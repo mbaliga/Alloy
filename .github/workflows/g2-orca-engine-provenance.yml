@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/g2-orca-engine-provenance.yml'
       - 'ci/identify_orca_engine.py'
+      - 'ci/find_orca_profile_anchor.py'
       - 'docs/UPSTREAM_EVALUATION.md'
   workflow_dispatch:
 
@@ -41,6 +42,17 @@ jobs:
           git clone --filter=blob:none --single-branch --branch main "$ORCA_REPO" orca
           git -C orca rev-parse HEAD
 
+      - name: Locate bundled BBL profile in official history
+        id: profile_anchor
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 ci/find_orca_profile_anchor.py mobile orca g2-evidence 2>&1 | tee g2-profile-anchor.log
+          status=${PIPESTATUS[0]}
+          cp g2-profile-anchor.log g2-evidence/profile-anchor-run.log || true
+          exit "$status"
+
       - name: Match mobile engine tree to official history
         id: provenance
         continue-on-error: true
@@ -60,10 +72,11 @@ jobs:
           path: g2-evidence
           if-no-files-found: error
 
-      - name: Enforce G2 confidence threshold
-        if: steps.provenance.outcome != 'success'
+      - name: Enforce G2 evidence thresholds
+        if: steps.profile_anchor.outcome != 'success' || steps.provenance.outcome != 'success'
         shell: bash
         run: |
-          echo 'G2 did not reach the documented high-confidence provenance threshold.' >&2
+          echo 'G2 did not reach all documented provenance thresholds.' >&2
+          cat g2-evidence/G2_BBL_PROFILE_ANCHOR.md 2>/dev/null || true
           cat g2-evidence/G2_PROVENANCE.md 2>/dev/null || true
           exit 1
