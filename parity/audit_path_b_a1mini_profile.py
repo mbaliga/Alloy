@@ -26,7 +26,11 @@ MACHINE = "Bambu Lab A1 mini 0.4 nozzle"
 PROCESS = "0.20mm Standard @BBL A1M"
 FILAMENT = "Bambu PLA Basic @BBL A1M"
 
-# Same compatibility renames present in SliceBeam's experimental Orca importer.
+# Compatibility renames from Orca/Bambu terminology to the PrusaSlicer 2.8
+# configuration vocabulary used by SliceBeam. Most already exist in SliceBeam's
+# experimental importer. The machine_max_speed_* -> machine_max_feedrate_*
+# mappings are explicit Prusa 2.8 equivalents (M203 feed-rate limits), not a
+# relaxation of the G4 criteria.
 KEY_MAP = {
     "machine_start_gcode": "start_gcode",
     "machine_end_gcode": "end_gcode",
@@ -50,6 +54,10 @@ KEY_MAP = {
     "overhang_fan_speed": "bridge_fan_speed",
     "slow_down_layer_time": "slowdown_below_layer_time",
     "slow_down_min_speed": "min_print_speed",
+    "machine_max_speed_x": "machine_max_feedrate_x",
+    "machine_max_speed_y": "machine_max_feedrate_y",
+    "machine_max_speed_z": "machine_max_feedrate_z",
+    "machine_max_speed_e": "machine_max_feedrate_e",
 }
 
 CRITICAL = {
@@ -59,10 +67,10 @@ CRITICAL = {
         "machine_start_gcode": "start_gcode",
         "machine_end_gcode": "end_gcode",
         "nozzle_diameter": "nozzle_diameter",
-        "machine_max_speed_x": "machine_max_speed_x",
-        "machine_max_speed_y": "machine_max_speed_y",
-        "machine_max_speed_z": "machine_max_speed_z",
-        "machine_max_speed_e": "machine_max_speed_e",
+        "machine_max_speed_x": "machine_max_feedrate_x",
+        "machine_max_speed_y": "machine_max_feedrate_y",
+        "machine_max_speed_z": "machine_max_feedrate_z",
+        "machine_max_speed_e": "machine_max_feedrate_e",
         "machine_max_acceleration_x": "machine_max_acceleration_x",
         "machine_max_acceleration_y": "machine_max_acceleration_y",
         "machine_max_acceleration_z": "machine_max_acceleration_z",
@@ -146,9 +154,20 @@ def resolve(name: str, profiles: dict[str, dict], stack=None) -> dict:
 
 def supported_slice_keys(slice_repo: Path) -> set[str]:
     cpp = (slice_repo / "app/src/main/jni/libslic3r/PrintConfig.cpp").read_text(errors="replace")
-    # Prusa's PrintConfigDef constructors consistently register options with add("key", ...).
+    hpp = (slice_repo / "app/src/main/jni/libslic3r/PrintConfig.hpp").read_text(errors="replace")
+
+    # Dynamic config definitions are registered with add("key", ...). Static
+    # config members are also declared through the CONFIG_* macro tables in the
+    # header; machine limit options such as machine_max_acceleration_x and
+    # machine_max_feedrate_x live there and must be counted as valid keys.
     keys = set(re.findall(r"\badd\s*\(\s*\"([^\"]+)\"", cpp))
-    if len(keys) < 100:
+    keys.update(
+        re.findall(
+            r"\(\(\s*ConfigOption[A-Za-z0-9_<>:]*\s*,\s*([A-Za-z0-9_]+)\s*\)\)",
+            hpp,
+        )
+    )
+    if len(keys) < 500:
         raise RuntimeError(f"unexpectedly few PrintConfig keys parsed: {len(keys)}")
     return keys
 
@@ -186,6 +205,7 @@ def audit_one(kind: str, resolved: dict, supported: set[str]) -> dict:
             "orca_key": source_key,
             "expected_target": expected_target,
             "translated_target": target,
+            "mapping_matches_expected": target == expected_target,
             "present_in_resolved_profile": source_key in resolved,
             "target_supported_by_prusa_core": target in supported,
             "value": json_value(resolved[source_key]) if source_key in resolved else None,
@@ -218,12 +238,17 @@ def main():
         "audit": {kind: audit_one(kind, cfg, supported) for kind, cfg in resolved.items()},
     }
 
-    # G4 static pre-gate: every declared critical field must exist and have a
-    # supported target. Native/runtime parity remains a separate gate.
+    # G4 static pre-gate: every declared critical field must exist, map to the
+    # explicitly expected equivalent, and be supported by the pinned Prusa core.
+    # Native/runtime parity remains a separate gate.
     failures = []
     for kind, info in audit["audit"].items():
         for row in info["critical"]:
-            if not row["present_in_resolved_profile"] or not row["target_supported_by_prusa_core"]:
+            if (
+                not row["present_in_resolved_profile"]
+                or not row["target_supported_by_prusa_core"]
+                or not row["mapping_matches_expected"]
+            ):
                 failures.append({"kind": kind, **row})
     audit["critical_failures"] = failures
     audit["static_critical_result"] = "pass" if not failures else "fail"
@@ -237,7 +262,7 @@ def main():
         "",
         f"- Orca profile snapshot: `{audit['orca_commit']}`",
         f"- SliceBeam: `{audit['slicebeam_commit']}`",
-        f"- Prusa-core registered config keys parsed: {len(supported)}",
+        f"- Prusa-core registered/static config keys parsed: {len(supported)}",
         f"- machine: `{MACHINE}`",
         f"- process: `{PROCESS}`",
         f"- filament: `{FILAMENT}`",
@@ -246,10 +271,20 @@ def main():
     ]
     for kind in ("printer", "process", "filament"):
         info = audit["audit"][kind]
-        md += [f"## {kind.title()}", "", f"Coverage counts: `{json.dumps(info['counts'], sort_keys=True)}`", "",
-               "| Orca field | translated field | present | core supports target |", "|---|---|---:|---:|"]
+        md += [
+            f"## {kind.title()}",
+            "",
+            f"Coverage counts: `{json.dumps(info['counts'], sort_keys=True)}`",
+            "",
+            "| Orca field | translated field | expected mapping | present | core supports target |",
+            "|---|---|---:|---:|---:|",
+        ]
         for row in info["critical"]:
-            md.append(f"| `{row['orca_key']}` | `{row['translated_target']}` | {row['present_in_resolved_profile']} | {row['target_supported_by_prusa_core']} |")
+            md.append(
+                f"| `{row['orca_key']}` | `{row['translated_target']}` | "
+                f"{row['mapping_matches_expected']} | {row['present_in_resolved_profile']} | "
+                f"{row['target_supported_by_prusa_core']} |"
+            )
         md.append("")
     if failures:
         md += ["## Critical failures", ""]
@@ -262,8 +297,12 @@ def main():
 
 def subprocess_rev(repo: Path) -> str:
     import subprocess
-    return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True,
-                          stdout=subprocess.PIPE, check=True).stdout.strip()
+    return subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"],
+        text=True,
+        stdout=subprocess.PIPE,
+        check=True,
+    ).stdout.strip()
 
 
 if __name__ == "__main__":
