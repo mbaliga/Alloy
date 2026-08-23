@@ -7,12 +7,14 @@ on:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/verify_gcode_3mf.py'
   pull_request:
     branches: [stage1-gates-prep]
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/verify_gcode_3mf.py'
   workflow_dispatch:
 
 permissions:
@@ -104,18 +106,7 @@ jobs:
               "$GITHUB_WORKSPACE/$stl" \
               > "$out/orca.log" 2>&1
 
-            test -s "$out/$name.gcode.3mf"
-            python3 - "$out/$name.gcode.3mf" <<'PY'
-import sys
-from zipfile import ZipFile
-path = sys.argv[1]
-with ZipFile(path) as z:
-    members = z.namelist()
-    gcode = [m for m in members if m.startswith('Metadata/plate_') and m.endswith('.gcode')]
-    if not gcode:
-        raise SystemExit(f'No Metadata/plate_*.gcode in {path}: {members[:30]}')
-    print(path, gcode)
-PY
+            python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
           done
 
       - name: Record authoritative baseline manifest
