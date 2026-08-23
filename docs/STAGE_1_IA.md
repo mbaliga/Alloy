@@ -2,7 +2,7 @@
 
 Status: **PROPOSED — approval gate**
 
-No Compose screen implementation should begin until this document's interaction model is approved.
+No Compose screen implementation should begin until this document's interaction model is explicitly approved.
 
 ## Product principle
 
@@ -10,7 +10,7 @@ A phone slicer should behave like a focused print-preparation task, not a deskto
 
 The default path is:
 
-**Import → Prepare → Slice → Inspect → Send / Export**
+**Import → Prepare → Slice → Inspect → Print / Export**
 
 The 3D model remains the visual anchor. Controls appear only when the current task needs them.
 
@@ -19,7 +19,8 @@ The 3D model remains the visual anchor. Controls appear only when the current ta
 ### Empty state
 - dominant `Import model` action
 - Android system file picker
-- accepted first-slice formats: STL, 3MF, STEP when supported by the engine build
+- Stage 1 required formats: STL and 3MF
+- STEP is deferred if OCCT blocks the reproducible native build gate
 - recent local projects below the primary action
 - no printer dashboard clutter before a model exists
 
@@ -42,22 +43,26 @@ A compact summary immediately above the primary action shows:
 - printer: Bambu Lab A1 Mini
 - plate
 - filament
-- process/profile (for example 0.20 mm Standard)
+- process/profile, for example `0.20 mm Standard`
 
-Tapping it opens the Recipe sheet. The user should be able to confirm the ordinary case without opening it.
+Tapping it opens the Recipe sheet. The ordinary case should be confirmable without opening it.
 
 ### Quick overrides
 Stage 1 exposes a deliberately small set in a bottom sheet:
 1. layer height / quality preset
-2. wall count
+2. walls: count + Arachne / Classic generator
 3. infill density
 4. infill pattern
-5. supports: off / auto / manual-compatible mode exposed by engine
-6. build-plate adhesion: none / brim
-7. seam position
-8. ironing where compatible
+5. supports: on/off + engine-supported type
+6. brim / build-plate adhesion
+7. plate type
+8. orientation / scale: lay-flat, rotate, resize
 
 Each override has `Profile default` as a first-class reset state. Alloy must visually distinguish a profile value from a user override.
+
+`Advanced` contains lower-frequency controls such as seam position, ironing, cooling, first-layer details, and max volumetric speed. Values still preserve an explicit profile-default state.
+
+Flow calibration is **not** a slice setting in Alloy's A1 Mini flow; it is a print-start option.
 
 A `More parameters` affordance on phone opens searchable categories, but the desktop-style always-visible parameter tree is reserved for larger width classes.
 
@@ -100,23 +105,27 @@ The full legend/settings surface lives in a bottom sheet.
 
 A `Back to prepare` action preserves all user overrides and model transforms.
 
-## 5. Send / Export
+## 5. Print / Export
 
 Primary action after a valid slice: **Print**.
 
 If no compatible printer transport is configured, label it **Export** rather than presenting a dead Print button.
 
 ### Print sheet
-For A1 Mini Stage 1:
+For A1 Mini Stage 1, only job-start options that the `project_file` path actually supports are shown:
 - target printer
 - bed leveling
-- flow calibration when supported/appropriate
-- vibration calibration when supported/appropriate
+- flow calibration
+- vibration calibration
 - timelapse
-- external spool (non-AMS default for the initial non-Combo target)
+- layer inspection where supported
 - explicit confirmation before sending the print-start command
 
-Alloy first uploads the completed `.gcode.3mf`, verifies success, then issues the MQTT `project_file` command. Upload and start are separate states in the UI and implementation.
+Do **not** present layer height, temperature, infill, walls, or other slice-time values as start-time controls. They are baked into the generated `.gcode.3mf`.
+
+For the initial non-Combo A1 Mini target, `use_ams` is false. AMS mapping is not exposed in Stage 1 until the external-spool payload is physically verified.
+
+Alloy first uploads the completed `.gcode.3mf`, verifies upload success, then issues the MQTT `project_file` command and waits for printer telemetry confirming PREPARE/RUNNING. Upload success, command publish, command acceptance, and print running are distinct states.
 
 ### Export
 - save `.gcode.3mf` through Android Storage Access Framework
@@ -139,13 +148,19 @@ Printer management and global app settings live outside the active preparation f
 
 ## Compact layout constraints
 
-- Designed for widths under 600dp first.
-- No orientation lock.
-- Landscape must remain functional, but Stage 1 optimization target is handheld portrait.
-- No essential action depends on hover, mouse secondary click, or keyboard.
-- Touch targets follow Android accessibility sizing.
-- Bottom sheets must remain usable with gesture navigation and IME visible.
-- System file picker rather than a bespoke filesystem browser.
+- designed for widths under 600dp first
+- no orientation lock
+- landscape must remain functional, but Stage 1 optimization target is handheld portrait
+- no essential action depends on hover, mouse secondary click, or keyboard
+- touch targets follow Android accessibility sizing
+- bottom sheets remain usable with gesture navigation and IME visible
+- system file picker rather than a bespoke filesystem browser
+
+## Renderer constraint
+
+Stage 1 may host the existing SliceBeam-lineage `GLView` through Compose `AndroidView` **only as bring-up scaffolding for basic model and G-code display**. Do not add Alloy-specific renderer features to the legacy Java view.
+
+Before Stage 2, replace it with an Alloy-owned GLES renderer hosted through `AndroidExternalSurface`, with desktop input/resizing requirements designed in rather than bolted on.
 
 ## Adaptive contract for later stages
 
@@ -162,9 +177,10 @@ Approval should specifically confirm these choices:
 1. task progression rather than desktop tabs/panels on phone
 2. viewport-dominant Prepare screen
 3. Recipe summary + bottom-sheet editing
-4. the initial eight quick-override categories
+4. the revised eight quick-override categories
 5. toolpath preview as its own Inspect state
-6. explicit upload → confirmation → print-start sequence
+6. explicit upload → verification → print-start → telemetry-confirmed-running sequence
 7. `Print` becoming `Export` when no printer transport is configured
+8. Stage 1 legacy GLView is scaffolding only, replaced before Stage 2
 
-Once approved, this document becomes the contract for Stage 1 Compose implementation.
+Once explicitly approved, this document becomes the contract for Stage 1 Compose implementation.

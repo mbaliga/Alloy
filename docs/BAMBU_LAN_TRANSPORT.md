@@ -13,31 +13,81 @@ For the A1 Mini LAN path being targeted:
 - username: `bblp`
 - password: printer LAN/Developer access code
 - command topic: `device/<serial>/request`
+- report topic: `device/<serial>/report`
 - print start command: `print.project_file`
 
-The probe uploads a known-good `.gcode.3mf` to `cache/<filename>` and uses a `file:///sdcard/cache/<filename>` project URL.
+The recommended artifact is `.gcode.3mf`, not plain `.gcode`.
 
-## Why curl is used for the proof
+## FTPS session reuse
 
-Some Bambu FTPS firmware requires TLS session reuse between the FTP control and data connections. Generic FTP client implementations can authenticate successfully and then fail file transfer with a 522 TLS error. The standalone probe therefore uses curl/OpenSSL for the upload rather than making Python's FTP stack part of the protocol proof.
+The printer's FTPS server may require TLS session reuse between the FTP control and data connections. Generic FTP clients can authenticate successfully and then fail data transfer with a 522 error.
 
-This does **not** dictate Alloy's final Android FTPS implementation. The Android transport must explicitly support the printer's implicit-TLS/session-reuse behavior and be tested against the physical A1 Mini.
+For the standalone proof, curl/OpenSSL remains the known-working path. For Alloy Android, the FTPS client must explicitly support implicit TLS and session reuse. Apache Commons Net `FTPSClient` with a data-socket session-reuse hook is a candidate, but it is not accepted until tested on the physical A1 Mini.
 
-## Safe test order
+## Remote path and project URL
+
+Two A1-family patterns exist in current implementations:
+
+1. upload to `/cache/<name>.gcode.3mf` and start with `file:///sdcard/cache/<name>.gcode.3mf`
+2. upload to FTP root and start with `ftp:///<name>.gcode.3mf`
+
+For Alloy, prefer the simpler **root upload + `ftp:///...`** path first because it directly couples the uploaded FTP name to the print URL. The exact accepted path is a physical-firmware gate and must be recorded with the printer firmware version.
+
+## A1 Mini no-AMS defaults
+
+Initial target: non-Combo A1 Mini using an external spool.
+
+- `use_ams`: false
+- `ams_mapping`: **do not guess**
+
+The mapping field is the least certain part of the payload for an external-spool/no-AMS A1 Mini. First hardware test should try omission/empty mapping and record printer telemetry. Alloy must not expose AMS mapping UI until that is validated.
+
+## Print-start fields
+
+The `project_file` command should carry only job-start values that are actually start-time controls, including:
+
+- `sequence_id`
+- `command: project_file`
+- `param: Metadata/plate_1.gcode` for plate 1
+- `subtask_name`
+- `url`
+- local IDs (`project_id`, `profile_id`, `task_id`, `subtask_id`) as required by accepted local payload
+- `timelapse`
+- `bed_type`
+- `bed_leveling` / firmware-compatible spelling if required
+- `flow_cali`
+- `vibration_cali`
+- `layer_inspect`
+- `use_ams: false`
+- verified no-AMS mapping behavior
+
+Layer height, temperature, infill, wall generation, and other slicer settings are baked into the `.gcode.3mf` and are not start-time overrides.
+
+## Verification sequence per job
+
+1. FTPS upload completes successfully (`STOR`/transfer returns success).
+2. When possible, LIST the destination and confirm filename + size.
+3. Publish `project_file`.
+4. Subscribe to `device/<serial>/report`.
+5. Wait for telemetry showing the expected `subtask_name` and a transition to PREPARE/RUNNING.
+6. A successful MQTT publish without status confirmation is **not** print acceptance.
+7. Cancellation/control is tested separately before transport is considered complete.
+
+## Safe physical validation order
 
 1. Keep the printer in its normal cloud configuration during slicer/profile work.
-2. Produce a known-good tiny `.gcode.3mf` using desktop Bambu Studio/OrcaSlicer.
-3. Enable the printer's LAN Developer Mode only for this gate.
-4. Record IP, serial and access code locally; never commit them.
-5. Run the probe with `--upload-only`.
-6. Verify the file is present on printer storage.
-7. Run again without `--upload-only` only with a tiny, physically safe fixture loaded and the correct plate/filament installed.
-8. Confirm the MQTT command is accepted and the printer transitions to a print state.
-9. Record firmware version and exact accepted payload.
-10. Capture telemetry needed to distinguish upload success, start acceptance, running and error.
-11. Disable Developer Mode again if the user wants to return to Bambu cloud/Handy operation.
+2. Produce a known-good tiny `.gcode.3mf` using desktop Bambu Studio/OrcaSlicer for A1 Mini, PLA, external spool.
+3. Enable LAN/Developer Mode for the transport gate.
+4. Record IP, serial, firmware, and access code locally; never commit credentials.
+5. Run upload-only first.
+6. Verify remote file presence.
+7. Run the start command only with a tiny, physically safe fixture loaded and the correct plate/filament installed.
+8. Confirm printer screen + MQTT report show the intended job and RUNNING state.
+9. Test stop/cancel.
+10. Record exact URL form, mapping behavior, accepted payload, and firmware in this document.
+11. Only after this end-to-end proof, wire the same transport semantics into Alloy.
 
-## Commands
+## Existing probe
 
 ```bash
 python -m pip install -r tools/requirements.txt
@@ -50,20 +100,21 @@ python tools/bambu_lan_probe.py \
   --upload-only
 ```
 
-The tool requires typing the literal word `PRINT` before it sends a physical print-start command.
+The probe is a bench tool, not the shipping Android transport. It must be updated to the physically accepted path/payload after hardware validation and should wait for report telemetry before declaring a start successful.
 
 ## Remaining transport work
 
-- verify exact payload on the target A1 Mini firmware
+- verify exact path/URL on target A1 Mini firmware
+- verify external-spool `ams_mapping` omission/empty behavior
 - subscribe to and parse status/report MQTT telemetry
-- test cancellation, disconnect and retry semantics
-- choose/implement Android implicit-FTPS client behavior
+- implement cancellation, disconnect, timeout and retry semantics
+- implement Android implicit-FTPS session reuse
 - Keystore-backed credential storage
 - printer discovery/pairing UX
-- checksum/remote-file verification where the printer protocol permits it
+- remote file verification where protocol permits it
 - ensure no credential leakage through Android logs/crash reporting
-- add fake-printer integration tests before real-printer CI/manual gates
+- add fake-printer integration tests before real-printer manual gates
 
 ## Non-goal
 
-Alloy will not reproduce or ship Bambu's proprietary networking plugin. LAN transport stays behind `PrinterTransport`, allowing a future Bambuddy/open-networking adapter without coupling it to slicing.
+Alloy will not reproduce or ship Bambu's proprietary networking plugin. LAN transport stays behind `PrinterTransport`, allowing future open-networking adapters without coupling them to slicing.
