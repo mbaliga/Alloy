@@ -8,7 +8,7 @@ on:
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
   pull_request:
-    branches: [stage1-path-b-g4-prep]
+    branches: [stage1-gates-prep]
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
