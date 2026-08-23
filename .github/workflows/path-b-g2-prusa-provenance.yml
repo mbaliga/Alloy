@@ -6,6 +6,11 @@ on:
     paths:
       - '.github/workflows/path-b-g2-prusa-provenance.yml'
       - 'ci/identify_slicebeam_prusa_engine.py'
+  pull_request:
+    branches: [stage1-foundation]
+    paths:
+      - '.github/workflows/path-b-g2-prusa-provenance.yml'
+      - 'ci/identify_slicebeam_prusa_engine.py'
   workflow_dispatch:
 
 permissions:
