@@ -1,6 +1,12 @@
 name: Desktop Orca A1 Mini reference slices
 
 on:
+  push:
+    branches: [stage1-runtime-parity]
+    paths:
+      - '.github/workflows/desktop-orca-reference.yml'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/generate_fixtures.py'
   pull_request:
     branches: [stage1-path-b-g4-prep]
     paths:
