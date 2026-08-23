@@ -4,6 +4,10 @@
 This is intentionally independent of Alloy's Android transport implementation.
 It exists to prove the printer protocol before that behavior is embedded in the app.
 
+Requirements:
+- curl built with TLS support
+- paho-mqtt (see tools/requirements.txt)
+
 Usage example:
   python tools/bambu_lan_probe.py \
     --host 192.168.1.50 \
@@ -19,62 +23,47 @@ intend to start a physical print.
 from __future__ import annotations
 
 import argparse
-import ftplib
 import hashlib
 import json
 import os
-import socket
 import ssl
+import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 import paho.mqtt.client as mqtt
 
 
-class ImplicitFTP_TLS(ftplib.FTP_TLS):
-    """FTP_TLS variant for implicit TLS (Bambu FTPS port 990)."""
-
-    def connect(self, host="", port=0, timeout=-999, source_address=None):
-        if host:
-            self.host = host
-        if port > 0:
-            self.port = port
-        if timeout != -999:
-            self.timeout = timeout
-        if source_address is not None:
-            self.source_address = source_address
-
-        raw_sock = socket.create_connection(
-            (self.host, self.port), self.timeout, source_address=self.source_address
-        )
-        self.af = raw_sock.family
-        self.sock = self.context.wrap_socket(raw_sock, server_hostname=self.host)
-        self.file = self.sock.makefile("r", encoding=self.encoding)
-        self.welcome = self.getresp()
-        return self.welcome
-
-
-
 def upload_ftps(host: str, access_code: str, local: Path, remote: str) -> None:
-    context = ssl.create_default_context()
-    # Current Bambu LAN endpoints commonly present a self-signed certificate.
-    # Developer Mode authentication still occurs with the local access code.
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
-
-    ftp = ImplicitFTP_TLS(context=context, timeout=20)
+    """Upload through curl because Bambu FTPS may require TLS session reuse."""
+    remote_url = f"ftps://{host}:990/{quote(remote, safe='/')}"
+    # Feed curl configuration on stdin so the access code is not exposed in the
+    # process command line. -k/insecure is required for the printer's current
+    # self-signed LAN certificate.
+    curl_config = "\n".join(
+        [
+            "silent",
+            "show-error",
+            "fail",
+            "insecure",
+            "ftp-pasv",
+            "ssl-reqd",
+            f'user = "bblp:{access_code}"',
+            f'upload-file = "{local}"',
+            f'url = "{remote_url}"',
+            "",
+        ]
+    )
     try:
-        ftp.connect(host, 990)
-        ftp.login("bblp", access_code)
-        ftp.prot_p()
-        with local.open("rb") as handle:
-            ftp.storbinary(f"STOR {remote}", handle)
-    finally:
-        try:
-            ftp.quit()
-        except Exception:
-            ftp.close()
-
+        subprocess.run(
+            ["curl", "--config", "-"],
+            input=curl_config,
+            text=True,
+            check=True,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError("curl is required for the FTPS transport probe") from exc
 
 
 def start_project(
@@ -101,8 +90,9 @@ def start_project(
             "md5": "",
             "timelapse": False,
             "bed_type": "auto",
-            # Firmware/tools in the ecosystem use both spellings. Sending both is
-            # deliberate until the A1 Mini hardware fixture settles the contract.
+            # Current ecosystem implementations expose both spellings across
+            # firmware generations. Keep both until the A1 Mini hardware fixture
+            # settles the exact accepted contract.
             "bed_leveling": True,
             "bed_levelling": True,
             "flow_cali": False,
@@ -113,7 +103,10 @@ def start_project(
         }
     }
 
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"alloy-{os.getpid()}")
+    client = mqtt.Client(
+        mqtt.CallbackAPIVersion.VERSION2,
+        client_id=f"alloy-{os.getpid()}",
+    )
     client.username_pw_set("bblp", access_code)
     client.tls_set(cert_reqs=ssl.CERT_NONE)
     client.tls_insecure_set(True)
@@ -127,7 +120,6 @@ def start_project(
     finally:
         client.loop_stop()
         client.disconnect()
-
 
 
 def main() -> int:
@@ -147,7 +139,7 @@ def main() -> int:
 
     if not args.file.is_file():
         parser.error(f"not a file: {args.file}")
-    if args.file.suffix.lower() != ".3mf":
+    if not args.file.name.lower().endswith(".gcode.3mf"):
         print("warning: expected a .gcode.3mf project", file=sys.stderr)
 
     remote = args.remote or f"cache/{args.file.name}"
@@ -181,7 +173,7 @@ def main() -> int:
         args.file.name,
         args.plate,
     )
-    print("Start command published. Confirm acceptance on the printer/status channel.")
+    print("Start command published. Confirm acceptance on printer/status telemetry.")
     return 0
 
 
