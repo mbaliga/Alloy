@@ -1,6 +1,13 @@
 name: Path B Prusa 2.8 runtime profile proof
 
 on:
+  push:
+    branches: [stage1-path-b-prusa-runtime]
+    paths:
+      - '.github/workflows/path-b-prusa-runtime-slice.yml'
+      - 'parity/build_path_b_prusa_config.py'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/generate_fixtures.py'
   pull_request:
     branches: [stage1-runtime-parity]
     paths:
