@@ -8,6 +8,7 @@ on:
       - 'parity/build_path_b_prusa_config.py'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/check_rendered_gcode_templates.py'
   pull_request:
     branches: [stage1-runtime-parity]
     paths:
@@ -15,6 +16,7 @@ on:
       - 'parity/build_path_b_prusa_config.py'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/check_rendered_gcode_templates.py'
   workflow_dispatch:
 
 permissions:
@@ -120,28 +122,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          python3 - <<'PY'
-from pathlib import Path
-import re
-import sys
-
-bad = []
-patterns = [
-    re.compile(r"\{\s*(?:if|elsif|else|endif)\b", re.I),
-    re.compile(r"\[[A-Za-z_][A-Za-z0-9_]*(?:\[[^\]]+\])?\]"),
-]
-for path in Path('runtime/prusa-reference').glob('*/*.gcode'):
-    for lineno, raw in enumerate(path.read_text(errors='replace').splitlines(), 1):
-        executable = raw.split(';', 1)[0]
-        if any(p.search(executable) for p in patterns):
-            bad.append((str(path), lineno, raw[:240]))
-if bad:
-    print('Unresolved template syntax found in executable G-code:', file=sys.stderr)
-    for row in bad[:100]:
-        print(f'{row[0]}:{row[1]}: {row[2]}', file=sys.stderr)
-    raise SystemExit(2)
-print('No unresolved template directives in executable G-code.')
-PY
+          python3 parity/check_rendered_gcode_templates.py runtime/prusa-reference/*/*.gcode
 
       - name: Record Path B runtime manifest
         shell: bash
