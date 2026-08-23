@@ -6,6 +6,11 @@ on:
     paths:
       - '.github/workflows/path-b-g1-slicebeam-source-build.yml'
       - 'ci/patch_orca_mobile_bootstrap.py'
+  pull_request:
+    branches: [stage1-foundation]
+    paths:
+      - '.github/workflows/path-b-g1-slicebeam-source-build.yml'
+      - 'ci/patch_orca_mobile_bootstrap.py'
   workflow_dispatch:
 
 permissions:
@@ -58,8 +63,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y \
-            autoconf automake libtool make ninja-build pkg-config python3 git curl unzip
+          sudo apt-get install -y autoconf automake libtool make ninja-build pkg-config python3 git curl unzip
 
       - name: Clone pinned SliceBeam source
         shell: bash
@@ -78,10 +82,7 @@ jobs:
           git -C bootstrap-source checkout --detach "$ORCA_MOBILE_SHA"
           cp bootstrap-source/scripts/build_all_deps_android.sh slicebeam/build_all_deps_android.sh
           cp bootstrap-source/scripts/check-native-prebuilts.py slicebeam/check-native-prebuilts.py
-          python3 ci/patch_orca_mobile_bootstrap.py \
-            slicebeam/build_all_deps_android.sh \
-            "$ANDROID_SDK_ROOT" \
-            "$ANDROID_NDK_ROOT"
+          python3 ci/patch_orca_mobile_bootstrap.py slicebeam/build_all_deps_android.sh "$ANDROID_SDK_ROOT" "$ANDROID_NDK_ROOT"
 
       - name: Build missing SliceBeam native dependencies from source
         working-directory: slicebeam
