@@ -1,0 +1,146 @@
+name: Path B Prusa 2.8 runtime profile proof
+
+on:
+  push:
+    branches: [stage1-path-b-prusa-runtime]
+    paths:
+      - '.github/workflows/path-b-prusa-runtime-slice.yml'
+      - 'parity/build_path_b_prusa_config.py'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/generate_fixtures.py'
+      - 'parity/check_rendered_gcode_templates.py'
+  pull_request:
+    branches: [stage1-runtime-parity]
+    paths:
+      - '.github/workflows/path-b-prusa-runtime-slice.yml'
+      - 'parity/build_path_b_prusa_config.py'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/generate_fixtures.py'
+      - 'parity/check_rendered_gcode_templates.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ORCA_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
+  ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
+  SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
+  SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+  PRUSA_VERSION: 2.8.0
+  PRUSA_APPIMAGE_URL: https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.8.0/PrusaSlicer-2.8.0+linux-x64-GTK3-202406270929.AppImage
+
+jobs:
+  translated-profile-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate deterministic fixtures
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/generate_fixtures.py --out runtime/fixtures
+          sha256sum runtime/fixtures/*.stl | tee runtime/fixtures/SHA256SUMS
+
+      - name: Clone pinned profile and engine sources
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$ORCA_REPO" orca-profiles
+          git -C orca-profiles checkout --detach "$ORCA_PROFILE_SHA"
+          test "$(git -C orca-profiles rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
+          git clone --filter=blob:none --no-checkout "$SLICEBEAM_REPO" slicebeam
+          git -C slicebeam checkout --detach "$SLICEBEAM_SHA"
+          test "$(git -C slicebeam rev-parse HEAD)" = "$SLICEBEAM_SHA"
+
+      - name: Build deterministic Path B config
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p runtime/path-b
+          python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
+          python3 parity/build_path_b_prusa_config.py runtime/profiles slicebeam runtime/path-b/a1mini.ini --report runtime/path-b/translation-report.json
+          sha256sum runtime/path-b/a1mini.ini runtime/path-b/translation-report.json | tee runtime/path-b/SHA256SUMS
+          head -n 80 runtime/path-b/a1mini.ini
+
+      - name: Install AppImage host OpenGL runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libopengl0 libglu1-mesa
+
+      - name: Download and extract PrusaSlicer 2.8.0
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p runtime/prusa
+          curl -L --fail --retry 3 -o runtime/prusa/PrusaSlicer.AppImage "$PRUSA_APPIMAGE_URL"
+          chmod +x runtime/prusa/PrusaSlicer.AppImage
+          sha256sum runtime/prusa/PrusaSlicer.AppImage | tee runtime/prusa/SHA256SUMS
+          (cd runtime/prusa && ./PrusaSlicer.AppImage --appimage-extract >/dev/null)
+          test -x runtime/prusa/squashfs-root/AppRun
+
+      - name: Capture Prusa CLI evidence
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PRUSA="$GITHUB_WORKSPACE/runtime/prusa/squashfs-root/AppRun"
+          mkdir -p runtime/evidence
+          "$PRUSA" --help > runtime/evidence/prusa-help.txt 2>&1 || true
+          "$PRUSA" --help-fff > runtime/evidence/prusa-help-fff.txt 2>&1 || true
+          head -n 80 runtime/evidence/prusa-help.txt || true
+          grep -E -- '--load|--export-gcode|--printer-technology' runtime/evidence/prusa-help.txt runtime/evidence/prusa-help-fff.txt | head -n 80 || true
+
+      - name: Slice all fixtures through the exact Path B engine baseline
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PRUSA="$GITHUB_WORKSPACE/runtime/prusa/squashfs-root/AppRun"
+          CONFIG="$GITHUB_WORKSPACE/runtime/path-b/a1mini.ini"
+          mkdir -p runtime/prusa-reference
+          for stl in runtime/fixtures/*.stl; do
+            name="$(basename "$stl" .stl)"
+            out="$GITHUB_WORKSPACE/runtime/prusa-reference/$name"
+            mkdir -p "$out"
+            "$PRUSA" --printer-technology FFF --center 90,90 --export-gcode --load "$CONFIG" --output "$out/$name.gcode" "$GITHUB_WORKSPACE/$stl" > "$out/prusa.log" 2>&1
+            test -s "$out/$name.gcode"
+          done
+
+      - name: Reject unresolved template directives in executable G-code
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/check_rendered_gcode_templates.py runtime/prusa-reference/*/*.gcode
+
+      - name: Record Path B runtime manifest
+        shell: bash
+        run: |
+          set -euxo pipefail
+          {
+            echo "PrusaSlicer release: ${PRUSA_VERSION}"
+            echo "SliceBeam baseline: ${SLICEBEAM_SHA}"
+            echo "Orca profile snapshot translated: ${ORCA_PROFILE_SHA}"
+            echo "Machine: Bambu Lab A1 mini 0.4 nozzle"
+            echo "Process: 0.20mm Standard @BBL A1M"
+            echo "Filament: Bambu PLA Basic @BBL A1M"
+            echo
+            sha256sum runtime/prusa-reference/*/*.gcode
+          } > runtime/evidence/path-b-runtime-manifest.txt
+          cat runtime/evidence/path-b-runtime-manifest.txt
+
+      - name: Upload Path B runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: path-b-prusa-2.8-runtime-slices
+          path: |
+            runtime/path-b
+            runtime/profiles
+            runtime/prusa-reference
+            runtime/prusa/SHA256SUMS
+            runtime/evidence
+          if-no-files-found: error
