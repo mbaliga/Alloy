@@ -52,7 +52,6 @@ jobs:
           git clone --filter=blob:none --no-checkout "$ORCA_REPO" orca-profiles
           git -C orca-profiles checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profiles rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
-
           git clone --filter=blob:none --no-checkout "$SLICEBEAM_REPO" slicebeam
           git -C slicebeam checkout --detach "$SLICEBEAM_SHA"
           test "$(git -C slicebeam rev-parse HEAD)" = "$SLICEBEAM_SHA"
@@ -63,13 +62,16 @@ jobs:
           set -euxo pipefail
           mkdir -p runtime/path-b
           python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
-          python3 parity/build_path_b_prusa_config.py \
-            runtime/profiles \
-            slicebeam \
-            runtime/path-b/a1mini.ini \
-            --report runtime/path-b/translation-report.json
+          python3 parity/build_path_b_prusa_config.py runtime/profiles slicebeam runtime/path-b/a1mini.ini --report runtime/path-b/translation-report.json
           sha256sum runtime/path-b/a1mini.ini runtime/path-b/translation-report.json | tee runtime/path-b/SHA256SUMS
           head -n 80 runtime/path-b/a1mini.ini
+
+      - name: Install AppImage host OpenGL runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libopengl0 libglu1-mesa
 
       - name: Download and extract PrusaSlicer 2.8.0
         shell: bash
@@ -79,10 +81,7 @@ jobs:
           curl -L --fail --retry 3 -o runtime/prusa/PrusaSlicer.AppImage "$PRUSA_APPIMAGE_URL"
           chmod +x runtime/prusa/PrusaSlicer.AppImage
           sha256sum runtime/prusa/PrusaSlicer.AppImage | tee runtime/prusa/SHA256SUMS
-          (
-            cd runtime/prusa
-            ./PrusaSlicer.AppImage --appimage-extract >/dev/null
-          )
+          (cd runtime/prusa && ./PrusaSlicer.AppImage --appimage-extract >/dev/null)
           test -x runtime/prusa/squashfs-root/AppRun
 
       - name: Capture Prusa CLI evidence
@@ -93,7 +92,8 @@ jobs:
           mkdir -p runtime/evidence
           "$PRUSA" --help > runtime/evidence/prusa-help.txt 2>&1 || true
           "$PRUSA" --help-fff > runtime/evidence/prusa-help-fff.txt 2>&1 || true
-          grep -E -- '--load|--export-gcode|--printer-technology' runtime/evidence/prusa-help.txt runtime/evidence/prusa-help-fff.txt | head -n 80
+          head -n 80 runtime/evidence/prusa-help.txt || true
+          grep -E -- '--load|--export-gcode|--printer-technology' runtime/evidence/prusa-help.txt runtime/evidence/prusa-help-fff.txt | head -n 80 || true
 
       - name: Slice all fixtures through the exact Path B engine baseline
         shell: bash
@@ -102,19 +102,11 @@ jobs:
           PRUSA="$GITHUB_WORKSPACE/runtime/prusa/squashfs-root/AppRun"
           CONFIG="$GITHUB_WORKSPACE/runtime/path-b/a1mini.ini"
           mkdir -p runtime/prusa-reference
-
           for stl in runtime/fixtures/*.stl; do
             name="$(basename "$stl" .stl)"
             out="$GITHUB_WORKSPACE/runtime/prusa-reference/$name"
             mkdir -p "$out"
-            "$PRUSA" \
-              --printer-technology FFF \
-              --center 90,90 \
-              --export-gcode \
-              --load "$CONFIG" \
-              --output "$out/$name.gcode" \
-              "$GITHUB_WORKSPACE/$stl" \
-              > "$out/prusa.log" 2>&1
+            "$PRUSA" --printer-technology FFF --center 90,90 --export-gcode --load "$CONFIG" --output "$out/$name.gcode" "$GITHUB_WORKSPACE/$stl" > "$out/prusa.log" 2>&1
             test -s "$out/$name.gcode"
           done
 
