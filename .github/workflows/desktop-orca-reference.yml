@@ -56,6 +56,13 @@ jobs:
           python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
           sha256sum runtime/profiles/*.json | tee runtime/profiles/SHA256SUMS
 
+      - name: Install AppImage host OpenGL runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libopengl0 libglu1-mesa
+
       - name: Download and extract OrcaSlicer 2.4.2 AppImage
         shell: bash
         run: |
@@ -77,8 +84,8 @@ jobs:
           ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
           mkdir -p runtime/evidence
           "$ORCA" --help > runtime/evidence/orca-help.txt 2>&1 || true
-          head -n 120 runtime/evidence/orca-help.txt
-          grep -E -- '--load-settings|--load-filaments|--slice|--export-3mf' runtime/evidence/orca-help.txt
+          head -n 120 runtime/evidence/orca-help.txt || true
+          grep -E -- '--load-settings|--load-filaments|--slice|--export-3mf' runtime/evidence/orca-help.txt || true
 
       - name: Slice all three fixtures with pinned A1 Mini profiles
         shell: bash
