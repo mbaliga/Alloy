@@ -1,0 +1,65 @@
+name: Path B G2 PrusaSlicer provenance
+
+on:
+  push:
+    branches: [stage1-gates-prep]
+    paths:
+      - '.github/workflows/path-b-g2-prusa-provenance.yml'
+      - 'ci/identify_slicebeam_prusa_engine.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
+  SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+  PRUSA_REPO: https://github.com/prusa3d/PrusaSlicer.git
+
+jobs:
+  provenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone pinned SliceBeam source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$SLICEBEAM_REPO" slicebeam
+          git -C slicebeam checkout --detach "$SLICEBEAM_SHA"
+          test "$(git -C slicebeam rev-parse HEAD)" = "$SLICEBEAM_SHA"
+
+      - name: Clone PrusaSlicer history
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --single-branch --branch master "$PRUSA_REPO" prusa
+          git -C prusa rev-parse HEAD
+
+      - name: Match SliceBeam engine to official PrusaSlicer history
+        id: provenance
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p path-b-g2-evidence
+          python3 ci/identify_slicebeam_prusa_engine.py slicebeam prusa path-b-g2-evidence 2>&1 | tee path-b-g2-evidence/run.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload Path B G2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: path-b-g2-prusa-provenance
+          path: path-b-g2-evidence
+          if-no-files-found: error
+
+      - name: Enforce provenance threshold
+        if: steps.provenance.outcome != 'success'
+        shell: bash
+        run: |
+          cat path-b-g2-evidence/PATH_B_G2.md 2>/dev/null || true
+          exit 1
