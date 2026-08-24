@@ -55,7 +55,7 @@ Do not use `0.4.6` as the Orca engine version. The Android build injects the mob
 
 ## Renderer decision
 
-For Stage 1 engine bring-up only, the inherited SliceBeam/OraSlicer-Mobile `GLView` may be hosted from Compose through `AndroidView`.
+For Stage 1 engine bring-up only, the inherited SliceBeam/OrcaSlicer-Mobile `GLView` may be hosted from Compose through `AndroidView`.
 
 Constraints:
 - basic model/G-code display only
