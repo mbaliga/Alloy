@@ -3,7 +3,8 @@
 Date: 2026-09-21
 
 Fresh verification on this checkpoint: the independent parity suite completed
-65/65 tests successfully; Android, transport, release, model/profile/native
+66/66 tests successfully; the Linux/model/artifact bridge suite completed
+26/26 tests; Android, transport, release, model/profile/native
 wiring validators all passed; and the native-enabled `connectedReleaseAndroidTest`
 completed 153 instrumentation executions with 0 failures and 1 intentional
 skip. The skip is the opt-in native G3 evidence export; it remains excluded
@@ -64,6 +65,11 @@ or oversized model stalls, Alloy cancels the worker, restores the workspace
 state, and explains the recovery path instead of leaving the session disabled.
 The native-enabled release instrumentation suite was rerun afterward: **153
 tests completed, 0 failures, 1 intentional G3 export skip**.
+
+The post-watchdog host audit also reran the independent parity suite at **66/66**
+and the Linux/model/artifact bridge suite at **26/26**. These remain offline and
+bridge-level checks; they do not substitute for acceptance on a physical A1
+Mini or for a production release-signing review.
 
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
