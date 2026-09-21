@@ -20,6 +20,9 @@ APK/AAB build must pass `-PalloyProductionRelease=true` together with
 organization signing configuration rather than `-PalloyCiDebugSign=true`.
 The Gradle guard also requires the reviewed `release/production-readiness.json`
 evidence record to exist before it will configure that promotion build.
+Start a reviewed record from `release/production-readiness.template.json`;
+the template intentionally contains only `PENDING` gates and cannot satisfy
+the production validator on its own.
 The ordinary CI-debug and emulator commands remain available for development
 and test verification, but they cannot be mistaken for a production build.
 
