@@ -14,6 +14,13 @@ The repository has two Android build paths:
   app and matching instrumentation APK; manual dispatch remains unsigned for
   dry-run validation.
 
+The production promotion contract is explicit and fail-closed. A production
+APK/AAB build must pass `-PalloyProductionRelease=true` together with
+`-PalloyNativeEngine=true -PalloyNativeEngineVerified=true` and must use the
+organization signing configuration rather than `-PalloyCiDebugSign=true`.
+The ordinary CI-debug and emulator commands remain available for development
+and test verification, but they cannot be mistaken for a production build.
+
 Manual release-candidate dispatch deliberately produces an unsigned APK.
 Production distribution still requires the organization-owned Android signing
 key, protected CI secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEY_ALIAS`,
