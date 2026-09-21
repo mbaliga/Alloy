@@ -115,13 +115,14 @@ portable batch archives and the fail-closed Bambu LAN probe payload rules.
 ## Linux alternatives today
 
 Linux already has credible slicers (checked against upstream release pages on
-2026-09-20):
+2026-09-21):
 
 - [Bambu Studio](https://github.com/bambulab/BambuStudio) itself publishes
-  Linux builds through its upstream release/Flathub channels. The locally
-  pinned **v02.08.02.61** checkout is an audit reference, not a claim about
-  the newest public release; users should select the current artifact from
-  the upstream release page for their distribution.
+  Ubuntu AppImages through its upstream releases and points Linux users to
+  its Flathub build. The current public release listed upstream is
+  **v02.08.02.61**; **v02.08.03.66** is listed as a beta. The locally pinned
+  v02.08.02.61 checkout is an audit reference, not a claim about the newest
+  public release.
 - [OrcaSlicer](https://www.orcaslicer.com/download/) 2.4.2 is the strongest
   open-source Bambu-oriented alternative for profiles, calibration, and LAN
   workflows, with project/Flatpak Linux packages.
