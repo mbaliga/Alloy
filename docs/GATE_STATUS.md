@@ -50,6 +50,14 @@ fixture, the export moved from 1,438 to 1,498 travel moves and from 10.70% to
 **FAIL/NO-GO** at 1,585 s versus 1,782 s, with remaining profile/brim and motion
 differences. This is a measured fidelity improvement, not production parity.
 
+The controlled follow-up on 2026-09-21 reran the same native cube with the
+desktop reference's resolved brim recipe (`auto_brim`, width `5`, object gap
+`0.1`) instead of the earlier opt-in `no_brim` experiment. Profile identity
+then passed **62/62** fields, but the toolpath metrics were unchanged: 1,585 s
+versus 1,782 s, 2.09% filament-length delta, 2.03% mass delta, and 39.01%
+travel-move delta. This rules out brim configuration as the remaining G3
+cause; the next parity work belongs in motion/travel planning.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
