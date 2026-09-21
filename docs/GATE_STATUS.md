@@ -98,6 +98,12 @@ worker and promotes the durable checkpoint to `RECOVERY_REQUIRED`; it does not
 silently label an incomplete artifact as a valid slice. The instrumentation
 regression covers the bounded stall predicate.
 
+The same bounded watchdog now covers multi-plate foreground slicing. Plate
+completion and per-plate progress callbacks refresh the window; a stalled
+batch is cancelled and promoted to batch recovery review rather than being
+reported as ready. Both single-plate and batch watchdog predicates are covered
+by instrumentation tests.
+
 Bambu profile/project imports now have the same bounded-failure behavior with a
 60-second watchdog. A stalled provider is cancelled, the import action is
 re-enabled, and the workspace returns to its prior state with a recovery

@@ -394,6 +394,17 @@ public final class AndroidPipelineTest {
         }
     }
 
+    @Test
+    public void foregroundBatchWatchdogSharesBoundedStallWindow() {
+        long now = System.currentTimeMillis();
+        Assert.assertFalse("fresh batch progress must not be treated as stalled",
+                BatchSliceJobService.hasStalled(now, now));
+        Assert.assertTrue("a silent batch slice past the watchdog window must require recovery",
+                BatchSliceJobService.hasStalled(now, now - 180_000L));
+        Assert.assertFalse("future batch timestamps must not trip the watchdog",
+                BatchSliceJobService.hasStalled(now, now + 1L));
+    }
+
 
     @Test
     public void modelImportSniffsStlWhenDocumentNameHasNoExtension() throws Exception {

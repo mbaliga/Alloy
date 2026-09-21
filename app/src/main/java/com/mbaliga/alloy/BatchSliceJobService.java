@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 
 import java.io.File;
 import java.util.concurrent.CancellationException;
@@ -37,9 +39,16 @@ public final class BatchSliceJobService extends Service {
     private Future<?> active;
     private volatile SlicerEngine engine;
     private volatile boolean cancelRequested;
+    private volatile boolean watchdogTriggered;
+    private volatile long lastProgressAt;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable watchdog = this::watchdogTick;
 
     public static boolean ownsJob(String jobId) { return jobId != null && jobId.equals(activeJobId); }
     public static boolean ownsAnyJob() { return activeJobId != null; }
+    static boolean hasStalled(long now, long lastProgress) {
+        return SliceJobService.hasStalled(now, lastProgress);
+    }
 
     public static void start(Context context, String jobId) { dispatch(context, ACTION_START, jobId); }
     public static void cancel(Context context, String jobId) { dispatch(context, ACTION_CANCEL, jobId); }
@@ -121,8 +130,31 @@ public final class BatchSliceJobService extends Service {
         }
         activeJobId = jobId;
         cancelRequested = false;
+        watchdogTriggered = false;
+        lastProgressAt = System.currentTimeMillis();
         active = executor.submit(() -> run(jobId));
         return START_NOT_STICKY;
+    }
+
+    private void watchdogTick() {
+        String jobId = activeJobId;
+        if (jobId == null || store == null) return;
+        if (hasStalled(System.currentTimeMillis(), lastProgressAt)) {
+            watchdogTriggered = true;
+            cancelRequested = true;
+            SlicerEngine currentEngine = engine;
+            if (currentEngine != null) currentEngine.cancel();
+            Future<?> current = active;
+            if (current != null) current.cancel(true);
+            BatchSliceJobStore.Job recovered = store.recoverAfterRestart(false);
+            String detail = "Batch slicing stopped reporting progress; review the job and start again.";
+            if (recovered != null && recovered.state == BatchSliceJobStore.State.RECOVERY_REQUIRED)
+                detail = recovered.detail;
+            publish(jobId, BatchSliceJobStore.State.RECOVERY_REQUIRED, detail,
+                    recovered == null ? -1 : recovered.progress, "Recovery review");
+            return;
+        }
+        handler.postDelayed(watchdog, 30_000L);
     }
 
     private void run(String jobId) {
@@ -130,11 +162,14 @@ public final class BatchSliceJobService extends Service {
             File filesDir = getFilesDir();
             BatchSliceRequestStore.Request request = BatchSliceRequestStore.read(filesDir, jobId);
             File batchDir = BatchSliceRequestStore.jobDirectory(filesDir, jobId);
+            handler.removeCallbacks(watchdog);
+            handler.postDelayed(watchdog, 30_000L);
             publish(jobId, BatchSliceJobStore.State.RUNNING, "Slicing plates in the foreground", 1, "Preparing plates");
             BatchSliceJobController.BatchResult result = BatchSliceJobController.run(
                     getContentResolver(), filesDir, request.plates, request.config, engine,
                     (plate, completed, total) -> {
                         if (cancelRequested || Thread.currentThread().isInterrupted()) throw new CancellationException("Batch slice cancelled");
+                        lastProgressAt = System.currentTimeMillis();
                         BatchSliceResultStore.record(filesDir, batchDir, plate);
                         int progress = completed * 100 / Math.max(1, total);
                         store.progress(jobId, completed, progress, "Ready  ·  " + plate.plate.name);
@@ -142,6 +177,7 @@ public final class BatchSliceJobService extends Service {
                     },
                     (percent, phase) -> {
                         if (cancelRequested || Thread.currentThread().isInterrupted()) throw new CancellationException("Batch slice cancelled");
+                        lastProgressAt = System.currentTimeMillis();
                         BatchSliceJobStore.Job checkpoint = store.load();
                         int completed = checkpoint == null ? 0 : checkpoint.completedPlates;
                         store.progress(jobId, completed, percent, phase);
@@ -153,12 +189,22 @@ public final class BatchSliceJobService extends Service {
             store.complete(jobId, "All " + verified.plates.size() + " plates are ready");
             publish(jobId, BatchSliceJobStore.State.COMPLETED, "All " + verified.plates.size() + " plates are ready", 100, "Complete");
         } catch (CancellationException ignored) {
-            store.cancel(jobId, "Batch slice cancelled");
-            publish(jobId, BatchSliceJobStore.State.CANCELLED, "Batch slice cancelled", -1, "Cancelled");
+            if (watchdogTriggered) {
+                BatchSliceJobStore.Job recovered = store.load();
+                if (recovered == null || recovered.state != BatchSliceJobStore.State.RECOVERY_REQUIRED)
+                    recovered = store.recoverAfterRestart(false);
+                publish(jobId, BatchSliceJobStore.State.RECOVERY_REQUIRED,
+                        recovered == null ? "Batch slicing stopped reporting progress; review the job and start again." : recovered.detail,
+                        recovered == null ? -1 : recovered.progress, "Recovery review");
+            } else {
+                store.cancel(jobId, "Batch slice cancelled");
+                publish(jobId, BatchSliceJobStore.State.CANCELLED, "Batch slice cancelled", -1, "Cancelled");
+            }
         } catch (Exception error) {
             store.fail(jobId, "Batch slice failed: " + safeMessage(error));
             publish(jobId, BatchSliceJobStore.State.FAILED, "Batch slice failed: " + safeMessage(error), -1, "Failed");
         } finally {
+            handler.removeCallbacks(watchdog);
             if (jobId.equals(activeJobId)) activeJobId = null;
             active = null;
             stopForeground(true);
@@ -208,6 +254,7 @@ public final class BatchSliceJobService extends Service {
     @Override public IBinder onBind(Intent intent) { return null; }
 
     @Override public void onDestroy() {
+        handler.removeCallbacks(watchdog);
         SlicerEngine currentEngine = engine;
         if (activeJobId != null && store != null) {
             if (currentEngine != null) currentEngine.cancel();
