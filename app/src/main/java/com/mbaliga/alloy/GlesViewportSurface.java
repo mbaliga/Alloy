@@ -675,7 +675,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // Give the full A1 silhouette breathing room so the receding
             // plates remain legible instead of letting the printer consume
             // the phone frame.
-            float frameScale = machineStudy ? 6.35f : 3.35f;
+            float frameScale = machineStudy ? 7.35f : 3.35f;
             float frameMax = machineStudy ? 1_080f : 620f;
             float frameMin = cleanPresentation ? 12f : 92f;
             float distance = (framing == null ? fallbackDistance : clamp(span * frameScale, frameMin, frameMax))
@@ -688,7 +688,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // Machine view. Hero must look directly at the imported object's
             // own centre, especially for compact or small-unit OBJ sources.
             float lookAtZ = presentationMode && !cleanPresentation
-                    ? Math.max(targetZ, BUILD_Z * 0.34f) : targetZ;
+                    ? (machineStudy ? 38f : Math.max(targetZ, BUILD_Z * 0.34f)) : targetZ;
             Matrix.setLookAtM(view, 0, eyeX, eyeY, eyeZ, targetX, targetY, lookAtZ, 0f, 0f, 1f);
         }
         Matrix.perspectiveM(projection, 0, 42f, aspect, 0.2f, 2_000f);

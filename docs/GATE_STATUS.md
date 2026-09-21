@@ -21,11 +21,12 @@ This is the current slicer-fidelity blocker; no physical A1 Mini send/start
 claim has been made.
 
 Visual status is also **OPEN**. The latest emulator capture uses the supplied
-A1 Mini mesh, five receding plates, and scale props, but it is still a study
-shell rather than the supplied luxury configurator experience: the lighting,
-materials, immersive camera choreography, interaction model, and inventory
-surface have not yet been brought to reference quality. The capture is kept
-at `/private/tmp/alloy-reference-composition-v6-study-real.png` for review.
+A1 Mini mesh, five receding plates, and scale props, with a revised editorial
+title, centered hero framing, and quieter callout hierarchy. It is still a
+study shell rather than the supplied luxury configurator experience: the
+lighting, materials, immersive camera choreography, interaction model, and
+inventory surface have not yet been brought to reference quality. The capture
+is kept at `/private/tmp/alloy-reference-composition-v7-study.png` for review.
 
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
