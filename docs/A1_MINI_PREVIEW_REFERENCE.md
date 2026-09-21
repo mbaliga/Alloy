@@ -33,6 +33,11 @@ presentation asset, not a printable model or production collision envelope.
   should indicate a collision hazard.
 - Preserve the physical distinction between the black PEI plate and the
   surrounding workspace in both light and dark themes.
+- Let the runway grid remain in plate-local coordinates, cross the physical
+  sheet edge, and dissolve into the stage; the grid is an art-direction cue,
+  not a second solid surface or a printable bed boundary. The native GLES
+  study now keeps that grid in a separate line buffer so plate geometry and
+  grid treatment cannot drift into one another.
 - Keep the physical plate visually legible with bounded procedural grain and
   use small, Alloy-authored can/ball/key props as scale references in the
   standalone study; both are presentation-only.
