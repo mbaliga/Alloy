@@ -18,6 +18,8 @@ The production promotion contract is explicit and fail-closed. A production
 APK/AAB build must pass `-PalloyProductionRelease=true` together with
 `-PalloyNativeEngine=true -PalloyNativeEngineVerified=true` and must use the
 organization signing configuration rather than `-PalloyCiDebugSign=true`.
+The Gradle guard also requires the reviewed `release/production-readiness.json`
+evidence record to exist before it will configure that promotion build.
 The ordinary CI-debug and emulator commands remain available for development
 and test verification, but they cannot be mistaken for a production build.
 
