@@ -1387,10 +1387,14 @@ final class GlesViewportSurface extends GLSurfaceView {
     private static float[] studyPlates() {
         ArrayList<Float> values = new ArrayList<>();
         final float centerX = BED_X / 2f;
-        for (int index = 0; index < 6; index++) {
-            float depth = 62f - index * 4f;
-            float width = 178f - index * 10f;
-            float centerY = 78f - index * 70f;
+        // Keep the machine grounded on the first plate while giving the
+        // phone composition an unmistakable runway into the distance. The
+        // plates are presentation-only geometry; they never enter layout,
+        // collision, slicing, thumbnails, or printer transport.
+        for (int index = 0; index < 9; index++) {
+            float depth = 76f - index * 4.5f;
+            float width = 178f - index * 8.5f;
+            float centerY = 92f - index * 58f;
             float z = -3.4f - index * 0.12f;
             addBox(values, centerX - width / 2f, centerY - depth / 2f, z,
                     centerX + width / 2f, centerY + depth / 2f, z + 1.4f, -20f);
