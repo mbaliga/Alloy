@@ -62,6 +62,7 @@ public final class ViewportView extends FrameLayout {
         surface.setMachineStudy(value);
         emptyHint.setVisibility(value || hasModel ? GONE : VISIBLE);
     }
+    public boolean isMachineStudy() { return machineStudy; }
     public boolean isToolpathOnly() { return surface.isToolpathOnly(); }
     public void setSelectedLayer(int layer) { surface.setSelectedLayer(layer); }
     public int getSelectedLayer() { return surface.getSelectedLayer(); }
