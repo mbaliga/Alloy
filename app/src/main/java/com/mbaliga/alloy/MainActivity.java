@@ -1139,6 +1139,39 @@ public final class MainActivity extends Activity {
         return tag;
     }
 
+    /** A quieter configurator pill for the standalone machine marketing study. */
+    private View compactSceneTag(String glyph, String eyebrow, String value, int gravity,
+                                 int horizontalMargin, int verticalMargin) {
+        LinearLayout tag = new LinearLayout(this);
+        tag.setOrientation(LinearLayout.HORIZONTAL);
+        tag.setGravity(Gravity.CENTER_VERTICAL);
+        tag.setPadding(dp(4), dp(3), dp(9), dp(3));
+        tag.setBackground(round(Color.argb(238, 255, 255, 255), Color.rgb(226, 222, 213), 1, 18));
+        tag.setElevation(dp(3));
+        TextView icon = label(glyph, glyph.length() > 2 ? 8 : 11, INK);
+        icon.setGravity(Gravity.CENTER);
+        icon.setTypeface(null, android.graphics.Typeface.BOLD);
+        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 14));
+        tag.addView(icon, new LinearLayout.LayoutParams(dp(26), dp(26)));
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(dp(6), 0, 0, 0);
+        TextView small = label(eyebrow, 7, MUTED);
+        small.setLetterSpacing(0.07f);
+        TextView main = label(value, 10, TEXT);
+        main.setTypeface(null, android.graphics.Typeface.BOLD);
+        copy.addView(small);
+        copy.addView(main);
+        tag.addView(copy);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
+        if ((gravity & Gravity.START) != 0) lp.leftMargin = horizontalMargin;
+        if ((gravity & Gravity.END) != 0) lp.rightMargin = horizontalMargin;
+        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
+        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
+        tag.setLayoutParams(lp);
+        return tag;
+    }
+
     private View buildHeader() {
         FrameLayout header = new FrameLayout(this);
         // The bundled profile is source-backed, but physical-print promotion
@@ -1245,15 +1278,15 @@ public final class MainActivity extends Activity {
         // orbit the hero subject while controls stay quiet at the edges.
         // Keep the renderer controls available through the scene itself, but
         // do not let them dominate the first marketing frame.
-        stage.addView(sceneTag("A1", "PRINTER", "A1 MINI",
+        stage.addView(compactSceneTag("A1", "PRINTER", "A1 MINI",
                 Gravity.TOP | Gravity.START, dp(16), dp(230)));
-        stage.addView(sceneTag("◌", "MATERIAL", "NATURAL PLA",
+        stage.addView(compactSceneTag("◌", "MATERIAL", "NATURAL PLA",
                 Gravity.TOP | Gravity.END, dp(16), dp(230)));
-        stage.addView(sceneTag("⌁", "NOZZLE", "0.4 MM",
+        stage.addView(compactSceneTag("⌁", "NOZZLE", "0.4 MM",
                 Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(34)));
-        stage.addView(sceneTag("□", "BUILD VOLUME", "180 × 180 × 180 MM",
+        stage.addView(compactSceneTag("□", "BUILD VOLUME", "180 × 180 × 180 MM",
                 Gravity.BOTTOM | Gravity.START, dp(16), dp(92)));
-        stage.addView(sceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
+        stage.addView(compactSceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
                 Gravity.BOTTOM | Gravity.END, dp(16), dp(88)));
         TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM", 9, MUTED);
         hint.setGravity(Gravity.CENTER);
@@ -1276,19 +1309,10 @@ public final class MainActivity extends Activity {
         LinearLayout footerActions = new LinearLayout(this);
         footerActions.setOrientation(LinearLayout.HORIZONTAL);
         footerActions.setGravity(Gravity.CENTER);
-        Button importReference = dialogButton("Import model", v -> {
-            dialog.dismiss();
-            openModel();
-        });
-        importReference.setContentDescription("Import a 3D model from this phone");
-        LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
-        importLp.setMargins(0, 0, dp(6), 0);
-        footerActions.addView(importReference, importLp);
         Button done = dialogButton("Done", v -> dialog.dismiss());
         done.setTextSize(13);
         done.setTypeface(null, android.graphics.Typeface.BOLD);
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
-        doneLp.setMargins(dp(6), 0, 0, 0);
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-1, dp(44));
         footerActions.addView(done, doneLp);
         footer.addView(footerActions, new LinearLayout.LayoutParams(-1, dp(44)));
         page.addView(footer, new LinearLayout.LayoutParams(-1, dp(88)));

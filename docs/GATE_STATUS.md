@@ -68,6 +68,13 @@ marketing study composition, but the visual gate remains open: the supplied
 luxury reference still calls for a more refined material/lighting pass and a
 final art-directed hero scene.
 
+The follow-up chrome pass is installed and emulator-checked at
+`/private/tmp/alloy-compact-study.png`. The standalone A1 study now uses
+compact configurator pills and a single full-width `Done` action, keeping model
+inspection/import controls in the main workspace instead of crowding the
+marketing frame. This improves reference alignment without changing any
+geometry, slicing, profile, inventory, or printer-control behavior.
+
 The phone import lifecycle now has a 90-second watchdog. If a document provider
 or oversized model stalls, Alloy cancels the worker, restores the workspace
 state, and explains the recovery path instead of leaving the session disabled.
