@@ -179,6 +179,9 @@ public final class MainActivity extends Activity {
     private BatchSliceJobController batchSliceJobs;
     private ProfileCatalog.Profile profile;
     private Future<?> activeProfileImport;
+    private final AtomicLong profileImportIds = new AtomicLong();
+    private long activeProfileImportId;
+    private Runnable profileImportTimeoutRunnable;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -2585,9 +2588,21 @@ public final class MainActivity extends Activity {
     private void importBambuProfiles(ArrayList<Uri> sources) {
         if (sources == null || sources.isEmpty()) return;
         final ProfileCatalog.Profile baseline = profile;
+        final long importId = profileImportIds.incrementAndGet();
+        activeProfileImportId = importId;
         profileImporting = true;
         status.setText("Profile  ·  importing Bambu preset chain…");
         refreshActions();
+        profileImportTimeoutRunnable = () -> {
+            synchronized (MainActivity.this) {
+                if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
+            }
+            cancelProfileImport();
+            Toast.makeText(MainActivity.this,
+                    "Profile import timed out. Check the selected files and try again.",
+                    Toast.LENGTH_LONG).show();
+        };
+        mainHandler.postDelayed(profileImportTimeoutRunnable, 60_000L);
         activeProfileImport = importExecutor.submit(() -> {
             try {
                 byte[][] documents = new byte[sources.size()][];
@@ -2601,6 +2616,13 @@ public final class MainActivity extends Activity {
                 byte[] normalized = ProfileCatalog.serialize(imported);
                 writeImportedProfile(imported, normalized);
                 mainHandler.post(() -> {
+                    synchronized (MainActivity.this) {
+                        if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
+                        if (profileImportTimeoutRunnable != null) {
+                            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
+                            profileImportTimeoutRunnable = null;
+                        }
+                    }
                     profileImporting = false;
                     activeProfileImport = null;
                     if (isFinishing()) return;
@@ -2625,6 +2647,13 @@ public final class MainActivity extends Activity {
                 });
             } catch (Exception error) {
                 mainHandler.post(() -> {
+                    synchronized (MainActivity.this) {
+                        if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
+                        if (profileImportTimeoutRunnable != null) {
+                            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
+                            profileImportTimeoutRunnable = null;
+                        }
+                    }
                     profileImporting = false;
                     activeProfileImport = null;
                     if (isFinishing()) return;
@@ -2634,6 +2663,22 @@ public final class MainActivity extends Activity {
                 });
             }
         });
+    }
+
+    private synchronized void cancelProfileImport() {
+        activeProfileImportId = profileImportIds.incrementAndGet();
+        if (profileImportTimeoutRunnable != null) {
+            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
+            profileImportTimeoutRunnable = null;
+        }
+        if (activeProfileImport != null) {
+            activeProfileImport.cancel(true);
+            activeProfileImport = null;
+        }
+        if (!profileImporting) return;
+        profileImporting = false;
+        status.setText(model == null ? "Import a model to begin" : "Prepare  ·  " + model.displayName);
+        refreshActions();
     }
 
     /** Persist a normalized profile with a same-directory temporary replacement. */
