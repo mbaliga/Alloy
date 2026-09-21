@@ -26,6 +26,15 @@ discovery wire-contract regression passed in the release instrumentation run;
 this improves detection on networks where a printer does not answer the
 standard destination, but does not constitute physical A1 Mini acceptance.
 
+The latest native motion increment now projects Bambu's `z_hop_types = Auto
+Lift` into the filament-level SliceBeam configuration and repairs the generic
+enum-map initialization that previously caused a native crash. The focused
+projection test and full native Android suite pass. On the pinned G3 cube
+fixture, the export moved from 1,438 to 1,498 travel moves and from 10.70% to
+9.48% positive-extrusion delta versus the Bambu reference; G3 still remains
+**FAIL/NO-GO** at 1,585 s versus 1,782 s, with remaining profile/brim and motion
+differences. This is a measured fidelity improvement, not production parity.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production

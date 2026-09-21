@@ -5286,7 +5286,13 @@ void PrintConfigDef::init_fff_params()
     def->enum_labels.push_back(L("Slope"));
     def->enum_labels.push_back(L("Spiral"));
     def->mode = comAdvanced;
-    def->set_default_value(new ConfigOptionEnumsGeneric{ ZHopType::zhtSlope });
+    // Keep the enum map on the default value as well as on the option
+    // definition.  Mobile config loading can deserialize directly into a
+    // cloned default before the definition has a chance to inject the map;
+    // leaving this unset makes a valid Bambu `z_hop_types` value crash in
+    // ConfigOptionEnumsGenericTempl::deserialize().
+    def->set_default_value(new ConfigOptionEnumsGeneric{
+        &ConfigOptionEnum<ZHopType>::get_enum_values(), 1, ZHopType::zhtSlope});
 
     def = this->add("travel_slope", coFloats);
     def->label = L("Traveling angle");
@@ -7291,7 +7297,16 @@ void PrintConfigDef::init_fff_params()
         case coFloats   : def->set_default_value(new ConfigOptionFloatsNullable  (static_cast<const ConfigOptionFloats*  >(it_opt->second.default_value.get())->values)); break;
         case coPercents : def->set_default_value(new ConfigOptionPercentsNullable(static_cast<const ConfigOptionPercents*>(it_opt->second.default_value.get())->values)); break;
         case coBools    : def->set_default_value(new ConfigOptionBoolsNullable   (static_cast<const ConfigOptionBools*   >(it_opt->second.default_value.get())->values)); break;
-        case coEnums    : def->set_default_value(new ConfigOptionEnumsGenericNullable(static_cast<const ConfigOptionEnumsGeneric*   >(it_opt->second.default_value.get())->values)); break;
+        case coEnums: {
+            auto *default_value = new ConfigOptionEnumsGenericNullable(
+                    static_cast<const ConfigOptionEnumsGeneric *>(it_opt->second.default_value.get())->values);
+            // Preserve the source enum map when creating the nullable
+            // filament override; otherwise a later merged Bambu profile can
+            // deserialize z_hop_types through a null map.
+            default_value->keys_map = def->enum_keys_map;
+            def->set_default_value(default_value);
+            break;
+        }
         default: assert(false);
         }
     }

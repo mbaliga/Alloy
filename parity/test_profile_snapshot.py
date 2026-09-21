@@ -102,6 +102,7 @@ class ProfileSnapshotTests(unittest.TestCase):
                 "retract_lift_above": ["0"],
                 "retract_lift_below": ["179"],
                 "z_hop": ["0.4"],
+                "z_hop_types": ["Auto Lift"],
             },
         }
         process_files = {
