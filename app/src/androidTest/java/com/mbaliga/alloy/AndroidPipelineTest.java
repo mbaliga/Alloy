@@ -1,13 +1,16 @@
 package com.mbaliga.alloy;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.view.View;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -30,6 +33,8 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -2479,6 +2484,38 @@ public final class AndroidPipelineTest {
         }
         Assert.assertTrue("thumbnail should contain a shaded scene rather than one flat fill", foundMaterialContrast);
         thumbnail.recycle();
+    }
+
+    @Test
+    public void liveGlesCaptureReturnsBoundedPngForA1Study() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Intent intent = new Intent(context, MainActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        Activity activity = InstrumentationRegistry.getInstrumentation().startActivitySync(intent);
+        try {
+            Field viewportField = MainActivity.class.getDeclaredField("viewport");
+            viewportField.setAccessible(true);
+            ViewportView viewport = (ViewportView) viewportField.get(activity);
+            Assert.assertNotNull("main activity should expose its 3D viewport", viewport);
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> viewport.setMachineStudy(true));
+            SystemClock.sleep(750L);
+            CountDownLatch captured = new CountDownLatch(1);
+            byte[][] holder = new byte[1][];
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() ->
+                    viewport.capturePng(512, png -> {
+                        holder[0] = png;
+                        captured.countDown();
+                    }));
+            Assert.assertTrue("live GLES capture should complete", captured.await(10, TimeUnit.SECONDS));
+            Assert.assertNotNull("live A1 study capture should be a PNG", holder[0]);
+            Assert.assertTrue("live capture must remain bounded", holder[0].length <= 2 * 1024 * 1024);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(holder[0], 0, holder[0].length);
+            Assert.assertNotNull("live capture should be decodable", bitmap);
+            Assert.assertTrue(bitmap.getWidth() <= 512 && bitmap.getHeight() <= 512);
+            bitmap.recycle();
+        } finally {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(activity::finish);
+        }
     }
 
     @Test
