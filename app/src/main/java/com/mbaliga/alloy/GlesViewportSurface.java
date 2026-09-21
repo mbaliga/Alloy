@@ -1120,6 +1120,13 @@ final class GlesViewportSurface extends GLSurfaceView {
         private float referenceMachinePalette(float x, float y, float z,
                                               float nx, float ny, float nz) {
             if (z < 4f) return -1f;                 // black PEI / base
+            // The source is a welded shell, so these spatial bands are the
+            // renderer's presentation segmentation. They deliberately
+            // follow the visible A1 construction: pale side uprights and a
+            // darker front carriage. They never enter preparation, collision
+            // or printer transport.
+            if ((x < -95f || x > 175f) && z > 20f) return -17f; // uprights
+            if (y < 45f && z > 24f && z < 116f) return -18f;    // front carriage
             // The extracted handoff mesh is centred on the physical bed but
             // the spool and toolhead are not at the nominal 90/110 anchors
             // used by the first Android port. These regions are deliberately
@@ -1750,6 +1757,8 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.075,0.085,0.095);}"
                     + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.22,0.24,0.26);}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
+                    + "else if(uMachine==1 && vPart<-17.5){base=vec3(0.075,0.085,0.095);}"
+                    + "else if(uMachine==1 && vPart<-16.5){base=vec3(0.78,0.80,0.82);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
                     + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
                     + "else if(uMachine==1 && vPart>-3.5){base=vec3(0.28,0.25,0.22);}"
