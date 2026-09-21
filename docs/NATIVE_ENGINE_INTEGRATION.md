@@ -170,6 +170,24 @@ thin-wall artifacts as `alloy-native-g3-evidence`. This is evidence collection,
 not an automatic parity promotion; the retained desktop comparison still
 controls the G3 decision.
 
+For a local artifact-retaining run, install the already-built release/test APK
+pair and invoke the one export test directly so Gradle cannot uninstall the
+package before retrieval:
+
+```sh
+adb install -r app/build/outputs/apk/release/app-release.apk
+adb install -r app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
+adb shell am instrument -w \
+  -e class com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested \
+  -e export-g3 true -e g3-gcode-flavor marlin \
+  com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-g3-evidence /tmp/alloy-g3-evidence
+```
+
+The direct invocation is an evidence-harness convenience. It does not change
+the app's production behavior, and a retrieved export still requires the
+desktop comparator and physical-printer gates before promotion.
+
 The Android adapter now projects the current Bambu/Orca support vocabulary
 explicitly: organic tree support uses the resolved `default` base pattern,
 the pinned two top/two bottom interface layers, and the source-backed top and
