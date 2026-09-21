@@ -702,9 +702,18 @@ public final class NativeSlicerEngine implements SlicerEngine {
         // envelope before the first layer begins.
         String flavor = config.nativeSettings.get("gcode_flavor");
         boolean desktopMarlinStart = "marlin".equalsIgnoreCase(flavor == null ? "" : flavor.trim());
-        float startAcceleration = desktopMarlinStart
-                ? parseFirstNumber(config.nativeSettings.get("travel_acceleration"))
-                : Float.NaN;
+        // Imported Bambu projects provide a dedicated initial-layer travel
+        // ceiling. It is the acceleration active when the first layer starts,
+        // regardless of whether the native output uses legacy Marlin or
+        // marlin2 vocabulary. The bundled profile keeps its reviewed 6000
+        // value, while imported A1 projects correctly carry Bambu's 500.
+        float startAcceleration = parseFirstNumber(
+                config.nativeSettings.get("initial_layer_travel_acceleration"));
+        if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f) {
+            startAcceleration = desktopMarlinStart
+                    ? parseFirstNumber(config.nativeSettings.get("travel_acceleration"))
+                    : Float.NaN;
+        }
         if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f)
             startAcceleration = parseFirstNumber(config.nativeSettings.get("default_acceleration"));
         String acceleration = Float.isFinite(startAcceleration) && startAcceleration > 0f
