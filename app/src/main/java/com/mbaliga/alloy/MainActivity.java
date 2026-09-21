@@ -151,6 +151,8 @@ public final class MainActivity extends Activity {
     private final AtomicLong importIds = new AtomicLong();
     private Future<?> activeImport;
     private long activeImportId;
+    /** Prevent a stalled document provider from trapping a phone-only session. */
+    private Runnable importTimeoutRunnable;
     private final AtomicLong geometryRepairIds = new AtomicLong();
     private Future<?> activeGeometryRepair;
     private long activeGeometryRepairId;
@@ -2783,6 +2785,16 @@ public final class MainActivity extends Activity {
         importing = true;
         status.setText("Import  ·  reading model…");
         refreshActions();
+        importTimeoutRunnable = () -> {
+            synchronized (MainActivity.this) {
+                if (importId != activeImportId || !importing || isFinishing()) return;
+            }
+            cancelImport();
+            Toast.makeText(MainActivity.this,
+                    "Model import timed out. Check the file provider or try a smaller model.",
+                    Toast.LENGTH_LONG).show();
+        };
+        mainHandler.postDelayed(importTimeoutRunnable, 90_000L);
         activeImport = importExecutor.submit(() -> {
             try {
             ArrayList<MeshModel> loaded = new ArrayList<>();
@@ -2864,6 +2876,10 @@ public final class MainActivity extends Activity {
                     if (importId != activeImportId || !importing || isFinishing()) return;
                     importing = false;
                     activeImport = null;
+                    if (importTimeoutRunnable != null) {
+                        mainHandler.removeCallbacks(importTimeoutRunnable);
+                        importTimeoutRunnable = null;
+                    }
                 }
                 try {
                     if (importedProjectProfile != null) {
@@ -2897,6 +2913,10 @@ public final class MainActivity extends Activity {
                         if (importId != activeImportId || !importing || isFinishing()) return;
                         importing = false;
                         activeImport = null;
+                        if (importTimeoutRunnable != null) {
+                            mainHandler.removeCallbacks(importTimeoutRunnable);
+                            importTimeoutRunnable = null;
+                        }
                     }
                     status.setText(model == null ? "Import a model to begin" : "Prepare  ·  " + model.displayName);
                     pruneModelCache();
@@ -2937,6 +2957,10 @@ public final class MainActivity extends Activity {
 
     private synchronized void cancelImport() {
         activeImportId = importIds.incrementAndGet();
+        if (importTimeoutRunnable != null) {
+            mainHandler.removeCallbacks(importTimeoutRunnable);
+            importTimeoutRunnable = null;
+        }
         if (activeImport != null) {
             activeImport.cancel(true);
             activeImport = null;
