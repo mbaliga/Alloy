@@ -31,6 +31,9 @@ if (productionRelease && (!nativeEngineEnabled || !nativeEngineVerified)) {
 if (productionRelease && project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean()) {
     throw new GradleException('alloyProductionRelease=true cannot use the CI debug signing key')
 }
+if (productionRelease && !file('../release/production-readiness.json').isFile()) {
+    throw new GradleException('alloyProductionRelease=true requires the reviewed release/production-readiness.json evidence record')
+}
 
 android {
     namespace 'com.mbaliga.alloy'
