@@ -700,7 +700,11 @@ public final class NativeSlicerEngine implements SlicerEngine {
         // the default in the start block injects an extra M204 S6000 and makes
         // an otherwise matched artifact advertise a different acceleration
         // envelope before the first layer begins.
-        float startAcceleration = parseFirstNumber(config.nativeSettings.get("travel_acceleration"));
+        String flavor = config.nativeSettings.get("gcode_flavor");
+        boolean desktopMarlinStart = "marlin".equalsIgnoreCase(flavor == null ? "" : flavor.trim());
+        float startAcceleration = desktopMarlinStart
+                ? parseFirstNumber(config.nativeSettings.get("travel_acceleration"))
+                : Float.NaN;
         if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f)
             startAcceleration = parseFirstNumber(config.nativeSettings.get("default_acceleration"));
         String acceleration = Float.isFinite(startAcceleration) && startAcceleration > 0f
