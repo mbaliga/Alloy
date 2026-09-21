@@ -233,6 +233,13 @@ emulator; the capture is `/private/tmp/alloy-fidelity-study.png`. The visual
 gate remains **OPEN**: this is still an intermediate native study, not final
 signoff.
 
+The current native-enabled instrumentation rerun completed **155 tests, 0
+failures, and 1 intentional native-G3 export skip**. This specifically revalidates
+the modeling, inventory persistence, on-device visualization/BYOK safety
+boundary, slicing lifecycle, artifact validation, and printer-transport fake
+coverage on the current checkout. It is emulator evidence and does not close
+the physical A1 Mini or production-signing gates.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
