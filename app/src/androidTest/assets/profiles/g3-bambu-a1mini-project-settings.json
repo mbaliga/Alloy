@@ -122,5 +122,6 @@
   "wall_generator": "arachne",
   "ironing_type": "no ironing",
   "skirt_loops": "0",
-  "retraction_minimum_travel": ["1"]
+  "retraction_minimum_travel": ["1"],
+  "reduce_infill_retraction": "1"
 }
