@@ -10,9 +10,9 @@ The repository has two Android build paths:
   transport gates, source-builds the pinned native engine and assembles a
   release APK, Android App Bundle, plus its matching release instrumentation
   APK with that engine enabled, then publishes SHA-256 manifests as workflow
-  artifacts. On a `v*` tag it requires organization-owned signing secrets and
-  signs the APK, AAB, and matching instrumentation APK; manual dispatch remains unsigned for
-  dry-run validation.
+  artifacts. On either a `v*` tag or manual dispatch it requires
+  organization-owned signing secrets and signs the APK, AAB, and matching
+  instrumentation APK.
 
 The production promotion contract is explicit and fail-closed. A production
 APK/AAB build must pass `-PalloyProductionRelease=true` together with
@@ -26,12 +26,11 @@ the production validator on its own.
 The ordinary CI-debug and emulator commands remain available for development
 and test verification, but they cannot be mistaken for a production build.
 
-Manual release-candidate dispatch deliberately produces an unsigned APK.
-Production distribution still requires the organization-owned Android signing
+Release-candidate dispatch requires the organization-owned Android signing
 key, protected CI secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEY_ALIAS`,
 `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`), Play App Signing or
-an equivalent signing service, and a tested upgrade path. A pushed `v*` tag
-fails closed when those secrets are absent. The signing key must never be
+an equivalent signing service, and a tested upgrade path. A tag or manual
+dispatch fails closed when those secrets are absent. The signing key must never be
 committed to Alloy or stored in a workflow artifact. The signing helper also
 compares the SHA-256 signer digest of the app and its matching instrumentation
 APK before replacing the unsigned workflow outputs; the pair cannot be

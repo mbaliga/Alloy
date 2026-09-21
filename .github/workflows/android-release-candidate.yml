@@ -138,8 +138,8 @@ jobs:
       - name: Compile release instrumentation APK
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyNativeEngineVerified=false --no-daemon --stacktrace
 
-      - name: Sign production tag artifacts
-        if: github.event_name == 'push'
+      - name: Sign release-candidate artifacts
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
