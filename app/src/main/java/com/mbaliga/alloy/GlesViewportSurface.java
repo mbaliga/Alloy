@@ -671,8 +671,12 @@ final class GlesViewportSurface extends GLSurfaceView {
             // postage stamp in a large empty machine volume. Imported parts
             // remain bounded by the same max distance and can be pinched out
             // when the user wants more surrounding context.
-            float frameScale = machineStudy ? 5.15f : 3.35f;
-            float frameMax = machineStudy ? 900f : 620f;
+            // The study is a product composition, not a diagnostics view.
+            // Give the full A1 silhouette breathing room so the receding
+            // plates remain legible instead of letting the printer consume
+            // the phone frame.
+            float frameScale = machineStudy ? 6.35f : 3.35f;
+            float frameMax = machineStudy ? 1_080f : 620f;
             float frameMin = cleanPresentation ? 12f : 92f;
             float distance = (framing == null ? fallbackDistance : clamp(span * frameScale, frameMin, frameMax))
                     / Math.max(0.45f, zoom);

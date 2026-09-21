@@ -1602,6 +1602,14 @@ material/finish callouts and finished marketing composition. It must not be
 described as production-ready or as a faithful implementation of the supplied
 reference.
 
+The next visual pass is now installed and emulator-checked: the A1 Mini study
+uses the reference-inspired hero composition, quiet white stage, centred Alloy
+wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a
+two-action bottom surface. The final emulator capture is retained at
+`/private/tmp/alloy-reference-composition-v6-study-real.png`. This is a
+directional product-surface milestone, not final art direction or a claim
+that the supplied reference has been reproduced pixel-for-pixel.
+
 ## Linux milestone
 
 **Status: implemented lightweight bridge; native desktop engine intentionally

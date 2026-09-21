@@ -1204,7 +1204,7 @@ public final class MainActivity extends Activity {
         scene.setModel(null);
         stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView title = label("A1 MINI\nBambu Lab", 12, TEXT);
+        TextView title = label("A1 mini\nBambu Lab", 12, TEXT);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setLineSpacing(3, 1.0f);
         title.setPadding(dp(12), dp(8), dp(12), dp(8));
@@ -1227,15 +1227,20 @@ public final class MainActivity extends Activity {
         FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
         fitLp.setMargins(0, dp(68), dp(14), 0);
         stage.addView(fit, fitLp);
-        addPresentationAppearanceControls(stage, scene, dp(122));
-        // Keep annotations in the open space above the machine so the
-        // supplied reference mesh remains unobscured as the hero subject.
-        stage.addView(sceneTag("A1", "PRINTER", "A1 MINI", Gravity.TOP | Gravity.START, dp(16), dp(214)));
-        stage.addView(sceneTag(scene.hasReferenceMachineModel() ? "⌁" : "◇", "GEOMETRY",
-                scene.hasReferenceMachineModel() ? "A1 MINI" : "ALLOY STUDY MODEL",
-                Gravity.TOP | Gravity.END, dp(16), dp(246)));
+        // The supplied reference is a calm product configurator: callouts
+        // orbit the hero subject while controls stay quiet at the edges.
+        // Keep the renderer controls available through the scene itself, but
+        // do not let them dominate the first marketing frame.
+        stage.addView(sceneTag("A1", "PRINTER", "A1 MINI",
+                Gravity.TOP | Gravity.START, dp(16), dp(214)));
+        stage.addView(sceneTag("◌", "MATERIAL", "NATURAL PLA",
+                Gravity.TOP | Gravity.END, dp(16), dp(214)));
+        stage.addView(sceneTag("⌁", "NOZZLE", "0.4 MM",
+                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(22)));
+        stage.addView(sceneTag("□", "BUILD VOLUME", "180 × 180 × 180 MM",
+                Gravity.BOTTOM | Gravity.START, dp(16), dp(74)));
         stage.addView(sceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
-                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, dp(18)));
+                Gravity.BOTTOM | Gravity.END, dp(16), dp(70)));
         TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM", 9, MUTED);
         hint.setGravity(Gravity.CENTER);
         hint.setLetterSpacing(0.08f);
@@ -1247,28 +1252,32 @@ public final class MainActivity extends Activity {
         LinearLayout footer = new LinearLayout(this);
         footer.setOrientation(LinearLayout.VERTICAL);
         footer.setGravity(Gravity.CENTER_VERTICAL);
-        footer.setPadding(dp(14), dp(6), dp(14), dp(10));
+        footer.setPadding(dp(18), dp(10), dp(18), dp(12));
         footer.setBackgroundColor(Color.WHITE);
-        TextView note = label("A1 MINI  ·  PHONE STUDY", 10, MUTED);
+        TextView note = label("A1 MINI  ·  PHONE STUDY", 9, MUTED);
         note.setGravity(Gravity.CENTER);
         note.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         note.setLineSpacing(1, 1.0f);
-        footer.addView(note, new LinearLayout.LayoutParams(-1, 0, 1));
+        footer.addView(note, new LinearLayout.LayoutParams(-1, dp(22)));
+        LinearLayout footerActions = new LinearLayout(this);
+        footerActions.setOrientation(LinearLayout.HORIZONTAL);
+        footerActions.setGravity(Gravity.CENTER);
         Button importReference = dialogButton("Import model", v -> {
             dialog.dismiss();
             openModel();
         });
         importReference.setContentDescription("Import a 3D model from this phone");
-        LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(dp(230), dp(42));
-        importLp.gravity = Gravity.CENTER_HORIZONTAL;
-        footer.addView(importReference, importLp);
+        LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        importLp.setMargins(0, 0, dp(6), 0);
+        footerActions.addView(importReference, importLp);
         Button done = dialogButton("Done", v -> dialog.dismiss());
         done.setTextSize(13);
         done.setTypeface(null, android.graphics.Typeface.BOLD);
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-1, dp(54));
-        doneLp.setMargins(dp(120), dp(8), dp(120), 0);
-        footer.addView(done, doneLp);
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(112)));
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        doneLp.setMargins(dp(6), 0, 0, 0);
+        footerActions.addView(done, doneLp);
+        footer.addView(footerActions, new LinearLayout.LayoutParams(-1, dp(44)));
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(88)));
 
         dialog.setContentView(page);
         dialog.setOnDismissListener(ignored -> scene.onHostPause());
