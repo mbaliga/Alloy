@@ -126,7 +126,10 @@ final class GlesViewportSurface extends GLSurfaceView {
         // Match the supplied study's right-front camera when entering the
         // machine frame; Hero keeps the quieter object-first angle.
         yaw = value ? (machineStudy ? 0.70f : 0.78f) : -0.55f;
-        pitch = value && machineStudy ? 0.88f : 0.55f;
+        // Match the supplied handoff's elevated product angle. The previous
+        // lower polar angle made the front upright dominate a portrait frame
+        // and hid the plate runway behind it.
+        pitch = value && machineStudy ? 1.02f : 0.55f;
         zoom = 1f;
         panX = 0f;
         panY = 0f;
@@ -171,7 +174,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // the frame; this elevation keeps the machine readable while
             // exposing the plate runway behind it.
             yaw = 0.70f;
-            pitch = 0.88f;
+            pitch = 1.02f;
             zoom = 1f;
             panX = 0f;
             panY = 0f;
@@ -692,7 +695,10 @@ final class GlesViewportSurface extends GLSurfaceView {
             // negative space. Keep the full A1 silhouette and the receding
             // plate runway inside that calm frame instead of letting the
             // machine fill the phone viewport like a debug inspection view.
-            float frameScale = machineStudy ? 6.15f : 3.35f;
+            // Give the complete silhouette room to breathe on a portrait
+            // phone. A product hero should reveal the runway and props, not
+            // let one upright become the subject by cropping the composition.
+            float frameScale = machineStudy ? 6.85f : 3.35f;
             float frameMax = machineStudy ? 920f : 620f;
             float frameMin = cleanPresentation ? 12f : 92f;
             float distance = (framing == null ? fallbackDistance : clamp(span * frameScale, frameMin, frameMax))
@@ -1427,21 +1433,24 @@ final class GlesViewportSurface extends GLSurfaceView {
     /** A receding row of empty presentation plates for the A1 study scene. */
     private static float[] studyPlates() {
         ArrayList<Float> values = new ArrayList<>();
-        final float centerX = BED_X / 2f;
         // Keep the machine grounded on the first plate while giving the
         // phone composition an unmistakable runway into the distance. The
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
-        for (int index = 0; index < 4; index++) {
+        for (int index = 0; index < 6; index++) {
             // The handoff's reference uses full physical 184 mm sheets. The
             // earlier 72 mm depth made the runway collapse into a few dark
             // grid fragments behind the printer on a portrait phone. Keep
             // the first sheet near the real A1 footprint, then use a bounded
-            // perspective reduction and overlap so all four plates read as
+            // perspective reduction and overlap so all six plates read as
             // a continuous conveyor receding into the scene.
-            float depth = 150f - index * 24f;
-            float width = 184f - index * 14f;
-            float centerY = 92f - index * (92f - index * 8f);
+            float depth = 154f - index * 10f;
+            float width = 188f - index * 13f;
+            // Pull each subsequent plate farther behind the machine and a
+            // little leftward. The diagonal procession remains visible on a
+            // portrait phone instead of collapsing into one dark rectangle.
+            float centerX = BED_X / 2f - index * 9f;
+            float centerY = 92f - index * 80f;
             // The supplied machine mesh carries its own lower bed shell. Put
             // the presentation sheets on the physical top plane instead of
             // underneath that shell, otherwise the runway disappears behind
@@ -1739,6 +1748,13 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "color+=vec3(0.045,0.060,0.085)*glow*(uTheme==1?1.0:0.20);"
                     + "float edge=smoothstep(0.30,0.82,distance(vUv,vec2(0.50,0.48)));"
                     + "color*=1.0-edge*(uTheme==1?0.22:0.08);"
+                    // An almost imperceptible studio grid gives the light
+                    // stage the same tactile depth as the supplied reference
+                    // without turning it into a slicer work surface.
+                    + "float gx=abs(fract(vUv.x*26.0)-0.5); float gy=abs(fract(vUv.y*26.0)-0.5);"
+                    + "float grid=1.0-smoothstep(0.485,0.500,min(gx,gy));"
+                    + "float gridFade=smoothstep(0.38,0.92,vUv.y)*(uTheme==1?0.05:0.030);"
+                    + "color+=vec3(0.52,0.54,0.56)*grid*gridFade;"
                     + "gl_FragColor=vec4(color,1.0); }";
 
     private static final String MESH_VERTEX_SHADER =
