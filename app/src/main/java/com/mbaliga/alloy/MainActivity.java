@@ -137,6 +137,7 @@ public final class MainActivity extends Activity {
     private boolean batchTransferring;
     private boolean profileImporting;
     private boolean visualizing;
+    private boolean openingPrivateA1Study;
     private boolean modeling;
     private boolean plateImportInFlight;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -287,6 +288,7 @@ public final class MainActivity extends Activity {
                     ModelCatalog.Entry ownerStartup = privateOwnerStartupModel();
                     if (ownerStartup == null) loadShowcaseModel();
                     else loadAssetModel(ownerStartup.assetPath, ownerStartup.name);
+                    openingPrivateA1Study = hasBundledA1Reference();
                     // The supplied handoff is an immersive presentation first,
                     // not merely a slicer canvas. Make that experience visible
                     // once on a genuinely fresh install, or once after a
@@ -310,13 +312,16 @@ public final class MainActivity extends Activity {
                                 .apply();
                         mainHandler.postDelayed(() -> {
                             if (isFinishing() || model == null) return;
-                            // The supplied design is the reason for the
-                            // private visual-review build: land on it as the
-                            // hero immediately instead of leaving the user
-                            // in the compact preparation workspace. The A1
-                            // study remains available from the A1 shortcut.
-                            if (ownerStartup == null && viewport != null && viewport.hasReferenceMachineModel())
+                            // The private visual-review build is meant to
+                            // make the supplied A1 Mini study discoverable
+                            // immediately: land on the machine, receding
+                            // plates and scale props first. The supplied
+                            // Redmagic/box/parts catalog remains available
+                            // through the model workspace and atlas.
+                            if (hasBundledA1Reference()) {
+                                openingPrivateA1Study = false;
                                 showPrinterStudy();
+                            }
                             else showImmersiveView();
                         }, 350L);
                     }
@@ -2839,7 +2844,7 @@ public final class MainActivity extends Activity {
                     // a supplied box, part, assembly or CAD conversion is
                     // immediately inspectable; restored projects still open
                     // in the normal workspace to preserve their task context.
-                    if (!restoreTransform) mainHandler.postDelayed(() -> {
+                    if (!restoreTransform && !openingPrivateA1Study) mainHandler.postDelayed(() -> {
                         if (!isFinishing() && model != null && !importing && !slicing && !batchSlicing)
                             showImmersiveView();
                     }, 120L);
@@ -3717,6 +3722,15 @@ public final class MainActivity extends Activity {
             // A missing private overlay must not prevent the normal showcase.
         }
         return null;
+    }
+
+    /** Asset presence is the stable owner-review switch during first launch. */
+    private boolean hasBundledA1Reference() {
+        try (InputStream input = getAssets().open("visuals/a1-mini-reference.mesh")) {
+            return input.read() >= 0;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private void loadShowcaseModel() {
