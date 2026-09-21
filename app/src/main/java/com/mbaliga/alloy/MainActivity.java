@@ -57,6 +57,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_NOTIFICATIONS = 46;
     private static final int REQUEST_PROFILE = 47;
     private static final int REQUEST_PROFILE_EXPORT = 48;
+    private static final int REQUEST_VIEW_EXPORT = 49;
     private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
     private static final int HISTORY_RESET = 0;
     private static final int HISTORY_RESTORE = 1;
@@ -2519,6 +2520,7 @@ public final class MainActivity extends Activity {
             loadUris(uris, false);
         }
         if (request == REQUEST_EXPORT && data.getData() != null) writeExport(data.getData());
+        if (request == REQUEST_VIEW_EXPORT && data.getData() != null) writeViewExport(data.getData());
         if (request == REQUEST_PROJECT_EXPORT && data.getData() != null) writeProjectArchive(data.getData());
         if (request == REQUEST_BATCH_EXPORT && data.getData() != null) writeBatchArchive(data.getData());
         if (request == REQUEST_PROJECT_OPEN && data.getData() != null) {
@@ -4244,6 +4246,38 @@ public final class MainActivity extends Activity {
         intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
     }
 
+    private void openViewExport() {
+        if (viewport == null) {
+            Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/png");
+        intent.putExtra(Intent.EXTRA_TITLE, "alloy-3d-view.png");
+        startActivityForResult(intent, REQUEST_VIEW_EXPORT);
+    }
+
+    private void writeViewExport(Uri uri) {
+        if (viewport == null) {
+            Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        byte[] png = viewport.thumbnailPng(1024);
+        if (png == null || png.length == 0) {
+            Toast.makeText(this, "3D view capture failed", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
+            if (out == null) throw new IOException("Output destination could not be opened");
+            out.write(png);
+            out.flush();
+            Toast.makeText(this, "Saved 3D view PNG", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "3D view export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void writeExport(Uri uri) {
         ArtifactValidator.Report report = ArtifactValidator.validate(model, slice, config);
         if (!report.isValid()) {
@@ -5190,19 +5224,20 @@ public final class MainActivity extends Activity {
     private void showProjectMenu() {
         new AlertDialog.Builder(this)
                 .setTitle("Project")
-                .setItems(new String[]{"New project", "Print plates", "Open model atlas", "A1 Mini 3D study", "Review active profile", "Import Bambu profile(s)", "Export active profile", "Reset imported profile", "Save project archive", "Open project archive", "Project history", "Forget saved model"}, (dialog, which) -> {
+                .setItems(new String[]{"New project", "Print plates", "Open model atlas", "A1 Mini 3D study", "Save current 3D view (PNG)", "Review active profile", "Import Bambu profile(s)", "Export active profile", "Reset imported profile", "Save project archive", "Open project archive", "Project history", "Forget saved model"}, (dialog, which) -> {
                     if (which == 0) resetProject();
                     if (which == 1) showPlates();
                     if (which == 2) showModelLibrary();
                     if (which == 3) showPrinterStudy();
-                    if (which == 4) showProfileReview();
-                    if (which == 5) openBambuProfile();
-                    if (which == 6) openProfileExport();
-                    if (which == 7) resetImportedProfile();
-                    if (which == 8) saveProjectArchive();
-                    if (which == 9) openProjectArchive();
-                    if (which == 10) showProjectHistory();
-                    if (which == 11) {
+                    if (which == 4) openViewExport();
+                    if (which == 5) showProfileReview();
+                    if (which == 6) openBambuProfile();
+                    if (which == 7) openProfileExport();
+                    if (which == 8) resetImportedProfile();
+                    if (which == 9) saveProjectArchive();
+                    if (which == 10) openProjectArchive();
+                    if (which == 11) showProjectHistory();
+                    if (which == 12) {
                         if (printerBusy || slicing || batchSlicing || batchTransferring) {
                             Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
                             return;
