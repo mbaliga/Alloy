@@ -1402,7 +1402,7 @@ final class GlesViewportSurface extends GLSurfaceView {
         // reduced scale keeps the full printer frame legible on a phone.
         addCylinderZ(values, -102f, 226f, -30f, 10f, 34f, 36, 0f);
         addCylinderZ(values, -102f, 226f, -12f, 8.6f, 1.2f, 36, 0f);
-        addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 40, 24, 1f);
+        addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 56, 32, 1f);
         addCylinderZ(values, -34f, 226f, -43f, 6.5f, 2.5f, 32, 2f);
         addBox(values, -43f, 224f, -42f, -27f, 228f, -34f, 2f);
         addBox(values, -22f, 225f, -41f, 4f, 227f, -37f, 2f);
@@ -1586,11 +1586,27 @@ final class GlesViewportSurface extends GLSurfaceView {
                 float[] p2 = spherePoint(centerX, centerY, centerZ, radiusX, radiusY, radiusZ, a1, b1);
                 float[] p3 = spherePoint(centerX, centerY, centerZ, radiusX, radiusY, radiusZ, a1, b0);
                 float[] n0 = sphereNormal(p0, centerX, centerY, centerZ, radiusX, radiusY, radiusZ);
-                float[] n1 = sphereNormal(p2, centerX, centerY, centerZ, radiusX, radiusY, radiusZ);
-                addFace(values, p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], n0, part);
-                addFace(values, p0[0], p0[1], p0[2], p2[0], p2[1], p2[2], p3[0], p3[1], p3[2], n1, part);
+                float[] n1 = sphereNormal(p1, centerX, centerY, centerZ, radiusX, radiusY, radiusZ);
+                float[] n2 = sphereNormal(p2, centerX, centerY, centerZ, radiusX, radiusY, radiusZ);
+                float[] n3 = sphereNormal(p3, centerX, centerY, centerZ, radiusX, radiusY, radiusZ);
+                addSmoothFace(values, p0, p1, p2, n0, n1, n2, part);
+                addSmoothFace(values, p0, p2, p3, n0, n2, n3, part);
             }
         }
+    }
+
+    private static void addSmoothFace(ArrayList<Float> values, float[] a, float[] b, float[] c,
+                                      float[] na, float[] nb, float[] nc, float part) {
+        addVertexWithNormal(values, a, na, part);
+        addVertexWithNormal(values, b, nb, part);
+        addVertexWithNormal(values, c, nc, part);
+    }
+
+    private static void addVertexWithNormal(ArrayList<Float> values, float[] point,
+                                            float[] normal, float part) {
+        values.add(point[0]); values.add(point[1]); values.add(point[2]);
+        values.add(normal[0]); values.add(normal[1]); values.add(normal[2]);
+        values.add(part);
     }
 
     private static float[] spherePoint(float centerX, float centerY, float centerZ,
