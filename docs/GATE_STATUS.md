@@ -36,6 +36,14 @@ the active bed axes, so non-square or non-180 mm profiles no longer receive a
 truncated or misleading plate grid. The native-enabled connected suite again
 completed 157 tests with 0 failures and 1 intentional G3 skip.
 
+The Android release-candidate workflow now applies the organization signing
+step to both tag pushes and manual dispatches. Manual candidates therefore
+cannot silently publish unsigned APK/AAB/instrumentation artifacts; the
+signing helper still verifies the app/instrumentation certificate match and
+the AAB signature before replacement. This is release-integrity hardening, not
+production promotion: the protected signing secrets and all reviewed
+readiness gates remain required.
+
 The printer completion path now durably queues inventory reconciliation before
 attempting the stock write. Activity startup and the foreground printer service
 both drain that queue idempotently, so a confirmed print cannot silently lose
