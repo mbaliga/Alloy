@@ -680,8 +680,12 @@ final class GlesViewportSurface extends GLSurfaceView {
             // supplied 3D reference read like a small technical thumbnail.
             // Tighten only the presentation camera; preparation/slicing
             // framing remains unchanged.
-            float frameScale = machineStudy ? 5.65f : 3.35f;
-            float frameMax = machineStudy ? 860f : 620f;
+            // The study is a product composition, not a catalog thumbnail.
+            // Keep the full silhouette visible, but give the supplied machine
+            // enough screen presence for the plate runway and material cues to
+            // read in a marketing capture.
+            float frameScale = machineStudy ? 4.65f : 3.35f;
+            float frameMax = machineStudy ? 720f : 620f;
             float frameMin = cleanPresentation ? 12f : 92f;
             float distance = (framing == null ? fallbackDistance : clamp(span * frameScale, frameMin, frameMax))
                     / Math.max(0.45f, zoom);
@@ -1406,7 +1410,7 @@ final class GlesViewportSurface extends GLSurfaceView {
         // phone composition an unmistakable runway into the distance. The
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
-        for (int index = 0; index < 9; index++) {
+        for (int index = 0; index < 6; index++) {
             float depth = 76f - index * 4.5f;
             float width = 178f - index * 8.5f;
             float centerY = 92f - index * 58f;
@@ -1707,6 +1711,10 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "shaded+=vec3(0.30,0.25,0.19)*highlight;"
                     + "shaded+=base*rim*(uNight==1?0.34:0.20);"
                     + "shaded+=vec3(0.12,0.16,0.22)*edgeLight*(uNight==1?0.58:0.28);"
+                    // PEI is a physical black sheet. Keep the plate runway
+                    // dark and material-led instead of letting the studio
+                    // highlight turn distant plates into beige UI cards.
+                    + "if(uMachine==2 && vPart<-19.0){float grain=alloyNoise(vPosition.xy*0.31)*0.70+alloyNoise(vPosition.xy*1.7)*0.30; shaded=base*(0.58+0.22*keyDiffuse)+vec3(grain*0.018); }"
                     + "float shadowAlpha=(uMachine==2 && vPart<-19.0)?(uNight==1?0.48:0.25):1.0;"
                     + "gl_FragColor=vec4(shaded*focus,uAlpha*shadowAlpha); }";
 
