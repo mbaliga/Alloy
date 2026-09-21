@@ -11,17 +11,15 @@ from the production claim until the engine gate is closed.
 
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
-Android engine using the matched A1 Mini/PLA profile. Alloy's native export
-matches the reviewed profile fields and major feature classes, but remains
-**FAIL/NO-GO** for production parity: 3,137 s versus 3,035 s (3.25% high),
-2,022.86 mm versus 2,032.81 mm of reported filament (0.49% delta), and 2,304
-versus 2,361 travel moves (2.41% delta). The geometry-aware auto-brim adapter
-preserves Bambu's fallback skirt, imported Bambu internal-retraction policy
-is now honored, and the first-layer start emits the project-backed 500
-acceleration value. Positive extrusion is 2,565.26 mm versus 2,574.41 mm
-(0.36% delta); the remaining gate failures are the 3.25% time delta and
-later P/T acceleration-command vocabulary differences. No physical A1 Mini
-send/start claim has been made.
+Android engine using the matched A1 Mini/PLA profile. Preserving the imported
+project's `gcode_flavor = marlin` closes the aggregate fixture gate: 3,029 s
+versus 3,035 s (0.20% delta), 2,022.86 mm versus 2,032.81 mm of reported
+filament (0.49% delta), 2,304 versus 2,361 travel moves (2.41% delta), and
+2,565.26 mm versus 2,574.41 mm positive extrusion (0.36% delta). Major
+features and all 140 layers match. A later acceleration transition remains a
+warning (`P1500` versus `P300`), so the fixture is **PASS WITH WARNING**, not
+a blanket production-parity claim. No physical A1 Mini send/start claim has
+been made.
 
 Visual status is also **OPEN**. The latest emulator capture uses the supplied
 A1 Mini mesh, five receding plates, and scale props, with a revised editorial

@@ -244,6 +244,7 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("0.8", imported.nativeSettings.get("retract_length"));
         Assert.assertEquals("0.4", imported.nativeSettings.get("retract_lift"));
         Assert.assertEquals("1", imported.nativeSettings.get("reduce_infill_retraction"));
+        Assert.assertEquals("marlin", imported.nativeSettings.get("gcode_flavor"));
         Assert.assertEquals("2", imported.nativeSettings.get("wipe_distance"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_remove_small_overhang"));
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_distance"));
