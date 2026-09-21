@@ -69,10 +69,20 @@ def main() -> None:
     build_required = (
         "validateNativePrebuiltDirectory",
         "tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }",
+        "includeSuppliedReferenceVisuals",
+        ": true",
+        "file('src/debug/assets')",
     )
     missing_build = [token for token in build_required if token not in build_text]
     if missing_build:
         raise SystemExit(f"{APP_BUILD}: missing native prebuilt guard wiring: {missing_build}")
+    visual_assets = (
+        ROOT / "app/src/debug/assets/visuals/a1-mini-reference.mesh",
+        ROOT / "app/src/debug/assets/models/a1-mini-v5-owner.3mf",
+    )
+    missing_visuals = [str(path) for path in visual_assets if not path.is_file()]
+    if missing_visuals:
+        raise SystemExit(f"release visual study assets are missing: {missing_visuals}")
     for token in ("RECOVERY_REQUIRED", "must not automatically retry", "offline recovery"):
         if token not in release_doc:
             raise SystemExit(f"{RELEASE_DOC}: missing interruption recovery gate: {token}")
