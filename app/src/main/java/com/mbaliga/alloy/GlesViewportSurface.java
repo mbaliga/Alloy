@@ -1400,8 +1400,8 @@ final class GlesViewportSurface extends GLSurfaceView {
         // A compact can silhouette, a tennis-ball sphere and a key-shaped
         // object sit in the quiet foreground of the machine study. Their
         // reduced scale keeps the full printer frame legible on a phone.
-        addCylinderZ(values, -102f, 226f, -30f, 10f, 34f, 36, 0f);
-        addCylinderZ(values, -102f, 226f, -12f, 8.6f, 1.2f, 36, 0f);
+        addSmoothCylinderZ(values, -102f, 226f, -30f, 10f, 34f, 48, 0f);
+        addSmoothCylinderZ(values, -102f, 226f, -12f, 8.6f, 1.2f, 48, 0f);
         addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 56, 32, 1f);
         addCylinderZ(values, -34f, 226f, -43f, 6.5f, 2.5f, 32, 2f);
         addBox(values, -43f, 224f, -42f, -27f, 228f, -34f, 2f);
@@ -1549,6 +1549,29 @@ final class GlesViewportSurface extends GLSurfaceView {
             addFace(values, ax, ay, z0, bx, by, z1, ax, ay, z1, 0f, 0f, 1f, part);
             addFace(values, ax, ay, z0, ax, ay, z1, bx, by, z1,
                     (float) Math.cos(a), (float) Math.sin(a), 0f, part);
+        }
+    }
+
+    /** Smooth-sided Z cylinder for presentation props; caps remain planar. */
+    private static void addSmoothCylinderZ(ArrayList<Float> values, float centerX, float centerY,
+                                           float centerZ, float radius, float height, int slices, float part) {
+        int count = Math.max(16, Math.min(64, slices));
+        float z0 = centerZ - height / 2f, z1 = centerZ + height / 2f;
+        for (int index = 0; index < count; index++) {
+            double a = index * Math.PI * 2d / count;
+            double b = (index + 1) * Math.PI * 2d / count;
+            float ax = centerX + radius * (float) Math.cos(a), ay = centerY + radius * (float) Math.sin(a);
+            float bx = centerX + radius * (float) Math.cos(b), by = centerY + radius * (float) Math.sin(b);
+            float[] na = {(float) Math.cos(a), (float) Math.sin(a), 0f};
+            float[] nb = {(float) Math.cos(b), (float) Math.sin(b), 0f};
+            addFace(values, centerX, centerY, z0, bx, by, z0, ax, ay, z0, 0f, 0f, -1f, part);
+            addFace(values, centerX, centerY, z1, ax, ay, z1, bx, by, z1, 0f, 0f, 1f, part);
+            addSmoothFace(values,
+                    new float[]{ax, ay, z0}, new float[]{bx, by, z0}, new float[]{bx, by, z1},
+                    na, nb, nb, part);
+            addSmoothFace(values,
+                    new float[]{ax, ay, z0}, new float[]{bx, by, z1}, new float[]{ax, ay, z1},
+                    na, nb, na, part);
         }
     }
 

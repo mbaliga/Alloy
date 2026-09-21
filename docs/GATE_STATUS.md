@@ -81,6 +81,11 @@ ellipsoid normals and denser sampling rather than one flat normal per triangle,
 removing a visible faceted-debug artifact from the marketing study. This is a
 presentation-only improvement and does not alter printable geometry.
 
+The companion can prop is now smooth-sided as well, with per-vertex radial
+normals and denser sampling. The current emulator capture is retained at
+`/private/tmp/alloy-smooth-can-study.png`; the can no longer reads as a
+low-poly debug cylinder. This remains presentation-only geometry.
+
 The phone import lifecycle now has a 90-second watchdog. If a document provider
 or oversized model stalls, Alloy cancels the worker, restores the workspace
 state, and explains the recovery path instead of leaving the session disabled.
