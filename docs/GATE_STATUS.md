@@ -7,8 +7,8 @@ Date: 2026-09-21
 The current checkout is a **closed-alpha Android build**, not a production
 replacement for Bambu Studio. The local `codex/alloy-phone-first-ui` checkout
 contains the Android/native implementation and local branding checkpoint
-`b19b01b`; the GitHub branch of the same name carries the logo and marketing
-captures through `0786233113dc8021c7ced06b732db4764b58f2f5`. That branch has no
+`7915526`; the GitHub branch of the same name carries the updated logo and
+marketing captures through `926b25859732c2400d790f2ad86365f0279ef2b4`. That branch has no
 merged pull request yet, and the local implementation remains ahead of the
 remote branding-only branch. The checkout's tracking ref is still
 `origin/codex/alloy-v1` at the older base, so those refs must not be treated as
