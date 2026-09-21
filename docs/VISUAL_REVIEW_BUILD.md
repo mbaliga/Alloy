@@ -16,11 +16,11 @@ gradle :app:assembleRelease \
 ```
 
 Install `app/build/outputs/apk/release/app-release.apk` on the Android phone.
-On first launch this variant opens the supplied Redmagic Keyboard Case v0.4
-assembly in the object-first Hero view when the OCCT bridge is present, with
-the A1 Mini machine study available from **A1 study** / **Machine view**. The
-Model Atlas also exposes the bezel, phone sled, service hatch, fit coupon,
-editable STEP assembly and the supplied A1 Mini v5 3MF reference.
+On first launch this variant opens the supplied A1 Mini machine study with its
+receding presentation plates and scale props. The supplied Redmagic Keyboard
+Case v0.4 assembly, bezel, phone sled, service hatch, fit coupon, editable
+STEP assembly and A1 Mini v5 3MF reference remain available from **Model
+Atlas** and the model workspace.
 
 The scene is presentation-only: its material finish, lighting, exploded view
 and machine envelope never alter the printable mesh, recipe, G-code or printer
