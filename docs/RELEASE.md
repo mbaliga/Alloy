@@ -8,10 +8,10 @@ The repository has two Android build paths:
   production release.
 - `Alloy Android release candidate` runs the same structural/profile/model/
   transport gates, source-builds the pinned native engine and assembles a
-  release APK plus its matching release instrumentation APK with that engine
-  enabled, then publishes a SHA-256 manifest as a workflow artifact. On a
-  `v*` tag it requires organization-owned signing secrets and signs both the
-  app and matching instrumentation APK; manual dispatch remains unsigned for
+  release APK, Android App Bundle, plus its matching release instrumentation
+  APK with that engine enabled, then publishes SHA-256 manifests as workflow
+  artifacts. On a `v*` tag it requires organization-owned signing secrets and
+  signs the APK, AAB, and matching instrumentation APK; manual dispatch remains unsigned for
   dry-run validation.
 
 The production promotion contract is explicit and fail-closed. A production

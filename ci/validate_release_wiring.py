@@ -39,12 +39,12 @@ def main() -> None:
         "jniImports/oneTBB",
         "mkdir -p app/src/main/jniImports/boost app/src/main/jniImports/oneTBB",
         "src/main/occt",
-        "assembleRelease -PalloyNativeEngine=true",
+        "assembleRelease :app:bundleRelease -PalloyNativeEngine=true",
         "assembleReleaseAndroidTest -PalloyNativeEngine=true",
         "alloy-android-release-instrumentation",
         "-PalloyNativeEngineVerified=false",
         "Sign production tag artifacts",
-        "ci/sign_android_release.sh app/build/outputs/apk/release app/build/outputs/apk/androidTest/release",
+        "ci/sign_android_release.sh app/build/outputs/apk/release app/build/outputs/apk/androidTest/release app/build/outputs/bundle/release",
         "ANDROID_KEYSTORE_B64",
         "ANDROID_KEY_ALIAS",
         "ANDROID_KEYSTORE_PASSWORD",
@@ -55,7 +55,7 @@ def main() -> None:
     if missing:
         raise SystemExit(f"{WORKFLOW}: missing native release wiring: {missing}")
     signing_required = (
-        "APP_CERT=", "TEST_CERT=",
+        "APP_CERT=", "TEST_CERT=", "SIGNED_BUNDLE=", "jarsigner", "-signedjar",
         "release and instrumentation APK signer certificates do not match",
         'verify --print-certs',
     )
