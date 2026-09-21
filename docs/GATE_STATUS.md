@@ -49,6 +49,15 @@ reports that physical state is unconfirmed; it no longer presents that case as
 `READY`. The native-enabled Android suite completed 156 executions with 0
 failures and 1 intentional skip after this fail-closed transport change.
 
+The Android release-candidate workflow now assembles and publishes an AAB in
+addition to the APK and matching instrumentation APK. Protected tag signing
+JAR-signs the AAB with the organization keystore, verifies it before replacing
+the unsigned bundle, and emits a separate SHA-256 manifest/artifact. Local
+verification produced `app/build/outputs/bundle/release/app-release.aab` and
+confirmed that the bundle contains the Alloy logo, splash resources, supplied
+A1 study mesh, and packaged model assets. This closes the AAB packaging gap;
+organization signing and every production-readiness gate remain required.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported

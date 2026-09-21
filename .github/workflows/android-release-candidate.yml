@@ -133,7 +133,7 @@ jobs:
           gradle-version: 8.9
 
       - name: Assemble unsigned release candidate
-        run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyNativeEngineVerified=false --no-daemon --stacktrace
+        run: gradle :app:assembleRelease :app:bundleRelease -PalloyNativeEngine=true -PalloyNativeEngineVerified=false --no-daemon --stacktrace
 
       - name: Compile release instrumentation APK
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyNativeEngineVerified=false --no-daemon --stacktrace
@@ -147,7 +147,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_BUILD_TOOLS_VERSION: 35.0.0
-        run: bash ci/sign_android_release.sh app/build/outputs/apk/release app/build/outputs/apk/androidTest/release
+        run: bash ci/sign_android_release.sh app/build/outputs/apk/release app/build/outputs/apk/androidTest/release app/build/outputs/bundle/release
 
       - name: Hash release candidate
         shell: bash
@@ -155,6 +155,7 @@ jobs:
           set -euxo pipefail
           sha256sum app/build/outputs/apk/release/*.apk | tee app/build/outputs/apk/release/SHA256SUMS
           sha256sum app/build/outputs/apk/androidTest/release/*.apk | tee app/build/outputs/apk/androidTest/release/SHA256SUMS
+          sha256sum app/build/outputs/bundle/release/*.aab | tee app/build/outputs/bundle/release/SHA256SUMS
 
       - uses: actions/upload-artifact@v4
         with:
@@ -166,4 +167,10 @@ jobs:
         with:
           name: alloy-android-release-instrumentation
           path: app/build/outputs/apk/androidTest/release
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alloy-android-release-bundle
+          path: app/build/outputs/bundle/release
           if-no-files-found: error

@@ -6,8 +6,9 @@ set -euo pipefail
 # removed on exit; no signing material is written to the repository or an
 # uploaded artifact.
 
-RELEASE_DIR=${1:?usage: sign_android_release.sh <release-dir> <android-test-dir>}
-TEST_DIR=${2:?usage: sign_android_release.sh <release-dir> <android-test-dir>}
+RELEASE_DIR=${1:?usage: sign_android_release.sh <release-dir> <android-test-dir> [bundle-dir]}
+TEST_DIR=${2:?usage: sign_android_release.sh <release-dir> <android-test-dir> [bundle-dir]}
+BUNDLE_DIR=${3:-}
 BUILD_TOOLS_VERSION=${ANDROID_BUILD_TOOLS_VERSION:-35.0.0}
 ANDROID_ROOT=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
 
@@ -35,11 +36,16 @@ if [[ ! -f "$TEST_DIR/app-release-androidTest.apk" ]]; then
     echo "missing release instrumentation APK" >&2
     exit 2
 fi
+if [[ -n "$BUNDLE_DIR" && ! -f "$BUNDLE_DIR/app-release.aab" ]]; then
+    echo "missing unsigned release AAB" >&2
+    exit 2
+fi
 
 TEMP_ROOT=$(mktemp -d)
 KEYSTORE="$TEMP_ROOT/release.keystore"
 SIGNED_APP="$TEMP_ROOT/app-release.apk"
 SIGNED_TEST="$TEMP_ROOT/app-release-androidTest.apk"
+SIGNED_BUNDLE="$TEMP_ROOT/app-release.aab"
 trap 'rm -rf "$TEMP_ROOT"' EXIT
 umask 077
 printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > "$KEYSTORE"
@@ -55,6 +61,21 @@ COMMON_ARGS=(
 "$APK_SIGNER" sign "${COMMON_ARGS[@]}" --out "$SIGNED_TEST" "$TEST_DIR/app-release-androidTest.apk"
 "$APK_SIGNER" verify --verbose "$SIGNED_APP" >/dev/null
 "$APK_SIGNER" verify --verbose "$SIGNED_TEST" >/dev/null
+
+if [[ -n "$BUNDLE_DIR" ]]; then
+    # AABs are JAR-signed rather than APK-signed. Verify before replacing the
+    # unsigned workflow output.
+    jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+        -keystore "$KEYSTORE" -storepass:env ANDROID_KEYSTORE_PASSWORD \
+        -keypass:env ANDROID_KEY_PASSWORD -signedjar "$SIGNED_BUNDLE" \
+        "$BUNDLE_DIR/app-release.aab" "$ANDROID_KEY_ALIAS" >/dev/null
+    # Production keystores are normally self-signed; -strict would reject a
+    # valid signature solely because its certificate is not in the local JDK
+    # trust store. Signature integrity is still required by the non-strict
+    # verifier and by the bundle/toolchain promotion checks.
+    jarsigner -verify -keystore "$KEYSTORE" \
+        -storepass:env ANDROID_KEYSTORE_PASSWORD "$SIGNED_BUNDLE" >/dev/null
+fi
 
 # The instrumentation APK is installed alongside the app during release QA.
 # Compare the actual signer digests before replacing the workflow outputs so a
@@ -72,5 +93,8 @@ fi
 mv "$SIGNED_APP" "$RELEASE_DIR/app-release.apk"
 mv "$SIGNED_TEST" "$TEST_DIR/app-release-androidTest.apk"
 rm -f "$RELEASE_DIR/app-release-unsigned.apk"
+if [[ -n "$BUNDLE_DIR" ]]; then
+    mv "$SIGNED_BUNDLE" "$BUNDLE_DIR/app-release.aab"
+fi
 
 echo "signed and verified release app plus matching instrumentation APK"
