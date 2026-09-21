@@ -1576,6 +1576,32 @@ before CMake runs. The local compile/link and emulator runtime smoke now pass;
 hosted reproducibility and the remaining engine/profile/hardware gates are
 still required before promotion.
 
+## Desktop reference audit
+
+The installed Bambu Studio 02.08.02.61 CLI can now be used as an external
+reference without depending on a GUI capture. The identical checked-in
+`travel_obstacle.stl` was packaged and sliced through a temporary copied
+profile directory using the A1 mini 0.4 nozzle and Bambu PLA profile. The
+desktop result reported 140 layers, 28 mm maximum Z and 56m14s estimated
+duration, and emitted `plate_1.gcode` successfully.
+
+This is evidence that the comparison path is available, not a parity pass.
+The first reference is not yet like-for-like with the Android evidence:
+desktop emitted 2,174 retraction moves and 515 Z moves, while the Android
+Slope Lift export emitted 1,501 retractions and 2,241 Z moves. The Android
+export also has support enabled and a 5 mm auto-brim, while the first desktop
+project carried different resolved settings. The next parity gate is to
+construct a fully resolved A1 mini project with identical layer height,
+support, brim, wipe and lift settings on both sides, then compare time,
+filament, travel, retraction and collision-sensitive motion signatures.
+
+The product visual gate is also still open. The current A1 study screen is a
+readable native 3D scene, but it is not yet the supplied luxury configurator
+direction: it lacks the reference's immersive whitespace, hero-object focus,
+material/finish callouts and finished marketing composition. It must not be
+described as production-ready or as a faithful implementation of the supplied
+reference.
+
 ## Linux milestone
 
 **Status: implemented lightweight bridge; native desktop engine intentionally
