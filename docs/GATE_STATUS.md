@@ -2,6 +2,14 @@
 
 Date: 2026-09-21
 
+Fresh verification on this checkpoint: the independent parity suite completed
+65/65 tests successfully; Android, transport, release, model/profile/native
+wiring validators all passed; and `connectedReleaseAndroidTest` completed 153
+instrumentation executions with 0 failures and 2 intentional skips. The two
+skips are the opt-in native G3 evidence export and owner-step assembly smoke
+test; they remain excluded from the production claim until their engine gates
+are closed.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
