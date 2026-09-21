@@ -210,7 +210,7 @@ def main() -> None:
         require(studio_preview, token, studio_preview_path)
     for token in ("setEGLContextClientVersion(2)", "RENDERMODE_WHEN_DIRTY", "setPreserveEGLContextOnPause",
                   "MESH_VERTEX_SHADER", "MESH_FRAGMENT_SHADER", "MAX_TOOLPATH_SEGMENTS", "outsideBuildVolume",
-                  "uSelectedPart", "uOutOfBounds", "thumbnailPng", "hitTest"):
+                  "uSelectedPart", "uOutOfBounds", "thumbnailPng", "capturePng", "PixelCopy", "hitTest"):
         require(gles_viewport, token, gles_viewport_path)
     for token in ("slicebeam_commit", "required", "excluded", "rationales", "unreviewed unsupported field", "status_by_key"):
         require(g4_scope_validator, token, g4_scope_validator_path)
@@ -233,6 +233,8 @@ def main() -> None:
         "foregroundSliceCheckpointFailsClosedAfterProcessLoss", "modelHistoryPersistsUndoRedoAndDropsRedoBranch",
         "historicalModelSnapshotsSurviveCachePrune"):
         require(pipeline_test, token, pipeline_test_path)
+    require(pipeline_test, "liveGlesCaptureReturnsBoundedPngForA1Study", pipeline_test_path)
+    require(activity, "viewport.capturePng(1_024", activity_path)
     for token in ("typedRecipeOwnsOverlappingNativeSettings",):
         require(native_smoke_test, token, native_smoke_test_path)
     for token in ("MAX_GCODE_CHARS", "class Stream", "hasPrintableMotion", "removeCommentsAndChecksum"):
