@@ -69,6 +69,14 @@ a claim of final luxury-grade art direction; richer authored materials,
 composition, lighting, and interaction polish remain on the Android product
 track.
 
+The subsequent marketing-composition pass tightened the standalone study
+camera, enlarged the A1 subject for phone capture, extended the receding
+plate row to six plates, increased its visual contrast, and moved the scale
+callout clear of the dimensional props. Java compilation passed after the
+change; the emulator capture used for this pass is retained in temporary
+verification storage. The result is more legible for collateral, but remains
+an intermediate visual-review surface rather than a production design signoff.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
