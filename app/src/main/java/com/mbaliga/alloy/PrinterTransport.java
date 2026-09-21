@@ -31,6 +31,7 @@ public interface PrinterTransport {
         RECOVERY_REQUIRED,
         CONNECTING,
         READY,
+        STATUS_UNCONFIRMED,
         UPLOADING,
         UPLOADED,
         START_REQUESTED,

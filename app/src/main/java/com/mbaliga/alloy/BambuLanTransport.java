@@ -179,7 +179,8 @@ public final class BambuLanTransport implements PrinterTransport, Closeable {
                         // or leaving the screen can interrupt this snapshot.
                     }
                 }
-                if (!closed) state(callback, State.READY, "LAN services ready · no telemetry snapshot received");
+                if (!closed) state(callback, State.STATUS_UNCONFIRMED,
+                        "LAN services reachable, but the printer returned no telemetry snapshot; physical state is unconfirmed");
             } catch (Exception error) {
                 if (!closed) state(callback, State.FAILED, safeMessage(error));
             } finally {

@@ -42,6 +42,13 @@ opens known-dimension scaling when a model is loaded (otherwise it explains
 the prerequisite). The native-enabled Android suite completed 156 executions
 with 0 failures and 1 intentional skip after this interaction pass.
 
+The LAN status boundary now distinguishes connectivity from printer-state
+evidence. If a pinned MQTT session returns no valid telemetry snapshot within
+the bounded read window, Alloy emits `STATUS_UNCONFIRMED` and the Android UI
+reports that physical state is unconfirmed; it no longer presents that case as
+`READY`. The native-enabled Android suite completed 156 executions with 0
+failures and 1 intentional skip after this fail-closed transport change.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported
