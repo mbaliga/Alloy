@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 
 import java.io.File;
 import java.util.concurrent.CancellationException;
@@ -30,6 +32,9 @@ public final class SliceJobService extends Service {
 
     private static final String CHANNEL_ID = "slice_jobs";
     private static final int NOTIFICATION_ID = 702;
+    /** A silent native engine must not trap the phone-only workflow forever. */
+    private static final long STALL_TIMEOUT_MS = 180_000L;
+    private static final long WATCHDOG_INTERVAL_MS = 30_000L;
     private static volatile String activeJobId;
 
     private SliceJobStore store;
@@ -37,9 +42,17 @@ public final class SliceJobService extends Service {
     private Future<?> active;
     private volatile SlicerEngine engine;
     private volatile boolean cancelRequested;
+    private volatile boolean watchdogTriggered;
+    private volatile long lastProgressAt;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable watchdog = this::watchdogTick;
 
     public static boolean ownsJob(String jobId) { return jobId != null && jobId.equals(activeJobId); }
     public static boolean ownsAnyJob() { return activeJobId != null; }
+
+    static boolean hasStalled(long now, long lastProgress) {
+        return now >= lastProgress && now - lastProgress >= STALL_TIMEOUT_MS;
+    }
 
     public static void start(Context context, String jobId) {
         dispatch(context, ACTION_START, jobId);
@@ -126,17 +139,44 @@ public final class SliceJobService extends Service {
         }
         activeJobId = jobId;
         cancelRequested = false;
+        watchdogTriggered = false;
+        lastProgressAt = System.currentTimeMillis();
         active = executor.submit(() -> run(jobId));
         return START_NOT_STICKY;
+    }
+
+    private void watchdogTick() {
+        String jobId = activeJobId;
+        if (jobId == null || store == null) return;
+        long elapsed = System.currentTimeMillis() - lastProgressAt;
+        if (hasStalled(System.currentTimeMillis(), lastProgressAt)) {
+            watchdogTriggered = true;
+            cancelRequested = true;
+            SlicerEngine currentEngine = engine;
+            if (currentEngine != null) currentEngine.cancel();
+            Future<?> current = active;
+            if (current != null) current.cancel(true);
+            SliceJobStore.Job recovered = store.recoverAfterRestart(false);
+            String detail = "Slicing stopped reporting progress; review the job and start again.";
+            if (recovered != null && recovered.state == SliceJobStore.State.RECOVERY_REQUIRED)
+                detail = recovered.detail;
+            publish(jobId, SliceJobStore.State.RECOVERY_REQUIRED, detail,
+                    recovered == null ? -1 : recovered.progress, "Recovery review");
+            return;
+        }
+        handler.postDelayed(watchdog, WATCHDOG_INTERVAL_MS);
     }
 
     private void run(String jobId) {
         try {
             File filesDir = getFilesDir();
             SliceRequestStore.Request request = SliceRequestStore.read(filesDir, jobId);
+            handler.removeCallbacks(watchdog);
+            handler.postDelayed(watchdog, WATCHDOG_INTERVAL_MS);
             publish(jobId, SliceJobStore.State.RUNNING, "Slicing in the foreground", 1, "Preparing geometry");
             Slicer.Result result = engine.slice(request.model, request.config, (percent, phase) -> {
                 if (cancelRequested || Thread.currentThread().isInterrupted()) throw new CancellationException("Slice cancelled");
+                lastProgressAt = System.currentTimeMillis();
                 store.progress(jobId, percent, phase);
                 publish(jobId, SliceJobStore.State.RUNNING, phase, percent, phase);
             });
@@ -148,12 +188,22 @@ public final class SliceJobService extends Service {
             store.complete(jobId, artifact, "Slice complete");
             publish(jobId, SliceJobStore.State.COMPLETED, "Slice complete", 100, "Complete");
         } catch (CancellationException ignored) {
-            store.cancel(jobId, "Slice cancelled");
-            publish(jobId, SliceJobStore.State.CANCELLED, "Slice cancelled", -1, "Cancelled");
+            if (watchdogTriggered) {
+                SliceJobStore.Job recovered = store.load();
+                if (recovered == null || recovered.state != SliceJobStore.State.RECOVERY_REQUIRED)
+                    recovered = store.recoverAfterRestart(false);
+                publish(jobId, SliceJobStore.State.RECOVERY_REQUIRED,
+                        recovered == null ? "Slicing stopped reporting progress; review the job and start again." : recovered.detail,
+                        recovered == null ? -1 : recovered.progress, "Recovery review");
+            } else {
+                store.cancel(jobId, "Slice cancelled");
+                publish(jobId, SliceJobStore.State.CANCELLED, "Slice cancelled", -1, "Cancelled");
+            }
         } catch (Exception error) {
             store.fail(jobId, "Slice failed: " + safeMessage(error));
             publish(jobId, SliceJobStore.State.FAILED, "Slice failed: " + safeMessage(error), -1, "Failed");
         } finally {
+            handler.removeCallbacks(watchdog);
             if (jobId.equals(activeJobId)) activeJobId = null;
             active = null;
             stopForeground(true);
@@ -203,6 +253,7 @@ public final class SliceJobService extends Service {
     @Override public IBinder onBind(Intent intent) { return null; }
 
     @Override public void onDestroy() {
+        handler.removeCallbacks(watchdog);
         SlicerEngine currentEngine = engine;
         if (activeJobId != null && store != null) {
             if (currentEngine != null) currentEngine.cancel();
