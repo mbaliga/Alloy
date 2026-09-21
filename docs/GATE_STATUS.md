@@ -45,6 +45,14 @@ lighting, materials, immersive camera choreography, interaction model, and
 inventory surface have not yet been brought to reference quality. The capture
 is kept at `/private/tmp/alloy-reference-composition-v7-study.png` for review.
 
+The follow-up visual pass tightened the phone study camera, reduced the plate
+runway from nine to six visible presentation sheets, and corrected the PEI
+shading so distant sheets stay materially dark instead of reading as beige
+cards. The rebuilt release APK compiled successfully, installed on the API-35
+ARM64 emulator, and the runtime capture is retained at
+`/private/tmp/alloy-a1-study-tightened.png`. This is measurable presentation
+progress, not final visual signoff.
+
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
 so ordinary release APKs silently fell back to the simplified Alloy frame.
