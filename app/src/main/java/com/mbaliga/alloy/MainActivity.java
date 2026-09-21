@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.res.ColorStateList;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -1836,8 +1837,20 @@ public final class MainActivity extends Activity {
         TextView schedule = label(item.serviceLabel(), 10, item.needsServiceAttention() ? statusColor : MUTED);
         TextView care = label(item.care, 10, MUTED);
         care.setMaxLines(2);
+        // A compact stock gauge makes the reorder state legible without
+        // opening the item. The scale is intentionally relative to four
+        // minimum-stock units, so a full spool or spare does not disappear
+        // into a nearly-empty bar while a zero-stock item remains obvious.
+        android.widget.ProgressBar stock = new android.widget.ProgressBar(
+                this, null, android.R.attr.progressBarStyleHorizontal);
+        int gaugeMax = Math.max(1, Math.max(item.quantity, Math.max(1, item.minimum * 4)));
+        stock.setMax(gaugeMax);
+        stock.setProgress(Math.max(0, Math.min(gaugeMax, item.quantity)));
+        stock.setProgressTintList(ColorStateList.valueOf(statusColor));
+        stock.setContentDescription(item.name + " stock level: " + item.quantityLabel());
         copy.addView(name);
         copy.addView(meta);
+        copy.addView(stock, new LinearLayout.LayoutParams(-1, dp(5)));
         copy.addView(schedule);
         copy.addView(care);
         row.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
