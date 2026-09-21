@@ -79,6 +79,15 @@ slope branch is not exercised enough by this fixture to explain the desktop
 path. No default profile change was made. A dedicated obstacle/overhang
 travel fixture is the next appropriate parity target.
 
+That travel fixture is now present as `travel_obstacle.stl`, composed of four
+separated solids with deterministic heights and spacing. The native smoke test
+passes with it, and the opt-in G3 evidence exporter now emits its toolpath
+alongside the cube, support, and thin-wall evidence. A fresh Android export
+with `wipe=1`, `Slope Lift`, and `travel_slope=3` produced 2,243 Z moves,
+1,530 retractions, and 2,595 travel-like moves. This proves the fixture
+exercises the motion branch; a desktop export of the identical fixture is
+still required before any planner change can be promoted.
+
 The visual-review follow-up on 2026-09-21 corrected the standalone A1 Mini
 study's most obvious prototype artifacts: internal asset/debug wording was
 removed from the user-facing footer, the title was constrained so it cannot
