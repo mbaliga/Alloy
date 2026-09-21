@@ -4462,19 +4462,24 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
             return;
         }
-        byte[] png = viewport.thumbnailPng(1024);
-        if (png == null || png.length == 0) {
-            Toast.makeText(this, "3D view capture failed", Toast.LENGTH_LONG).show();
-            return;
-        }
-        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
-            if (out == null) throw new IOException("Output destination could not be opened");
-            out.write(png);
-            out.flush();
-            Toast.makeText(this, "Saved 3D view PNG", Toast.LENGTH_LONG).show();
-        } catch (Exception error) {
-            Toast.makeText(this, "3D view export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
+        // Capture the live GLES surface so A1 study exports contain the
+        // supplied machine mesh, real material pass and receding plates.
+        // thumbnailPng remains intentionally reserved for bounded archive and
+        // BYOK references, where deterministic CPU rendering is preferable.
+        viewport.capturePng(1_024, png -> {
+            if (png == null || png.length == 0) {
+                Toast.makeText(this, "3D view capture failed", Toast.LENGTH_LONG).show();
+                return;
+            }
+            try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
+                if (out == null) throw new IOException("Output destination could not be opened");
+                out.write(png);
+                out.flush();
+                Toast.makeText(this, "Saved 3D view PNG", Toast.LENGTH_LONG).show();
+            } catch (Exception error) {
+                Toast.makeText(this, "3D view export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void writeExport(Uri uri) {
