@@ -18,6 +18,16 @@ The new Android regression covers duplicate enqueue, retry drain, and
 idempotent replay. This closes an inventory reliability gap; it does not close
 the physical-printer acceptance or release-signing gates below.
 
+The latest visual pass was rebuilt, installed, and captured on the API-35
+emulator at `/private/tmp/alloy-visual-v15-runway.png`. It follows the supplied
+phone adaptation more closely: the hero camera is elevated to the handoff's
+three-quarter product angle, selector pills are quieter, and six full-depth
+presentation PEI sheets now form a visible diagonal runway behind the A1 Mini.
+This is a verified composition improvement, not final visual signoff: the
+source machine remains a welded reference shell and still needs authored
+material segmentation and richer interaction choreography to match the
+provided luxury configurator at production quality.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported
