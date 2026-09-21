@@ -243,17 +243,6 @@ public final class NativeSlicerEngine implements SlicerEngine {
         String explicitBrimType = config.nativeSettings.get("brim_type");
         if (explicitBrimType != null && explicitBrimType.trim().length() > 0) {
             String brimType = normalizedBrimType(explicitBrimType);
-            // Bambu's A1 Mini auto-brim preset carries a resolved positive
-            // width. The embedded core's btAutoBrim path independently
-            // recomputes adhesion and can collapse that same request to zero
-            // on compact, stable fixtures. Preserve the user's/profile's
-            // auto_brim value at the boundary, but resolve a positive-width
-            // request to the deterministic outer brim geometry that Bambu
-            // emits. A zero-width auto request remains a true no-geometry
-            // request.
-            String brimWidth = config.nativeSettings.get("brim_width");
-            if ("auto_brim".equals(brimType) && positiveFinite(brimWidth))
-                brimType = "outer_only";
             setting(settings, "brim_type", brimType);
             // Prusa's classic generator reverses the first-layer perimeter
             // order whenever the object config still carries a positive brim
@@ -473,8 +462,19 @@ public final class NativeSlicerEngine implements SlicerEngine {
         // width/acceleration spellings. Project both vocabularies so a pinned
         // Bambu recipe does not silently regain a default skirt or fall back
         // to unrelated native defaults.
-        setting(settings, "skirt_loops",
-                config.nativeSettings.getOrDefault("skirts", "0"));
+        String skirtLoops = config.nativeSettings.getOrDefault("skirts", "0");
+        // Bambu's geometry-aware auto-brim falls back to one skirt loop when
+        // the object does not need a physical brim. The native core preserves
+        // that auto-brim decision, but does not synthesize the fallback skirt
+        // when the imported recipe explicitly carries zero legacy skirts.
+        // Keep the fallback scoped to auto_brim with a positive width; an
+        // explicit no-brim or user-selected skirt count remains authoritative.
+        if ("auto_brim".equalsIgnoreCase(config.nativeSettings.get("brim_type"))
+                && positiveFinite(config.nativeSettings.get("brim_width"))
+                && parseInt(skirtLoops, 0) == 0) {
+            skirtLoops = "1";
+        }
+        setting(settings, "skirt_loops", skirtLoops);
         String defaultLineWidth = config.nativeSettings.getOrDefault("extrusion_width", number(config.nozzle));
         setting(settings, "line_width", defaultLineWidth);
         setting(settings, "outer_wall_line_width",

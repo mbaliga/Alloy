@@ -221,14 +221,6 @@ def normalize(field: str, value: Any, source: str, settings: dict[str, Any]) -> 
             "tree(auto)": "organic",
             "normal(auto)": "normal",
         }.get(low, low)
-    elif field == "brim_type":
-        # Bambu records auto_brim in the source recipe, while the native
-        # boundary resolves a positive-width request to outer_only because
-        # the embedded core rejects the provider's auto-width sentinel on
-        # compact fixtures. Compare the effective geometry, not the spelling.
-        width = _number(_scalar(settings.get("brim_width")))
-        if low == "auto_brim" and width is not None and float(width) > 0:
-            result = "outer_only"
     elif field == "support_material_pattern" and source == "desktop":
         # Bambu/Orca's resolved organic recipe uses `default`; older Alloy
         # snapshots used the equivalent legacy `rectilinear` spelling. Keep

@@ -399,8 +399,10 @@ public final class NativeEngineSmokeTest {
                     "travel_obstacle" + evidenceSuffix + ".gcode");
             String obstacleGcode = new String(Files.readAllBytes(obstacleEvidence.toPath()),
                     StandardCharsets.UTF_8);
-            Assert.assertTrue("resolved auto-brim must emit a brim feature",
+            Assert.assertFalse("auto-brim must not force a fixed outer brim on the stable obstacle fixture",
                     obstacleGcode.contains(";TYPE:Brim"));
+            Assert.assertTrue("auto-brim must preserve Bambu's fallback skirt",
+                    obstacleGcode.contains(";TYPE:Skirt"));
         }
         Slicer.Config supportConfig = config.copy();
         supportConfig.supports = true;
