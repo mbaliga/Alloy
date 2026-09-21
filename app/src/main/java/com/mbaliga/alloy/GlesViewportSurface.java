@@ -1404,8 +1404,11 @@ final class GlesViewportSurface extends GLSurfaceView {
         // A compact can silhouette, a tennis-ball sphere and a key-shaped
         // object sit in the quiet foreground of the machine study. Their
         // reduced scale keeps the full printer frame legible on a phone.
-        addSmoothCylinderZ(values, -102f, 226f, -30f, 10f, 34f, 48, 0f);
-        addSmoothCylinderZ(values, -102f, 226f, -12f, 8.6f, 1.2f, 48, 0f);
+        addSmoothCylinderZ(values, -102f, 226f, -30f, 10f, 30f, 48, 0f);
+        // A shallow shoulder and inset lid keep this from reading as an
+        // arbitrary cylinder while staying within the small study budget.
+        addSmoothCylinderZ(values, -102f, 226f, -14.4f, 9.5f, 2.4f, 48, 0f);
+        addSmoothCylinderZ(values, -102f, 226f, -12.2f, 8.6f, 1.2f, 48, 0f);
         addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 56, 32, 1f);
         addCylinderZ(values, -34f, 226f, -43f, 6.5f, 2.5f, 32, 2f);
         addBox(values, -43f, 224f, -42f, -27f, 228f, -34f, 2f);
@@ -1744,9 +1747,9 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // study too, so the receding runway reads as a real
                     // printer surface and preserves the supplied reference's
                     // quiet black-on-white material contrast.
-                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.19,0.20,0.21);}"
-                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.39,0.41,0.42);}"
-                    + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.46,0.39,0.31);}"
+                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.075,0.085,0.095);}"
+                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.22,0.24,0.26);}"
+                    + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
                     + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
                     + "else if(uMachine==1 && vPart>-3.5){base=vec3(0.28,0.25,0.22);}"
@@ -1757,7 +1760,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "else if(uMachine==1 && vPart>-8.5){base=vec3(0.58,0.61,0.65);}"
                     + "else if(uMachine==1 && vPart>-9.5){base=vec3(0.24,0.27,0.31);}"
                     + "else if(uMachine==1 && vPart>-10.5){base=vec3(0.12,0.14,0.17);}"
-                    + "else if(uMachine==1 && vPart>-11.5){base=vec3(0.88,0.68,0.25);}"
+                    + "else if(uMachine==1 && vPart>-11.5){base=vec3(0.34,0.36,0.39);}"
                     + "else if(uMachine==1 && vPart>-12.5){base=vec3(0.16,0.18,0.23);}"
                     + "else if(uMachine==1 && vPart>-13.5){base=vec3(0.78,0.80,0.84);}"
                     + "else if(uMachine==1 && vPart>-14.5){base=vec3(0.22,0.24,0.27);}"
