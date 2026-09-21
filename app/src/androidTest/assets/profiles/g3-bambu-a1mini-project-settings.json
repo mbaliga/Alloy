@@ -65,6 +65,7 @@
   "initial_layer_jerk": "9",
   "travel_jerk": "9",
   "travel_acceleration": ["500"],
+  "gcode_flavor": "marlin",
   "default_acceleration": ["6000"],
   "sparse_infill_acceleration": ["100%"],
   "infill_direction": "45",
