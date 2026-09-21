@@ -370,6 +370,12 @@ public final class NativeEngineSmokeTest {
         }
         String brimType = requestedBrimType(arguments);
         if (brimType != null) config.nativeSettings.put("brim_type", brimType);
+        String wipe = requestedWipe(arguments);
+        if (wipe != null) config.nativeSettings.put("wipe", wipe);
+        String zHopTypes = requestedZHopTypes(arguments);
+        if (zHopTypes != null) config.nativeSettings.put("z_hop_types", zHopTypes);
+        String travelSlope = requestedTravelSlope(arguments);
+        if (travelSlope != null) config.nativeSettings.put("travel_slope", travelSlope);
         boolean arcFitting = requestedArcFitting(arguments);
         if (arcFitting) config.nativeSettings.put("arc_fitting", "emit_center");
         File evidenceDir = new File(context.getExternalFilesDir(null), "alloy-g3-evidence");
@@ -380,6 +386,9 @@ public final class NativeEngineSmokeTest {
                 new File(evidenceDir, "g3-bambu-a1mini-project-settings.json"));
 
         String evidenceSuffix = brimType == null ? "" : "_brim_" + brimType;
+        if (wipe != null) evidenceSuffix += "_wipe_" + wipe;
+        if (zHopTypes != null) evidenceSuffix += "_zhop_" + zHopTypes.toLowerCase(java.util.Locale.US).replace(' ', '_');
+        if (travelSlope != null) evidenceSuffix += "_slope_" + travelSlope.replace('.', '_');
         exportNativeG3(context, config, "box-20mm.stl", arcFitting ? "cube_20mm_arcs" + evidenceSuffix + ".gcode" : "cube_20mm" + evidenceSuffix + ".gcode", evidenceDir);
         Slicer.Config supportConfig = config.copy();
         supportConfig.supports = true;
@@ -473,6 +482,46 @@ public final class NativeEngineSmokeTest {
             throw new IllegalArgumentException(
                     "g3-brim-type must be no_brim, outer_only, inner_only, outer_and_inner or auto_brim");
         return normalized;
+    }
+
+    /** Keep wipe experiments explicit; the desktop fixture resolves this to 0. */
+    private static String requestedWipe(Bundle arguments) {
+        String value = arguments == null ? null : arguments.getString("g3-wipe");
+        if (value == null || value.trim().isEmpty()) return null;
+        if (!"0".equals(value.trim()) && !"1".equals(value.trim()))
+            throw new IllegalArgumentException("g3-wipe must be 0 or 1");
+        return value.trim();
+    }
+
+    /** Keep Z-hop strategy experiments explicit and bounded to native enum values. */
+    private static String requestedZHopTypes(Bundle arguments) {
+        String value = arguments == null ? null : arguments.getString("g3-z-hop-types");
+        if (value == null || value.trim().isEmpty()) return null;
+        String normalized = value.trim().replace('_', ' ').replace('-', ' ');
+        if (!"Auto Lift".equalsIgnoreCase(normalized)
+                && !"Slope Lift".equalsIgnoreCase(normalized)
+                && !"Normal Lift".equalsIgnoreCase(normalized)
+                && !"Spiral Lift".equalsIgnoreCase(normalized))
+            throw new IllegalArgumentException(
+                    "g3-z-hop-types must be Auto Lift, Slope Lift, Normal Lift or Spiral Lift");
+        if ("auto lift".equalsIgnoreCase(normalized)) return "Auto Lift";
+        if ("slope lift".equalsIgnoreCase(normalized)) return "Slope Lift";
+        if ("normal lift".equalsIgnoreCase(normalized)) return "Normal Lift";
+        return "Spiral Lift";
+    }
+
+    /** Keep the Bambu travel-slope experiment finite and within native bounds. */
+    private static String requestedTravelSlope(Bundle arguments) {
+        String value = arguments == null ? null : arguments.getString("g3-travel-slope");
+        if (value == null || value.trim().isEmpty()) return null;
+        try {
+            float parsed = Float.parseFloat(value.trim());
+            if (Float.isNaN(parsed) || Float.isInfinite(parsed) || parsed <= 0f || parsed >= 90f)
+                throw new NumberFormatException("out of range");
+            return value.trim();
+        } catch (NumberFormatException error) {
+            throw new IllegalArgumentException("g3-travel-slope must be finite and between 0 and 90 degrees", error);
+        }
     }
 
     /** Keep support-style experiments explicit and bounded to native choices. */

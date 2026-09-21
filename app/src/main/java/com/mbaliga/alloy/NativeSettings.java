@@ -50,7 +50,7 @@ final class NativeSettings {
             // Native tree-support key; only controlled parity experiments use it
             // until the pinned Orca process snapshot exposes a source value.
             "support_tree_branch_distance", "support_tree_branch_diameter_angle", "support_material_pattern", "support_material_spacing", "support_material_style", "support_tree_branch_diameter_double_wall", "support_interface_spacing", "support_bottom_interface_spacing", "support_remove_small_overhang", "support_object_first_layer_gap", "support_interface_not_for_body", "thin_walls", "top_fill_pattern", "top_infill_extrusion_width",
-            "top_one_perimeter_type", "top_solid_infill_acceleration", "top_solid_infill_speed", "top_solid_min_thickness", "travel_acceleration", "travel_speed_z",
+            "top_one_perimeter_type", "top_solid_infill_acceleration", "top_solid_infill_speed", "top_solid_min_thickness", "travel_acceleration", "travel_slope", "travel_speed_z",
             "supertack_plate_temp", "supertack_plate_temp_initial_layer", "textured_plate_temp", "textured_plate_temp_initial_layer",
             "wipe", "wipe_distance", "wipe_tower_no_sparse_layers")));
 
