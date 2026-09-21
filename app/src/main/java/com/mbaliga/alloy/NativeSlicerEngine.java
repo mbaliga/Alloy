@@ -236,6 +236,17 @@ public final class NativeSlicerEngine implements SlicerEngine {
         String explicitBrimType = config.nativeSettings.get("brim_type");
         if (explicitBrimType != null && explicitBrimType.trim().length() > 0) {
             String brimType = normalizedBrimType(explicitBrimType);
+            // Bambu's A1 Mini auto-brim preset carries a resolved positive
+            // width. The embedded core's btAutoBrim path independently
+            // recomputes adhesion and can collapse that same request to zero
+            // on compact, stable fixtures. Preserve the user's/profile's
+            // auto_brim value at the boundary, but resolve a positive-width
+            // request to the deterministic outer brim geometry that Bambu
+            // emits. A zero-width auto request remains a true no-geometry
+            // request.
+            String brimWidth = config.nativeSettings.get("brim_width");
+            if ("auto_brim".equals(brimType) && positiveFinite(brimWidth))
+                brimType = "outer_only";
             setting(settings, "brim_type", brimType);
             // Prusa's classic generator reverses the first-layer perimeter
             // order whenever the object config still carries a positive brim
@@ -1067,6 +1078,10 @@ public final class NativeSlicerEngine implements SlicerEngine {
             float parsed = Float.parseFloat(value);
             return finite(parsed) ? parsed : fallback;
         } catch (Exception ignored) { return fallback; }
+    }
+
+    private static boolean positiveFinite(String value) {
+        return finiteFloat(value, 0f) > 0f;
     }
 
     private static int parseInt(String value, int fallback) {
