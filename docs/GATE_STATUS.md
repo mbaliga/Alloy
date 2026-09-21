@@ -35,6 +35,13 @@ carriage, and a restrained teal Alloy accent on the toolhead/carriage region.
 This improves component readability without changing the mesh, print
 placement, slicing, or transport data.
 
+The study's five callouts are now functional controls rather than decoration:
+size refits the presentation, material cycles bounded finish previews, nozzle
+opens the active profile review, printer opens status/pairing review, and scale
+opens known-dimension scaling when a model is loaded (otherwise it explains
+the prerequisite). The native-enabled Android suite completed 156 executions
+with 0 failures and 1 intentional skip after this interaction pass.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported

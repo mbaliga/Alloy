@@ -1289,16 +1289,40 @@ public final class MainActivity extends Activity {
         // and only two small context selectors near the lower edge. The
         // labels are presentation-only; printer configuration remains in the
         // actual preparation and pairing flows.
-        stage.addView(compactSceneTag("□", "SIZE", "180 × 180 × 180 MM",
-                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(126)));
-        stage.addView(compactSceneTag("◌", "MATERIAL", "NATURAL PLA",
-                Gravity.CENTER_VERTICAL | Gravity.START, dp(16), dp(44)));
-        stage.addView(compactSceneTag("⌁", "NOZZLE", "0.4 MM",
-                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(26)));
-        stage.addView(compactSceneTag("A1", "PRINTER", "A1 MINI",
-                Gravity.BOTTOM | Gravity.START, dp(16), dp(92)));
-        stage.addView(compactSceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
-                Gravity.BOTTOM | Gravity.END, dp(16), dp(88)));
+        View sizeTag = compactSceneTag("□", "SIZE", "180 × 180 × 180 MM",
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(126));
+        sizeTag.setOnClickListener(v -> {
+            scene.fitModel();
+            Toast.makeText(this, "A1 Mini volume · 180 × 180 × 180 mm", Toast.LENGTH_SHORT).show();
+        });
+        stage.addView(sizeTag);
+        View materialTag = compactSceneTag("◌", "MATERIAL", "NATURAL PLA",
+                Gravity.CENTER_VERTICAL | Gravity.START, dp(16), dp(44));
+        materialTag.setOnClickListener(v -> {
+            int next = (scene.getFinishMode() + 1) % 5;
+            scene.setFinishMode(next);
+            String[] finishes = {"Natural PLA", "Matte black", "Silk white", "Signal orange", "Steel blue"};
+            Toast.makeText(this, "Preview finish · " + finishes[next], Toast.LENGTH_SHORT).show();
+        });
+        stage.addView(materialTag);
+        View nozzleTag = compactSceneTag("⌁", "NOZZLE", "0.4 MM",
+                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(26));
+        nozzleTag.setOnClickListener(v -> showProfileReview());
+        stage.addView(nozzleTag);
+        View printerTag = compactSceneTag("A1", "PRINTER", "A1 MINI",
+                Gravity.BOTTOM | Gravity.START, dp(16), dp(92));
+        printerTag.setOnClickListener(v -> showPrinterStatus());
+        stage.addView(printerTag);
+        View scaleTag = compactSceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
+                Gravity.BOTTOM | Gravity.END, dp(16), dp(88));
+        scaleTag.setOnClickListener(v -> {
+            if (model == null) {
+                Toast.makeText(this, "Import a model to use known-dimension scaling", Toast.LENGTH_SHORT).show();
+            } else {
+                showScaleToKnownDimension();
+            }
+        });
+        stage.addView(scaleTag);
         page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout footer = new LinearLayout(this);
