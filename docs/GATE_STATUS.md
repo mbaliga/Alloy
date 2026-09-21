@@ -77,6 +77,12 @@ is presentation-only and reads the same persisted quantity/minimum values as the
 ledger. The native-enabled Android suite was rerun after this main-activity
 change: **153 tests completed, 0 failures, 1 intentional G3 export skip**.
 
+The remaining physical-printer promotion contract is now recorded in
+`docs/PHYSICAL_A1_ACCEPTANCE.md`. It requires one real A1 Mini run covering
+pairing, telemetry, package upload/revalidation, start, pause/resume, cancel,
+restart recovery, and fail-closed negative cases. No synthetic evidence is being
+used to close that gate.
+
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
 so ordinary release APKs silently fell back to the simplified Alloy frame.
