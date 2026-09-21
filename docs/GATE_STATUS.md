@@ -1607,6 +1607,12 @@ motion gap: the best controlled wipe-off comparison is still 5.27% slower,
 4.79% higher in filament and 11.64% different in travel moves. This mapping
 is retained as correctness hardening; it is not being counted as a parity win.
 
+The native-enabled release instrumentation suite was rerun after this change:
+**153 tests finished, 0 failures, 1 intentional skip** on the API-35 ARM64
+emulator. The desktop-flavor acceleration adjustment is now restricted to an
+explicit `gcode_flavor=marlin` parity run; the shipped Marlin 2 compatibility
+recipe retains its reviewed default start acceleration.
+
 The product visual gate is also still open. The current A1 study screen is a
 readable native 3D scene, but it is not yet the supplied luxury configurator
 direction: it lacks the reference's immersive whitespace, hero-object focus,

@@ -187,6 +187,7 @@ public final class NativeEngineSmokeTest {
             Assert.assertTrue(serialized.contains("support_top_z_distance = 0.2"));
             Assert.assertTrue(serialized.contains("support_bottom_z_distance = 0.2"));
             Assert.assertTrue(serialized.contains("retract_before_travel = 1"));
+            Assert.assertTrue(serialized.contains("retraction_minimum_travel = 1"));
             Assert.assertTrue(serialized.contains("retract_lift = 0.4"));
             Assert.assertTrue(serialized.contains("support_material_pattern = rectilinear"));
             Assert.assertTrue(serialized.contains("support_base_pattern = default"));

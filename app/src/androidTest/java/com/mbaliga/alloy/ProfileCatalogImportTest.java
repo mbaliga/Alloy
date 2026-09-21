@@ -215,7 +215,7 @@ public final class ProfileCatalogImportTest {
                 imported.nativeSettings.get("machine_max_acceleration_x"));
         Assert.assertEquals("1500,1250",
                 imported.nativeSettings.get("machine_max_acceleration_travel"));
-        Assert.assertEquals("150", imported.nativeSettings.get("support_material_speed"));
+        Assert.assertEquals("80", imported.nativeSettings.get("support_material_speed"));
         Assert.assertEquals("organic", imported.nativeSettings.get("support_material_style"));
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_diameter_angle"));
         Assert.assertEquals("10", imported.nativeSettings.get("min_print_speed"));
@@ -240,7 +240,7 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("20", imported.nativeSettings.get("infill_anchor_max"));
         Assert.assertEquals("auto_brim", imported.nativeSettings.get("brim_type"));
         Assert.assertEquals("5", imported.nativeSettings.get("brim_width"));
-        Assert.assertEquals("0.1", imported.nativeSettings.get("brim_object_gap"));
+        Assert.assertEquals("0", imported.nativeSettings.get("brim_object_gap"));
         Assert.assertEquals("0.8", imported.nativeSettings.get("retract_length"));
         Assert.assertEquals("0.4", imported.nativeSettings.get("retract_lift"));
         Assert.assertEquals("2", imported.nativeSettings.get("wipe_distance"));
