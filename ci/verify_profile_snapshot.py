@@ -46,6 +46,7 @@ NATIVE_PROJECTIONS = {
     "retract_before_travel": ("machine", "retraction_minimum_travel"),
     "retract_length_toolchange": ("machine", "retract_length_toolchange"),
     "retract_lift": ("machine", "z_hop"),
+    "z_hop_types": ("machine", "z_hop_types"),
     "retract_restart_extra": ("machine", "retract_restart_extra"),
     "retract_restart_extra_toolchange": ("machine", "retract_restart_extra_toolchange"),
     "retract_layer_change": ("machine", "retract_when_changing_layer"),

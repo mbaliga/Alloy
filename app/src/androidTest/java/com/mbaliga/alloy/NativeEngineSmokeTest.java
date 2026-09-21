@@ -66,6 +66,12 @@ public final class NativeEngineSmokeTest {
         Assert.assertTrue(defaultSerialized.contains("brim_type = no_brim"));
         Assert.assertTrue(defaultSerialized.contains("brim_width = 0"));
         Assert.assertTrue(defaultSerialized.contains("brim_object_gap = 0"));
+        Assert.assertTrue("Bambu Auto Lift must survive native config projection",
+                defaultSerialized.contains("z_hop_types = Auto Lift\n"));
+        Assert.assertTrue("Bambu Auto Lift must reach the filament override",
+                defaultSerialized.contains("filament_z_hop_types = Auto Lift\n"));
+        Assert.assertTrue(defaultSerialized.contains("filament_retraction_length = 0.8\n"));
+        Assert.assertTrue(defaultSerialized.contains("filament_z_hop = 0.4\n"));
         // The desktop flavor is a bounded parity override, not an arbitrary
         // native command channel. Verify both the accepted legacy value and
         // the fail-closed fallback before the contract-mutation assertions.

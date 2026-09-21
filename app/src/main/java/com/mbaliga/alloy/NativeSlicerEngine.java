@@ -201,6 +201,20 @@ public final class NativeSlicerEngine implements SlicerEngine {
             if (NativeSettings.isApprovedKey(entry.getKey()))
                 setting(settings, entry.getKey(), entry.getValue());
         }
+        // SliceBeam's G-code generator reads the per-filament Z-hop vector.
+        // Bambu's machine profile exposes the same choice as z_hop_types, so
+        // mirror the reviewed value into the native filament override rather
+        // than silently retaining the engine default.
+        String zHopType = config.nativeSettings.get("z_hop_types");
+        if (zHopType != null && zHopType.trim().length() > 0)
+            setting(settings, "filament_z_hop_types", zHopType);
+        mirrorFilamentSetting(settings, config.nativeSettings, "retract_length", "filament_retraction_length");
+        mirrorFilamentSetting(settings, config.nativeSettings, "retract_lift", "filament_z_hop");
+        mirrorFilamentSetting(settings, config.nativeSettings, "retract_lift_above", "filament_retract_lift_above");
+        mirrorFilamentSetting(settings, config.nativeSettings, "retract_lift_below", "filament_retract_lift_below");
+        mirrorFilamentSetting(settings, config.nativeSettings, "retract_before_travel", "filament_retraction_minimum_travel");
+        mirrorFilamentSetting(settings, config.nativeSettings, "retract_speed", "filament_retraction_speed");
+        mirrorFilamentSetting(settings, config.nativeSettings, "wipe", "filament_wipe");
         // Bambu's resolved A1 Mini profile constrains the X/Y and travel
         // acceleration ceilings to default_acceleration even though the
         // inherited machine JSON advertises higher axis maxima. SliceBeam
@@ -597,6 +611,15 @@ public final class NativeSlicerEngine implements SlicerEngine {
             for (Map.Entry<String, String> entry : settings.entrySet())
                 line(out, entry.getKey(), entry.getValue());
         }
+    }
+
+    private static void mirrorFilamentSetting(LinkedHashMap<String, String> output,
+                                              Map<String, String> source,
+                                              String sourceKey,
+                                              String filamentKey) {
+        String value = source.get(sourceKey);
+        if (value != null && value.trim().length() > 0)
+            setting(output, filamentKey, value);
     }
 
     private static String normalizedBrimType(String raw) {

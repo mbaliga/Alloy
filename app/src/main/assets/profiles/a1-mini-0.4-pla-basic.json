@@ -131,6 +131,7 @@
     "retract_lift_above": "0",
     "retract_lift_below": "179",
     "retract_lift": "0.4",
+    "z_hop_types": "Auto Lift",
     "bottom_solid_min_thickness": "0",
     "bridge_flow_ratio": "1",
     "bridge_speed": "50",

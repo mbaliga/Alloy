@@ -656,6 +656,15 @@ bool ConfigBase::set_deserialize_raw(const t_config_option_key &opt_key_src, con
     	substituted = result == ConfigHelpers::DeserializationResult::Substituted;
     } else {
 		//bool test = (opt_key == "filament_end_gcode");
+		// Some legacy/profile-copy paths construct a generic enum option from
+		// its values alone. Restore the definition's map before deserializing;
+		// otherwise a valid enum value can dereference a null map in the mobile
+		// config loader (notably Bambu's z_hop_types).
+		if (optdef->type == coEnums) {
+		    auto *enum_option = dynamic_cast<ConfigOptionEnumsGeneric *>(opt);
+		    if (enum_option != nullptr && enum_option->keys_map == nullptr)
+		        enum_option->keys_map = optdef->enum_keys_map;
+		}
 		success = opt->deserialize(value, append);
 	    if (! success && substitutions_ctxt.rule != ForwardCompatibilitySubstitutionRule::Disable &&
 	        // Only allow substitutions of an enum value by another enum value or a boolean value with an enum value.
