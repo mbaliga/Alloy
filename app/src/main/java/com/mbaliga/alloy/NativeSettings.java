@@ -23,7 +23,7 @@ final class NativeSettings {
             "chamber_temperature", "complete_objects", "cool_plate_temp", "cool_plate_temp_initial_layer", "curr_bed_type", "default_acceleration", "deretract_speed", "dont_support_bridges", "draft_shield",
             "elefant_foot_compensation", "enable_dynamic_overhang_speeds", "external_perimeter_acceleration", "external_perimeter_extrusion_width", "extrusion_width", "filament_cost", "filament_density",
             "filament_max_volumetric_speed", "filament_minimal_purge_on_wipe_tower", "filament_soluble", "filament_vendor", "fill_angle", "fill_pattern", "set_other_flow_ratios",
-            "fan_below_layer_time", "first_layer_acceleration", "initial_layer_acceleration", "initial_layer_infill_speed", "initial_layer_travel_acceleration", "first_layer_extrusion_width", "full_fan_speed_layer", "gap_fill_speed", "infill_overlap",
+            "fan_below_layer_time", "first_layer_acceleration", "initial_layer_acceleration", "initial_layer_infill_speed", "initial_layer_travel_acceleration", "first_layer_extrusion_width", "full_fan_speed_layer", "gap_fill_speed", "gcode_flavor", "infill_overlap",
             "interface_shells", "infill_extrusion_width", "internal_solid_infill_pattern", "ironing", "ironing_flowrate", "ironing_spacing", "ironing_speed", "machine_max_acceleration_e",
             "machine_max_acceleration_extruding", "machine_max_acceleration_retracting", "machine_max_acceleration_travel",
             "machine_max_acceleration_x", "machine_max_acceleration_y", "machine_max_acceleration_z", "infill_acceleration", "infill_anchor", "infill_anchor_max",

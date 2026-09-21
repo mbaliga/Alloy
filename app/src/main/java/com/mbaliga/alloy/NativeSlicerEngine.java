@@ -518,11 +518,18 @@ public final class NativeSlicerEngine implements SlicerEngine {
         } else {
             setting(settings, "max_volumetric_speed", number(config.maxVolumetricSpeed));
         }
-        // Bambu's A1 output uses the new Marlin P/R/T acceleration vocabulary.
-        // SliceBeam's `marlin` value is the legacy S/T flavor, where T means
-        // retract acceleration; `marlin2` is the source-backed mode that
-        // preserves separate print, retract and travel acceleration semantics.
-        setting(settings, "gcode_flavor", "marlin2");
+        // Bambu's A1 output can explicitly select either legacy `marlin` or
+        // the newer `marlin2` vocabulary. Keep the reviewed mobile default on
+        // `marlin2`, but honor a source-backed project override so a parity
+        // fixture can reproduce the exact desktop flavor without changing
+        // ordinary phone jobs. Only the two registered engine values are
+        // accepted; arbitrary slicer command text never crosses this boundary.
+        String requestedGcodeFlavor = config.nativeSettings.get("gcode_flavor");
+        if (!"marlin".equalsIgnoreCase(requestedGcodeFlavor)
+                && !"marlin2".equalsIgnoreCase(requestedGcodeFlavor)) {
+            requestedGcodeFlavor = "marlin2";
+        }
+        setting(settings, "gcode_flavor", requestedGcodeFlavor.toLowerCase(Locale.US));
         // Preserve an explicit source/profile choice for arc fitting. The
         // default remains linear until a profile opts in; the phone preview
         // discretizes G2/G3 moves into bounded display segments without
