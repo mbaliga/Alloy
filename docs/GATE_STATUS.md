@@ -64,6 +64,14 @@ artifact. The current native APK hashes are release
 instrumentation
 `d281a3e0ccd7272dcaff0cefd130dec8dc1029efa0cdc43c5a958a42a27f7e2d`.
 
+After the layer-height safety change, the native ARM64 release was rebuilt
+successfully and the native smoke suite completed **9 executions, 0 failures,
+2 intentional opt-in/private-asset skips**. The rebuilt artifact hashes are
+APK `db6640d14390e83eb6cc978eb71e57c7b13eafa4b957a89ce70fff849459d709`, AAB
+`7ddd6d86b712391c6b16ad17afc8969c2acb1a0505ed6c3814ef85bb6aea96dc`, and
+stripped `libslic3r.so`
+`e437f1035a384ccfcdfc84ea0f402e57a555bcd594d1b60c80b43ea8b6ba362f`.
+
 The controlled cube export now carries the reviewed machine-start
 `M204 S6000` default acceleration before first-layer acceleration. The first
 remaining normalized acceleration mismatch against Orca is the separate
