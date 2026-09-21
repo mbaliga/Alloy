@@ -21,6 +21,15 @@ warning (`P1500` versus `P300`), so the fixture is **PASS WITH WARNING**, not
 a blanket production-parity claim. No physical A1 Mini send/start claim has
 been made.
 
+The dedicated obstacle comparison remains an explicit **FAIL / NO-GO** for
+promotion. The saved desktop and Android artifacts in
+`/private/tmp/alloy-g3-obstacle` and `/private/tmp/alloy-g3-flavor-current`
+compare at 140 layers with 0.34% filament-length delta and 1.70% extrusion-move
+delta, but Android emits 2,304 versus 4,096 travel moves (43.75% fewer),
+5.47% positive-extrusion delta, and a different acceleration sequence. This
+fixture is evidence that the slope-lift/travel planner still needs work; it
+must not be described as production parity.
+
 Visual status is also **OPEN**. The latest emulator capture uses the supplied
 A1 Mini mesh, five receding plates, and scale props, with a revised editorial
 title, centered hero framing, and quieter callout hierarchy. It is still a
