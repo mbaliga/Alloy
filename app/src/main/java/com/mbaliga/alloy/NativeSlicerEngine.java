@@ -436,6 +436,10 @@ public final class NativeSlicerEngine implements SlicerEngine {
         }
         if (config.nativeSettings.containsKey("support_tree_branch_diameter_double_wall")) {
             String wallCount = config.nativeSettings.get("support_tree_branch_diameter_double_wall");
+            // Bambu's -1 means automatic/default wall policy. The embedded
+            // core expresses that same policy as zero extra walls and rejects
+            // the provider sentinel as outside its bounded enum range.
+            if ("-1".equals(wallCount.trim())) wallCount = "0";
             setting(settings, "tree_support_wall_count", wallCount);
         }
         if (!hasApprovedNativeSetting(config, "support_material_contact_distance"))
@@ -684,9 +688,16 @@ public final class NativeSlicerEngine implements SlicerEngine {
 
     /** Keep the native artifact self-contained and printable on Marlin-like firmware. */
     private static String startGcode(Slicer.Config config) {
-        float defaultAcceleration = parseFirstNumber(config.nativeSettings.get("default_acceleration"));
-        String acceleration = Float.isFinite(defaultAcceleration) && defaultAcceleration > 0f
-                ? String.format(Locale.US, "M204 S%.0f\\n", defaultAcceleration) : "";
+        // Bambu's A1 start sequence establishes the travel acceleration here;
+        // the process default is applied later by the resolved toolpath. Using
+        // the default in the start block injects an extra M204 S6000 and makes
+        // an otherwise matched artifact advertise a different acceleration
+        // envelope before the first layer begins.
+        float startAcceleration = parseFirstNumber(config.nativeSettings.get("travel_acceleration"));
+        if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f)
+            startAcceleration = parseFirstNumber(config.nativeSettings.get("default_acceleration"));
+        String acceleration = Float.isFinite(startAcceleration) && startAcceleration > 0f
+                ? String.format(Locale.US, "M204 S%.0f\\n", startAcceleration) : "";
         return String.format(Locale.US,
                 "; Alloy native start · %s\\n; Alloy template policy: %s\\n%sM140 S%.0f\\nM104 S%.0f\\nM190 S%.0f\\nM109 S%.0f\\nG28\\nG90\\nM83\\nG92 E0\\nM107",
                 config.printer, A1MiniTemplatePolicy.ID, acceleration, config.firstLayerBedTemperature, config.nozzleTemperature,
