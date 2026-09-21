@@ -1781,6 +1781,16 @@ composition and material-language improvement only; the visual gate remains
 open because the supplied machine mesh still needs a higher-fidelity material,
 lighting, and hero-render pass.
 
+The follow-up render pass is captured at `/private/tmp/alloy-visual-v9-study.png`.
+It removes the in-frame instructional hint and prototype wording from the
+marketing surface, adds bounded neutral specular response and low-amplitude
+powder-coat variation to the welded machine shell, and keeps the four-plate
+runway and selector hierarchy intact. The release APK builds successfully and
+the shader path was exercised on the API-35 ARM64 emulator. The visual gate
+remains open: the source mesh still needs authored region segmentation or a
+higher-fidelity licensed render asset before this can be called premium or
+production-ready.
+
 The next visual pass is now installed and emulator-checked: the A1 Mini study
 uses the reference-inspired hero composition, quiet white stage, centred Alloy
 wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a
