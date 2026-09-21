@@ -2423,7 +2423,7 @@ public final class MainActivity extends Activity {
         new AlertDialog.Builder(this)
                 .setTitle("Start print?")
                 .setMessage("The artifact was uploaded to " + target.name + ". The printer must confirm PREPARE/RUNNING telemetry before Alloy reports a start.")
-                .setNegativeButton("Not now", (dialog, which) -> {
+                .setNegativeButton("Keep uploaded", (dialog, which) -> {
                     if (!printerJobStore.updateIfMatches(jobId, target, artifact, PrinterTransport.State.UPLOADED,
                             "Artifact uploaded; start was not requested", remotePath)) return;
                     activePrinterTarget = null;
