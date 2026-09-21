@@ -66,6 +66,12 @@ state, and explains the recovery path instead of leaving the session disabled.
 The native-enabled release instrumentation suite was rerun afterward: **153
 tests completed, 0 failures, 1 intentional G3 export skip**.
 
+Bambu profile/project imports now have the same bounded-failure behavior with a
+60-second watchdog. A stalled provider is cancelled, the import action is
+re-enabled, and the workspace returns to its prior state with a recovery
+message. The watchdog is generation-scoped so a late callback from an older
+import cannot clear or overwrite a newer import.
+
 The post-watchdog host audit also reran the independent parity suite at **66/66**
 and the Linux/model/artifact bridge suite at **26/26**. These remain offline and
 bridge-level checks; they do not substitute for acceptance on a physical A1
