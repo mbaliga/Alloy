@@ -58,6 +58,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_PROFILE = 47;
     private static final int REQUEST_PROFILE_EXPORT = 48;
     private static final int REQUEST_VIEW_EXPORT = 49;
+    private static final int REQUEST_VISUALIZATION_EXPORT = 50;
     private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
     private static final int HISTORY_RESET = 0;
     private static final int HISTORY_RESTORE = 1;
@@ -162,6 +163,7 @@ public final class MainActivity extends Activity {
     private Future<?> activeVisualization;
     private final AtomicLong visualizationIds = new AtomicLong();
     private long activeVisualizationId;
+    private byte[] pendingVisualizationPng;
     private Future<?> activeCertificateInspection;
     private final AtomicLong certificateInspectionIds = new AtomicLong();
     private long activeCertificateInspectionId;
@@ -2521,6 +2523,7 @@ public final class MainActivity extends Activity {
         }
         if (request == REQUEST_EXPORT && data.getData() != null) writeExport(data.getData());
         if (request == REQUEST_VIEW_EXPORT && data.getData() != null) writeViewExport(data.getData());
+        if (request == REQUEST_VISUALIZATION_EXPORT && data.getData() != null) writeVisualizationExport(data.getData());
         if (request == REQUEST_PROJECT_EXPORT && data.getData() != null) writeProjectArchive(data.getData());
         if (request == REQUEST_BATCH_EXPORT && data.getData() != null) writeBatchArchive(data.getData());
         if (request == REQUEST_PROJECT_OPEN && data.getData() != null) {
@@ -3682,9 +3685,42 @@ public final class MainActivity extends Activity {
         ImageView image = new ImageView(this);
         image.setAdjustViewBounds(true); image.setPadding(12, 12, 12, 12); image.setImageBitmap(bitmap);
         ScrollView scroll = new ScrollView(this); scroll.addView(image);
+        pendingVisualizationPng = result.imagePng.clone();
         new AlertDialog.Builder(this).setTitle("Visualization ready")
                 .setMessage(result.providerLabel + " · reference geometry remains unchanged")
-                .setView(scroll).setPositiveButton("Done", null).show();
+                .setView(scroll).setNegativeButton("Done", null)
+                .setPositiveButton("Save PNG", (dialog, which) -> openVisualizationExport()).show();
+    }
+
+    private void openVisualizationExport() {
+        if (pendingVisualizationPng == null || !VisualizationProvider.isBoundedPng(pendingVisualizationPng)) {
+            Toast.makeText(this, "Visualization image is no longer available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/png");
+        intent.putExtra(Intent.EXTRA_TITLE, "alloy-visualization.png");
+        startActivityForResult(intent, REQUEST_VISUALIZATION_EXPORT);
+    }
+
+    private void writeVisualizationExport(Uri uri) {
+        byte[] png = pendingVisualizationPng;
+        pendingVisualizationPng = null;
+        if (png == null || !VisualizationProvider.isBoundedPng(png)) {
+            Toast.makeText(this, "Visualization image is no longer available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
+            if (out == null) throw new IOException("Output destination could not be opened");
+            out.write(png);
+            out.flush();
+            Toast.makeText(this, "Saved visualization PNG", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Visualization export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        } finally {
+            java.util.Arrays.fill(png, (byte) 0);
+        }
     }
 
     private synchronized void cancelVisualization() {
