@@ -420,6 +420,7 @@ public final class ProfileCatalog {
             case "fan_cooling_layer_time": return "fan_below_layer_time";
             case "slow_down_min_speed": return "min_print_speed";
             case "retract_when_changing_layer": return "retract_layer_change";
+            case "reduce_infill_retraction_mode": return "reduce_infill_retraction";
             case "retraction_length": return "retract_length";
             case "retraction_speed": return "retract_speed";
             case "z_hop": return "retract_lift";
@@ -450,6 +451,11 @@ public final class ProfileCatalog {
             if ("zig-zag".equals(normalized)) return "rectilinear";
             if ("monotoniclines".equals(normalized)) return "monotonicline";
             return normalized;
+        }
+        if ("reduce_infill_retraction".equals(nativeKey)) {
+            String normalized = value.trim().toLowerCase(Locale.US);
+            return "auto".equals(normalized) || "always".equals(normalized)
+                    || "true".equals(normalized) || "1".equals(normalized) ? "1" : "0";
         }
         if (!"support_material_style".equals(nativeKey)) return value;
         String normalized = value.trim().toLowerCase(Locale.US);

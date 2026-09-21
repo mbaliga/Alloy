@@ -38,7 +38,7 @@ final class NativeSettings {
             "min_print_speed", "overhang_speed_0", "overhang_speed_1", "overhang_speed_2", "overhang_speed_3", "perimeter_acceleration", "perimeter_extrusion_width", "perimeter_generator", "printer_model",
             "printer_variant", "raft_layers", "resolution", "retract_before_travel", "retract_before_wipe", "retract_length",
             "retract_length_toolchange", "retract_lift", "retract_lift_above", "retract_lift_below", "retract_restart_extra", "z_hop_types",
-            "retract_restart_extra_toolchange", "retract_layer_change", "retract_speed", "seam_position", "silent_mode",
+            "retract_restart_extra_toolchange", "retract_layer_change", "retract_speed", "reduce_infill_retraction", "seam_position", "silent_mode",
             "single_extruder_multi_material", "skirt_distance", "skirt_height", "skirts", "slowdown_below_layer_time",
             "eng_plate_temp", "eng_plate_temp_initial_layer", "hot_plate_temp", "hot_plate_temp_initial_layer",
             "inner_wall_acceleration", "outer_wall_acceleration", "sparse_infill_acceleration", "top_surface_acceleration", "internal_solid_infill_acceleration",
