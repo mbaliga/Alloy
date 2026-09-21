@@ -1053,6 +1053,12 @@ public final class MainActivity extends Activity {
     /** Remove platform chrome while a presentation study is on screen. */
     private void enterPresentationMode(Window window) {
         if (window == null) return;
+        // Dialog windows can briefly inherit the host activity's system-bar
+        // policy during a cold launch. The study is a full-bleed product
+        // surface, so make fullscreen an explicit window property as well as
+        // an insets request; otherwise status/navigation chrome can appear
+        // over marketing captures and change the composition.
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
         if (Build.VERSION.SDK_INT >= 30) {
             window.setDecorFitsSystemWindows(false);
             android.view.WindowInsetsController controller = window.getInsetsController();
