@@ -1425,10 +1425,10 @@ final class GlesViewportSurface extends GLSurfaceView {
         // phone composition an unmistakable runway into the distance. The
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
-        for (int index = 0; index < 8; index++) {
-            float depth = 72f - index * 3.5f;
-            float width = 178f - index * 7f;
-            float centerY = 92f - index * 52f;
+        for (int index = 0; index < 4; index++) {
+            float depth = 72f - index * 4.5f;
+            float width = 178f - index * 9f;
+            float centerY = 92f - index * 58f;
             float z = -3.4f - index * 0.12f;
             // A physical PEI sheet has softened corners and a small front
             // grip tab. Keeping that silhouette in the presentation geometry
@@ -1773,10 +1773,13 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "else if(vPart<4.5){base=vec3(0.12,0.15,0.17);}"
                     + "else if(vPart<5.5){base=vec3(0.64,0.32,0.10);}"
                     + "else{base=vec3(0.93,0.73,0.27);}"
-                    + "if(uMachine==3 && vPart<0.5){base=vec3(0.58,0.62,0.69);}"
-                    + "else if(uMachine==3 && vPart<1.5){base=vec3(0.78,0.86,0.12);}"
-                    + "else if(uMachine==3 && vPart<2.5){base=vec3(0.74,0.67,0.42);}"
-                    + "else if(uMachine==3){base=vec3(0.88,0.72,0.22);}"
+                    // Scale props are deliberately restrained: the supplied
+                    // reference uses them as quiet dimensional cues, not as
+                    // saturated debug primitives competing with the hero.
+                    + "if(uMachine==3 && vPart<0.5){base=vec3(0.72,0.70,0.64);}"
+                    + "else if(uMachine==3 && vPart<1.5){base=vec3(0.36,0.52,0.40);}"
+                    + "else if(uMachine==3 && vPart<2.5){base=vec3(0.58,0.43,0.22);}"
+                    + "else if(uMachine==3){base=vec3(0.19,0.22,0.24);}"
                     + "if(uMachine==1 && vPart>-1.5 && vPosition.z<4.5){"
                     + "vec2 grainUv=vPosition.xy*0.22; float n=alloyNoise(grainUv)*0.58+alloyNoise(grainUv*2.7)*0.27+alloyNoise(grainUv*6.1)*0.15;"
                     + "float dx=alloyNoise(grainUv+vec2(0.55,0.0))-n; float dy=alloyNoise(grainUv+vec2(0.0,0.55))-n;"

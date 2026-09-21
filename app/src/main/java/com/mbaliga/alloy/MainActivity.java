@@ -1250,13 +1250,13 @@ public final class MainActivity extends Activity {
         scene.setModel(null);
         stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView title = label("A1 MINI  ·  3D STUDY\nBambu Lab", 10, TEXT);
+        TextView title = label("A1 MINI\nBambu Lab\n180 × 180 × 180 MM", 10, TEXT);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setLetterSpacing(0.06f);
         title.setLineSpacing(3, 1.0f);
         title.setPadding(dp(2), dp(2), dp(2), dp(2));
         title.setBackgroundColor(Color.TRANSPARENT);
-        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(190), -2, Gravity.TOP | Gravity.START);
+        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(215), -2, Gravity.TOP | Gravity.START);
         titleLp.setMargins(dp(22), dp(20), 0, 0);
         stage.addView(title, titleLp);
         TextView wordmark = label("ALLOY", 19, TEXT);
@@ -1278,13 +1278,18 @@ public final class MainActivity extends Activity {
         // orbit the hero subject while controls stay quiet at the edges.
         // Keep the renderer controls available through the scene itself, but
         // do not let them dominate the first marketing frame.
-        stage.addView(compactSceneTag("A1", "PRINTER", "A1 MINI",
-                Gravity.TOP | Gravity.START, dp(16), dp(230)));
+        // Match the supplied configurator's visual grammar: one quiet size
+        // selector above the hero, material and nozzle selectors orbiting it,
+        // and only two small context selectors near the lower edge. The
+        // labels are presentation-only; printer configuration remains in the
+        // actual preparation and pairing flows.
+        stage.addView(compactSceneTag("□", "SIZE", "180 × 180 × 180 MM",
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(126)));
         stage.addView(compactSceneTag("◌", "MATERIAL", "NATURAL PLA",
-                Gravity.TOP | Gravity.END, dp(16), dp(230)));
+                Gravity.CENTER_VERTICAL | Gravity.START, dp(16), dp(44)));
         stage.addView(compactSceneTag("⌁", "NOZZLE", "0.4 MM",
-                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(34)));
-        stage.addView(compactSceneTag("□", "BUILD VOLUME", "180 × 180 × 180 MM",
+                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(26)));
+        stage.addView(compactSceneTag("A1", "PRINTER", "A1 MINI",
                 Gravity.BOTTOM | Gravity.START, dp(16), dp(92)));
         stage.addView(compactSceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
                 Gravity.BOTTOM | Gravity.END, dp(16), dp(88)));

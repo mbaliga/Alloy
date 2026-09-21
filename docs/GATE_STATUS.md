@@ -1771,6 +1771,16 @@ material/finish callouts and finished marketing composition. It must not be
 described as production-ready or as a faithful implementation of the supplied
 reference.
 
+The next visual milestone is emulator-verified at
+`/private/tmp/alloy-visual-v8.png`. The A1 study now uses the reference's
+selector choreography more directly: size above the hero, material and nozzle
+at the sides, and printer/scale context at the lower edge. The runway is four
+receding presentation-only PEI sheets, and the scale props use restrained
+stone/sage/brass materials instead of saturated debug colours. This is a
+composition and material-language improvement only; the visual gate remains
+open because the supplied machine mesh still needs a higher-fidelity material,
+lighting, and hero-render pass.
+
 The next visual pass is now installed and emulator-checked: the A1 Mini study
 uses the reference-inspired hero composition, quiet white stage, centred Alloy
 wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a
