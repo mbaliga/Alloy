@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
+import groovy.json.JsonSlurper
+
 def nativeEngineEnabled = project.findProperty('alloyNativeEngine')?.toString()?.toBoolean() ?: false
 def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.toString()?.toBoolean() ?: false
 def productionRelease = project.findProperty('alloyProductionRelease')?.toString()?.toBoolean() ?: false
@@ -31,8 +33,29 @@ if (productionRelease && (!nativeEngineEnabled || !nativeEngineVerified)) {
 if (productionRelease && project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean()) {
     throw new GradleException('alloyProductionRelease=true cannot use the CI debug signing key')
 }
-if (productionRelease && !file('../release/production-readiness.json').isFile()) {
-    throw new GradleException('alloyProductionRelease=true requires the reviewed release/production-readiness.json evidence record')
+if (productionRelease) {
+    def readinessFile = file('../release/production-readiness.json')
+    if (!readinessFile.isFile()) {
+        throw new GradleException('alloyProductionRelease=true requires the reviewed release/production-readiness.json evidence record')
+    }
+    try {
+        def readiness = new JsonSlurper().parse(readinessFile)
+        def requiredReadinessGates = [
+                'native_engine_source_build', 'native_smoke_on_arm64_device',
+                'a1_mini_profile_parity', 'g3_toolpath_parity',
+                'g4_profile_runtime_parity', 'bambu_treesupport3d_parity',
+                'physical_a1_mini_transport', 'signed_install_and_upgrade',
+                'interruption_and_recovery'
+        ]
+        if (readiness.schema_version != 1 || !(readiness.gates instanceof Map)
+                || requiredReadinessGates.any { readiness.gates[it] != 'PASS' }) {
+            throw new GradleException('release/production-readiness.json does not mark every required gate PASS')
+        }
+    } catch (GradleException error) {
+        throw error
+    } catch (Exception error) {
+        throw new GradleException('release/production-readiness.json is not valid JSON: ' + error.message)
+    }
 }
 
 android {
