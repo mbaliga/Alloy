@@ -10,6 +10,14 @@ completed 157 instrumentation executions with 0 failures and 1 intentional
 skip. The skip is the opt-in native G3 evidence export; it remains excluded
 from the production claim until the engine gate is closed.
 
+The current source audit still reports Bambu `TreeSupport3D` as
+`PORT_REQUIRED`: seven required implementation files differ, the direct
+include surface is 36 files, and 35 quoted includes remain unresolved in the
+transitive audit. The Linux companion regression suite independently completed
+19/19 tests. The production-readiness template continues to fail closed on
+placeholder evidence IDs by design; it has not been promoted to a release
+claim.
+
 The Android wiring validator now also requires the live GLES `PixelCopy` export
 path, its bounded A1 study instrumentation test, and the MainActivity export
 call site. This turns the verified marketing/inspection capture path into a
