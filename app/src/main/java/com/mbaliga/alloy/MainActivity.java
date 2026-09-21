@@ -1204,12 +1204,12 @@ public final class MainActivity extends Activity {
         scene.setModel(null);
         stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView title = label("A1 MINI\nBambu Lab  ·  0.4 mm nozzle", 13, TEXT);
+        TextView title = label("A1 MINI\nBambu Lab", 12, TEXT);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setLineSpacing(3, 1.0f);
-        title.setPadding(dp(16), dp(12), dp(16), dp(12));
-        title.setBackground(round(Color.argb(248, 255, 255, 255), Color.rgb(231, 228, 221), 1, 18));
-        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+        title.setPadding(dp(12), dp(8), dp(12), dp(8));
+        title.setBackground(round(Color.argb(224, 255, 255, 255), Color.TRANSPARENT, 0, 14));
+        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(142), -2, Gravity.TOP | Gravity.START);
         titleLp.setMargins(dp(14), dp(14), 0, 0);
         stage.addView(title, titleLp);
         TextView wordmark = label("ALLOY", 19, TEXT);
@@ -1232,11 +1232,11 @@ public final class MainActivity extends Activity {
         // supplied reference mesh remains unobscured as the hero subject.
         stage.addView(sceneTag("A1", "PRINTER", "A1 MINI", Gravity.TOP | Gravity.START, dp(16), dp(214)));
         stage.addView(sceneTag(scene.hasReferenceMachineModel() ? "⌁" : "◇", "GEOMETRY",
-                scene.hasReferenceMachineModel() ? "SUPPLIED REFERENCE" : "ALLOY STUDY MODEL",
-                Gravity.TOP | Gravity.END, dp(16), dp(214)));
+                scene.hasReferenceMachineModel() ? "A1 MINI" : "ALLOY STUDY MODEL",
+                Gravity.TOP | Gravity.END, dp(16), dp(246)));
         stage.addView(sceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
                 Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, dp(72)));
-        TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM  ·  PRESENTATION ONLY", 9, MUTED);
+        TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM", 9, MUTED);
         hint.setGravity(Gravity.CENTER);
         hint.setLetterSpacing(0.08f);
         FrameLayout.LayoutParams hintLp = new FrameLayout.LayoutParams(-2, dp(30), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
@@ -1247,23 +1247,18 @@ public final class MainActivity extends Activity {
         LinearLayout footer = new LinearLayout(this);
         footer.setOrientation(LinearLayout.VERTICAL);
         footer.setGravity(Gravity.CENTER_VERTICAL);
-        footer.setPadding(dp(14), dp(10), dp(14), dp(14));
+        footer.setPadding(dp(14), dp(6), dp(14), dp(10));
         footer.setBackgroundColor(Color.WHITE);
-        boolean suppliedReference = scene.hasReferenceMachineModel();
-        TextView note = label(suppliedReference
-                ? "OWNER VISUAL-REVIEW ASSET  ·  16,054 triangles  ·  presentation only"
-                : "PUBLIC/ORDINARY BUILD  ·  supplied A1 mesh is not packaged  ·  presentation only", 10, MUTED);
+        TextView note = label("A1 MINI  ·  PHONE STUDY", 10, MUTED);
         note.setGravity(Gravity.CENTER);
         note.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         note.setLineSpacing(1, 1.0f);
         footer.addView(note, new LinearLayout.LayoutParams(-1, 0, 1));
-        Button importReference = dialogButton(suppliedReference ? "Import from phone" : "Import A1 3MF", v -> {
+        Button importReference = dialogButton("Import model", v -> {
             dialog.dismiss();
             openModel();
         });
-        importReference.setContentDescription(suppliedReference
-                ? "Import an A1 Mini model from this phone"
-                : "Import the supplied A1 Mini 3MF model from this phone");
+        importReference.setContentDescription("Import a 3D model from this phone");
         LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(dp(230), dp(42));
         importLp.gravity = Gravity.CENTER_HORIZONTAL;
         footer.addView(importReference, importLp);
@@ -1273,7 +1268,7 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-1, dp(54));
         doneLp.setMargins(dp(120), dp(8), dp(120), 0);
         footer.addView(done, doneLp);
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(142)));
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(112)));
 
         dialog.setContentView(page);
         dialog.setOnDismissListener(ignored -> scene.onHostPause());

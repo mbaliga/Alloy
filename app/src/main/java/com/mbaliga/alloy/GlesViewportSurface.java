@@ -1589,7 +1589,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "float alloyNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(alloyHash(i),alloyHash(i+vec2(1.0,0.0)),f.x),mix(alloyHash(i+vec2(0.0,1.0)),alloyHash(i+vec2(1.0,1.0)),f.x),f.y);}"
                     + "void main(){"
                     + "vec3 base;"
-                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.010,0.012,0.020):vec3(0.18,0.16,0.14);}"
+                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.34,0.31,0.27);}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
                     + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
