@@ -1839,6 +1839,15 @@ The Android, release, transport, native, model-asset, and parity checks pass;
 the visual-quality, native parity, physical-printer, and production-signing
 gates remain open.
 
+The next emulator visual capture is `/private/tmp/alloy-visual-v11-runway.png`.
+The presentation runway now uses four full-depth PEI-sheet silhouettes with
+bounded perspective reduction and overlap; the prior shallow 72 mm sheets
+read as disconnected grid fragments on portrait phones. The debug APK builds,
+installs, and opens the study successfully after this change. This improves
+the requested A1 Mini marketing composition, but does not close the broader
+visual-quality gate: the machine still needs authored region materials,
+higher-fidelity lighting, and a final reference-led art pass.
+
 ## Linux milestone
 
 **Status: implemented lightweight bridge; native desktop engine intentionally
