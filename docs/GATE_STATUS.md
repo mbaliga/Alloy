@@ -9,6 +9,24 @@ completed 153 instrumentation executions with 0 failures and 1 intentional
 skip. The skip is the opt-in native G3 evidence export; it remains excluded
 from the production claim until the engine gate is closed.
 
+Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
+has now been sliced by both the installed Bambu Studio CLI and Alloy's native
+Android engine using the matched A1 Mini/PLA profile. Alloy's native export
+matches the reviewed profile fields and major feature classes, but remains
+**FAIL/NO-GO** for production parity: 3,204 s versus 3,035 s (5.27% high),
+2,135.01 mm versus 2,032.81 mm of filament (4.79% high), and 2,672 versus
+2,361 travel moves (11.64% high). Positive extrusion is 2,835.81 mm versus
+2,574.41 mm (9.22% high), and later acceleration transitions still differ.
+This is the current slicer-fidelity blocker; no physical A1 Mini send/start
+claim has been made.
+
+Visual status is also **OPEN**. The latest emulator capture uses the supplied
+A1 Mini mesh, five receding plates, and scale props, but it is still a study
+shell rather than the supplied luxury configurator experience: the lighting,
+materials, immersive camera choreography, interaction model, and inventory
+surface have not yet been brought to reference quality. The capture is kept
+at `/private/tmp/alloy-reference-composition-v6-study-real.png` for review.
+
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
 so ordinary release APKs silently fell back to the simplified Alloy frame.
