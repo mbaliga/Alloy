@@ -1831,6 +1831,14 @@ two-action bottom surface. The final emulator capture is retained at
 directional product-surface milestone, not final art direction or a claim
 that the supplied reference has been reproduced pixel-for-pixel.
 
+The Android wiring guard was tightened on this checkpoint so future APK/AAB
+builds fail if the owner-provided Alloy logo is missing, empty, or no longer
+referenced by the splash drawable. The manifest launcher icon, splash logo,
+release assets, and Android model wiring all remain covered by the validator.
+The Android, release, transport, native, model-asset, and parity checks pass;
+the visual-quality, native parity, physical-printer, and production-signing
+gates remain open.
+
 ## Linux milestone
 
 **Status: implemented lightweight bridge; native desktop engine intentionally

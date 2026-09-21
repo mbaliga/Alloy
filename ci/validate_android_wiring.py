@@ -44,6 +44,8 @@ def main() -> None:
     batch_slice_result_path = ROOT / "app/src/main/java/com/mbaliga/alloy/BatchSliceResultStore.java"
     safety_path = ROOT / "app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java"
     manifest_path = ROOT / "app/src/main/AndroidManifest.xml"
+    splash_path = ROOT / "app/src/main/res/drawable/splash_screen.xml"
+    logo_path = ROOT / "app/src/main/res/drawable-nodpi/alloy_logo.png"
     activity = activity_path.read_text()
     viewport = viewport_path.read_text()
     gles_viewport = gles_viewport_path.read_text()
@@ -75,6 +77,7 @@ def main() -> None:
     batch_slice_result = batch_slice_result_path.read_text()
     safety = safety_path.read_text()
     manifest = manifest_path.read_text()
+    splash = splash_path.read_text()
 
     for token in (
         "ExecutorService importExecutor",
@@ -318,6 +321,10 @@ def main() -> None:
         'android:mimeType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"',
     ):
         require(manifest, token, manifest_path)
+    for token in ('@drawable/alloy_logo', '@color/splash_black'):
+        require(splash, token, splash_path)
+    if not logo_path.is_file() or logo_path.stat().st_size == 0:
+        raise SystemExit(f"missing or empty Alloy logo asset: {logo_path}")
     require(activity, "onNewIntent(Intent intent)", activity_path)
     require(pipeline_test, "sharedModelIntentCarriesStreamUri", pipeline_test_path)
     for asset in (
