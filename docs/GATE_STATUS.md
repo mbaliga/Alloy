@@ -1807,6 +1807,10 @@ release, transport, Android, native, and model-asset validators now all pass
 on this checkpoint. This closes repository-integrity regressions; it does not
 close the native parity or physical-printer gates.
 
+The independent parity suite was rerun after the audit repairs: **66/66
+tests passed**. This confirms the catalog and validator changes did not alter
+the checked-in profile, comparison, or artifact contracts.
+
 The next visual pass is now installed and emulator-checked: the A1 Mini study
 uses the reference-inspired hero composition, quiet white stage, centred Alloy
 wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a
