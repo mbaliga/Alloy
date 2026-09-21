@@ -1369,10 +1369,10 @@ final class GlesViewportSurface extends GLSurfaceView {
         // A compact can silhouette, a tennis-ball sphere and a key-shaped
         // object sit in the quiet foreground of the machine study. Their
         // reduced scale keeps the full printer frame legible on a phone.
-        addCylinderZ(values, -102f, 226f, -30f, 10f, 34f, 24, 0f);
-        addCylinderZ(values, -102f, 226f, -12f, 8.6f, 1.2f, 24, 0f);
-        addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 20, 12, 1f);
-        addCylinderZ(values, -34f, 226f, -43f, 6.5f, 2.5f, 20, 2f);
+        addCylinderZ(values, -102f, 226f, -30f, 10f, 34f, 36, 0f);
+        addCylinderZ(values, -102f, 226f, -12f, 8.6f, 1.2f, 36, 0f);
+        addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 40, 24, 1f);
+        addCylinderZ(values, -34f, 226f, -43f, 6.5f, 2.5f, 32, 2f);
         addBox(values, -43f, 224f, -42f, -27f, 228f, -34f, 2f);
         addBox(values, -22f, 225f, -41f, 4f, 227f, -37f, 2f);
         addCylinderZ(values, -34f, 226f, -31f, 2.3f, 2.8f, 16, 3f);
@@ -1466,8 +1466,8 @@ final class GlesViewportSurface extends GLSurfaceView {
     private static void addSphere(ArrayList<Float> values, float centerX, float centerY,
                                   float centerZ, float radiusX, float radiusY, float radiusZ,
                                   int segments, int rings, float part) {
-        int around = Math.max(12, Math.min(32, segments));
-        int bands = Math.max(6, Math.min(18, rings));
+        int around = Math.max(16, Math.min(48, segments));
+        int bands = Math.max(8, Math.min(24, rings));
         for (int ring = 0; ring < bands; ring++) {
             double a0 = -Math.PI / 2d + Math.PI * ring / bands;
             double a1 = -Math.PI / 2d + Math.PI * (ring + 1) / bands;
