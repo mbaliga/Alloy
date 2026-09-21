@@ -53,6 +53,12 @@ ARM64 emulator, and the runtime capture is retained at
 `/private/tmp/alloy-a1-study-tightened.png`. This is measurable presentation
 progress, not final visual signoff.
 
+The next pass replaced the study runway's rectangular slabs with rounded
+extruded PEI sheets and front grip tabs, then rebuilt and reinstalled the APK.
+The on-device capture is retained at `/private/tmp/alloy-rounded-plates-study.png`.
+The geometry is presentation-only and does not enter plate planning, slicing,
+collision, or printer transport.
+
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
 so ordinary release APKs silently fell back to the simplified Alloy frame.
