@@ -133,8 +133,8 @@ public final class PrinterReadiness {
                         ? (sliceVerified ? "Verified native result" : "Result is not marked engine-verified")
                         : "Slice a model first");
         if (includeSupportParityCheck) {
-            add(checks, "Support parity", supportParityReady,
-                    supportParityDetail.trim().length() == 0
+        add(checks, "Support parity", supportParityReady,
+                    supportParityDetail == null || supportParityDetail.trim().length() == 0
                             ? (supportParityReady ? "Support parity is covered" : "Production support parity is not available")
                             : supportParityDetail);
         }
