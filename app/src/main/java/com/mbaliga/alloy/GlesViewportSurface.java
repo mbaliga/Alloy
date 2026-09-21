@@ -1433,9 +1433,15 @@ final class GlesViewportSurface extends GLSurfaceView {
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
         for (int index = 0; index < 4; index++) {
-            float depth = 72f - index * 4.5f;
-            float width = 178f - index * 9f;
-            float centerY = 92f - index * 58f;
+            // The handoff's reference uses full physical 184 mm sheets. The
+            // earlier 72 mm depth made the runway collapse into a few dark
+            // grid fragments behind the printer on a portrait phone. Keep
+            // the first sheet near the real A1 footprint, then use a bounded
+            // perspective reduction and overlap so all four plates read as
+            // a continuous conveyor receding into the scene.
+            float depth = 150f - index * 24f;
+            float width = 184f - index * 14f;
+            float centerY = 92f - index * (92f - index * 8f);
             float z = -3.4f - index * 0.12f;
             // A physical PEI sheet has softened corners and a small front
             // grip tab. Keeping that silhouette in the presentation geometry
