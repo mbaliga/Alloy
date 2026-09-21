@@ -840,6 +840,8 @@ final class GlesViewportSurface extends GLSurfaceView {
         private int studyAccessoryVertexCount;
         private FloatBuffer studyPlateBuffer;
         private int studyPlateVertexCount;
+        private FloatBuffer studyShadowBuffer;
+        private int studyShadowVertexCount;
         private FloatBuffer meshBuffer;
         private int meshVertexCount;
         private MeshModel uploadedModel;
@@ -892,6 +894,8 @@ final class GlesViewportSurface extends GLSurfaceView {
             studyAccessoryVertexCount = studyAccessoryBuffer.limit() / 7;
             studyPlateBuffer = floatBuffer(studyPlates());
             studyPlateVertexCount = studyPlateBuffer.limit() / 7;
+            studyShadowBuffer = floatBuffer(studyShadow());
+            studyShadowVertexCount = studyShadowBuffer.limit() / 7;
         }
 
         @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 unused, int width, int height) {
@@ -938,6 +942,12 @@ final class GlesViewportSurface extends GLSurfaceView {
                 // never part of the printable model, plate planner, or
                 // collision envelope.
                 drawMeshBuffer(studyPlateBuffer, studyPlateVertexCount, mvp, -1, 0, 2, 1f);
+            }
+            if (machineStudy && studyShadowBuffer != null) {
+                // Keep the supplied machine visually grounded on the front
+                // plate. This is presentation geometry only and is never
+                // included in the printable scene or collision envelope.
+                drawMeshBuffer(studyShadowBuffer, studyShadowVertexCount, mvp, -1, 0, 2, 0.22f);
             }
             if (machineStudy && studyAccessoryBuffer != null) {
                 drawMeshBuffer(studyAccessoryBuffer, studyAccessoryVertexCount, mvp, -1, 0, 3, 1f);
@@ -1424,6 +1434,13 @@ final class GlesViewportSurface extends GLSurfaceView {
                         centerX + gridInsetX, y + 0.35f, z + 1.88f, -19f);
             }
         }
+        return toArray(values);
+    }
+
+    /** Soft contact ellipse for the standalone product-study composition. */
+    private static float[] studyShadow() {
+        ArrayList<Float> values = new ArrayList<>();
+        addShadow(values, BED_X / 2f, 92f, 76f, 56f, -1.62f, -20f);
         return toArray(values);
     }
 
