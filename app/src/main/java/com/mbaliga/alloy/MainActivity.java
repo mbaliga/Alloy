@@ -1204,13 +1204,14 @@ public final class MainActivity extends Activity {
         scene.setModel(null);
         stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView title = label("A1 mini\nBambu Lab", 12, TEXT);
+        TextView title = label("A1 MINI  ·  3D STUDY\nBambu Lab", 10, TEXT);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setLetterSpacing(0.06f);
         title.setLineSpacing(3, 1.0f);
-        title.setPadding(dp(12), dp(8), dp(12), dp(8));
-        title.setBackground(round(Color.argb(224, 255, 255, 255), Color.TRANSPARENT, 0, 14));
-        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(142), -2, Gravity.TOP | Gravity.START);
-        titleLp.setMargins(dp(14), dp(14), 0, 0);
+        title.setPadding(dp(2), dp(2), dp(2), dp(2));
+        title.setBackgroundColor(Color.TRANSPARENT);
+        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(190), -2, Gravity.TOP | Gravity.START);
+        titleLp.setMargins(dp(22), dp(20), 0, 0);
         stage.addView(title, titleLp);
         TextView wordmark = label("ALLOY", 19, TEXT);
         wordmark.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -1232,15 +1233,15 @@ public final class MainActivity extends Activity {
         // Keep the renderer controls available through the scene itself, but
         // do not let them dominate the first marketing frame.
         stage.addView(sceneTag("A1", "PRINTER", "A1 MINI",
-                Gravity.TOP | Gravity.START, dp(16), dp(214)));
+                Gravity.TOP | Gravity.START, dp(16), dp(230)));
         stage.addView(sceneTag("◌", "MATERIAL", "NATURAL PLA",
-                Gravity.TOP | Gravity.END, dp(16), dp(214)));
+                Gravity.TOP | Gravity.END, dp(16), dp(230)));
         stage.addView(sceneTag("⌁", "NOZZLE", "0.4 MM",
-                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(22)));
+                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(34)));
         stage.addView(sceneTag("□", "BUILD VOLUME", "180 × 180 × 180 MM",
-                Gravity.BOTTOM | Gravity.START, dp(16), dp(74)));
+                Gravity.BOTTOM | Gravity.START, dp(16), dp(92)));
         stage.addView(sceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
-                Gravity.BOTTOM | Gravity.END, dp(16), dp(70)));
+                Gravity.BOTTOM | Gravity.END, dp(16), dp(88)));
         TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM", 9, MUTED);
         hint.setGravity(Gravity.CENTER);
         hint.setLetterSpacing(0.08f);
