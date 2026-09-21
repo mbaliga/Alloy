@@ -2095,6 +2095,12 @@ public final class AndroidPipelineTest {
         Assert.assertEquals(9, blocked.checks().size());
         Assert.assertFalse(blocked.checks().get(3).passed());
         Assert.assertTrue(blocked.checks().get(3).detail.contains("legacy SliceBeam"));
+
+        PrinterReadiness.Report nullDetail = PrinterReadiness.evaluate(
+                true, true, true, true, true, true, true,
+                true, true, true, true, false, null);
+        Assert.assertFalse(nullDetail.canSend());
+        Assert.assertEquals("Production support parity is not available", nullDetail.checks().get(3).detail);
     }
 
     @Test
