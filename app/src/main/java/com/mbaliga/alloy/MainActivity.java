@@ -2344,10 +2344,14 @@ public final class MainActivity extends Activity {
      * durable transaction.
      */
     private PrinterReadiness.Report printerReadinessReport() {
+        return printerReadinessReport(stagedArtifact);
+    }
+
+    private PrinterReadiness.Report printerReadinessReport(PrinterTransport.Artifact artifact) {
         PrinterCredentialStore.Credentials credentials = savedCredentials();
-        boolean artifactReady = stagedArtifact != null && stagedArtifact.hasSourceFile()
-                && stagedArtifact.sourceFile.isFile()
-                && stagedArtifact.sourceFile.length() == stagedArtifact.sizeBytes;
+        boolean artifactReady = artifact != null && artifact.hasSourceFile()
+                && artifact.sourceFile.isFile()
+                && artifact.sourceFile.length() == artifact.sizeBytes;
         return PrinterReadiness.evaluate(
                 BuildConfig.NATIVE_ENGINE_ENABLED,
                 BuildConfig.NATIVE_ENGINE_VERIFIED,
@@ -2396,6 +2400,11 @@ public final class MainActivity extends Activity {
         if (!hasUploadedPrinterArtifact()) return;
         PrinterJobStore.Job job = printerJobStore.load();
         PrinterTransport.PrinterTarget target = printerTarget(job);
+        if (!printerReadinessReport(recoveredArtifact).canSend()) {
+            Button review = action("Print readiness", v -> showPrinterReadiness());
+            review.setTextColor(RED);
+            return;
+        }
         Button start = action("Start uploaded print", v -> showStartConfirmation(target,
                 job.remotePath.length() == 0 ? "/" + recoveredArtifact.displayName : job.remotePath,
                 recoveredArtifact, job.jobId));
@@ -2405,6 +2414,12 @@ public final class MainActivity extends Activity {
     private void showStartConfirmation(PrinterTransport.PrinterTarget target, String remotePath,
                                        PrinterTransport.Artifact artifact, String jobId) {
         if (target == null || artifact == null || jobId == null) return;
+        PrinterReadiness.Report readiness = printerReadinessReport(artifact);
+        if (!readiness.canSend()) {
+            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
+            showPrinterReadiness();
+            return;
+        }
         new AlertDialog.Builder(this)
                 .setTitle("Start print?")
                 .setMessage("The artifact was uploaded to " + target.name + ". The printer must confirm PREPARE/RUNNING telemetry before Alloy reports a start.")
@@ -2420,6 +2435,12 @@ public final class MainActivity extends Activity {
                     PrinterJobStore.Job current = printerJobStore.load();
                     if (current == null || !jobId.equals(current.jobId) || current.state != PrinterTransport.State.UPLOADED) {
                         Toast.makeText(this, "This printer job is no longer active", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    PrinterReadiness.Report latest = printerReadinessReport(artifact);
+                    if (!latest.canSend()) {
+                        Toast.makeText(this, latest.summary(), Toast.LENGTH_LONG).show();
+                        showPrinterReadiness();
                         return;
                     }
                     printActive = true;
