@@ -1588,12 +1588,16 @@ duration, and emitted `plate_1.gcode` successfully.
 The first reference was not like-for-like with Android, so a second temporary
 desktop project now overlays the Android recipe: 0.20 mm layers, 15% infill,
 organic/tree support, 5 mm auto-brim, wipe and Slope Lift. The profile
-identity harness still finds eight support/brim field mismatches, and the
-matched obstacle comparison passes layer count, filament length and major
-feature coverage but fails the production tolerance on time (9.19%), filament
-(4.83%) and motion counts. The next parity gate is to resolve those remaining
-support-profile fields and acceleration/travel differences, then repeat the
-comparison across all four fixtures—not to promote from a single obstacle.
+identity harness now passes all 62 source-backed fields after aligning the
+support interface, tree-branch, speed, brim-gap and automatic-wall sentinel
+values to the resolved desktop recipe. With the desktop PLA density restored,
+the matched obstacle comparison now reports valid mass evidence as well. It
+passes layer count, profile identity, filament length and major feature
+coverage, but still fails production tolerance on time (6.11%), filament mass
+(4.79%) and motion counts; the acceleration sequence diverges at a later
+support transition. The next parity gate is to resolve that support-motion
+and acceleration difference, then repeat the comparison across all four
+fixtures—not to promote from a single obstacle.
 
 The product visual gate is also still open. The current A1 study screen is a
 readable native 3D scene, but it is not yet the supplied luxury configurator
