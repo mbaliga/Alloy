@@ -247,6 +247,17 @@ fresh cube, obstacle, support and thin-wall evidence set; it does not by itself
 prove desktop parity, because the exported files still require an authoritative
 desktop comparison and the physical-printer gate remains separate.
 
+The export was subsequently run manually against the installed release/test APK
+so the app-owned evidence directory could be retrieved before test cleanup. The
+fresh Android obstacle artifact was compared with the retained Bambu A1 Mini
+reference at `/private/tmp/alloy-bambu-reference/matched-density/sliced/plate_1.gcode`:
+140/140 layers, 3,073 s desktop versus 3,080 s Android (0.23%), 1.52% filament
+length delta, 1.30% travel-move delta, 1.23% positive-E delta, and 62/62
+source-backed profile fields matched. The comparator reports **PASS WITH WARNING**
+because extrusion-move count, transition sequence, and one acceleration command
+still differ; this is fixture-level evidence and not a blanket production-parity
+or physical-printer claim.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
