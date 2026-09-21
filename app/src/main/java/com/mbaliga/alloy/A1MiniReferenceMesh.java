@@ -17,11 +17,10 @@ import java.util.Locale;
 /**
  * Loads the optional, user-supplied A1 mini presentation mesh.
  *
- * The asset is sourced from the owner-provided visual-review material. It is
- * normally available only to debug builds; the owner can explicitly opt a
- * private release APK in with alloyIncludeSuppliedReferenceVisuals. Ordinary
- * distributable releases fall back to Alloy-owned presentation geometry until
- * a redistributable model is approved.
+ * The asset is sourced from the owner-provided visual-review material and is
+ * packaged in the product release. Builds for a separate distribution can
+ * explicitly omit it with alloyIncludeSuppliedReferenceVisuals=false; in that
+ * case the renderer safely falls back to Alloy-owned presentation geometry.
  */
 final class A1MiniReferenceMesh {
     private static final String ASSET = "visuals/a1-mini-reference.mesh";
@@ -36,7 +35,8 @@ final class A1MiniReferenceMesh {
             return read(input);
         } catch (Exception ignored) {
             // Missing optional presentation content must never prevent the
-            // slicer UI. Public release variants intentionally omit it.
+            // slicer UI. The renderer remains safe for explicitly stripped
+            // distribution variants.
             return null;
         }
     }

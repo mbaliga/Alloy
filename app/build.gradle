@@ -9,10 +9,14 @@ def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.to
 // forcing a full CMake rebuild when the native ABI has not changed.
 def nativeEnginePrebuiltDir = project.findProperty('alloyNativeEnginePrebuiltDir')?.toString()
 def nativeEngineBuild = nativeEngineEnabled && nativeEnginePrebuiltDir == null
-// The supplied A1 study mesh has no redistributable licence metadata. Keep it
-// out of ordinary/public release APKs, but allow the owner to build a private
-// visual-review APK that includes the exact handoff reference.
-def includeSuppliedReferenceVisuals = project.findProperty('alloyIncludeSuppliedReferenceVisuals')?.toString()?.toBoolean() ?: false
+// The A1 study mesh is part of the owner-provided Alloy product handoff. Ship
+// it in the product release by default so the visible app uses the supplied
+// machine study rather than silently falling back to a simplified placeholder.
+// A distribution pipeline may still opt out explicitly when it has a separate
+// redistributable visual asset.
+def includeSuppliedReferenceVisuals = project.hasProperty('alloyIncludeSuppliedReferenceVisuals')
+        ? project.findProperty('alloyIncludeSuppliedReferenceVisuals').toString().toBoolean()
+        : true
 
 // Verification is a promotion claim about the native slicer, never about the
 // fallback engine. Reject an inconsistent build at configuration time so a
