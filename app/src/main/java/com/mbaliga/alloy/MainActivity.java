@@ -3594,10 +3594,12 @@ public final class MainActivity extends Activity {
             if (bitmap == null) throw new IOException("On-device preview returned an unsupported image");
             ImageView image = new ImageView(this);
             image.setAdjustViewBounds(true); image.setPadding(12, 12, 12, 12); image.setImageBitmap(bitmap);
+            pendingVisualizationPng = result.imagePng.clone();
             new AlertDialog.Builder(this).setTitle("On-device studio preview")
                     .setMessage(result.providerLabel + " · " + finish.label + " · " + environment.label
                             + "\nGeometry, recipe and printer commands remain unchanged. This is not a generative AI result.")
-                    .setView(image).setPositiveButton("Done", null).show();
+                    .setView(image).setNegativeButton("Done", null)
+                    .setPositiveButton("Save PNG", (dialog, which) -> openVisualizationExport()).show();
         } catch (Exception error) {
             Toast.makeText(this, "The local preview could not be rendered: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
