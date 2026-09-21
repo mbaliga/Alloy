@@ -30,11 +30,11 @@ standard destination, but does not constitute physical A1 Mini acceptance.
 
 The current checkout is a **closed-alpha Android build**, not a production
 replacement for Bambu Studio. The local `codex/alloy-phone-first-ui` checkout
-contains the Android/native implementation and local branding checkpoint
-`7915526`; the GitHub branch of the same name carries the updated logo and
-marketing captures through `926b25859732c2400d790f2ad86365f0279ef2b4`. That branch has no
-merged pull request yet, and the local implementation remains ahead of the
-remote branding-only branch. The checkout's tracking ref is still
+contains the Android/native implementation through checkpoint `561c0f1c`; the
+GitHub branch of the same name carries the updated logo and marketing captures
+through `926b25859732c2400d790f2ad86365f0279ef2b4`. That branch has no merged
+pull request yet, and the local implementation remains ahead of the remote
+branding-only branch. The checkout's tracking ref is still
 `origin/codex/alloy-v1` at the older base, so those refs must not be treated as
 one synchronized release.
 
