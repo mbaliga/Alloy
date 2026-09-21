@@ -2,6 +2,15 @@
 
 Date: 2026-09-22
 
+The Bambu `TreeSupport3D` port was audited against the pinned
+`v02.08.02.61` checkout. An exact seven-file overlay reached `PORT_READY` in
+the source audit, but the ARM64 native compiler correctly rejected it because
+Alloy's Orca-Mobile API lacks Bambu's support parameters, polygon helpers,
+Clipper2 target, layer enum names, and compile-time scaling contract. The
+overlay was removed and the original native tree rebuilt successfully. The
+full evidence is recorded in `docs/BAMBU_TREESUPPORT3D_PORT.md`; the Bambu
+parity gate remains open.
+
 The latest visual handoff pass is source-backed by the supplied
 `3D Rendering Style Identification.md`, `3D Rendering Style Preview.html`,
 and `Extract Mesh 3D Rendering.py` files. The A1 study runway now separates
