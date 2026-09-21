@@ -14,6 +14,17 @@ public final class BambuPrinterDiscoveryTest {
         Assert.assertTrue(request.endsWith("\r\n\r\n"));
     }
 
+    @Test public void buildsVendorPortSearchesWithoutAllowingArbitraryDestinations() {
+        Assert.assertTrue(BambuPrinterDiscovery.buildSearchRequest(BambuPrinterDiscovery.BAMBU_SSDP_PORT)
+                .contains("HOST: 239.255.255.250:1990\r\n"));
+        Assert.assertTrue(BambuPrinterDiscovery.buildSearchRequest(BambuPrinterDiscovery.LISTEN_PORT)
+                .contains("HOST: 239.255.255.250:2021\r\n"));
+        try {
+            BambuPrinterDiscovery.buildSearchRequest(8888);
+            Assert.fail("arbitrary discovery destinations must be rejected");
+        } catch (IllegalArgumentException expected) { }
+    }
+
     @Test public void parsesA1MiniAnnouncementAndUsesLocationHost() throws Exception {
         String response = "HTTP/1.1 200 OK\r\n"
                 + "Location: 192.168.50.24\r\n"

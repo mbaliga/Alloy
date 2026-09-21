@@ -32,8 +32,10 @@ import java.util.concurrent.Executors;
 public final class BambuPrinterDiscovery {
     static final int LISTEN_PORT = 2021;
     static final int SSDP_PORT = 1900;
+    static final int BAMBU_SSDP_PORT = 1990;
     static final String SSDP_GROUP = "239.255.255.250";
     static final String DEVICE_TYPE = "urn:bambulab-com:device:3dprinter:1";
+    private static final int[] SEARCH_PORTS = {SSDP_PORT, BAMBU_SSDP_PORT, LISTEN_PORT};
     private static final int MAX_PACKET_BYTES = 16 * 1024;
     private static final int READ_TIMEOUT_MS = 250;
     private static final long DEFAULT_TIMEOUT_MS = 5_000L;
@@ -135,14 +137,23 @@ public final class BambuPrinterDiscovery {
     }
 
     private static void sendSearch(MulticastSocket socket, InetAddress group) throws IOException {
-        byte[] request = buildSearchRequest().getBytes(StandardCharsets.US_ASCII);
-        socket.send(new DatagramPacket(request, request.length, group, SSDP_PORT));
+        for (int port : SEARCH_PORTS) {
+            byte[] request = buildSearchRequest(port).getBytes(StandardCharsets.US_ASCII);
+            socket.send(new DatagramPacket(request, request.length, group, port));
+        }
     }
 
     /** Package-visible for protocol tests and documentation tooling. */
     static String buildSearchRequest() {
+        return buildSearchRequest(SSDP_PORT);
+    }
+
+    /** Build a bounded read-only probe for one of Bambu's SSDP destinations. */
+    static String buildSearchRequest(int port) {
+        if (port != SSDP_PORT && port != BAMBU_SSDP_PORT && port != LISTEN_PORT)
+            throw new IllegalArgumentException("unsupported Bambu discovery port");
         return "M-SEARCH * HTTP/1.1\r\n"
-                + "HOST: " + SSDP_GROUP + ":" + SSDP_PORT + "\r\n"
+                + "HOST: " + SSDP_GROUP + ":" + port + "\r\n"
                 + "MAN: \"ssdp:discover\"\r\n"
                 + "MX: 2\r\n"
                 + "ST: " + DEVICE_TYPE + "\r\n\r\n";
