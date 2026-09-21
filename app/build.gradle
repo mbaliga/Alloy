@@ -2,6 +2,25 @@ plugins {
     id 'com.android.application'
 }
 
+def nativeEngineEnabled = project.findProperty('alloyNativeEngine')?.toString()?.toBoolean() ?: false
+def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.toString()?.toBoolean() ?: false
+// Release packaging may consume a separately verified native bundle. This is
+// useful for offline/reproducible builds and keeps Java/profile changes from
+// forcing a full CMake rebuild when the native ABI has not changed.
+def nativeEnginePrebuiltDir = project.findProperty('alloyNativeEnginePrebuiltDir')?.toString()
+def nativeEngineBuild = nativeEngineEnabled && nativeEnginePrebuiltDir == null
+// The supplied A1 study mesh has no redistributable licence metadata. Keep it
+// out of ordinary/public release APKs, but allow the owner to build a private
+// visual-review APK that includes the exact handoff reference.
+def includeSuppliedReferenceVisuals = project.findProperty('alloyIncludeSuppliedReferenceVisuals')?.toString()?.toBoolean() ?: false
+
+// Verification is a promotion claim about the native slicer, never about the
+// fallback engine. Reject an inconsistent build at configuration time so a
+// release pipeline cannot accidentally label a Java-only APK as verified.
+if (nativeEngineVerified && !nativeEngineEnabled) {
+    throw new GradleException('alloyNativeEngineVerified=true requires alloyNativeEngine=true')
+}
+
 android {
     namespace 'com.mbaliga.alloy'
     compileSdk 35
@@ -12,11 +31,42 @@ android {
         targetSdk 35
         versionCode 1
         versionName '1.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'boolean', 'NATIVE_ENGINE_ENABLED', nativeEngineEnabled ? 'true' : 'false'
+        // Enabling native code is not proof of print-safe output. Promotion
+        // stays an explicit build-time decision after all acceptance gates.
+        buildConfigField 'boolean', 'NATIVE_ENGINE_VERIFIED', nativeEngineVerified ? 'true' : 'false'
+    }
+
+    // Exercise the same shrink/signing/resource variant that is distributed;
+    // release validation must not silently run against a debug-only APK.
+    testBuildType 'release'
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    // Bouncy Castle publishes the same multi-release OSGi manifest in its
+    // provider and TLS artifacts. It is metadata for the JVM packaging model,
+    // not an Android runtime resource; excluding the duplicate keeps the APK
+    // merge deterministic without weakening the TLS implementation.
+    packaging {
+        resources {
+            excludes += 'META-INF/versions/**/OSGI-INF/MANIFEST.MF'
+            pickFirsts += ['META-INF/LICENSE.md', 'META-INF/MANIFEST.MF']
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            // Ordinary CI needs an installable release variant for
+            // connectedReleaseAndroidTest, but the release-candidate workflow
+            // deliberately omits this property and remains unsigned until the
+            // organization-owned signing service is configured.
+            if (project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean()) {
+                signingConfig signingConfigs.debug
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -25,5 +75,89 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    if (nativeEngineBuild) {
+        defaultConfig {
+            ndk {
+                // The phone-first native gate targets current Android phones;
+                // CI must not spend hours building unsupported simulator ABIs.
+                abiFilters 'arm64-v8a'
+            }
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_STL=c++_shared', '-DANDROID_PLATFORM=26',
+                            '-DCMAKE_BUILD_TYPE=Release', '-DSLIC3R_VERSION="1.0.0"',
+                            '-DSLIC3R_BUILD_ID="1"'
+                }
+            }
+        }
+        externalNativeBuild {
+            cmake {
+                path file('CMakeLists.txt')
+            }
+        }
+        ndkVersion '23.1.7779620'
+    }
+
+    sourceSets {
+        main {
+            if (nativeEnginePrebuiltDir != null) {
+                jniLibs.srcDirs = [file(nativeEnginePrebuiltDir)]
+            } else if (nativeEngineEnabled) {
+                // CMake packages every imported native target, including the
+                // NDK's libc++_shared.so. Keep the OCCT directory here because
+                // Android's packaging task does not always copy imported
+                // libraries that are only transitive DT_NEEDED entries.
+                // Excluding the generic fallback bundle avoids its second
+                // libc++_shared.so while retaining the complete OCCT chain.
+                jniLibs.srcDirs = [file('src/main/occt/jniLibs')]
+            } else {
+                // The default phone shell must not ship native code while the
+                // native slicer is disabled and unverified. Native-enabled
+                // variants select the complete ABI bundle above.
+                jniLibs.srcDirs = []
+            }
+        }
+        release {
+            if (includeSuppliedReferenceVisuals) {
+                assets.srcDirs += file('src/debug/assets')
+            }
+        }
+    }
 }
 
+// A native-enabled APK must never silently degrade to a Java-only package when
+// a caller supplies a stale or empty prebuilt directory. Run this as a normal
+// build task so an invalid bundle fails cleanly before signing or packaging,
+// without turning a deliberate negative check into a misleading configuration
+// error from the Android plugin.
+if (nativeEngineEnabled && nativeEnginePrebuiltDir != null) {
+    def validateNativePrebuiltDirectory = tasks.register('validateNativePrebuiltDirectory') {
+        doLast {
+            def prebuiltRoot = file(nativeEnginePrebuiltDir)
+            def requiredNativeFiles = [
+                    'arm64-v8a/libslic3r.so',
+                    'arm64-v8a/libc++_shared.so',
+                    'arm64-v8a/libTKBO.so',
+                    'arm64-v8a/libgmp.so',
+                    'arm64-v8a/libmpfr.so'
+            ]
+            def missingNativeFiles = requiredNativeFiles.findAll { !new File(prebuiltRoot, it).isFile() }
+            if (!prebuiltRoot.isDirectory() || !missingNativeFiles.isEmpty()) {
+                throw new GradleException('Native prebuilt directory is incomplete; missing: ' +
+                        (missingNativeFiles.isEmpty() ? prebuiltRoot.absolutePath : missingNativeFiles.join(', ')))
+            }
+        }
+    }
+    tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }
+}
+
+dependencies {
+    // Bambu's FTPS server requires the data TLS channel to resume the exact
+    // control-channel session. BCJSSE exposes that operation as a supported
+    // API; the stock Android JSSE API does not.
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.85.2'
+    implementation 'org.bouncycastle:bctls-jdk18on:1.85'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}

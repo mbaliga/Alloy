@@ -1,0 +1,169 @@
+name: Alloy Android release candidate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+env:
+  SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
+  SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+  ORCA_MOBILE_REPO: https://github.com/CodeMasterCody3D/OrcaSlicer-Mobile.git
+  ORCA_MOBILE_SHA: d996a9cadb65b354997f2d5d8734b46bb9ea4efd
+  ORCA_PROFILE_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
+  ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
+  ANDROID_API: '35'
+  NDK_VERSION: 23.1.7779620
+
+jobs:
+  release-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Android workflow variants
+        run: python3 ci/validate_android_workflows.py
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Verify pinned Orca profile snapshot
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
+          test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+
+      - name: Validate release inputs
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 ci/validate_android_wiring.py
+          python3 ci/validate_profile_assets.py
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/validate_model_assets.py
+          python3 ci/validate_3mf_contract.py
+          python3 ci/validate_native_wiring.py
+          python3 ci/validate_native_jni_contract.py
+          python3 ci/validate_native_prebuilts.py arm64-v8a
+          python3 ci/validate_transport_wiring.py
+          python3 ci/validate_release_wiring.py
+          python3 -B -m unittest discover -s parity -p 'test_*.py' -v
+
+      - name: Validate production evidence before a tag release
+        if: github.event_name == 'push'
+        shell: bash
+        run: python3 ci/validate_release_readiness.py release/production-readiness.json
+
+      - name: Install Android SDK
+        shell: bash
+        run: |
+          set -euxo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager \
+            "platforms;android-${ANDROID_API}" \
+            "build-tools;35.0.0" \
+            "ndk;${NDK_VERSION}" \
+            "cmake;3.22.1"
+          echo "ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Install native build prerequisites
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool make ninja-build pkg-config python3 git curl unzip
+
+      - name: Clone pinned SliceBeam native source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --recursive "$SLICEBEAM_REPO" slicebeam
+          git -C slicebeam checkout --detach "$SLICEBEAM_SHA"
+          git -C slicebeam submodule update --init --recursive
+          test "$(git -C slicebeam rev-parse HEAD)" = "$SLICEBEAM_SHA"
+
+      - name: Borrow and patch pinned Android dependency bootstrap
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$ORCA_MOBILE_REPO" bootstrap-source
+          git -C bootstrap-source checkout --detach "$ORCA_MOBILE_SHA"
+          cp bootstrap-source/scripts/build_all_deps_android.sh slicebeam/build_all_deps_android.sh
+          python3 ci/patch_orca_mobile_bootstrap.py slicebeam/build_all_deps_android.sh "$ANDROID_SDK_ROOT" "$ANDROID_NDK_ROOT"
+          python3 ci/patch_slicebeam_stage1_no_step.py slicebeam
+
+      - name: Build pinned native dependencies from source
+        working-directory: slicebeam
+        shell: bash
+        run: |
+          set -euxo pipefail
+          bash build_all_deps_android.sh
+
+      - name: Copy native build inputs into Alloy
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p app/src/main/jniImports/boost app/src/main/jniImports/oneTBB
+          cp -a slicebeam/app/src/main/jniImports/boost/. app/src/main/jniImports/boost/
+          cp -a slicebeam/app/src/main/jniImports/oneTBB/. app/src/main/jniImports/oneTBB/
+          mkdir -p app/src/main/occt/include app/src/main/occt/jniLibs
+          cp -a slicebeam/app/src/main/occt/include/. app/src/main/occt/include/
+          cp -a slicebeam/app/src/main/occt/jniLibs/. app/src/main/occt/jniLibs/
+          mkdir -p app/src/main/occt/src
+          cp -a slicebeam/app/src/main/occt/src/. app/src/main/occt/src/
+          python3 ci/normalize_occt_headers.py app/src/main/occt
+          python3 ci/validate_native_dependency_inputs.py arm64-v8a
+          bash ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26
+          python3 ci/validate_native_prebuilts.py arm64-v8a --source-built
+
+      - uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: 8.9
+
+      - name: Assemble unsigned release candidate
+        run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyNativeEngineVerified=false --no-daemon --stacktrace
+
+      - name: Compile release instrumentation APK
+        run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyNativeEngineVerified=false --no-daemon --stacktrace
+
+      - name: Sign production tag artifacts
+        if: github.event_name == 'push'
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+          ANDROID_BUILD_TOOLS_VERSION: 35.0.0
+        run: bash ci/sign_android_release.sh app/build/outputs/apk/release app/build/outputs/apk/androidTest/release
+
+      - name: Hash release candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sha256sum app/build/outputs/apk/release/*.apk | tee app/build/outputs/apk/release/SHA256SUMS
+          sha256sum app/build/outputs/apk/androidTest/release/*.apk | tee app/build/outputs/apk/androidTest/release/SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alloy-android-release-candidate
+          path: app/build/outputs/apk/release
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alloy-android-release-instrumentation
+          path: app/build/outputs/apk/androidTest/release
+          if-no-files-found: error

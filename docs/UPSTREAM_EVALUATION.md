@@ -139,7 +139,7 @@ Filament is not a Stage 1 dependency.
 ## Stage 1 native scope
 
 To reduce G1 surface area:
-- first required imports: STL and 3MF
+- first required imports: STL, OBJ and 3MF
 - trusted output: `.gcode.3mf`
 - STEP/OCCT is desirable but may be removed from the first Alloy engine extraction if it blocks reproducibility; restoring STEP is a subsequent native milestone
 - arm64-v8a first

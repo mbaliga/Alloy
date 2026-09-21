@@ -1,0 +1,19 @@
+{
+  "type": "filament",
+  "name": "Alloy G3 PLA @BBL A1M",
+  "from": "user",
+  "inherits": "Bambu PLA Basic @BBL A1M",
+  "filament_id": "alloy-g3-pla",
+  "filament_type": "PLA",
+  "filament_density": ["1.26"],
+  "filament_diameter": ["1.75"],
+  "filament_flow_ratio": ["1"],
+  "filament_max_volumetric_speed": ["2"],
+  "fan_min_speed": ["60"],
+  "fan_max_speed": ["80"],
+  "nozzle_temperature": ["200"],
+  "nozzle_temperature_initial_layer": ["200"],
+  "hot_plate_temp": ["60"],
+  "hot_plate_temp_initial_layer": ["60"],
+  "fan_cooling_layer_time": ["80"]
+}

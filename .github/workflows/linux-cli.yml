@@ -1,0 +1,52 @@
+name: Alloy Linux CLI contract
+
+on:
+  push:
+    branches: [main, 'codex/**']
+    paths:
+      - 'tools/alloy_linux.py'
+      - 'tools/alloy_linux_gui.py'
+      - 'tools/test_alloy_linux.py'
+      - 'tools/bambu_lan_probe.py'
+      - 'tools/test_bambu_lan_probe.py'
+      - 'tools/requirements.txt'
+      - 'app/src/main/assets/models/**'
+      - 'docs/LINUX_DESKTOP.md'
+      - 'docs/LINUX_ALTERNATIVES.md'
+      - '.github/workflows/linux-cli.yml'
+  pull_request:
+    paths:
+      - 'tools/alloy_linux.py'
+      - 'tools/alloy_linux_gui.py'
+      - 'tools/test_alloy_linux.py'
+      - 'tools/bambu_lan_probe.py'
+      - 'tools/test_bambu_lan_probe.py'
+      - 'tools/requirements.txt'
+      - 'app/src/main/assets/models/**'
+      - 'docs/LINUX_DESKTOP.md'
+      - 'docs/LINUX_ALTERNATIVES.md'
+      - '.github/workflows/linux-cli.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Linux bridge tests
+        run: python3 -m unittest -v tools/test_alloy_linux.py tools/test_bambu_lan_probe.py
+      - name: Inspect bundled assembly
+        run: python3 tools/alloy_linux.py inspect --json app/src/main/assets/models/box-and-lid.stl
+      - name: Check portable project inspection entry point
+        run: python3 tools/alloy_linux.py inspect-project --help
+      - name: Check portable batch validation entry point
+        run: python3 tools/alloy_linux.py validate-batch --help
+      - name: Compile Linux bridge
+        run: python3 -m py_compile tools/alloy_linux.py tools/test_alloy_linux.py tools/bambu_lan_probe.py tools/test_bambu_lan_probe.py
+
+      - name: Check Linux workspace entry point
+        run: python3 tools/alloy_linux_gui.py --help

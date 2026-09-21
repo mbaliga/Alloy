@@ -1,8 +1,10 @@
 # Stage 1 — compact-phone information architecture
 
-Status: **PROPOSED — approval gate**
+Status: **Implemented as the Android Views contract; the Alloy-owned GLES viewport is now in place, while native engine and hardware gates remain open.**
 
-No Compose screen implementation should begin until this document's interaction model is explicitly approved.
+The current implementation uses Android Views with an Alloy-owned GLES 2.0
+viewport. The native slicer and printer transport remain behind their explicit
+build, parity and hardware gates.
 
 ## Product principle
 
@@ -19,7 +21,7 @@ The 3D model remains the visual anchor. Controls appear only when the current ta
 ### Empty state
 - dominant `Import model` action
 - Android system file picker
-- Stage 1 required formats: STL and 3MF
+- Stage 1 required formats: STL, OBJ and 3MF
 - STEP is deferred if OCCT blocks the reproducible native build gate
 - recent local projects below the primary action
 - no printer dashboard clutter before a model exists
@@ -158,9 +160,16 @@ Printer management and global app settings live outside the active preparation f
 
 ## Renderer constraint
 
-Stage 1 may host the existing SliceBeam-lineage `GLView` through Compose `AndroidView` **only as bring-up scaffolding for basic model and G-code display**. Do not add Alloy-specific renderer features to the legacy Java view.
+The product viewport is now an Alloy-owned GLES 2.0 surface hosted behind the
+stable `ViewportView` API. It renders the model with perspective lighting,
+machine/build-volume presentation geometry, part focus, out-of-volume shading,
+toolpath layers and lifecycle-safe thumbnails. It is not a printer clearance
+authority: reviewed collision geometry remains part of the printer/profile
+gate.
 
-Before Stage 2, replace it with an Alloy-owned GLES renderer hosted through `AndroidExternalSurface`, with desktop input/resizing requirements designed in rather than bolted on.
+An `AndroidExternalSurface` host remains a later adaptive-shell option for
+foldables and desktop windows, where hover, secondary click and arbitrary
+resizing need dedicated validation.
 
 ## Adaptive contract for later stages
 
@@ -181,6 +190,7 @@ Approval should specifically confirm these choices:
 5. toolpath preview as its own Inspect state
 6. explicit upload → verification → print-start → telemetry-confirmed-running sequence
 7. `Print` becoming `Export` when no printer transport is configured
-8. Stage 1 legacy GLView is scaffolding only, replaced before Stage 2
+8. Alloy-owned GLES viewport is the product surface; adaptive external-surface
+   hosting remains a later foldable/desktop gate
 
 Once explicitly approved, this document becomes the contract for Stage 1 Compose implementation.

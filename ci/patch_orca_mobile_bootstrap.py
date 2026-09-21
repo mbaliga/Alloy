@@ -13,6 +13,8 @@ import sys
 OPENVDB_ANDROID_SHA = "4d4a057d0a26d9cff88d6d7cc7bea80d27ffa7ec"
 BOOST_ANDROID_SHA = "7943955c4d11a5bd61381a8b200c28619323eb0f"
 OCCT_SHA = "7d2efad9c8a9a57ea96c4c8587134b34dd503cd8"
+BOOST_ANDROID_ARCH = "arm64-v8a"
+BOOST_ANDROID_TARGET_VERSION = "26"
 
 
 def replace_once(text: str, old: str, new: str) -> str:
@@ -63,11 +65,38 @@ def main() -> None:
         f"    git -C OCCT checkout --detach {OCCT_SHA}\n",
     )
 
+    text = replace_once(
+        text,
+        "export N_CORES=$(nproc)\n",
+        'export N_CORES="${N_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)}"\n',
+    )
+    text = replace_once(
+        text,
+        "./build-android.sh --boost=1.85.0 $ANDROID_NDK_ROOT\n",
+        "./build-android.sh --arch=arm64-v8a --target-version=26 --boost=1.85.0 $ANDROID_NDK_ROOT\n",
+    )
+    text = replace_once(
+        text,
+        'cp -r openvdb-android/dist/include/* "$JNI_IMPORTS_DIR/oneTBB/include/"\n',
+        'cp -r openvdb-android/dist/include/* "$JNI_IMPORTS_DIR/oneTBB/include/"\n'
+        'mkdir -p "$JNI_IMPORTS_DIR/oneTBB/include/oneapi"\n'
+        'ln -s ../tbb "$JNI_IMPORTS_DIR/oneTBB/include/oneapi/tbb"\n',
+    )
+    text = replace_once(
+        text,
+        'cp -r include/opencascade/* "$JNI_IMPORTS_DIR/../occt/include/$ABI/"\n',
+        'cp -r include/opencascade/* "$JNI_IMPORTS_DIR/../occt/include/$ABI/"\n'
+        'mkdir -p "$JNI_IMPORTS_DIR/../occt/src"\n'
+        'cp -r "$WORK_DIR/OCCT/src/." "$JNI_IMPORTS_DIR/../occt/src/"\n',
+    )
+
     path.write_text(text)
 
     print("Patched bootstrap with:")
     print(f"  OpenVDB-Android {OPENVDB_ANDROID_SHA}")
     print(f"  Boost-for-Android {BOOST_ANDROID_SHA}")
+    print(f"  Boost ABI {BOOST_ANDROID_ARCH}")
+    print(f"  Boost target API {BOOST_ANDROID_TARGET_VERSION}")
     print(f"  OCCT {OCCT_SHA}")
     print(f"  Android SDK {sdk_root}")
     print(f"  Android NDK {ndk_root}")

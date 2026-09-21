@@ -46,8 +46,27 @@ G1 X20 Y0 E4.0
 
 GCODE_MISSING_FEATURE = GCODE_B.replace("; FEATURE: Internal infill\n", "")
 
+GCODE_ACCELERATION_EQUIVALENT = GCODE_A.replace("G90\n", "G90\nM204 S1500\nM204 S500\n")
+GCODE_ACCELERATION_NATIVE = GCODE_B.replace("G90\n", "G90\nM204 P1500\nM204 P500\n")
+
 
 class CompareGcodeTests(unittest.TestCase):
+    def test_profile_identity_is_a_hard_check_when_attached(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "a.gcode", GCODE_A), None)
+            android = parse_metrics(self.write(root, "b.gcode", GCODE_B), None)
+            report = compare(
+                desktop,
+                android,
+                0.02,
+                {"result": "fail", "failed_fields": ["fill_density"]},
+            )
+            self.assertEqual("fail", report["result"])
+            self.assertEqual("fail", next(
+                check for check in report["checks"] if check["name"] == "profile_identity"
+            )["status"])
+
     def write(self, root: Path, name: str, content: str) -> Path:
         path = root / name
         path.write_text(content)
@@ -75,6 +94,38 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertEqual(result["result"], "fail")
             feature = next(c for c in result["checks"] if c["name"] == "major_feature_classes")
             self.assertEqual(feature["status"], "fail")
+
+    def test_acceleration_command_profile_normalizes_orca_s_and_native_p(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_ACCELERATION_EQUIVALENT), None)
+            android = parse_metrics(self.write(root, "android.gcode", GCODE_ACCELERATION_NATIVE), None)
+            result = compare(desktop, android, 0.02)
+            acceleration = next(c for c in result["checks"] if c["name"] == "acceleration_command_profile")
+            self.assertEqual(acceleration["status"], "pass")
+
+    def test_acceleration_command_profile_warns_on_motion_policy_change(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop_text = GCODE_ACCELERATION_EQUIVALENT
+            android_text = GCODE_ACCELERATION_NATIVE.replace("M204 P500", "M204 P700")
+            desktop = parse_metrics(self.write(root, "desktop.gcode", desktop_text), None)
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+            result = compare(desktop, android, 0.02)
+            acceleration = next(c for c in result["checks"] if c["name"] == "acceleration_command_profile")
+            self.assertEqual(acceleration["status"], "warn")
+            self.assertIn("desktop=P500, Android=P700", acceleration["detail"])
+
+    def test_internal_bridge_is_reported_as_bridge_alias(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = self.write(root, "desktop.gcode", GCODE_A + "; FEATURE: Bridge\n")
+            android = self.write(root, "android.gcode", GCODE_A + ";TYPE:Internal Bridge\n")
+            result = compare(parse_metrics(desktop, None), parse_metrics(android, None), 0.02)
+            feature = next(c for c in result["checks"] if c["name"] == "major_feature_classes")
+            self.assertEqual(feature["status"], "pass")
+            aliases = next(c for c in result["checks"] if c["name"] == "semantic_feature_aliases")
+            self.assertIn("bridge covered by internal_bridge", aliases["detail"])
 
     def test_reads_plate_gcode_from_3mf(self):
         with tempfile.TemporaryDirectory() as td:
@@ -105,6 +156,34 @@ G1 X4 E0.75
             metrics = parse_metrics(self.write(root, "relative.gcode", gcode), None)
             self.assertAlmostEqual(metrics.positive_e_mm, 2.0)
             self.assertEqual(metrics.extrusion_moves, 3)
+
+    def test_bambu_headers_and_slice_beam_layer_markers_are_normalized(self):
+        bambu = """; model printing time: 28m 50s; total estimated time: 28m 51s
+; total layer number: 100
+; total filament length [mm] : 1257.28
+; total filament weight [g] : 0.00
+G90
+G1 Z0.01
+; CHANGE_LAYER
+G1 Z0.20
+"""
+        slicebeam = """; estimated printing time = 28m 51s
+; filament used [mm] = 1257.28
+G90
+;LAYER:0
+G1 Z0.20
+;LAYER:1
+G1 Z0.40
+"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "bambu.gcode", bambu), None)
+            android = parse_metrics(self.write(root, "android.gcode", slicebeam), None)
+            self.assertEqual(desktop.layer_count, 100)
+            self.assertEqual(android.layer_count, 2)
+            self.assertEqual(desktop.print_time_seconds, 1730.0)
+            self.assertAlmostEqual(desktop.filament_mm, 1257.28)
+            self.assertAlmostEqual(desktop.filament_g, 0.0)
 
 
 if __name__ == "__main__":
