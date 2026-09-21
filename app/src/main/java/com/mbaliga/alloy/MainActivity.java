@@ -1235,7 +1235,7 @@ public final class MainActivity extends Activity {
                 scene.hasReferenceMachineModel() ? "A1 MINI" : "ALLOY STUDY MODEL",
                 Gravity.TOP | Gravity.END, dp(16), dp(246)));
         stage.addView(sceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
-                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, dp(72)));
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, dp(18)));
         TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM", 9, MUTED);
         hint.setGravity(Gravity.CENTER);
         hint.setLetterSpacing(0.08f);

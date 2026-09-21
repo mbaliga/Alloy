@@ -671,8 +671,8 @@ final class GlesViewportSurface extends GLSurfaceView {
             // postage stamp in a large empty machine volume. Imported parts
             // remain bounded by the same max distance and can be pinched out
             // when the user wants more surrounding context.
-            float frameScale = machineStudy ? 6.20f : 3.35f;
-            float frameMax = machineStudy ? 1_100f : 620f;
+            float frameScale = machineStudy ? 5.15f : 3.35f;
+            float frameMax = machineStudy ? 900f : 620f;
             float frameMin = cleanPresentation ? 12f : 92f;
             float distance = (framing == null ? fallbackDistance : clamp(span * frameScale, frameMin, frameMax))
                     / Math.max(0.45f, zoom);
@@ -1383,10 +1383,10 @@ final class GlesViewportSurface extends GLSurfaceView {
     private static float[] studyPlates() {
         ArrayList<Float> values = new ArrayList<>();
         final float centerX = BED_X / 2f;
-        for (int index = 0; index < 5; index++) {
-            float depth = 54f - index * 4f;
-            float width = 168f - index * 8f;
-            float centerY = 78f - index * 72f;
+        for (int index = 0; index < 6; index++) {
+            float depth = 62f - index * 4f;
+            float width = 178f - index * 10f;
+            float centerY = 78f - index * 70f;
             float z = -3.4f - index * 0.12f;
             addBox(values, centerX - width / 2f, centerY - depth / 2f, z,
                     centerX + width / 2f, centerY + depth / 2f, z + 1.4f, -20f);
@@ -1589,7 +1589,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "float alloyNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(alloyHash(i),alloyHash(i+vec2(1.0,0.0)),f.x),mix(alloyHash(i+vec2(0.0,1.0)),alloyHash(i+vec2(1.0,1.0)),f.x),f.y);}"
                     + "void main(){"
                     + "vec3 base;"
-                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.34,0.31,0.27);}"
+                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.44,0.36,0.24);}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
                     + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
