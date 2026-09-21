@@ -125,8 +125,8 @@ final class GlesViewportSurface extends GLSurfaceView {
         presentationMode = value;
         // Match the supplied study's right-front camera when entering the
         // machine frame; Hero keeps the quieter object-first angle.
-        yaw = value ? 0.78f : -0.55f;
-        pitch = 0.55f;
+        yaw = value ? (machineStudy ? 0.70f : 0.78f) : -0.55f;
+        pitch = value && machineStudy ? 0.88f : 0.55f;
         zoom = 1f;
         panX = 0f;
         panY = 0f;
@@ -166,8 +166,12 @@ final class GlesViewportSurface extends GLSurfaceView {
             toolpathOnly = false;
             selectedLayer = -1;
             selectedPart = -1;
-            yaw = 0.78f;
-            pitch = 0.55f;
+            // The supplied preview uses a calm three-quarter product angle.
+            // The old phone study sat too low and let the front column fill
+            // the frame; this elevation keeps the machine readable while
+            // exposing the plate runway behind it.
+            yaw = 0.70f;
+            pitch = 0.88f;
             zoom = 1f;
             panX = 0f;
             panY = 0f;
@@ -700,7 +704,11 @@ final class GlesViewportSurface extends GLSurfaceView {
                     ? (machineStudy ? 25f : Math.max(targetZ, BUILD_Z * 0.34f)) : targetZ;
             Matrix.setLookAtM(view, 0, eyeX, eyeY, eyeZ, targetX, targetY, lookAtZ, 0f, 0f, 1f);
         }
-        Matrix.perspectiveM(projection, 0, 42f, aspect, 0.2f, 2_000f);
+        // A portrait phone has a much narrower horizontal field of view than
+        // the supplied desktop composition. Give the standalone study a
+        // modestly wider lens so the gantry does not become a crop artifact.
+        float fieldOfView = machineStudy && aspect < 0.85f ? 49f : 42f;
+        Matrix.perspectiveM(projection, 0, fieldOfView, aspect, 0.2f, 2_000f);
         Matrix.multiplyMM(output, 0, projection, 0, view, 0);
     }
 
@@ -1410,10 +1418,10 @@ final class GlesViewportSurface extends GLSurfaceView {
         // phone composition an unmistakable runway into the distance. The
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
-        for (int index = 0; index < 6; index++) {
-            float depth = 76f - index * 4.5f;
-            float width = 178f - index * 8.5f;
-            float centerY = 92f - index * 58f;
+        for (int index = 0; index < 8; index++) {
+            float depth = 72f - index * 3.5f;
+            float width = 178f - index * 7f;
+            float centerY = 92f - index * 52f;
             float z = -3.4f - index * 0.12f;
             // A physical PEI sheet has softened corners and a small front
             // grip tab. Keeping that silhouette in the presentation geometry

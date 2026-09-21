@@ -60,6 +60,14 @@ The on-device capture is retained at `/private/tmp/alloy-rounded-plates-study.pn
 The geometry is presentation-only and does not enter plate planning, slicing,
 collision, or printer transport.
 
+The latest composition pass is installed and emulator-checked at
+`/private/tmp/alloy-camera-pass-study.png`. It uses the handoff's three-quarter
+study angle, a wider portrait-phone lens, and eight tapered PEI sheets so the
+runway reads as depth instead of a single heavy plate. This is a stronger
+marketing study composition, but the visual gate remains open: the supplied
+luxury reference still calls for a more refined material/lighting pass and a
+final art-directed hero scene.
+
 The phone import lifecycle now has a 90-second watchdog. If a document provider
 or oversized model stalls, Alloy cancels the worker, restores the workspace
 state, and explains the recovery path instead of leaving the session disabled.
