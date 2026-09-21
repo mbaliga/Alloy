@@ -71,6 +71,12 @@ and the Linux/model/artifact bridge suite at **26/26**. These remain offline and
 bridge-level checks; they do not substitute for acceptance on a physical A1
 Mini or for a production release-signing review.
 
+The workshop inventory cards now include a bounded stock-level gauge in addition
+to the existing reorder, service-soon, and service-overdue indicators. The gauge
+is presentation-only and reads the same persisted quantity/minimum values as the
+ledger. The native-enabled Android suite was rerun after this main-activity
+change: **153 tests completed, 0 failures, 1 intentional G3 export skip**.
+
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
 so ordinary release APKs silently fell back to the simplified Alloy frame.
