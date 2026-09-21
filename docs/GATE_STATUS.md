@@ -31,6 +31,11 @@ this change. The A1 study remains a presentation reference; this wiring makes
 model-view bounds truthful for the selected profile without authorizing a
 physical print.
 
+The same profile-driven pass now scales the visual grid independently across
+the active bed axes, so non-square or non-180 mm profiles no longer receive a
+truncated or misleading plate grid. The native-enabled connected suite again
+completed 157 tests with 0 failures and 1 intentional G3 skip.
+
 The printer completion path now durably queues inventory reconciliation before
 attempting the stock write. Activity startup and the foreground printer service
 both drain that queue idempotently, so a confirmed print cannot silently lose

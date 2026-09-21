@@ -1392,9 +1392,12 @@ final class GlesViewportSurface extends GLSurfaceView {
         for (int i = 0; i < 4; i++) addLine(values, bed[i * 3], bed[i * 3 + 1], bed[i * 3 + 2],
                 bed[((i + 1) % 4) * 3], bed[((i + 1) % 4) * 3 + 1], bed[((i + 1) % 4) * 3 + 2],
                 0.16f, 0.15f, 0.13f, 0.95f);
-        for (int grid = 30; grid < 180; grid += 30) {
-            float gx = x0 + grid, gy = y0 + grid;
+        for (float grid = 30f; grid < bedX - 0.01f; grid += 30f) {
+            float gx = x0 + grid;
             addLine(values, gx, y0, 0.2f, gx, y1, 0.2f, 0.30f, 0.28f, 0.25f, 0.55f);
+        }
+        for (float grid = 30f; grid < bedY - 0.01f; grid += 30f) {
+            float gy = y0 + grid;
             addLine(values, x0, gy, 0.2f, x1, gy, 0.2f, 0.30f, 0.28f, 0.25f, 0.55f);
         }
         // A phone-first product viewport keeps the printer context quiet. A
