@@ -6,9 +6,14 @@ Fresh verification on this checkpoint: the independent parity suite completed
 66/66 tests successfully; the Linux/model/artifact bridge suite completed
 26/26 tests; Android, transport, release, model/profile/native
 wiring validators all passed; and the native-enabled `connectedReleaseAndroidTest`
-completed 156 instrumentation executions with 0 failures and 1 intentional
+completed 157 instrumentation executions with 0 failures and 1 intentional
 skip. The skip is the opt-in native G3 evidence export; it remains excluded
 from the production claim until the engine gate is closed.
+
+The Android wiring validator now also requires the live GLES `PixelCopy` export
+path, its bounded A1 study instrumentation test, and the MainActivity export
+call site. This turns the verified marketing/inspection capture path into a
+release-regression guard; it does not change the production-readiness gates.
 
 The printer completion path now durably queues inventory reconciliation before
 attempting the stock write. Activity startup and the foreground printer service
