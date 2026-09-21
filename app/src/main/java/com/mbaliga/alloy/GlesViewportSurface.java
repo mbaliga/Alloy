@@ -1442,7 +1442,12 @@ final class GlesViewportSurface extends GLSurfaceView {
             float depth = 150f - index * 24f;
             float width = 184f - index * 14f;
             float centerY = 92f - index * (92f - index * 8f);
-            float z = -3.4f - index * 0.12f;
+            // The supplied machine mesh carries its own lower bed shell. Put
+            // the presentation sheets on the physical top plane instead of
+            // underneath that shell, otherwise the runway disappears behind
+            // the machine in the hero camera. This z value is presentation
+            // only and never participates in model placement or slicing.
+            float z = -0.2f - index * 0.12f;
             // A physical PEI sheet has softened corners and a small front
             // grip tab. Keeping that silhouette in the presentation geometry
             // is the difference between a real plate runway and a stack of
@@ -1450,7 +1455,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             addRoundedPlate(values, centerX, centerY, z, width, depth, 1.4f,
                     Math.min(7f, width * 0.08f), -20f);
             addBox(values, centerX - 11f, centerY - depth / 2f - 4.2f, z + 0.15f,
-                    centerX + 11f, centerY - depth / 2f + 1.2f, z + 0.9f, -20f);
+                    centerX + 11f, centerY - depth / 2f + 1.2f, z + 0.9f, -18.6f);
             // A restrained inset stripe makes each plate readable without
             // turning the study into a second slicer viewport.
             addBox(values, centerX - width * 0.43f, centerY - 1.5f, z + 1.4f,

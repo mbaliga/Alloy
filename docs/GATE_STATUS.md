@@ -1848,6 +1848,15 @@ the requested A1 Mini marketing composition, but does not close the broader
 visual-quality gate: the machine still needs authored region materials,
 higher-fidelity lighting, and a final reference-led art pass.
 
+The follow-up capture is `/private/tmp/alloy-visual-v13-fullscreen.png`.
+Presentation sheets now sit on the supplied machine's bed plane, exposing the
+runway instead of letting the welded bed shell hide it; the sheet grip tabs
+also use a separate edge material. The standalone study window explicitly
+requests fullscreen so status/navigation chrome cannot contaminate a product
+capture. The debug APK builds and the study opens on the API-35 emulator.
+The visual gate remains open because the supplied reference still calls for a
+more authored hero asset, lighting treatment, and material system.
+
 ## Linux milestone
 
 **Status: implemented lightweight bridge; native desktop engine intentionally
