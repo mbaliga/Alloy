@@ -21,14 +21,21 @@ warning (`P1500` versus `P300`), so the fixture is **PASS WITH WARNING**, not
 a blanket production-parity claim. No physical A1 Mini send/start claim has
 been made.
 
-The dedicated obstacle comparison remains an explicit **FAIL / NO-GO** for
-promotion. The saved desktop and Android artifacts in
-`/private/tmp/alloy-g3-obstacle` and `/private/tmp/alloy-g3-flavor-current`
-compare at 140 layers with 0.34% filament-length delta and 1.70% extrusion-move
-delta, but Android emits 2,304 versus 4,096 travel moves (43.75% fewer),
-5.47% positive-extrusion delta, and a different acceleration sequence. This
-fixture is evidence that the slope-lift/travel planner still needs work; it
-must not be described as production parity.
+The earlier dedicated obstacle comparison recorded as **FAIL / NO-GO** used an
+Android artifact exported with `filament_wipe = 0`, so it was not the requested
+wipe-enabled recipe. The correct wipe-enabled Android artifact at
+`/private/tmp/alloy-g3-outer/travel_obstacle_brim_auto_brim_wipe_1_zhop_slope_lift_slope_3.gcode`
+now compares **PASS** against the retained desktop reference: 140/140 layers,
+10,303/10,303 extrusion moves, 4,096/4,096 travel moves, 2,713.58/2,713.58
+positive E, matching time and filament estimates, matching feature-transition
+sequence, and matching normalized acceleration commands. This closes the
+dedicated obstacle fixture at the checked-in tolerance. It is still
+fixture-level evidence, not a blanket production-parity claim, and no physical
+A1 Mini send/start claim has been made.
+
+The prior no-go artifact and comparison remain retained as historical evidence
+of the configuration mistake; they must not be used to describe the current
+wipe-enabled native result.
 
 Visual status is also **OPEN**. The latest emulator capture uses the supplied
 A1 Mini mesh, five receding plates, and scale props, with a revised editorial
