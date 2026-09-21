@@ -1551,6 +1551,26 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void gcodeSafetyBoundsArcExtremaAndRejectsUnboundedRadiusArcs() {
+        Slicer.Config config = new Slicer.Config();
+        String prefix = "G28\nG90\nM83\nG1 X10 Y90\n";
+        String safe = prefix + "G3 X90 Y90 I40 J0 E0.4\nM104 S0\nM140 S0\n";
+        Assert.assertTrue(GcodeSafetyValidator.inspect(safe, config).summary(),
+                GcodeSafetyValidator.inspect(safe, config).isValid());
+
+        String outside = "G28\nG90\nM83\nG1 X10 Y110\n"
+                + "G2 X170 Y110 I80 J0 E0.4\nM104 S0\nM140 S0\n";
+        GcodeSafetyValidator.Report outsideReport = GcodeSafetyValidator.inspect(outside, config);
+        Assert.assertFalse("arc midpoint outside the plate must be rejected", outsideReport.isValid());
+        Assert.assertTrue(outsideReport.summary().contains("arc"));
+
+        String radius = prefix + "G3 X90 Y90 R40 E0.4\nM104 S0\nM140 S0\n";
+        GcodeSafetyValidator.Report radiusReport = GcodeSafetyValidator.inspect(radius, config);
+        Assert.assertFalse("radius arcs have ambiguous bounds and must be rejected", radiusReport.isValid());
+        Assert.assertTrue(radiusReport.summary().contains("radius arcs"));
+    }
+
+    @Test
     public void gcodeSafetyStreamHandlesChunkBoundaries() throws Exception {
         GcodeSafetyValidator.Stream stream = new GcodeSafetyValidator.Stream();
         byte[] gcode = "G90\nM83\nG1 X2 Y3 E0.4\nM104 S0\n".getBytes(StandardCharsets.UTF_8);

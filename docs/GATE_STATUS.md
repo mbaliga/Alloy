@@ -35,6 +35,13 @@ focused regression passed, followed by the full non-native release suite:
 fail-closed input-validation improvement; it does not change the native
 engine, profile-parity, support-parity, or physical-printer gate status.
 
+The next artifact-safety increment hardens strict G-code validation for curved
+motion: I/J arcs now check their cardinal extrema against the configured bed,
+and radius-form arcs are rejected because their sweep cannot be bounded safely
+without a full arc simulator. The focused regression passed, followed by the
+full non-native release suite: **159 executions, 0 failures, 8 intentional
+native-engine skips**. Native toolpaths were not changed by this safeguard.
+
 Fresh G3 evidence was exported manually from the rebuilt native APK on the
 API-35 ARM64 emulator and retained in temporary evidence storage. The bundle
 validator passes. Against the pinned v14 Orca reference, the cube still has
