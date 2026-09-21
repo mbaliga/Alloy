@@ -6,6 +6,13 @@ on:
     paths:
       - '.github/workflows/path-b-g4-a1mini-profile-audit.yml'
       - 'parity/audit_path_b_a1mini_profile.py'
+      - 'parity/audit_bambu_a1mini_templates.py'
+      - 'parity/build_path_b_prusa_config.py'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'ci/validate_g4_scope.py'
+      - 'parity/a1mini_g4_scope.json'
+      - 'app/src/main/assets/profiles/**'
+      - 'ci/validate_profile_assets.py'
   workflow_dispatch:
 
 permissions:
@@ -50,6 +57,37 @@ jobs:
           mkdir -p path-b-g4-evidence
           python3 parity/audit_path_b_a1mini_profile.py orca slicebeam path-b-g4-evidence 2>&1 | tee path-b-g4-evidence/run.log
           exit ${PIPESTATUS[0]}
+
+      - name: Emit deterministic Prusa/SliceBeam recipe
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/export_resolved_orca_profiles.py orca path-b-g4-evidence/resolved
+          python3 parity/build_path_b_prusa_config.py \
+            path-b-g4-evidence/resolved slicebeam \
+            path-b-g4-evidence/a1-mini-prusa.ini \
+            --report path-b-g4-evidence/a1-mini-prusa.report.json
+
+      - name: Audit upstream A1 Mini machine templates
+        id: template-audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 parity/audit_bambu_a1mini_templates.py \
+            path-b-g4-evidence/resolved/machine.json \
+            --slice-repo slicebeam \
+            --report path-b-g4-evidence/a1-mini-template-audit.json 2>&1 \
+            | tee path-b-g4-evidence/a1-mini-template-audit.log
+
+      - name: Enforce explicit unsupported-field scope
+        if: steps.audit.outcome == 'success'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 ci/validate_g4_scope.py \
+            path-b-g4-evidence/path-b-g4-profile-audit.json \
+            parity/a1mini_g4_scope.json
 
       - name: Upload G4 static evidence
         if: always()

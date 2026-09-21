@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "path": "app/src/main/assets/models/box-20mm.stl",
+      "name": "Box · 20 mm calibration cube",
+      "author": "Alloy project",
+      "license": "AGPL-3.0-or-later",
+      "source": "Alloy-authored bundled calibration geometry",
+      "sha256": "9111b6da8e888bfc4725e41ec02da2465c81948739bce2cc639532a9d4e9bdbb"
+    },
+    {
+      "path": "app/src/main/assets/models/box-and-lid.stl",
+      "name": "Box + lid assembly",
+      "author": "Alloy project",
+      "license": "AGPL-3.0-or-later",
+      "source": "Alloy-authored bundled assembly geometry",
+      "sha256": "c2f0d941509f4de2fc067e04eacb276140efcfb6ece8487fcbd676123559b00a"
+    },
+    {
+      "path": "app/src/main/assets/models/mounting-block.stl",
+      "name": "Mounting block",
+      "author": "Alloy project",
+      "license": "AGPL-3.0-or-later",
+      "source": "Alloy-authored bundled workshop geometry",
+      "sha256": "1129b8fa0b8e69385ae56ab6134788093155e7e3bb74e405e1f3ccdbf01c5b7f"
+    },
+    {
+      "path": "app/src/main/assets/models/overhang-support-fixture.stl",
+      "name": "Calibration · overhang support fixture",
+      "author": "Alloy project",
+      "license": "AGPL-3.0-or-later",
+      "source": "Alloy-authored deterministic G3 parity geometry",
+      "sha256": "a38bff6c2dc906606b128ad13683e4b1ef2dc3adf3e27c8eb860635a28b97ed1"
+    },
+    {
+      "path": "app/src/main/assets/models/thin-wall-frame-fixture.stl",
+      "name": "Calibration · thin-wall frame fixture",
+      "author": "Alloy project",
+      "license": "AGPL-3.0-or-later",
+      "source": "Alloy-authored deterministic G3 parity geometry",
+      "sha256": "805b6388fb54539981a6020ecf93c509c66607e8e7c32ea85ef1a95693df0417"
+    }
+  ]
+}

@@ -3,34 +3,72 @@ name: Alloy Android v1
 on:
   push:
     branches: [main, 'codex/**']
-    paths: ['app/**', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   pull_request:
-    paths: ['app/**', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  ORCA_PROFILE_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
+  ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
+
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+      - name: Verify pinned Orca profile snapshot
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
+          test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+      - name: Validate Android workflow variants
+        run: python3 ci/validate_android_workflows.py
+      - name: Validate packaged profiles
+        run: |
+          python3 ci/validate_profile_assets.py
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+      - name: Validate Android shell and import wiring
+        run: python3 ci/validate_android_wiring.py
+      - name: Validate bundled model library
+        run: python3 ci/validate_model_assets.py
+      - name: Validate multi-object 3MF contract
+        run: python3 ci/validate_3mf_contract.py
+      - name: Validate native engine wiring
+        run: python3 ci/validate_native_wiring.py
+      - name: Validate Java to JNI symbol contract
+        run: python3 ci/validate_native_jni_contract.py
+      - name: Validate printer transport wiring
+        run: python3 ci/validate_transport_wiring.py
       - name: Install Android SDK
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/gradle-build-action@v3
         with:
           gradle-version: 8.9
-      - name: Build debug APK
-        run: gradle :app:assembleDebug --no-daemon --stacktrace
+      - name: Build CI-signed release APK
+        run: gradle :app:assembleRelease -PalloyCiDebugSign=true --no-daemon --stacktrace
+      - name: Run Android pipeline acceptance tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: Pixel 6
+          script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
         with:
-          name: alloy-v1-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: alloy-v1-release-ci-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error

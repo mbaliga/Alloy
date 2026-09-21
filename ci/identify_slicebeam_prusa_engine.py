@@ -45,16 +45,30 @@ def commit_blob(repo: Path, sha: str, path: str) -> str | None:
     return p.stdout.strip() if p.returncode == 0 else None
 
 
-def map_blobs(slice_repo: Path, prusa_repo: Path) -> dict[str, str]:
+def official_file_path(prusa_repo: Path, rel: str) -> tuple[Path, str] | None:
+    """Resolve both legacy and current PrusaSlicer libslic3r layouts."""
+    root = prusa_repo / "src/libslic3r"
+    candidates = (
+        (root / rel, f"src/libslic3r/{rel}"),
+        (root / "src/libslic3r" / rel, f"src/libslic3r/src/libslic3r/{rel}"),
+    )
+    for filesystem_path, git_path in candidates:
+        if filesystem_path.is_file():
+            return filesystem_path, git_path
+    return None
+
+
+def map_blobs(slice_repo: Path, prusa_repo: Path) -> dict[str, tuple[str, str]]:
     src = slice_repo / "app/src/main/jni/libslic3r"
-    official = prusa_repo / "src/libslic3r"
     out = {}
     for path in src.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in SUFFIXES:
             continue
         rel = path.relative_to(src).as_posix()
-        if (official / rel).is_file():
-            out[rel] = hash_file(path)
+        resolved = official_file_path(prusa_repo, rel)
+        if resolved:
+            _, git_path = resolved
+            out[rel] = (hash_file(path), git_path)
     return dict(sorted(out.items()))
 
 
@@ -68,8 +82,7 @@ def sample_paths(paths: list[str], slice_repo: Path) -> list[str]:
     return [src[min(int(i * step), len(src) - 1)] for i in range(SAMPLE_LIMIT)]
 
 
-def interval(prusa: Path, rel: str, wanted: str):
-    path = f"src/libslic3r/{rel}"
+def interval(prusa: Path, path: str, wanted: str):
     commits = [x for x in git(prusa, "log", "--format=%H", "--", path).splitlines() if x]
     for i, sha in enumerate(commits):
         if commit_blob(prusa, sha, path) != wanted:
@@ -119,6 +132,11 @@ def tree(prusa: Path, sha: str) -> dict[str, str]:
         parts = meta.split()
         if len(parts) >= 3 and parts[1] == "blob" and path.startswith(prefix):
             rel = path[len(prefix):]
+            # PrusaSlicer moved the implementation into a nested source tree;
+            # normalize both layouts to the SliceBeam-relative path.
+            nested = "src/libslic3r/"
+            if rel.startswith(nested):
+                rel = rel[len(nested):]
             if Path(rel).suffix.lower() in SUFFIXES:
                 out[rel] = parts[2]
     return out
@@ -137,7 +155,8 @@ def main():
     ivals = []
     rows = []
     for rel in samples:
-        hit = interval(prusa, rel, blobs[rel])
+        blob, git_path = blobs[rel]
+        hit = interval(prusa, git_path, blob)
         if hit:
             ivals.append(hit)
             rows.append({"path": rel, "from": hit[0], "until": hit[1], "commit": hit[2]})
@@ -146,7 +165,7 @@ def main():
     scored = []
     for ts, sha in cand:
         official = tree(prusa, sha)
-        exact = sum(official.get(rel) == blob for rel, blob in blobs.items())
+        exact = sum(official.get(rel) == blob for rel, (blob, _) in blobs.items())
         scored.append((exact, len(blobs), sha, ts))
     scored.sort(reverse=True)
     best = scored[0] if scored else (0, len(blobs), "", 0)

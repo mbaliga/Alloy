@@ -33,6 +33,24 @@ jobs:
         run: |
           python3 -m unittest -v test_compare_gcode.py
 
+      - name: Run G3 profile identity tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_g3_profile.py
+
+      - name: Run A1 Mini template policy tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_bambu_a1mini_templates.py
+
+      - name: Run Stage 1 scope-patch tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_stage1_scope_patch.py test_orca_mobile_bootstrap_patch.py
+
+      - name: Run native dependency wiring tests
+        run: python3 -m unittest -v parity/test_native_dependency_wiring.py
+
       - name: Generate deterministic geometry fixtures
         run: |
           rm -rf parity/generated-fixtures

@@ -1,0 +1,66 @@
+name: Path B G5 Bambu TreeSupport3D audit
+
+on:
+  pull_request:
+    branches: [stage1-gates-prep]
+    paths:
+      - '.github/workflows/path-b-g5-bambu-treesupport3d-audit.yml'
+      - 'ci/audit_bambu_treesupport3d.py'
+      - 'app/src/main/jni/libslic3r/Support/**'
+      - 'docs/NATIVE_ENGINE_INTEGRATION.md'
+      - 'THIRD_PARTY_NOTICES.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BAMBU_REPO: https://github.com/bambulab/BambuStudio.git
+  BAMBU_TAG: v02.08.02.61
+  BAMBU_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
+
+jobs:
+  treesupport3d-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone pinned Bambu source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$BAMBU_REPO" bambu
+          git -C bambu fetch --tags --depth=1 origin "$BAMBU_TAG"
+          git -C bambu checkout --detach "$BAMBU_SHA"
+          test "$(git -C bambu rev-parse HEAD)" = "$BAMBU_SHA"
+          test "$(git -C bambu rev-parse "$BAMBU_TAG^{commit}")" = "$BAMBU_SHA"
+
+      - name: Audit coherent Bambu TreeSupport3D port scope
+        id: audit
+        shell: bash
+        run: |
+          set +e
+          mkdir -p path-b-g5-evidence
+          python3 ci/audit_bambu_treesupport3d.py \
+            bambu . path-b-g5-evidence 2>&1 \
+            | tee path-b-g5-evidence/run.log
+          status=${PIPESTATUS[0]}
+          echo "audit_exit=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Upload Bambu TreeSupport3D evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: path-b-g5-bambu-treesupport3d-audit
+          path: path-b-g5-evidence
+          if-no-files-found: error
+
+      - name: Keep the open port gate explicit
+        if: steps.audit.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "G5 remains open until the pinned Bambu route is ported coherently and passes semantic/runtime parity."
+          exit 1

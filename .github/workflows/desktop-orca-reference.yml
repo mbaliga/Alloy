@@ -7,6 +7,8 @@ on:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/g3-bambu-filament-overlay.json'
+      - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
   pull_request:
     branches: [stage1-gates-prep]
@@ -14,6 +16,8 @@ on:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/g3-bambu-filament-overlay.json'
+      - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
   workflow_dispatch:
 
@@ -61,7 +65,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y libopengl0 libglu1-mesa
+          sudo apt-get install -y libopengl0 libglu1-mesa libwebkit2gtk-4.1-0 libjavascriptcoregtk-4.1-0
 
       - name: Download and extract OrcaSlicer 2.4.2 AppImage
         shell: bash
@@ -93,8 +97,12 @@ jobs:
           set -euxo pipefail
           ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
           MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"
-          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/process.json"
-          FILAMENT="$GITHUB_WORKSPACE/runtime/profiles/filament.json"
+          # Use the checked-in G3 recipe rather than the resolved system
+          # process/filament snapshots. The latter are useful provenance
+          # artifacts, but they can silently reintroduce a different nozzle
+          # temperature or volumetric cap into a parity reference.
+          PROCESS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference
 
           for stl in runtime/fixtures/*.stl; do
@@ -124,8 +132,8 @@ jobs:
             echo "OrcaSlicer release: v${ORCA_VERSION}"
             echo "Orca profile source: ${ORCA_PROFILE_SHA}"
             echo "Machine: Bambu Lab A1 mini 0.4 nozzle"
-            echo "Process: 0.20mm Standard @BBL A1M"
-            echo "Filament: Bambu PLA Basic @BBL A1M"
+            echo "Process: Alloy checked-in G3 project recipe"
+            echo "Filament: Alloy checked-in G3 PLA overlay"
             echo
             sha256sum runtime/orca-reference/*/*.gcode.3mf
           } > runtime/evidence/reference-manifest.txt
