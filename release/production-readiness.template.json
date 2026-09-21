@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "evidence_id": "REPLACE-WITH-REVIEWED-ID",
+  "verified_at": "REPLACE-WITH-UTC-TIMESTAMP",
+  "reviewer": "REPLACE-WITH-REVIEWER",
+  "device_scope": "Bambu Lab A1 Mini / N1 / firmware REPLACE",
+  "gates": {
+    "native_engine_source_build": "PENDING",
+    "native_smoke_on_arm64_device": "PENDING",
+    "a1_mini_profile_parity": "PENDING",
+    "g3_toolpath_parity": "PENDING",
+    "g4_profile_runtime_parity": "PENDING",
+    "bambu_treesupport3d_parity": "PENDING",
+    "physical_a1_mini_transport": "PENDING",
+    "signed_install_and_upgrade": "PENDING",
+    "interruption_and_recovery": "PENDING"
+  },
+  "notes": "Copy to production-readiness.json only after every gate has reviewed evidence. Do not replace PENDING with PASS without attaching the corresponding evidence record."
+}
