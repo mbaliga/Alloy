@@ -44,6 +44,8 @@ def validate(path: Path) -> dict:
         value = document.get(field)
         if not isinstance(value, str) or not value.strip():
             fail(f"{field} must be a non-empty string")
+        if "REPLACE-WITH" in value or value.strip().upper().startswith("TODO"):
+            fail(f"{field} still contains a placeholder")
     gates = document.get("gates")
     if not isinstance(gates, dict):
         fail("gates must be an object")
