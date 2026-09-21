@@ -42,6 +42,12 @@ without a full arc simulator. The focused regression passed, followed by the
 full non-native release suite: **159 executions, 0 failures, 8 intentional
 native-engine skips**. Native toolpaths were not changed by this safeguard.
 
+The native `nativeArcOutputRemainsInspectableAndSafe` smoke test also passes on
+the API-35 ARM64 emulator with the strict arc validator enabled. This confirms
+the new envelope check accepts Alloy's actual I/J output while still rejecting
+the synthetic unsafe cases; it is safety evidence, not native parity or
+physical-printer acceptance evidence.
+
 Fresh G3 evidence was exported manually from the rebuilt native APK on the
 API-35 ARM64 emulator and retained in temporary evidence storage. The bundle
 validator passes. Against the pinned v14 Orca reference, the cube still has
