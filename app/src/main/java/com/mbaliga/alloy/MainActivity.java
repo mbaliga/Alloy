@@ -190,6 +190,8 @@ public final class MainActivity extends Activity {
         window.setNavigationBarColor(BG);
         window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         inventoryStore = new InventoryStore(getSharedPreferences("alloy_inventory", MODE_PRIVATE));
+        new InventoryReconciliationStore(getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE))
+                .drain(inventoryStore);
         importedModelStore = new ImportedModelStore(getSharedPreferences("alloy_model_library", MODE_PRIVATE));
         projectStore = new ProjectStore(getPreferences(MODE_PRIVATE));
         projectHistoryStore = new ProjectHistoryStore(getSharedPreferences("alloy_project_history", MODE_PRIVATE));
@@ -203,15 +205,13 @@ public final class MainActivity extends Activity {
         if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.COMPLETED
                 && recoveredJob.filamentMm > 0f) {
             try {
-                // The checkpoint is committed before the transport callback
-                // returns. Reconcile here in case the process died in the
-                // small window before the foreground UI updated inventory.
-                inventoryStore.recordCompletedPrint(recoveredJob.jobId, recoveredJob.filament,
+                InventoryReconciliationStore reconciliation = new InventoryReconciliationStore(
+                        getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE));
+                reconciliation.enqueue(recoveredJob.jobId, recoveredJob.filament,
                         recoveredJob.filamentMm, recoveredJob.filamentDiameterMm);
+                reconciliation.drain(inventoryStore);
             } catch (Exception ignored) {
-                // A completed job with no matching gram-tracked material stays
-                // visible in the printer history; it is never guessed into a
-                // different stock item.
+                // The durable queue remains the source of truth for the next launch.
             }
         }
         if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
