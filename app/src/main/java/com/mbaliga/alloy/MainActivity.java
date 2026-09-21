@@ -4313,7 +4313,8 @@ public final class MainActivity extends Activity {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/png");
-        intent.putExtra(Intent.EXTRA_TITLE, "alloy-3d-view.png");
+        intent.putExtra(Intent.EXTRA_TITLE, viewport.isMachineStudy()
+                ? "alloy-a1-mini-study.png" : "alloy-3d-view.png");
         startActivityForResult(intent, REQUEST_VIEW_EXPORT);
     }
 
