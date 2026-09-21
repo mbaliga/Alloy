@@ -5,6 +5,7 @@ Fixtures:
 - cube_20mm.stl: baseline geometry and timing/material sanity check.
 - overhang_support.stl: connected cantilever geometry that should exercise support generation.
 - thin_wall_frame.stl: keyboard-case-like rectangular shell for Arachne/thin-wall behavior.
+- travel_obstacle.stl: separated towers that force inter-island travel and Z-hop decisions.
 
 No randomness is used. Units are millimetres.
 """
@@ -155,6 +156,25 @@ def thin_wall_frame(outer_w: float = 80.0, outer_d: float = 40.0,
     return m
 
 
+def translated(mesh: Mesh, dx: float, dy: float) -> Mesh:
+    """Return a deterministic XY translation without changing triangle order."""
+    return Mesh([
+        tuple((x + dx, y + dy, z) for x, y, z in triangle)  # type: ignore[arg-type]
+        for triangle in mesh.triangles
+    ])
+
+
+def travel_obstacle_fixture() -> Mesh:
+    """Three separated solids with different heights for travel-path evidence."""
+    result = Mesh([])
+    for dx, height in ((-34.0, 8.0), (0.0, 20.0), (34.0, 12.0)):
+        result.triangles.extend(translated(box(16.0, 16.0, height), dx, 0.0).triangles)
+    # A narrow rear fin creates a second obstacle crossing at a different Z
+    # without becoming a support or overhang fixture.
+    result.triangles.extend(translated(box(8.0, 8.0, 28.0), 0.0, 32.0).triangles)
+    return result
+
+
 def write_ascii_stl(path: Path, name: str, mesh: Mesh) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [f"solid {name}"]
@@ -190,6 +210,11 @@ def generate(out: Path) -> None:
         out / "thin_wall_frame.stl",
         "thin_wall_frame",
         thin_wall_frame(),
+    )
+    write_ascii_stl(
+        out / "travel_obstacle.stl",
+        "travel_obstacle",
+        travel_obstacle_fixture(),
     )
 
 

@@ -51,6 +51,7 @@ public final class NativeEngineSmokeTest {
         Assert.assertTrue("support-enabled native output must contain support toolpaths",
                 supportResult.gcode.contains(";TYPE:Support"));
         assertSlicesAndStages(context, config, "thin-wall-frame-fixture.stl", "native-smoke-thin-wall");
+        assertSlicesAndStages(context, config, "travel_obstacle.stl", "native-smoke-travel-obstacle");
     }
 
     @Test
@@ -390,6 +391,8 @@ public final class NativeEngineSmokeTest {
         if (zHopTypes != null) evidenceSuffix += "_zhop_" + zHopTypes.toLowerCase(java.util.Locale.US).replace(' ', '_');
         if (travelSlope != null) evidenceSuffix += "_slope_" + travelSlope.replace('.', '_');
         exportNativeG3(context, config, "box-20mm.stl", arcFitting ? "cube_20mm_arcs" + evidenceSuffix + ".gcode" : "cube_20mm" + evidenceSuffix + ".gcode", evidenceDir);
+        exportNativeG3(context, config, "travel_obstacle.stl",
+                "travel_obstacle" + evidenceSuffix + ".gcode", evidenceDir);
         Slicer.Config supportConfig = config.copy();
         supportConfig.supports = true;
         String supportStyle = requestedSupportStyle(arguments);
