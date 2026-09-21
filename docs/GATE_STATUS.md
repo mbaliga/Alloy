@@ -75,6 +75,12 @@ inspection/import controls in the main workspace instead of crowding the
 marketing frame. This improves reference alignment without changing any
 geometry, slicing, profile, inventory, or printer-control behavior.
 
+The scale-reference pass is installed and emulator-checked at
+`/private/tmp/alloy-smooth-props-study.png`. The ball prop now uses per-vertex
+ellipsoid normals and denser sampling rather than one flat normal per triangle,
+removing a visible faceted-debug artifact from the marketing study. This is a
+presentation-only improvement and does not alter printable geometry.
+
 The phone import lifecycle now has a 90-second watchdog. If a document provider
 or oversized model stalls, Alloy cancels the worker, restores the workspace
 state, and explains the recovery path instead of leaving the session disabled.
