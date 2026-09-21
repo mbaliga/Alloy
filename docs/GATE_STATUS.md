@@ -1,12 +1,12 @@
 # Alloy engine gate status
 
-Date: 2026-09-21
+Date: 2026-09-22
 
 Fresh verification on this checkpoint: the independent parity suite completed
 66/66 tests successfully; the Linux/model/artifact bridge suite completed
 26/26 tests; Android, transport, release, model/profile/native
 wiring validators all passed; and the native-enabled `connectedReleaseAndroidTest`
-completed 153 instrumentation executions with 0 failures and 1 intentional
+completed 155 instrumentation executions with 0 failures and 1 intentional
 skip. The skip is the opt-in native G3 evidence export; it remains excluded
 from the production claim until the engine gate is closed.
 
@@ -222,6 +222,16 @@ callout clear of the dimensional props. Java compilation passed after the
 change; the emulator capture used for this pass is retained in temporary
 verification storage. The result is more legible for collateral, but remains
 an intermediate visual-review surface rather than a production design signoff.
+
+The subsequent reference-fidelity pass inspected the supplied self-contained
+preview and restored two of its load-bearing art-direction rules: PEI runway
+sheets stay black in light mode, and the machine/toolhead palette remains
+restrained gray rather than introducing a gold accent. The scale can received
+a shallow shoulder and inset lid so it reads as a physical reference prop.
+The rebuilt APK compiled successfully and was installed on the API-35 ARM64
+emulator; the capture is `/private/tmp/alloy-fidelity-study.png`. The visual
+gate remains **OPEN**: this is still an intermediate native study, not final
+signoff.
 
 ## Delivery forecast and merge state
 
