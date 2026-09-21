@@ -28,6 +28,13 @@ source machine remains a welded reference shell and still needs authored
 material segmentation and richer interaction choreography to match the
 provided luxury configurator at production quality.
 
+The subsequent material pass was rebuilt and installed as
+`/private/tmp/alloy-visual-v16-accent.png`. The real A1 reference mesh now
+uses a bounded authored palette for the white frame, charcoal PEI, dark
+carriage, and a restrained teal Alloy accent on the toolhead/carriage region.
+This improves component readability without changing the mesh, print
+placement, slicing, or transport data.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported

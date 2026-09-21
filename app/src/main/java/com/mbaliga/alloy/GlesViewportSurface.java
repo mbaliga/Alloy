@@ -1140,7 +1140,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // never machine collision or print geometry.
             if (x > 190f && y > 75f && y < 125f && z > 55f) return -12f; // spool
             if (x > 55f && x < 110f && y > 55f && y < 135f && z > 100f && z < 122f)
-                return -11f; // carriage/nozzle assembly
+                return -19f; // Alloy accent on carriage/nozzle assembly
             if (z > 145f) return -7f;               // light upper rails
             if (Math.abs(nx) > 0.75f || Math.abs(ny) > 0.75f) return -8f;
             return -6f;
@@ -1784,6 +1784,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.075,0.085,0.095);}"
                     + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.22,0.24,0.26);}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
+                    + "else if(uMachine==1 && vPart<-18.5){base=vec3(0.18,0.50,0.48);}"
                     + "else if(uMachine==1 && vPart<-17.5){base=vec3(0.075,0.085,0.095);}"
                     + "else if(uMachine==1 && vPart<-16.5){base=vec3(0.78,0.80,0.82);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
