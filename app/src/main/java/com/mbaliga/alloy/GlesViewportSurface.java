@@ -1781,8 +1781,13 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // study too, so the receding runway reads as a real
                     // printer surface and preserves the supplied reference's
                     // quiet black-on-white material contrast.
-                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.075,0.085,0.095);}"
-                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.22,0.24,0.26);}"
+                    // Keep the physical PEI sheet materially black in both
+                    // themes. The raised grid is intentionally only a
+                    // restrained charcoal cue; if it is lit like a second
+                    // surface the runway turns into pale UI cards and loses
+                    // the real-sheet depth of the supplied reference.
+                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.012,0.015,0.022):vec3(0.030,0.036,0.044);}"
+                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.045,0.052,0.065):vec3(0.085,0.100,0.115);}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
                     + "else if(uMachine==1 && vPart<-18.5){base=vec3(0.18,0.50,0.48);}"
                     + "else if(uMachine==1 && vPart<-17.5){base=vec3(0.075,0.085,0.095);}"

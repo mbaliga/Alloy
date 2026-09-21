@@ -58,6 +58,15 @@ confirmed that the bundle contains the Alloy logo, splash resources, supplied
 A1 study mesh, and packaged model assets. This closes the AAB packaging gap;
 organization signing and every production-readiness gate remain required.
 
+The current native-enabled debug APK was rebuilt from this checkout, installed
+on the API-35 ARM64 emulator, and captured at
+`/private/tmp/alloy-a1-plate-material-pass.png`. The visual pass applies the
+handoff's load-bearing material rule: the physical PEI runway remains dark in
+light mode while the raised grid stays a restrained contrast cue. The supplied
+A1 mesh, authored frame/toolhead palette, scale props, and receding plate
+geometry are visible in the same runtime capture. This is verified reference
+fidelity progress, not final luxury-grade visual signoff.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported
