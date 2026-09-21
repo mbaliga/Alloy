@@ -59,6 +59,12 @@ The on-device capture is retained at `/private/tmp/alloy-rounded-plates-study.pn
 The geometry is presentation-only and does not enter plate planning, slicing,
 collision, or printer transport.
 
+The phone import lifecycle now has a 90-second watchdog. If a document provider
+or oversized model stalls, Alloy cancels the worker, restores the workspace
+state, and explains the recovery path instead of leaving the session disabled.
+The native-enabled release instrumentation suite was rerun afterward: **153
+tests completed, 0 failures, 1 intentional G3 export skip**.
+
 The visible-product packaging gap was corrected on 2026-09-21. The supplied
 A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
 so ordinary release APKs silently fell back to the simplified Alloy frame.
