@@ -688,8 +688,12 @@ final class GlesViewportSurface extends GLSurfaceView {
             // Keep the full silhouette visible, but give the supplied machine
             // enough screen presence for the plate runway and material cues to
             // read in a marketing capture.
-            float frameScale = machineStudy ? 4.65f : 3.35f;
-            float frameMax = machineStudy ? 720f : 620f;
+            // The reference composition is an object study with generous
+            // negative space. Keep the full A1 silhouette and the receding
+            // plate runway inside that calm frame instead of letting the
+            // machine fill the phone viewport like a debug inspection view.
+            float frameScale = machineStudy ? 6.15f : 3.35f;
+            float frameMax = machineStudy ? 920f : 620f;
             float frameMin = cleanPresentation ? 12f : 92f;
             float distance = (framing == null ? fallbackDistance : clamp(span * frameScale, frameMin, frameMax))
                     / Math.max(0.45f, zoom);
@@ -1740,9 +1744,9 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // study too, so the receding runway reads as a real
                     // printer surface and preserves the supplied reference's
                     // quiet black-on-white material contrast.
-                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.075,0.085,0.095);}"
-                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.22,0.24,0.26);}"
-                    + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
+                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.19,0.20,0.21);}"
+                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.39,0.41,0.42);}"
+                    + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.46,0.39,0.31);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
                     + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
                     + "else if(uMachine==1 && vPart>-3.5){base=vec3(0.28,0.25,0.22);}"
