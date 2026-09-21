@@ -342,6 +342,13 @@ public final class NativeEngineSmokeTest {
         ProfileCatalog.Profile profile = loadG3ReferenceProfile(context, testContext);
         Slicer.Config config = new Slicer.Config();
         profile.applyTo(config);
+        String requestedFlavor = arguments.getString("g3-gcode-flavor");
+        if (requestedFlavor != null && !requestedFlavor.trim().isEmpty()) {
+            String normalizedFlavor = requestedFlavor.trim().toLowerCase(java.util.Locale.US);
+            if (!"marlin".equals(normalizedFlavor) && !"marlin2".equals(normalizedFlavor))
+                throw new IllegalArgumentException("g3-gcode-flavor must be marlin or marlin2");
+            config.nativeSettings.put("gcode_flavor", normalizedFlavor);
+        }
         String brimType = requestedBrimType(arguments);
         if (brimType != null) config.nativeSettings.put("brim_type", brimType);
         boolean arcFitting = requestedArcFitting(arguments);

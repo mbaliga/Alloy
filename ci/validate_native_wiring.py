@@ -163,6 +163,9 @@ def main() -> None:
         # source projection until auto-brim is promoted.
         "brim_object_gap",
         "brim_type",
+        # G3 parity fixtures may explicitly select the desktop flavor. The
+        # shipped A1 profile keeps the runtime default on marlin2.
+        "gcode_flavor",
         # Current Bambu projects carry this Orca-native pattern key. The
         # compact shipped profile predates the projection, so it remains an
         # import-only exception until the pinned profile snapshot is refreshed.

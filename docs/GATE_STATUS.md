@@ -174,16 +174,18 @@ the desktop reference comparison remains an explicit external-input gate and
 has not been synthesized from Alloy's own output.
 
 The 2026-09-21 parity follow-up tested two source-backed hypotheses against the
-same saved Orca cube reference and then restored the baseline. Mapping the A1
-profile from `marlin2` to legacy `marlin` changed the acceleration vocabulary
-but did not improve the gate (1,543 s, 1,111.86 mm, 1,438 travel moves). A
-separate export with arc fitting disabled also did not improve it (1,581 s,
-1,111.87 mm, 1,438 travel moves). Both experiments were rejected; the native
-profile remains on `marlin2` with its explicit arc-fitting projection. The
-remaining discrepancy is therefore in motion/travel planning rather than a
-header-only flavor or arc-setting mismatch. The restored baseline rebuilt and
-passed the full signed release instrumentation suite at 150 executions, 0
-failures, with two intentional skips.
+same saved Orca cube reference. The bounded native settings projection now
+accepts an explicit `marlin` or `marlin2` flavor for controlled fixtures while
+keeping the reviewed phone default on `marlin2`. The `marlin` export changed the
+acceleration vocabulary but still failed the gate (1,543 s versus 1,782 s,
+13.41%; filament 2.09%/2.03%; acceleration mismatch at desktop `P5000` versus
+Android `P1500`). A separate export with arc fitting disabled also did not
+improve it (1,581 s, 1,111.87 mm, 1,438 travel moves). The override is retained
+as parity instrumentation, not promotion evidence; the remaining discrepancy
+is in motion/travel planning rather than a header-only flavor or arc-setting
+mismatch. The restored baseline rebuilt and passed the full signed release
+instrumentation suite at 150 executions, 0 failures, with two intentional
+skips.
 
 A third 2026-09-21 experiment forced `wipe=0` for the cube export because the
 desktop config resolves that field differently. It worsened the result to
