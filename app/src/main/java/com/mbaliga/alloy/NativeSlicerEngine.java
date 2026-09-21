@@ -213,6 +213,13 @@ public final class NativeSlicerEngine implements SlicerEngine {
         mirrorFilamentSetting(settings, config.nativeSettings, "retract_lift_above", "filament_retract_lift_above");
         mirrorFilamentSetting(settings, config.nativeSettings, "retract_lift_below", "filament_retract_lift_below");
         mirrorFilamentSetting(settings, config.nativeSettings, "retract_before_travel", "filament_retraction_minimum_travel");
+        // The core's active retraction planner reads the top-level Prusa
+        // spelling, while Bambu's filament projection uses the prefixed
+        // spelling above. Carry both so the resolved value is not lost to the
+        // native default when a profile explicitly requests a short travel
+        // threshold.
+        optionalSetting(settings, config.nativeSettings,
+                "retract_before_travel", "retraction_minimum_travel");
         mirrorFilamentSetting(settings, config.nativeSettings, "retract_speed", "filament_retraction_speed");
         mirrorFilamentSetting(settings, config.nativeSettings, "wipe", "filament_wipe");
         // Bambu's resolved A1 Mini profile constrains the X/Y and travel
