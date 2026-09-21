@@ -21,6 +21,11 @@ opened with the supplied reference geometry, five receding plates, and the
 scale props visible. This closes the asset-packaging mismatch; it does not yet
 claim final visual polish, model-editing depth, or print-readiness.
 
+The same packaging change was rechecked with the native-enabled signed release
+instrumentation build: 153 test executions completed with 0 failures and 1
+intentional opt-in G3 export skip. This confirms that including the supplied
+visual study does not alter the native slicing or printer-safety test surface.
+
 The Linux secondary surface was rechecked from the repository root: the
 combined model/artifact bridge and Bambu LAN probe suite completed **25/25
 tests**, the bundled box-and-lid assembly inspected as two watertight solids
