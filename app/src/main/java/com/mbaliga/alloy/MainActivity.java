@@ -1240,6 +1240,7 @@ public final class MainActivity extends Activity {
         page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout footer = new LinearLayout(this);
+        footer.setOrientation(LinearLayout.VERTICAL);
         footer.setGravity(Gravity.CENTER_VERTICAL);
         footer.setPadding(dp(14), dp(10), dp(14), dp(14));
         footer.setBackgroundColor(Color.WHITE);
@@ -1247,9 +1248,10 @@ public final class MainActivity extends Activity {
         TextView note = label(suppliedReference
                 ? "OWNER VISUAL-REVIEW ASSET  ·  16,054 triangles  ·  presentation only"
                 : "PUBLIC/ORDINARY BUILD  ·  supplied A1 mesh is not packaged  ·  presentation only", 10, MUTED);
-        note.setGravity(Gravity.CENTER_VERTICAL);
+        note.setGravity(Gravity.CENTER);
+        note.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         note.setLineSpacing(1, 1.0f);
-        footer.addView(note, new LinearLayout.LayoutParams(0, dp(50), 1));
+        footer.addView(note, new LinearLayout.LayoutParams(-1, 0, 1));
         Button importReference = dialogButton(suppliedReference ? "Import from phone" : "Import A1 3MF", v -> {
             dialog.dismiss();
             openModel();
@@ -1257,14 +1259,16 @@ public final class MainActivity extends Activity {
         importReference.setContentDescription(suppliedReference
                 ? "Import an A1 Mini model from this phone"
                 : "Import the supplied A1 Mini 3MF model from this phone");
-        footer.addView(importReference, new LinearLayout.LayoutParams(-2, dp(50)));
+        LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(dp(230), dp(42));
+        importLp.gravity = Gravity.CENTER_HORIZONTAL;
+        footer.addView(importReference, importLp);
         Button done = dialogButton("Done", v -> dialog.dismiss());
         done.setTextSize(13);
         done.setTypeface(null, android.graphics.Typeface.BOLD);
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(54), 1);
-        doneLp.leftMargin = dp(8);
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-1, dp(54));
+        doneLp.setMargins(dp(120), dp(8), dp(120), 0);
         footer.addView(done, doneLp);
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(78)));
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(142)));
 
         dialog.setContentView(page);
         dialog.setOnDismissListener(ignored -> scene.onHostPause());
