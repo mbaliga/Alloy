@@ -1,5 +1,15 @@
 __pycache__/
 *.py[cod]
 app/build/
+app/.cxx/
+build/
 .gradle/
 local.properties
+
+# Local profile-resolution and slicer experiment outputs.
+00000.log
+effective-settings.json
+resolved-effective.json
+resolved-stock.json
+resolved-support.json
+result.json
