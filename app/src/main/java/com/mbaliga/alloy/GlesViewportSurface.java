@@ -963,7 +963,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                 // establish depth and scale for the marketing study and are
                 // never part of the printable model, plate planner, or
                 // collision envelope.
-                drawMeshBuffer(studyPlateBuffer, studyPlateVertexCount, mvp, -1, 0, 2, 1f);
+                drawMeshBuffer(studyPlateBuffer, studyPlateVertexCount, mvp, -1, 0, 4, 1f);
             }
             if (machineStudy && studyShadowBuffer != null) {
                 // Keep the supplied machine visually grounded on the front
@@ -1457,18 +1457,24 @@ final class GlesViewportSurface extends GLSurfaceView {
             // the machine in the hero camera. This z value is presentation
             // only and never participates in model placement or slicing.
             float z = -0.2f - index * 0.12f;
+            // Encode the stable runway index in the renderer-only material
+            // channel. The fragment shader uses it to let distant sheets
+            // recede without changing their geometry, plate planning, or
+            // printable coordinates.
+            float platePart = -20f - index * 0.2f;
+            float gridPart = -19f - index * 0.2f;
             // A physical PEI sheet has softened corners and a small front
             // grip tab. Keeping that silhouette in the presentation geometry
             // is the difference between a real plate runway and a stack of
             // rectangular UI cards.
             addRoundedPlate(values, centerX, centerY, z, width, depth, 1.4f,
-                    Math.min(7f, width * 0.08f), -20f);
+                    Math.min(7f, width * 0.08f), platePart);
             addBox(values, centerX - 11f, centerY - depth / 2f - 4.2f, z + 0.15f,
-                    centerX + 11f, centerY - depth / 2f + 1.2f, z + 0.9f, -18.6f);
+                    centerX + 11f, centerY - depth / 2f + 1.2f, z + 0.9f, -18.6f - index * 0.2f);
             // A restrained inset stripe makes each plate readable without
             // turning the study into a second slicer viewport.
             addBox(values, centerX - width * 0.43f, centerY - 1.5f, z + 1.4f,
-                    centerX + width * 0.43f, centerY + 1.5f, z + 1.7f, -20f);
+                    centerX + width * 0.43f, centerY + 1.5f, z + 1.7f, platePart);
             // A sparse PEI grid is presentation-only, but it is important
             // for material identity and depth. Keep the lines slightly
             // raised and bounded to each plate; the runway should feel like
@@ -1478,12 +1484,12 @@ final class GlesViewportSurface extends GLSurfaceView {
             for (int column = -3; column <= 3; column++) {
                 float x = centerX + column * width * 0.12f;
                 addBox(values, x - 0.35f, centerY - gridInsetY, z + 1.72f,
-                        x + 0.35f, centerY + gridInsetY, z + 1.88f, -19f);
+                        x + 0.35f, centerY + gridInsetY, z + 1.88f, gridPart);
             }
             for (int row = -2; row <= 2; row++) {
                 float y = centerY + row * depth * 0.14f;
                 addBox(values, centerX - gridInsetX, y - 0.35f, z + 1.72f,
-                        centerX + gridInsetX, y + 0.35f, z + 1.88f, -19f);
+                        centerX + gridInsetX, y + 0.35f, z + 1.88f, gridPart);
             }
         }
         return toArray(values);
@@ -1786,8 +1792,10 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // restrained charcoal cue; if it is lit like a second
                     // surface the runway turns into pale UI cards and loses
                     // the real-sheet depth of the supplied reference.
-                    + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.012,0.015,0.022):vec3(0.030,0.036,0.044);}"
-                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.045,0.052,0.065):vec3(0.085,0.100,0.115);}"
+                    + "if(uMachine==4 && vPart<-19.0){float plateDepth=clamp((-20.0-vPart)*0.20,0.0,1.0); base=uNight==1?vec3(0.012,0.015,0.022):vec3(0.030,0.036,0.044); base*=1.0-0.28*plateDepth;}"
+                    + "else if(uMachine==4 && vPart<-18.5){float gridDepth=clamp((-19.0-vPart)*0.20,0.0,1.0); base=uNight==1?vec3(0.045,0.052,0.065):vec3(0.085,0.100,0.115); base*=1.0-0.22*gridDepth;}"
+                    + "else if(uMachine==2 && vPart<-19.0){float plateDepth=clamp((-20.0-vPart)*0.20,0.0,1.0); base=uNight==1?vec3(0.012,0.015,0.022):vec3(0.030,0.036,0.044); base*=1.0-0.28*plateDepth;}"
+                    + "else if(uMachine==2 && vPart<-18.5){float gridDepth=clamp((-19.0-vPart)*0.20,0.0,1.0); base=uNight==1?vec3(0.045,0.052,0.065):vec3(0.085,0.100,0.115); base*=1.0-0.22*gridDepth;}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
                     + "else if(uMachine==1 && vPart<-18.5){base=vec3(0.18,0.50,0.48);}"
                     + "else if(uMachine==1 && vPart<-17.5){base=vec3(0.075,0.085,0.095);}"
@@ -1871,8 +1879,8 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // PEI is a physical black sheet. Keep the plate runway
                     // dark and material-led instead of letting the studio
                     // highlight turn distant plates into beige UI cards.
-                    + "if(uMachine==2 && vPart<-19.0){float grain=alloyNoise(vPosition.xy*0.31)*0.70+alloyNoise(vPosition.xy*1.7)*0.30; shaded=base*(0.58+0.22*keyDiffuse)+vec3(grain*0.018); }"
-                    + "float shadowAlpha=(uMachine==2 && vPart<-19.0)?(uNight==1?0.48:0.25):1.0;"
+                    + "if((uMachine==2 || uMachine==4) && vPart<-19.0){float grain=alloyNoise(vPosition.xy*0.31)*0.70+alloyNoise(vPosition.xy*1.7)*0.30; shaded=base*(0.58+0.22*keyDiffuse)+vec3(grain*0.018); }"
+                    + "float shadowAlpha=((uMachine==2 || uMachine==4) && vPart<-19.0)?(uNight==1?0.48:0.25):1.0;"
                     + "gl_FragColor=vec4(shaded*focus,uAlpha*shadowAlpha); }";
 
     private static final String LINE_VERTEX_SHADER =
