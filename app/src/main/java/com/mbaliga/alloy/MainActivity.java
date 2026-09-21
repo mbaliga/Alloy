@@ -1541,6 +1541,7 @@ public final class MainActivity extends Activity {
     private void updateRecipeMarkers() {
         if (qualityMarkerValue != null) qualityMarkerValue.setText(String.format(Locale.US, "%.2f mm", config.layerHeight));
         if (supportsMarkerValue != null) supportsMarkerValue.setText(config.supports ? "Auto supports" : "Off");
+        if (viewport != null) viewport.setBuildVolume(config.bedX, config.bedY, config.bedZ);
     }
 
     private android.graphics.drawable.Drawable round(int fill, int stroke, int strokeWidth, int radius) {

@@ -49,6 +49,7 @@ public final class ViewportView extends FrameLayout {
         surface.setModel(model);
         emptyHint.setVisibility(model == null && !machineStudy ? VISIBLE : GONE);
     }
+    public void setBuildVolume(float x, float y, float z) { surface.setBuildVolume(x, y, z); }
     public void setResult(Slicer.Result result) { surface.setResult(result); }
     public void setToolpathOnly(boolean value) { surface.setToolpathOnly(value); }
     public void setPresentationMode(boolean value) { surface.setPresentationMode(value); }

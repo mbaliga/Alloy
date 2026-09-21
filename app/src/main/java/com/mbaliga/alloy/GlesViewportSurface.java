@@ -35,9 +35,9 @@ import java.util.Locale;
  * reviewed presentation envelope only; it never authorizes a print.
  */
 final class GlesViewportSurface extends GLSurfaceView {
-    private static final float BED_X = 180f;
-    private static final float BED_Y = 180f;
-    private static final float BUILD_Z = 180f;
+    private volatile float bedX = 180f;
+    private volatile float bedY = 180f;
+    private volatile float buildZ = 180f;
     private static final int MAX_TOOLPATH_SEGMENTS = 80_000;
 
     private final int maxDrawTriangles;
@@ -108,6 +108,17 @@ final class GlesViewportSurface extends GLSurfaceView {
         zoom = 1f;
         panX = 0f;
         panY = 0f;
+        requestRender();
+    }
+
+    /** Keep the presentation envelope aligned with the active printer profile. */
+    void setBuildVolume(float x, float y, float z) {
+        if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(z)
+                || x <= 0f || y <= 0f || z <= 0f) return;
+        bedX = Math.min(2_000f, x);
+        bedY = Math.min(2_000f, y);
+        buildZ = Math.min(2_000f, z);
+        renderer.invalidateMeshUpload();
         requestRender();
     }
 
@@ -696,8 +707,8 @@ final class GlesViewportSurface extends GLSurfaceView {
         // viewport even though the model itself is correctly positioned.
         MeshModel framing = (machineStudy || (presentationMode && !cleanPresentation)) && referencePresentationModel != null
                 ? referencePresentationModel : current;
-        float targetX = sceneCenterX(framing) - panX / Math.max(1f, width) * BED_X;
-        float targetY = sceneCenterY(framing) + panY / Math.max(1f, height) * BED_Y;
+        float targetX = sceneCenterX(framing) - panX / Math.max(1f, width) * bedX;
+        float targetY = sceneCenterY(framing) + panY / Math.max(1f, height) * bedY;
         float targetZ = sceneCenterZ(framing);
         float[] view = new float[16];
         float[] projection = new float[16];
@@ -713,7 +724,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // printer-context envelope; otherwise a small-unit OBJ/STEP
             // source becomes a postage stamp in a beautiful but empty stage.
             float span = presentationMode && !cleanPresentation
-                    ? Math.max(sceneSpan(framing), BUILD_Z * 0.82f)
+                    ? Math.max(sceneSpan(framing), buildZ * 0.82f)
                     : sceneSpan(framing);
             // The release-safe standalone printer shell has no mesh bounds to
             // drive framing. Give that full-height study a wider phone-first
@@ -762,7 +773,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // Machine view. Hero must look directly at the imported object's
             // own centre, especially for compact or small-unit OBJ sources.
             float lookAtZ = presentationMode && !cleanPresentation
-                    ? (machineStudy ? 25f : Math.max(targetZ, BUILD_Z * 0.34f)) : targetZ;
+                    ? (machineStudy ? 25f : Math.max(targetZ, buildZ * 0.34f)) : targetZ;
             Matrix.setLookAtM(view, 0, eyeX, eyeY, eyeZ, targetX, targetY, lookAtZ, 0f, 0f, 1f);
         }
         // A portrait phone has a much narrower horizontal field of view than
@@ -773,14 +784,14 @@ final class GlesViewportSurface extends GLSurfaceView {
         Matrix.multiplyMM(output, 0, projection, 0, view, 0);
     }
 
-    private static float sceneCenterX(MeshModel value) {
+    private float sceneCenterX(MeshModel value) {
         return value == null || !finite(value.minX) || !finite(value.maxX)
-                ? BED_X / 2f : (value.minX + value.maxX) / 2f;
+                ? bedX / 2f : (value.minX + value.maxX) / 2f;
     }
 
-    private static float sceneCenterY(MeshModel value) {
+    private float sceneCenterY(MeshModel value) {
         return value == null || !finite(value.minY) || !finite(value.maxY)
-                ? BED_Y / 2f : (value.minY + value.maxY) / 2f;
+                ? bedY / 2f : (value.minY + value.maxY) / 2f;
     }
 
     private static float sceneCenterZ(MeshModel value) {
@@ -836,7 +847,7 @@ final class GlesViewportSurface extends GLSurfaceView {
     }
 
     /** Build stable, bounded offsets for the renderer-only exploded study. */
-    private static float[] presentationExplodeOffsets(MeshModel value) {
+    private float[] presentationExplodeOffsets(MeshModel value) {
         if (value == null || value.parts == null || value.parts.length < 2) return null;
         float[] output = new float[value.parts.length * 3];
         float modelCenterX = sceneCenterX(value);
@@ -949,9 +960,9 @@ final class GlesViewportSurface extends GLSurfaceView {
             linePosition = GLES20.glGetAttribLocation(lineProgram, "aPosition");
             lineColor = GLES20.glGetAttribLocation(lineProgram, "aColor");
             lineMvp = GLES20.glGetUniformLocation(lineProgram, "uMvp");
-            machineBuffer = floatBuffer(machineLines(BED_X / 2f, BED_Y / 2f, cleanPresentation));
+            machineBuffer = floatBuffer(machineLines(bedX / 2f, bedY / 2f, cleanPresentation));
             machineVertexCount = machineBuffer.limit() / 7;
-            machineSolidBuffer = floatBuffer(machineSolids(BED_X / 2f, BED_Y / 2f,
+            machineSolidBuffer = floatBuffer(machineSolids(bedX / 2f, bedY / 2f,
                     presentationMode, cleanPresentation, null));
             machineSolidVertexCount = machineSolidBuffer.limit() / 7;
             referenceMachineModel = referencePresentationModel;
@@ -1370,13 +1381,13 @@ final class GlesViewportSurface extends GLSurfaceView {
         return buffer;
     }
 
-    private static float[] machineLines(float centerX, float centerY, boolean cleanPresentation) {
+    private float[] machineLines(float centerX, float centerY, boolean cleanPresentation) {
         ArrayList<Float> values = new ArrayList<>();
         if (cleanPresentation) return toArray(values);
         // Black PEI-style bed with a restrained grid and a neutral conceptual
         // frame. The clearance envelope is visual only and is not a print gate.
-        float x0 = centerX - BED_X / 2f, x1 = centerX + BED_X / 2f;
-        float y0 = centerY - BED_Y / 2f, y1 = centerY + BED_Y / 2f;
+        float x0 = centerX - bedX / 2f, x1 = centerX + bedX / 2f;
+        float y0 = centerY - bedY / 2f, y1 = centerY + bedY / 2f;
         float[] bed = {x0, y0, 0.15f, x1, y0, 0.15f, x1, y1, 0.15f, x0, y1, 0.15f};
         for (int i = 0; i < 4; i++) addLine(values, bed[i * 3], bed[i * 3 + 1], bed[i * 3 + 2],
                 bed[((i + 1) % 4) * 3], bed[((i + 1) % 4) * 3 + 1], bed[((i + 1) % 4) * 3 + 2],
@@ -1396,13 +1407,13 @@ final class GlesViewportSurface extends GLSurfaceView {
      * Mini workspace. This is not redistributed Bambu geometry and is never
      * used by PreparationValidator or the native slicer.
      */
-    private static float[] machineSolids(float centerX, float centerY, boolean fullMachine,
+    private float[] machineSolids(float centerX, float centerY, boolean fullMachine,
                                          boolean cleanPresentation, MeshModel subject) {
         ArrayList<Float> values = new ArrayList<>();
-        float x0 = centerX - BED_X / 2f;
-        float x1 = centerX + BED_X / 2f;
-        float y0 = centerY - BED_Y / 2f;
-        float y1 = centerY + BED_Y / 2f;
+        float x0 = centerX - bedX / 2f;
+        float x1 = centerX + bedX / 2f;
+        float y0 = centerY - bedY / 2f;
+        float y1 = centerY + bedY / 2f;
         if (cleanPresentation) {
             // Hero mode is a configurator-style studio field, not a second
             // build plate. Keep only an understated contact shadow under the
@@ -1482,7 +1493,7 @@ final class GlesViewportSurface extends GLSurfaceView {
     }
 
     /** A receding row of empty presentation plates for the A1 study scene. */
-    private static float[] studyPlates() {
+    private float[] studyPlates() {
         ArrayList<Float> values = new ArrayList<>();
         // Keep the machine grounded on the first plate while giving the
         // phone composition an unmistakable runway into the distance. The
@@ -1500,7 +1511,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // Pull each subsequent plate farther behind the machine and a
             // little leftward. The diagonal procession remains visible on a
             // portrait phone instead of collapsing into one dark rectangle.
-            float centerX = BED_X / 2f - index * 9f;
+            float centerX = bedX / 2f - index * 9f;
             float centerY = 92f - index * 80f;
             // The supplied machine mesh carries its own lower bed shell. Put
             // the presentation sheets on the physical top plane instead of
@@ -1590,9 +1601,9 @@ final class GlesViewportSurface extends GLSurfaceView {
     }
 
     /** Soft contact ellipse for the standalone product-study composition. */
-    private static float[] studyShadow() {
+    private float[] studyShadow() {
         ArrayList<Float> values = new ArrayList<>();
-        addShadow(values, BED_X / 2f, 92f, 76f, 56f, -1.62f, -20f);
+        addShadow(values, bedX / 2f, 92f, 76f, 56f, -1.62f, -20f);
         return toArray(values);
     }
 
@@ -1785,10 +1796,10 @@ final class GlesViewportSurface extends GLSurfaceView {
         return output;
     }
 
-    private static boolean outsideBuildVolume(MeshModel value) {
-        return value.minX < -0.01f || value.maxX > BED_X + 0.01f
-                || value.minY < -0.01f || value.maxY > BED_Y + 0.01f
-                || value.minZ < -0.01f || value.maxZ > BUILD_Z + 0.01f;
+    private boolean outsideBuildVolume(MeshModel value) {
+        return value.minX < -0.01f || value.maxX > bedX + 0.01f
+                || value.minY < -0.01f || value.maxY > bedY + 0.01f
+                || value.minZ < -0.01f || value.maxZ > buildZ + 0.01f;
     }
 
     private static final String BACKDROP_VERTEX_SHADER =
