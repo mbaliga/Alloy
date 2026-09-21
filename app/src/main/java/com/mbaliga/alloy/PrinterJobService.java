@@ -307,11 +307,13 @@ public final class PrinterJobService extends Service {
         else if (current != null && jobId.equals(current.jobId)) publish(jobId, current.state, current.detail, -1, "");
         if (applied && state == PrinterTransport.State.COMPLETED && current != null) {
             try {
-                new InventoryStore(getSharedPreferences("alloy_inventory", MODE_PRIVATE))
-                        .recordCompletedPrint(jobId, current.filament, current.filamentMm, current.filamentDiameterMm);
+                InventoryReconciliationStore reconciliation = new InventoryReconciliationStore(
+                        getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE));
+                reconciliation.enqueue(jobId, current.filament, current.filamentMm, current.filamentDiameterMm);
+                reconciliation.drain(new InventoryStore(getSharedPreferences("alloy_inventory", MODE_PRIVATE)));
             } catch (Exception ignored) {
-                // Completion remains durable even if the optional inventory
-                // reconciliation cannot be written in this process.
+                // The completed checkpoint remains durable. If enqueue or the
+                // inventory write fails, startup retries from the queue.
             }
         }
         if (state == PrinterTransport.State.UPLOADED || state == PrinterTransport.State.FAILED

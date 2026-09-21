@@ -6,9 +6,17 @@ Fresh verification on this checkpoint: the independent parity suite completed
 66/66 tests successfully; the Linux/model/artifact bridge suite completed
 26/26 tests; Android, transport, release, model/profile/native
 wiring validators all passed; and the native-enabled `connectedReleaseAndroidTest`
-completed 155 instrumentation executions with 0 failures and 1 intentional
+completed 156 instrumentation executions with 0 failures and 1 intentional
 skip. The skip is the opt-in native G3 evidence export; it remains excluded
 from the production claim until the engine gate is closed.
+
+The printer completion path now durably queues inventory reconciliation before
+attempting the stock write. Activity startup and the foreground printer service
+both drain that queue idempotently, so a confirmed print cannot silently lose
+its filament accounting during a process death or transient preferences write.
+The new Android regression covers duplicate enqueue, retry drain, and
+idempotent replay. This closes an inventory reliability gap; it does not close
+the physical-printer acceptance or release-signing gates below.
 
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native

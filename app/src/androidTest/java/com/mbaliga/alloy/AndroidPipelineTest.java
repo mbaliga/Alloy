@@ -1281,6 +1281,26 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void inventoryReconciliationQueueSurvivesRetryAndIsIdempotent() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences queuePreferences = context.getSharedPreferences("alloy-test-inventory-reconciliation", Context.MODE_PRIVATE);
+        SharedPreferences inventoryPreferences = context.getSharedPreferences("alloy-test-inventory-reconciliation-stock", Context.MODE_PRIVATE);
+        queuePreferences.edit().clear().commit();
+        inventoryPreferences.edit().clear().commit();
+        InventoryReconciliationStore queue = new InventoryReconciliationStore(queuePreferences);
+        InventoryStore inventory = new InventoryStore(inventoryPreferences);
+        queue.enqueue("retry-job-1", "PLA", 600_000f, 1.75f);
+        queue.enqueue("retry-job-1", "PLA", 600_000f, 1.75f);
+        Assert.assertEquals(1, queue.pendingCount());
+        Assert.assertEquals(1, queue.drain(inventory));
+        Assert.assertEquals(0, queue.pendingCount());
+        Assert.assertEquals(0, queue.drain(inventory));
+        Assert.assertTrue(findInventoryItem(inventory, "pla-basic").filamentUsageMm >= 600_000L);
+        queuePreferences.edit().clear().commit();
+        inventoryPreferences.edit().clear().commit();
+    }
+
+    @Test
     public void inventoryFlagsServiceSoonAndOverdue() {
         long now = System.currentTimeMillis();
         InventoryStore.Item soon = new InventoryStore.Item("soon", "Nozzle", "Consumable", "each", 1, 0,

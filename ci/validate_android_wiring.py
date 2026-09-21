@@ -32,6 +32,7 @@ def main() -> None:
     g4_scope_path = ROOT / "parity/a1mini_g4_scope.json"
     job_path = ROOT / "app/src/main/java/com/mbaliga/alloy/PrinterJobStore.java"
     service_path = ROOT / "app/src/main/java/com/mbaliga/alloy/PrinterJobService.java"
+    reconciliation_path = ROOT / "app/src/main/java/com/mbaliga/alloy/InventoryReconciliationStore.java"
     batch_slice_path = ROOT / "app/src/main/java/com/mbaliga/alloy/BatchSliceJobController.java"
     batch_archive_path = ROOT / "app/src/main/java/com/mbaliga/alloy/BatchArtifactArchive.java"
     slice_job_path = ROOT / "app/src/main/java/com/mbaliga/alloy/SliceJobStore.java"
@@ -65,6 +66,7 @@ def main() -> None:
     g4_scope = g4_scope_path.read_text()
     job = job_path.read_text()
     service = service_path.read_text()
+    reconciliation = reconciliation_path.read_text()
     batch_slice = batch_slice_path.read_text()
     batch_archive = batch_archive_path.read_text()
     slice_job = slice_job_path.read_text()
@@ -249,10 +251,12 @@ def main() -> None:
         require(job, token, job_path)
     for token in ("extends Service", "ACTION_UPLOAD", "ACTION_START", "ACTION_PAUSE", "ACTION_RESUME", "ACTION_CANCEL", "ACTION_STATUS",
                   "startForegroundCompat", "FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE", "ArtifactStore.recover",
-                  "recordCompletedPrint", "PrinterJobStore", "interruptedJob", "recoverAfterRestart(false)",
+                  "InventoryReconciliationStore", "PrinterJobStore", "interruptedJob", "recoverAfterRestart(false)",
                   "sendBroadcast", "START_NOT_STICKY", "canRequestCancel", "not in a cancellable state",
                   "CANCEL_REQUESTED"):
         require(service, token, service_path)
+    for token in ("class InventoryReconciliationStore", "enqueue", "drain", "pendingCount", "MAX_PENDING", "recordCompletedPrint", "commit()"):
+        require(reconciliation, token, reconciliation_path)
     for forbidden in ("if (pause && job.state", "if (!pause && job.state"):
         if forbidden in service:
             raise SystemExit(f"{service_path}: cancellation path contains a pause/resume-only guard: {forbidden}")
