@@ -1857,6 +1857,15 @@ capture. The debug APK builds and the study opens on the API-35 emulator.
 The visual gate remains open because the supplied reference still calls for a
 more authored hero asset, lighting treatment, and material system.
 
+The native parity audit was also rerun against the fresh G3 travel-obstacle
+evidence while reviewing this checkpoint. The 62-field profile identity still
+passes, with 140/140 layers, print time within 0.23%, filament within 1.52%,
+and travel moves within 1.30%. The result remains **pass with warnings**:
+desktop and Android emit different early feature-transition counts (1023 vs
+1027), and the normalized acceleration sequence first diverges at index 29
+(`P1500` versus `P500`). These are still open parity work, not a production
+readiness pass.
+
 ## Linux milestone
 
 **Status: implemented lightweight bridge; native desktop engine intentionally
