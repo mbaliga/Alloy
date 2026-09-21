@@ -888,12 +888,12 @@ public final class MainActivity extends Activity {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setBackgroundColor(BG);
-        page.setPadding(dp(14), dp(10), dp(14), dp(10));
+        page.setBackgroundColor(Color.WHITE);
+        page.setPadding(0, 0, 0, 0);
 
         FrameLayout stage = new FrameLayout(this);
-        stage.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 2, 28));
-        stage.setClipToOutline(true);
+        stage.setBackgroundColor(Color.WHITE);
+        stage.setClipToOutline(false);
         ViewportView scene = new ViewportView(this);
         // Immersive study keeps the selected model as the hero, matching the
         // supplied configurator reference. The main workspace retains the
@@ -905,19 +905,28 @@ public final class MainActivity extends Activity {
         scene.setSelectedPart(viewport == null ? -1 : viewport.getSelectedPart());
         stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView title = label("3D STUDY\n" + presentationTitle(model.displayName), 10, MUTED);
-        title.setLetterSpacing(0.12f);
-        title.setLineSpacing(2, 1.0f);
+        TextView title = label(presentationTitle(model.displayName) + "\n"
+                + profileMaterialLabel() + "  ·  " + currentPlateLabel(), 13, TEXT);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setLineSpacing(3, 1.0f);
         // Keep the plate badge in its own visual lane on narrow phones; the
         // supplied configurator reference has generous desktop whitespace,
         // while Android presentation surfaces can be only 360dp wide.
         title.setMaxWidth(dp(185));
         title.setMaxLines(2);
-        title.setPadding(dp(12), dp(9), dp(12), dp(9));
-        title.setBackground(round(Color.argb(236, 255, 255, 255), Color.rgb(226, 222, 213), 1, 14));
+        title.setPadding(dp(16), dp(12), dp(16), dp(12));
+        title.setBackground(round(Color.argb(248, 255, 255, 255), Color.rgb(231, 228, 221), 1, 18));
         FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
         titleLp.setMargins(dp(14), dp(14), 0, 0);
         stage.addView(title, titleLp);
+
+        TextView wordmark = label("ALLOY", 19, TEXT);
+        wordmark.setTypeface(null, android.graphics.Typeface.BOLD);
+        wordmark.setLetterSpacing(0.18f);
+        wordmark.setGravity(Gravity.CENTER);
+        FrameLayout.LayoutParams wordmarkLp = new FrameLayout.LayoutParams(dp(150), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        wordmarkLp.topMargin = dp(14);
+        stage.addView(wordmark, wordmarkLp);
 
         TextView close = control("×", "Close immersive 3D view", v -> dialog.dismiss());
         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
@@ -953,7 +962,8 @@ public final class MainActivity extends Activity {
 
         LinearLayout footer = new LinearLayout(this);
         footer.setGravity(Gravity.CENTER_VERTICAL);
-        footer.setPadding(0, dp(8), 0, 0);
+        footer.setPadding(dp(14), dp(10), dp(14), dp(14));
+        footer.setBackgroundColor(Color.WHITE);
         TextView meta = label(currentPlateLabel() + "  ·  " + profileShortLabel(), 11, MUTED);
         meta.setGravity(Gravity.CENTER_VERTICAL);
         meta.setSingleLine(true);
@@ -994,10 +1004,12 @@ public final class MainActivity extends Activity {
         });
         footer.addView(framing, new LinearLayout.LayoutParams(-2, dp(50)));
         Button done = dialogButton("Done", v -> dialog.dismiss());
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-2, dp(50));
+        done.setTextSize(13);
+        done.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(54), 1);
         doneLp.leftMargin = dp(8);
         footer.addView(done, doneLp);
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(58)));
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(78)));
 
         dialog.setContentView(page);
         dialog.setOnDismissListener(ignored -> scene.onHostPause());
@@ -1169,12 +1181,12 @@ public final class MainActivity extends Activity {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setBackgroundColor(BG);
-        page.setPadding(dp(14), dp(10), dp(14), dp(10));
+        page.setBackgroundColor(Color.WHITE);
+        page.setPadding(0, 0, 0, 0);
 
         FrameLayout stage = new FrameLayout(this);
-        stage.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 2, 28));
-        stage.setClipToOutline(true);
+        stage.setBackgroundColor(Color.WHITE);
+        stage.setClipToOutline(false);
         ViewportView scene = new ViewportView(this);
         scene.setMachineStudy(true);
         scene.setPresentationMode(true);
@@ -1187,14 +1199,21 @@ public final class MainActivity extends Activity {
         scene.setModel(null);
         stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView title = label("A1 MINI\n3D STUDY", 10, MUTED);
-        title.setLetterSpacing(0.12f);
-        title.setLineSpacing(2, 1.0f);
-        title.setPadding(dp(12), dp(9), dp(12), dp(9));
-        title.setBackground(round(Color.argb(238, 255, 255, 255), Color.rgb(226, 222, 213), 1, 14));
+        TextView title = label("A1 MINI\nBambu Lab  ·  0.4 mm nozzle", 13, TEXT);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setLineSpacing(3, 1.0f);
+        title.setPadding(dp(16), dp(12), dp(16), dp(12));
+        title.setBackground(round(Color.argb(248, 255, 255, 255), Color.rgb(231, 228, 221), 1, 18));
         FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
         titleLp.setMargins(dp(14), dp(14), 0, 0);
         stage.addView(title, titleLp);
+        TextView wordmark = label("ALLOY", 19, TEXT);
+        wordmark.setTypeface(null, android.graphics.Typeface.BOLD);
+        wordmark.setLetterSpacing(0.18f);
+        wordmark.setGravity(Gravity.CENTER);
+        FrameLayout.LayoutParams wordmarkLp = new FrameLayout.LayoutParams(dp(150), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        wordmarkLp.topMargin = dp(14);
+        stage.addView(wordmark, wordmarkLp);
         TextView close = control("×", "Close A1 Mini 3D study", v -> dialog.dismiss());
         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
         closeLp.setMargins(0, dp(14), dp(14), 0);
@@ -1222,7 +1241,8 @@ public final class MainActivity extends Activity {
 
         LinearLayout footer = new LinearLayout(this);
         footer.setGravity(Gravity.CENTER_VERTICAL);
-        footer.setPadding(0, dp(8), 0, 0);
+        footer.setPadding(dp(14), dp(10), dp(14), dp(14));
+        footer.setBackgroundColor(Color.WHITE);
         boolean suppliedReference = scene.hasReferenceMachineModel();
         TextView note = label(suppliedReference
                 ? "OWNER VISUAL-REVIEW ASSET  ·  16,054 triangles  ·  presentation only"
@@ -1239,10 +1259,12 @@ public final class MainActivity extends Activity {
                 : "Import the supplied A1 Mini 3MF model from this phone");
         footer.addView(importReference, new LinearLayout.LayoutParams(-2, dp(50)));
         Button done = dialogButton("Done", v -> dialog.dismiss());
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-2, dp(50));
+        done.setTextSize(13);
+        done.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(54), 1);
         doneLp.leftMargin = dp(8);
         footer.addView(done, doneLp);
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(58)));
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(78)));
 
         dialog.setContentView(page);
         dialog.setOnDismissListener(ignored -> scene.onHostPause());
