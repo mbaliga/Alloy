@@ -1,5 +1,6 @@
-# Debug-only visual reference extracted from the user-supplied preview.
-# This file is not included in release variants.
+# Visual reference extracted from the user-supplied preview.
+# The owner-controlled product release packages this asset by default; a
+# distribution build may omit it explicitly with alloyIncludeSuppliedReferenceVisuals=false.
 version=1
 scale=0.00528362
 originX=-215.701
