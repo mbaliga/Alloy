@@ -67,6 +67,14 @@ A1 mesh, authored frame/toolhead palette, scale props, and receding plate
 geometry are visible in the same runtime capture. This is verified reference
 fidelity progress, not final luxury-grade visual signoff.
 
+The follow-up renderer pass assigns stable, renderer-only depth tags to each
+runway sheet and gives the plate draw its own material channel. The resulting
+capture is `/private/tmp/alloy-a1-depth-aware-runway-v2.png`; printable model
+coordinates, plate planning, and printer transport remain unchanged. This
+implements the handoff's separation between physical plate geometry and the
+visual runway treatment without claiming the placeholder clearance envelope
+or a final art-directed signoff.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported
