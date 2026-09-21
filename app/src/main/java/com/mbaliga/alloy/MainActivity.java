@@ -1326,7 +1326,8 @@ public final class MainActivity extends Activity {
         }
         String summary = attention == 0
                 ? "All stocked  ·  no service due"
-                : attention + " item" + (attention == 1 ? "" : "s") + " need attention  ·  " + service + " service alert";
+                : attention + " item" + (attention == 1 ? "" : "s") + " need attention  ·  "
+                        + reorder + " reorder  ·  " + service + " service due";
         inventorySummary.setText(summary);
         if (inventoryStatusDot != null) {
             int color = reorder > 0 ? RED : service > 0 ? AMBER : GREEN;
