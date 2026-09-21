@@ -738,16 +738,16 @@ the safe phone shell:
   The full owner suite remains green at **131/131**. This is profile-boundary
   hardening, not auto-brim parity evidence; the geometry-dependent resolver
   and physical A1 Mini acceptance gate remain open.
-- An opt-in `g3-brim-type=auto_brim` export was run on the same API-35 ARM64
-  emulator. The native artifact correctly records `brim_type=auto_brim` and
-  `brim_object_gap=0.1`, and produces no skirt/brim feature on the cube,
-  support or thin-wall fixtures. Its measured results were 713 s / 1,224.39
-  mm, 1,126 s / 960.03 mm, and 280 s / 859.86 mm respectively. The Bambu
-  reference artifacts resolve these same cases to `brim_width=0`, while the
-  native config still records the inherited process width of 5 mm. This is
-  useful evidence that the enum route is viable, but the width-resolution
-  mismatch means auto-brim remains unpromoted and the shipped compatibility
-  policy remains unchanged.
+- The auto-brim resolver now preserves the source-facing `brim_type=auto_brim`
+  and `brim_object_gap=0.1`, while resolving a positive inherited
+  `brim_width=5` to the deterministic outer-brim geometry used by the native
+  core. A fresh API-35 ARM64 export emits `;TYPE:Brim` on the obstacle fixture;
+  the regression exporter now fails if that feature disappears. The matched
+  obstacle evidence reports 2,255 Z moves, 1,541 retractions and 2,136.04 mm
+  of filament. Major feature classes now pass against the desktop reference,
+  but time remains 9.19% high (3,384 s vs 3,073 s), filament is 4.83% high,
+  travel is 17.09% high, and the acceleration command profile still differs.
+  Auto-brim geometry is therefore improved but not yet a G3 parity pass.
 - The profile surface now accepts one to thirty-two user-selected Bambu JSON preset
   documents (machine, process and/or filament), resolves inheritance when the
   selected chain is present, and persists an Alloy-normalized copy in app-private
@@ -1585,15 +1585,15 @@ profile directory using the A1 mini 0.4 nozzle and Bambu PLA profile. The
 desktop result reported 140 layers, 28 mm maximum Z and 56m14s estimated
 duration, and emitted `plate_1.gcode` successfully.
 
-This is evidence that the comparison path is available, not a parity pass.
-The first reference is not yet like-for-like with the Android evidence:
-desktop emitted 2,174 retraction moves and 515 Z moves, while the Android
-Slope Lift export emitted 1,501 retractions and 2,241 Z moves. The Android
-export also has support enabled and a 5 mm auto-brim, while the first desktop
-project carried different resolved settings. The next parity gate is to
-construct a fully resolved A1 mini project with identical layer height,
-support, brim, wipe and lift settings on both sides, then compare time,
-filament, travel, retraction and collision-sensitive motion signatures.
+The first reference was not like-for-like with Android, so a second temporary
+desktop project now overlays the Android recipe: 0.20 mm layers, 15% infill,
+organic/tree support, 5 mm auto-brim, wipe and Slope Lift. The profile
+identity harness still finds eight support/brim field mismatches, and the
+matched obstacle comparison passes layer count, filament length and major
+feature coverage but fails the production tolerance on time (9.19%), filament
+(4.83%) and motion counts. The next parity gate is to resolve those remaining
+support-profile fields and acceleration/travel differences, then repeat the
+comparison across all four fixtures—not to promote from a single obstacle.
 
 The product visual gate is also still open. The current A1 study screen is a
 readable native 3D scene, but it is not yet the supplied luxury configurator

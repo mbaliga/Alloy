@@ -393,6 +393,14 @@ public final class NativeEngineSmokeTest {
         exportNativeG3(context, config, "box-20mm.stl", arcFitting ? "cube_20mm_arcs" + evidenceSuffix + ".gcode" : "cube_20mm" + evidenceSuffix + ".gcode", evidenceDir);
         exportNativeG3(context, config, "travel_obstacle.stl",
                 "travel_obstacle" + evidenceSuffix + ".gcode", evidenceDir);
+        if ("auto_brim".equals(brimType)) {
+            File obstacleEvidence = new File(evidenceDir,
+                    "travel_obstacle" + evidenceSuffix + ".gcode");
+            String obstacleGcode = new String(Files.readAllBytes(obstacleEvidence.toPath()),
+                    StandardCharsets.UTF_8);
+            Assert.assertTrue("resolved auto-brim must emit a brim feature",
+                    obstacleGcode.contains(";TYPE:Brim"));
+        }
         Slicer.Config supportConfig = config.copy();
         supportConfig.supports = true;
         String supportStyle = requestedSupportStyle(arguments);
