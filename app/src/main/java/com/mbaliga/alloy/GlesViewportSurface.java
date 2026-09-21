@@ -1402,6 +1402,22 @@ final class GlesViewportSurface extends GLSurfaceView {
             // turning the study into a second slicer viewport.
             addBox(values, centerX - width * 0.43f, centerY - 1.5f, z + 1.4f,
                     centerX + width * 0.43f, centerY + 1.5f, z + 1.7f, -20f);
+            // A sparse PEI grid is presentation-only, but it is important
+            // for material identity and depth. Keep the lines slightly
+            // raised and bounded to each plate; the runway should feel like
+            // repeated physical sheets, not a second flat UI background.
+            float gridInsetX = width * 0.40f;
+            float gridInsetY = depth * 0.38f;
+            for (int column = -3; column <= 3; column++) {
+                float x = centerX + column * width * 0.12f;
+                addBox(values, x - 0.35f, centerY - gridInsetY, z + 1.72f,
+                        x + 0.35f, centerY + gridInsetY, z + 1.88f, -19f);
+            }
+            for (int row = -2; row <= 2; row++) {
+                float y = centerY + row * depth * 0.14f;
+                addBox(values, centerX - gridInsetX, y - 0.35f, z + 1.72f,
+                        centerX + gridInsetX, y + 0.35f, z + 1.88f, -19f);
+            }
         }
         return toArray(values);
     }
@@ -1603,6 +1619,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // printer surface and preserves the supplied reference's
                     // quiet black-on-white material contrast.
                     + "if(uMachine==2 && vPart<-19.0){base=uNight==1?vec3(0.020,0.024,0.032):vec3(0.075,0.085,0.095);}"
+                    + "else if(uMachine==2 && vPart<-18.5){base=uNight==1?vec3(0.090,0.100,0.120):vec3(0.22,0.24,0.26);}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
                     + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
                     + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
