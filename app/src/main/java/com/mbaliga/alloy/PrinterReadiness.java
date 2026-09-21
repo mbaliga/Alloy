@@ -145,7 +145,7 @@ public final class PrinterReadiness {
                 ? "Target credentials are present"
                 : "Pair an A1 Mini before sending");
         add(checks, "Printer model", a1MiniModelConfirmed, a1MiniModelConfirmed
-                ? "N1 / A1 Mini confirmed"
+                ? "A1 Mini confirmed"
                 : "Confirm the discovered model is N1 (A1 Mini)");
         add(checks, "Certificate pin", certificatePinned, certificatePinned
                 ? "Leaf SHA-256 pin configured"
