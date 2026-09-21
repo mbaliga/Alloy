@@ -66,6 +66,19 @@ public final class NativeEngineSmokeTest {
         Assert.assertTrue(defaultSerialized.contains("brim_type = no_brim"));
         Assert.assertTrue(defaultSerialized.contains("brim_width = 0"));
         Assert.assertTrue(defaultSerialized.contains("brim_object_gap = 0"));
+        // The desktop flavor is a bounded parity override, not an arbitrary
+        // native command channel. Verify both the accepted legacy value and
+        // the fail-closed fallback before the contract-mutation assertions.
+        config.nativeSettings.put("gcode_flavor", "marlin");
+        File legacyFlavorFile = new File(context.getCacheDir(), "native-config-legacy-flavor.ini");
+        NativeSlicerEngine.writeConfig(config, legacyFlavorFile);
+        String legacyFlavorSerialized = new String(Files.readAllBytes(legacyFlavorFile.toPath()), StandardCharsets.US_ASCII);
+        Assert.assertTrue(legacyFlavorSerialized.contains("gcode_flavor = marlin\n"));
+        config.nativeSettings.put("gcode_flavor", "unsafe-command");
+        File fallbackFlavorFile = new File(context.getCacheDir(), "native-config-fallback-flavor.ini");
+        NativeSlicerEngine.writeConfig(config, fallbackFlavorFile);
+        String fallbackFlavorSerialized = new String(Files.readAllBytes(fallbackFlavorFile.toPath()), StandardCharsets.US_ASCII);
+        Assert.assertTrue(fallbackFlavorSerialized.contains("gcode_flavor = marlin2\n"));
         // This simulates a future profile or tampered request carrying keys
         // that Alloy itself owns. The adapter must keep typed values and its
         // controlled machine-start G-code authoritative.
