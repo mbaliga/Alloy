@@ -11,6 +11,14 @@ skips are the opt-in native G3 evidence export and owner-step assembly smoke
 test; they remain excluded from the production claim until their engine gates
 are closed.
 
+The Linux secondary surface was rechecked from the repository root: the
+combined model/artifact bridge and Bambu LAN probe suite completed **25/25
+tests**, the bundled box-and-lid assembly inspected as two watertight solids
+with zero boundary, non-manifold, or degenerate facets, and the documented
+Linux entry points compiled successfully. This confirms the inspection,
+artifact-validation, and installed-slicer bridge milestone; it does not claim
+that Alloy's native desktop engine or physical Linux printer path is complete.
+
 The LAN pairing path now probes Bambu's standard SSDP destination (1900) and
 the vendor-observed 1990/2021 destinations while retaining the bounded,
 read-only parser and the existing certificate-pinned transport boundary. The
