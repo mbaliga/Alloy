@@ -707,8 +707,14 @@ public final class NativeSlicerEngine implements SlicerEngine {
         // regardless of whether the native output uses legacy Marlin or
         // marlin2 vocabulary. The bundled profile keeps its reviewed 6000
         // value, while imported A1 projects correctly carry Bambu's 500.
-        float startAcceleration = parseFirstNumber(
-                config.nativeSettings.get("initial_layer_travel_acceleration"));
+        // Alloy's normal marlin2 recipe owns the machine-start acceleration
+        // through default_acceleration. An imported desktop-Marlin project
+        // may explicitly carry a different first-layer travel transition;
+        // preserve that narrow parity behavior without allowing a conflicting
+        // native-only value to override the typed Alloy start contract.
+        float startAcceleration = desktopMarlinStart
+                ? parseFirstNumber(config.nativeSettings.get("initial_layer_travel_acceleration"))
+                : Float.NaN;
         if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f) {
             startAcceleration = desktopMarlinStart
                     ? parseFirstNumber(config.nativeSettings.get("travel_acceleration"))
