@@ -40,6 +40,14 @@
       "license": "AGPL-3.0-or-later",
       "source": "Alloy-authored deterministic G3 parity geometry",
       "sha256": "805b6388fb54539981a6020ecf93c509c66607e8e7c32ea85ef1a95693df0417"
+    },
+    {
+      "path": "app/src/main/assets/models/travel_obstacle.stl",
+      "name": "Calibration · travel obstacle fixture",
+      "author": "Alloy project",
+      "license": "AGPL-3.0-or-later",
+      "source": "Alloy-authored deterministic G3 motion-parity geometry",
+      "sha256": "88d257cf25c04ba3ace971d53e2bc97374960c808c32b1d1227d72927a723841"
     }
   ]
 }

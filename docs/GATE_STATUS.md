@@ -1799,6 +1799,14 @@ gray shell. The APK builds and the capture was exercised on the API-35 ARM64
 emulator. This is a measurable material-fidelity improvement, but the visual
 gate remains open pending authored render assets or further art direction.
 
+Release-wiring audit follow-up: the packaged model catalog now includes the
+four-solid `travel_obstacle.stl` motion-parity fixture, and the native wiring
+validator explicitly classifies `reduce_infill_retraction` and `travel_slope`
+as import-only parity keys rather than reporting false profile drift. The
+release, transport, Android, native, and model-asset validators now all pass
+on this checkpoint. This closes repository-integrity regressions; it does not
+close the native parity or physical-printer gates.
+
 The next visual pass is now installed and emulator-checked: the A1 Mini study
 uses the reference-inspired hero composition, quiet white stage, centred Alloy
 wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a

@@ -185,6 +185,12 @@ def main() -> None:
         "support_bottom_interface_spacing",
         "support_tree_branch_distance",
         "support_tree_branch_diameter_angle",
+        # These two fields are imported from Bambu projects and used by the
+        # dedicated motion-parity fixtures. They are intentionally not part
+        # of the compact shipped profile snapshot until the native profile
+        # projection is promoted beyond fixture-level evidence.
+        "reduce_infill_retraction",
+        "travel_slope",
     }
     # These source-backed compatibility fields are accepted for imported
     # Bambu projects, while the compact shipped profile represents them via
