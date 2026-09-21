@@ -68,6 +68,17 @@ experiment is therefore rejected as a production fix; the default `marlin2`
 path remains unchanged and the remaining work belongs in the native motion
 planner/travel emission rather than a command-vocabulary substitution.
 
+The next controlled motion matrix exposed two desktop-resolved fields that
+were previously outside the 62-field identity check: the reference uses
+`wipe=0`, `z_hop_types=Slope Lift`, and `travel_slope=3`. Alloy's bounded native
+settings allowlist now accepts imported `travel_slope` values, and the
+instrumentation test can exercise all three fields without changing ordinary
+jobs. On the cube fixture, `wipe=0` plus `Slope Lift` and `travel_slope=3`
+still produced 1,566 s, 965 travel moves, and the same filament deltas; the
+slope branch is not exercised enough by this fixture to explain the desktop
+path. No default profile change was made. A dedicated obstacle/overhang
+travel fixture is the next appropriate parity target.
+
 The visual-review follow-up on 2026-09-21 corrected the standalone A1 Mini
 study's most obvious prototype artifacts: internal asset/debug wording was
 removed from the user-facing footer, the title was constrained so it cannot
