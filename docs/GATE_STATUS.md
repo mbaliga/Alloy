@@ -11,6 +11,16 @@ skips are the opt-in native G3 evidence export and owner-step assembly smoke
 test; they remain excluded from the production claim until their engine gates
 are closed.
 
+The visible-product packaging gap was corrected on 2026-09-21. The supplied
+A1 Mini reference mesh and owner-provided study 3MF were previously debug-only,
+so ordinary release APKs silently fell back to the simplified Alloy frame.
+Release packaging now includes those supplied assets by default, with an
+explicit opt-out for a separately licensed distribution. A freshly built
+signed release APK was installed on the API-35 emulator; its first-run study
+opened with the supplied reference geometry, five receding plates, and the
+scale props visible. This closes the asset-packaging mismatch; it does not yet
+claim final visual polish, model-editing depth, or print-readiness.
+
 The Linux secondary surface was rechecked from the repository root: the
 combined model/artifact bridge and Bambu LAN probe suite completed **25/25
 tests**, the bundled box-and-lid assembly inspected as two watertight solids
