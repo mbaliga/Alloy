@@ -13,13 +13,15 @@ Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Alloy's native export
 matches the reviewed profile fields and major feature classes, but remains
-**FAIL/NO-GO** for production parity: 3,161 s versus 3,035 s (3.99% high),
-2,022.86 mm versus 2,032.81 mm of reported filament (0.49% delta), and 2,611
-versus 2,361 travel moves (9.57% high). The geometry-aware auto-brim adapter
-now preserves Bambu's fallback skirt instead of forcing a fixed 5 mm brim;
-positive extrusion is still 2,721.26 mm versus 2,574.41 mm, and acceleration
-transitions still differ. This is the current slicer-fidelity blocker; no
-physical A1 Mini send/start claim has been made.
+**FAIL/NO-GO** for production parity: 3,137 s versus 3,035 s (3.25% high),
+2,022.86 mm versus 2,032.81 mm of reported filament (0.49% delta), and 2,304
+versus 2,361 travel moves (2.41% delta). The geometry-aware auto-brim adapter
+preserves Bambu's fallback skirt, imported Bambu internal-retraction policy
+is now honored, and the first-layer start emits the project-backed 500
+acceleration value. Positive extrusion is 2,565.26 mm versus 2,574.41 mm
+(0.36% delta); the remaining gate failures are the 3.25% time delta and
+later P/T acceleration-command vocabulary differences. No physical A1 Mini
+send/start claim has been made.
 
 Visual status is also **OPEN**. The latest emulator capture uses the supplied
 A1 Mini mesh, five receding plates, and scale props, with a revised editorial
