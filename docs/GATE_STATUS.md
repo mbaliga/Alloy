@@ -240,6 +240,13 @@ boundary, slicing lifecycle, artifact validation, and printer-transport fake
 coverage on the current checkout. It is emulator evidence and does not close
 the physical A1 Mini or production-signing gates.
 
+The opt-in `exportsNativeG3EvidenceWhenRequested` instrumentation test was then
+run directly with the matched `marlin` project flavor and completed successfully
+on the API-35 ARM64 emulator. This proves the current checkout can generate the
+fresh cube, obstacle, support and thin-wall evidence set; it does not by itself
+prove desktop parity, because the exported files still require an authoritative
+desktop comparison and the physical-printer gate remains separate.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
