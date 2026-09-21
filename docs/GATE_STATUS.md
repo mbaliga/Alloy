@@ -81,6 +81,12 @@ mesh, plate runway, lighting, and material pass; deterministic CPU thumbnails
 remain the separate archive/BYOK representation. Java compilation and Android
 wiring validation pass for this path.
 
+The live capture contract is now covered by an on-device regression: the test
+opens `MainActivity`, enables the A1 study, captures the visible GLES surface,
+and verifies a bounded, decodable PNG. The targeted API-35 ARM64 run passed;
+this is runtime export evidence, not physical-printer or production-signing
+evidence.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported
