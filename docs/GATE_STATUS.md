@@ -58,6 +58,16 @@ versus 1,782 s, 2.09% filament-length delta, 2.03% mass delta, and 39.01%
 travel-move delta. This rules out brim configuration as the remaining G3
 cause; the next parity work belongs in motion/travel planning.
 
+The controlled legacy-Marlin follow-up on 2026-09-21 used the same resolved
+auto-brim recipe and fixture with `gcode_flavor=marlin`. It changed the first
+travel acceleration vocabulary from `M204 T500` to the legacy `M204 S500`,
+but did not improve the actual parity: Android remained at 1,498 travel moves,
+2.09% filament-length delta, 2.03% mass delta, and 9.48% positive-E delta,
+while estimated time worsened to 1,548 s versus 1,782 s (13.13%). The
+experiment is therefore rejected as a production fix; the default `marlin2`
+path remains unchanged and the remaining work belongs in the native motion
+planner/travel emission rather than a command-vocabulary substitution.
+
 The visual-review follow-up on 2026-09-21 corrected the standalone A1 Mini
 study's most obvious prototype artifacts: internal asset/debug wording was
 removed from the user-facing footer, the title was constrained so it cannot
