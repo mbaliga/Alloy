@@ -1132,7 +1132,11 @@ public final class MainActivity extends Activity {
 
     private View buildHeader() {
         FrameLayout header = new FrameLayout(this);
-        String profileState = profile != null && profile.verified ? "PROFILE VERIFIED" : "PROFILE UNVERIFIED";
+        // The bundled profile is source-backed, but physical-print promotion
+        // remains a separate gate until the native/runtime and real-printer
+        // acceptance evidence is complete. Avoid presenting that intentional
+        // fail-closed state as if the profile were malformed or untrusted.
+        String profileState = profile != null && profile.verified ? "PROFILE VERIFIED" : "PROFILE REVIEW REQUIRED";
         TextView context = label("WORKSHOP\nPHONE-FIRST  ·  " + profileState, 9, MUTED);
         context.setLetterSpacing(0.11f);
         context.setLineSpacing(2, 1.0f);
@@ -2627,7 +2631,7 @@ public final class MainActivity extends Activity {
                     .setPositiveButton("Done", null).show();
             return;
         }
-        String statusLabel = profile.verified ? "verified" : "unverified · review required";
+        String statusLabel = profile.verified ? "verified" : "review required · source-backed";
         String message = profile.name
                 + "\n\nPrinter envelope\n" + profile.buildVolumeLabel()
                 + "\nNozzle " + String.format(Locale.US, "%.2f mm", profile.nozzle)
@@ -2877,9 +2881,10 @@ public final class MainActivity extends Activity {
                         // workspace because a provider document disappeared.
                         loadShowcaseWithoutReplacingSavedProject();
                         status.setText("Prepare  ·  saved model needs review");
-                        Toast.makeText(MainActivity.this,
-                                "Saved model could not be reopened; loaded the local showcase. Re-import or retry the saved file.",
-                                Toast.LENGTH_LONG).show();
+                        // The workspace itself is already the recovery affordance.
+                        // Keep the explanation in the durable status line so a
+                        // stale provider URI cannot cover the first useful 3D
+                        // frame with a transient warning surface.
                     } else {
                         Toast.makeText(MainActivity.this, "Import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
                     }
