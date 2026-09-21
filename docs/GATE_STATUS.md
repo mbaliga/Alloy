@@ -23,6 +23,14 @@ path, its bounded A1 study instrumentation test, and the MainActivity export
 call site. This turns the verified marketing/inspection capture path into a
 release-regression guard; it does not change the production-readiness gates.
 
+The renderer's build-volume envelope is now driven by the active profile's
+`bed_x`, `bed_y`, and `build_z` values instead of a second hard-coded machine
+size. Profile import/reset and recipe application update the GLES surface, and
+the native-enabled release build plus 157-test API-35 ARM64 suite passed after
+this change. The A1 study remains a presentation reference; this wiring makes
+model-view bounds truthful for the selected profile without authorizing a
+physical print.
+
 The printer completion path now durably queues inventory reconciliation before
 attempting the stock write. Activity startup and the foreground printer service
 both drain that queue idempotently, so a confirmed print cannot silently lose
