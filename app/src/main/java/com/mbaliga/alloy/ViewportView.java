@@ -19,6 +19,10 @@ public final class ViewportView extends FrameLayout {
         void onPartSelected(int part);
     }
 
+    public interface PngCaptureListener {
+        void onCaptured(byte[] png);
+    }
+
     private final GlesViewportSurface surface;
     private final TextView emptyHint;
     private boolean machineStudy;
@@ -74,6 +78,9 @@ public final class ViewportView extends FrameLayout {
     public void fitModel() { surface.fitModel(); }
     public void resetView() { surface.resetView(); }
     public byte[] thumbnailPng(int maxSize) { return surface.thumbnailPng(maxSize); }
+    public void capturePng(int maxSize, PngCaptureListener listener) {
+        surface.capturePng(maxSize, listener);
+    }
     public void onHostPause() { surface.onPause(); }
     public void onHostResume() { surface.onResume(); }
 

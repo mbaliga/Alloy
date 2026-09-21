@@ -75,6 +75,12 @@ implements the handoff's separation between physical plate geometry and the
 visual runway treatment without claiming the placeholder clearance envelope
 or a final art-directed signoff.
 
+The explicit 3D-view PNG export now uses bounded Android `PixelCopy` capture of
+the live GLES surface. A1 study exports therefore contain the actual supplied
+mesh, plate runway, lighting, and material pass; deterministic CPU thumbnails
+remain the separate archive/BYOK representation. Java compilation and Android
+wiring validation pass for this path.
+
 Current checkpoint (2026-09-21): the identical A1 Mini travel-obstacle model
 has now been sliced by both the installed Bambu Studio CLI and Alloy's native
 Android engine using the matched A1 Mini/PLA profile. Preserving the imported

@@ -11,8 +11,11 @@ import android.graphics.Shader;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.view.PixelCopy;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -258,6 +261,54 @@ final class GlesViewportSurface extends GLSurfaceView {
             return output.toByteArray();
         } finally {
             bitmap.recycle();
+        }
+    }
+
+    /**
+     * Capture the rendered GLES surface, including the supplied A1 mesh and
+     * presentation-only runway. The older CPU thumbnail remains the durable
+     * archive/BYOK fallback, but it cannot represent the machine study.
+     */
+    void capturePng(int maxSize, ViewportView.PngCaptureListener listener) {
+        if (listener == null) return;
+        if (getWidth() <= 0 || getHeight() <= 0 || !getHolder().getSurface().isValid()) {
+            listener.onCaptured(null);
+            return;
+        }
+        final int bound = Math.max(64, Math.min(2_048, maxSize));
+        final Bitmap full = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+        try {
+            PixelCopy.request(getHolder().getSurface(), full, result -> {
+                if (result != PixelCopy.SUCCESS) {
+                    full.recycle();
+                    listener.onCaptured(null);
+                    return;
+                }
+                Bitmap output = full;
+                Bitmap scaled = null;
+                try {
+                    float scale = Math.min(1f, bound / (float) Math.max(full.getWidth(), full.getHeight()));
+                    if (scale < 1f) {
+                        scaled = Bitmap.createScaledBitmap(full,
+                                Math.max(1, Math.round(full.getWidth() * scale)),
+                                Math.max(1, Math.round(full.getHeight() * scale)), true);
+                        output = scaled;
+                    }
+                    ByteArrayOutputStream encoded = new ByteArrayOutputStream(Math.min(2 * 1024 * 1024,
+                            output.getWidth() * output.getHeight()));
+                    if (!output.compress(Bitmap.CompressFormat.PNG, 100, encoded)) {
+                        listener.onCaptured(null);
+                    } else {
+                        listener.onCaptured(encoded.toByteArray());
+                    }
+                } finally {
+                    if (scaled != null) scaled.recycle();
+                    full.recycle();
+                }
+            }, new Handler(Looper.getMainLooper()));
+        } catch (RuntimeException error) {
+            full.recycle();
+            listener.onCaptured(null);
         }
     }
 
