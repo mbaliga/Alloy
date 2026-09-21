@@ -35,6 +35,17 @@ focused regression passed, followed by the full non-native release suite:
 fail-closed input-validation improvement; it does not change the native
 engine, profile-parity, support-parity, or physical-printer gate status.
 
+Fresh G3 evidence was exported manually from the rebuilt native APK on the
+API-35 ARM64 emulator and retained in temporary evidence storage. The bundle
+validator passes. Against the pinned v14 Orca reference, the cube still has
+exact feature-transition and layer-count matches, 62/62 profile fields pass,
+and extrusion moves are within 2.01%; the measured deltas remain 11.28% for
+reported time, 2.09% for reported filament length, 2.03% for reported mass,
+41.45% for travel moves, and 10.70% for positive-E distance. The first motion
+signature mismatch remains desktop `M204 P500` versus native `M204 T500`.
+This refresh confirms the parity failure is reproducible; it does not promote
+the native engine.
+
 The 2026-09-20 native checkpoint successfully linked the ARM64 slicer, packaged
 the release and instrumentation APKs, and installed both on the API-35 ARM64
 emulator. The rebuilt profile-import regression is **15/15** and the native
