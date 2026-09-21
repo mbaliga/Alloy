@@ -58,6 +58,17 @@ versus 1,782 s, 2.09% filament-length delta, 2.03% mass delta, and 39.01%
 travel-move delta. This rules out brim configuration as the remaining G3
 cause; the next parity work belongs in motion/travel planning.
 
+The visual-review follow-up on 2026-09-21 corrected the standalone A1 Mini
+study's most obvious prototype artifacts: internal asset/debug wording was
+removed from the user-facing footer, the title was constrained so it cannot
+collide with the centered Alloy wordmark, the footer was shortened to preserve
+the hero canvas, and the receding presentation plates received a distinct
+warm material treatment. The rebuilt release APK was installed on the API-35
+emulator and visually rechecked. This is a verified presentation cleanup, not
+a claim of final luxury-grade art direction; richer authored materials,
+composition, lighting, and interaction polish remain on the Android product
+track.
+
 ## Delivery forecast and merge state
 
 The current checkout is a **closed-alpha Android build**, not a production
