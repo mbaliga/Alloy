@@ -92,6 +92,12 @@ state, and explains the recovery path instead of leaving the session disabled.
 The native-enabled release instrumentation suite was rerun afterward: **153
 tests completed, 0 failures, 1 intentional G3 export skip**.
 
+Foreground slicing now has a separate 180-second no-progress watchdog. If the
+native or fallback engine stops reporting progress, the service cancels the
+worker and promotes the durable checkpoint to `RECOVERY_REQUIRED`; it does not
+silently label an incomplete artifact as a valid slice. The instrumentation
+regression covers the bounded stall predicate.
+
 Bambu profile/project imports now have the same bounded-failure behavior with a
 60-second watchdog. A stalled provider is cancelled, the import action is
 re-enabled, and the workspace returns to its prior state with a recovery

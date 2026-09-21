@@ -311,6 +311,17 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void foregroundSliceWatchdogUsesBoundedStallWindow() {
+        long now = System.currentTimeMillis();
+        Assert.assertFalse("fresh progress must not be treated as stalled",
+                SliceJobService.hasStalled(now, now));
+        Assert.assertTrue("a silent slice past the watchdog window must require recovery",
+                SliceJobService.hasStalled(now, now - 180_000L));
+        Assert.assertFalse("future timestamps must not trip the watchdog",
+                SliceJobService.hasStalled(now, now + 1L));
+    }
+
+    @Test
     public void foregroundBatchSnapshotAndPerPlateResultsSurviveActivityRecreation() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
