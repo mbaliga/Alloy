@@ -1791,6 +1791,14 @@ remains open: the source mesh still needs authored region segmentation or a
 higher-fidelity licensed render asset before this can be called premium or
 production-ready.
 
+The following segmentation pass is captured at
+`/private/tmp/alloy-visual-v10-study.png`. It derives presentation-only
+upright and front-carriage bands from the supplied mesh coordinates, giving
+the machine a light frame / dark carriage separation instead of one uniform
+gray shell. The APK builds and the capture was exercised on the API-35 ARM64
+emulator. This is a measurable material-fidelity improvement, but the visual
+gate remains open pending authored render assets or further art direction.
+
 The next visual pass is now installed and emulator-checked: the A1 Mini study
 uses the reference-inspired hero composition, quiet white stage, centred Alloy
 wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a
