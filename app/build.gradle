@@ -4,6 +4,7 @@ plugins {
 
 def nativeEngineEnabled = project.findProperty('alloyNativeEngine')?.toString()?.toBoolean() ?: false
 def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.toString()?.toBoolean() ?: false
+def productionRelease = project.findProperty('alloyProductionRelease')?.toString()?.toBoolean() ?: false
 // Release packaging may consume a separately verified native bundle. This is
 // useful for offline/reproducible builds and keeps Java/profile changes from
 // forcing a full CMake rebuild when the native ABI has not changed.
@@ -23,6 +24,12 @@ def includeSuppliedReferenceVisuals = project.hasProperty('alloyIncludeSuppliedR
 // release pipeline cannot accidentally label a Java-only APK as verified.
 if (nativeEngineVerified && !nativeEngineEnabled) {
     throw new GradleException('alloyNativeEngineVerified=true requires alloyNativeEngine=true')
+}
+if (productionRelease && (!nativeEngineEnabled || !nativeEngineVerified)) {
+    throw new GradleException('alloyProductionRelease=true requires the native engine and its explicit verification flag')
+}
+if (productionRelease && project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean()) {
+    throw new GradleException('alloyProductionRelease=true cannot use the CI debug signing key')
 }
 
 android {
@@ -154,6 +161,24 @@ if (nativeEngineEnabled && nativeEnginePrebuiltDir != null) {
         }
     }
     tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }
+}
+
+// Keep the promotion contract visible in the build graph. Ordinary CI and
+// emulator builds remain intentionally permissive; only the explicit
+// production-release workflow is fail-closed before either release artifact
+// can be assembled.
+if (productionRelease) {
+    def verifyProductionRelease = tasks.register('verifyProductionRelease') {
+        doLast {
+            if (!nativeEngineEnabled || !nativeEngineVerified)
+                throw new GradleException('Production release requires a verified native engine')
+            if (includeSuppliedReferenceVisuals == false)
+                logger.lifecycle('Production release omits owner-provided visual-review assets')
+        }
+    }
+    tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
+        dependsOn(verifyProductionRelease)
+    }
 }
 
 dependencies {
