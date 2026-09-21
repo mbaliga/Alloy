@@ -1617,6 +1617,10 @@ public final class MainActivity extends Activity {
             transport.readStatus(target, (state, detail) -> runOnUiThread(() -> {
                 if (isFinishing() || printerTransport != transport) return;
                 if (state == PrinterTransport.State.READY) status.setText("Printer  ·  " + detail);
+                else if (state == PrinterTransport.State.STATUS_UNCONFIRMED) {
+                    status.setText("Printer  ·  status unconfirmed");
+                    Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
+                }
                 else if (state == PrinterTransport.State.FAILED) {
                     status.setText("Printer  ·  status unavailable");
                     Toast.makeText(this, "Printer status failed: " + detail, Toast.LENGTH_LONG).show();

@@ -108,7 +108,7 @@ def main() -> None:
     require(manifest, 'android:allowBackup="false"', manifest_path)
     for token in ("cancelPrint()", "pausePrint()", "resumePrint()", "Cancel print", "Pause print", "Resume print", "activePrinterTarget", "printerBusy",
                   "PrinterJobService.startUpload", "PrinterJobService.startPrint", "PrinterJobService.pausePrint", "PrinterJobService.resumePrint", "PrinterJobService.cancelPrint",
-                  "refreshPrinterStatus", "Refresh telemetry", "readStatus",
+                  "refreshPrinterStatus", "Refresh telemetry", "readStatus", "STATUS_UNCONFIRMED",
                   "activePrinterTarget = null",
                   "printerBusy = false"):
         require(activity, token, activity_path)
