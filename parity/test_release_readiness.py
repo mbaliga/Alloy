@@ -78,6 +78,23 @@ class ReleaseReadinessTests(unittest.TestCase):
         finally:
             directory.cleanup()
 
+    def test_placeholder_identity_is_rejected_even_when_gates_are_passed(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "REPLACE-WITH-REVIEWED-ID",
+            "verified_at": "REPLACE-WITH-UTC-TIMESTAMP",
+            "reviewer": "REPLACE-WITH-REVIEWER",
+            "device_scope": "Bambu Lab A1 Mini / N1 / firmware REPLACE",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        value["physical_acceptance_evidence"] = "physical.json"
+        directory, path = self._write(value)
+        try:
+            with self.assertRaises(SystemExit):
+                validate(path)
+        finally:
+            directory.cleanup()
+
 
 if __name__ == "__main__":
     unittest.main()
