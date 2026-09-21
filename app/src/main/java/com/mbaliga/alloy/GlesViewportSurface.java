@@ -1813,8 +1813,17 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "float highlight=pow(max(dot(normal,halfKey),0.0),uMachine==1?30.0:42.0);"
                     + "float edgeLight=pow(max(1.0-abs(dot(normal,view)),0.0),3.0);"
                     + "float heightTint=0.96+0.04*smoothstep(-20.0,180.0,vPosition.z);"
+                    // The reference machine is a single welded shell, so
+                    // material quality has to come from lighting as well as
+                    // the spatial palette. A bounded noise modulation gives
+                    // the painted frame a quiet powder-coat variation and a
+                    // neutral specular response without inventing seams or
+                    // changing printable geometry.
+                    + "float finishNoise=alloyNoise(vPosition.xy*0.11+vec2(vPosition.z*0.017,vPosition.z*0.009));"
+                    + "if(uMachine==1 && vPart>-18.5){base*=0.94+0.10*finishNoise;}"
                     + "vec3 shaded=base*(0.30+0.80*keyDiffuse+0.18*fillDiffuse)*heightTint;"
-                    + "shaded+=vec3(0.30,0.25,0.19)*highlight;"
+                    + "shaded+=vec3(0.18,0.19,0.20)*highlight;"
+                    + "if(uMachine==1){shaded+=vec3(0.10,0.11,0.12)*pow(max(dot(normal,halfKey),0.0),18.0);}"
                     + "shaded+=base*rim*(uNight==1?0.34:0.20);"
                     + "shaded+=vec3(0.12,0.16,0.22)*edgeLight*(uNight==1?0.58:0.28);"
                     // PEI is a physical black sheet. Keep the plate runway

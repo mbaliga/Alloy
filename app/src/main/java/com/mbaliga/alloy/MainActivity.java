@@ -1293,12 +1293,6 @@ public final class MainActivity extends Activity {
                 Gravity.BOTTOM | Gravity.START, dp(16), dp(92)));
         stage.addView(compactSceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
                 Gravity.BOTTOM | Gravity.END, dp(16), dp(88)));
-        TextView hint = label("DRAG TO ORBIT  ·  PINCH TO ZOOM", 9, MUTED);
-        hint.setGravity(Gravity.CENTER);
-        hint.setLetterSpacing(0.08f);
-        FrameLayout.LayoutParams hintLp = new FrameLayout.LayoutParams(-2, dp(30), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        hintLp.bottomMargin = dp(12);
-        stage.addView(hint, hintLp);
         page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout footer = new LinearLayout(this);
@@ -1306,7 +1300,7 @@ public final class MainActivity extends Activity {
         footer.setGravity(Gravity.CENTER_VERTICAL);
         footer.setPadding(dp(18), dp(10), dp(18), dp(12));
         footer.setBackgroundColor(Color.WHITE);
-        TextView note = label("A1 MINI  ·  PHONE STUDY", 9, MUTED);
+        TextView note = label("ALLOY  ·  A1 MINI", 9, MUTED);
         note.setGravity(Gravity.CENTER);
         note.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         note.setLineSpacing(1, 1.0f);
