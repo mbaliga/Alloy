@@ -2,6 +2,14 @@
 
 Date: 2026-09-22
 
+The latest visual handoff pass is source-backed by the supplied
+`3D Rendering Style Identification.md`, `3D Rendering Style Preview.html`,
+and `Extract Mesh 3D Rendering.py` files. The A1 study runway now separates
+physical rounded PEI sheets from a plate-local line grid that continues past
+each sheet and fades into the stage, matching the handoff's key depth cue.
+This is presentation-only GLES work; printable coordinates, slicing, and
+printer transport are unchanged.
+
 Fresh verification on this checkpoint: the independent parity suite completed
 66/66 tests successfully; the Linux/model/artifact bridge suite completed
 26/26 tests; Android, transport, release, model/profile/native

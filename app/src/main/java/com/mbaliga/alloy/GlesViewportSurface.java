@@ -924,6 +924,8 @@ final class GlesViewportSurface extends GLSurfaceView {
         private int studyAccessoryVertexCount;
         private FloatBuffer studyPlateBuffer;
         private int studyPlateVertexCount;
+        private FloatBuffer studyGridBuffer;
+        private int studyGridVertexCount;
         private FloatBuffer studyShadowBuffer;
         private int studyShadowVertexCount;
         private FloatBuffer meshBuffer;
@@ -978,6 +980,8 @@ final class GlesViewportSurface extends GLSurfaceView {
             studyAccessoryVertexCount = studyAccessoryBuffer.limit() / 7;
             studyPlateBuffer = floatBuffer(studyPlates());
             studyPlateVertexCount = studyPlateBuffer.limit() / 7;
+            studyGridBuffer = floatBuffer(studyPlateGridLines());
+            studyGridVertexCount = studyGridBuffer.limit() / 7;
             studyShadowBuffer = floatBuffer(studyShadow());
             studyShadowVertexCount = studyShadowBuffer.limit() / 7;
         }
@@ -1026,6 +1030,12 @@ final class GlesViewportSurface extends GLSurfaceView {
                 // never part of the printable model, plate planner, or
                 // collision envelope.
                 drawMeshBuffer(studyPlateBuffer, studyPlateVertexCount, mvp, -1, 0, 4, 1f);
+            }
+            if (machineStudy && studyGridBuffer != null) {
+                // The handoff deliberately lets the grid leave the physical
+                // sheet and dissolve into the stage. It is a visual depth
+                // cue, not part of the printable bed or machine envelope.
+                drawLines(studyGridBuffer, studyGridVertexCount, mvp);
             }
             if (machineStudy && studyShadowBuffer != null) {
                 // Keep the supplied machine visually grounded on the front
@@ -1540,21 +1550,42 @@ final class GlesViewportSurface extends GLSurfaceView {
             // turning the study into a second slicer viewport.
             addBox(values, centerX - width * 0.43f, centerY - 1.5f, z + 1.4f,
                     centerX + width * 0.43f, centerY + 1.5f, z + 1.7f, platePart);
-            // A sparse PEI grid is presentation-only, but it is important
-            // for material identity and depth. Keep the lines slightly
-            // raised and bounded to each plate; the runway should feel like
-            // repeated physical sheets, not a second flat UI background.
-            float gridInsetX = width * 0.40f;
-            float gridInsetY = depth * 0.38f;
+        }
+        return toArray(values);
+    }
+
+    /**
+     * Plate-local grid for the supplied study composition. The grid is an
+     * abstraction rather than a decal: it continues beyond the hard PEI
+     * edge, then fades into the neutral stage. Keeping this as line geometry
+     * also avoids duplicating hundreds of tiny raised meshes per plate.
+     */
+    private float[] studyPlateGridLines() {
+        ArrayList<Float> values = new ArrayList<>();
+        for (int index = 0; index < 6; index++) {
+            float depth = 154f - index * 10f;
+            float width = 188f - index * 13f;
+            float centerX = bedX / 2f - index * 9f;
+            float centerY = 92f - index * 80f;
+            float z = 1.92f - index * 0.12f;
+            float left = centerX - width / 2f, right = centerX + width / 2f;
+            float front = centerY - depth / 2f, back = centerY + depth / 2f;
+            float outsideX = Math.max(24f, width * 0.18f);
+            float outsideY = Math.max(26f, depth * 0.18f);
+            float r = nightStage ? 0.34f : 0.24f;
+            float g = nightStage ? 0.39f : 0.28f;
+            float b = nightStage ? 0.48f : 0.31f;
             for (int column = -3; column <= 3; column++) {
                 float x = centerX + column * width * 0.12f;
-                addBox(values, x - 0.35f, centerY - gridInsetY, z + 1.72f,
-                        x + 0.35f, centerY + gridInsetY, z + 1.88f, gridPart);
+                addLine(values, x, front - outsideY, z, x, front, z, r, g, b, 0.035f);
+                addLine(values, x, front, z, x, back, z, r, g, b, 0.20f);
+                addLine(values, x, back, z, x, back + outsideY, z, r, g, b, 0.035f);
             }
             for (int row = -2; row <= 2; row++) {
                 float y = centerY + row * depth * 0.14f;
-                addBox(values, centerX - gridInsetX, y - 0.35f, z + 1.72f,
-                        centerX + gridInsetX, y + 0.35f, z + 1.88f, gridPart);
+                addLine(values, left - outsideX, y, z, left, y, z, r, g, b, 0.035f);
+                addLine(values, left, y, z, right, y, z, r, g, b, 0.20f);
+                addLine(values, right, y, z, right + outsideX, y, z, r, g, b, 0.035f);
             }
         }
         return toArray(values);
