@@ -1811,6 +1811,18 @@ The independent parity suite was rerun after the audit repairs: **66/66
 tests passed**. This confirms the catalog and validator changes did not alter
 the checked-in profile, comparison, or artifact contracts.
 
+Release packaging was also exercised on this checkpoint. The signed
+debug-key release APK and AAB both build successfully; the AAB contains the
+owner-provided Alloy logo, splash resource, A1 reference mesh, and bundled
+model/profile assets. Hashes from the local build are:
+
+- APK `6526000af71c4d4f8362b6ce4df620c331a422ff4878ac037c3d29232ac13070`
+- AAB `a74388c2cb7ac5d7319e0588261306f79371995365d722130459ede5e6e4a369`
+
+These are CI/debug-signed verification artifacts, not production signing
+evidence; the protected production-readiness record remains intentionally
+unpromoted.
+
 The next visual pass is now installed and emulator-checked: the A1 Mini study
 uses the reference-inspired hero composition, quiet white stage, centred Alloy
 wordmark, floating printer/material/nozzle/build-volume/scale callouts, and a
