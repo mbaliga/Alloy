@@ -739,15 +739,16 @@ the safe phone shell:
   hardening, not auto-brim parity evidence; the geometry-dependent resolver
   and physical A1 Mini acceptance gate remain open.
 - The auto-brim resolver now preserves the source-facing `brim_type=auto_brim`
-  and `brim_object_gap=0.1`, while resolving a positive inherited
+  and resolves a positive inherited
   `brim_width=5` to the deterministic outer-brim geometry used by the native
   core. A fresh API-35 ARM64 export emits `;TYPE:Brim` on the obstacle fixture;
   the regression exporter now fails if that feature disappears. The matched
-  obstacle evidence reports 2,255 Z moves, 1,541 retractions and 2,136.04 mm
-  of filament. Major feature classes now pass against the desktop reference,
-  but time remains 9.19% high (3,384 s vs 3,073 s), filament is 4.83% high,
-  travel is 17.09% high, and the acceleration command profile still differs.
-  Auto-brim geometry is therefore improved but not yet a G3 parity pass.
+  obstacle evidence reports 2,255 Z moves and 2,135.01 mm of filament in the
+  desktop-flavor run. Major feature classes and all 62 profile fields now pass
+  against the desktop reference, but time remains 6.11% high (3,273 s vs
+  3,073 s), filament is 4.79% high, travel/retraction counts remain high, and
+  the acceleration command profile still diverges. Auto-brim geometry is
+  therefore improved but not yet a G3 parity pass.
 - The profile surface now accepts one to thirty-two user-selected Bambu JSON preset
   documents (machine, process and/or filament), resolves inheritance when the
   selected chain is present, and persists an Alloy-normalized copy in app-private
@@ -1598,6 +1599,13 @@ coverage, but still fails production tolerance on time (6.11%), filament mass
 support transition. The next parity gate is to resolve that support-motion
 and acceleration difference, then repeat the comparison across all four
 fixtures—not to promote from a single obstacle.
+
+The native boundary now projects Bambu's `retract_before_travel` into both
+the filament-prefixed and active top-level native keys. A wipe-off experiment
+confirmed the setting is isolated and valid, but did not close the remaining
+motion gap: the best controlled wipe-off comparison is still 5.27% slower,
+4.79% higher in filament and 11.64% different in travel moves. This mapping
+is retained as correctness hardening; it is not being counted as a parity win.
 
 The product visual gate is also still open. The current A1 study screen is a
 readable native 3D scene, but it is not yet the supplied luxury configurator
