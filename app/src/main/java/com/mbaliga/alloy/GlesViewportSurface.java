@@ -1415,8 +1415,14 @@ final class GlesViewportSurface extends GLSurfaceView {
             float width = 178f - index * 8.5f;
             float centerY = 92f - index * 58f;
             float z = -3.4f - index * 0.12f;
-            addBox(values, centerX - width / 2f, centerY - depth / 2f, z,
-                    centerX + width / 2f, centerY + depth / 2f, z + 1.4f, -20f);
+            // A physical PEI sheet has softened corners and a small front
+            // grip tab. Keeping that silhouette in the presentation geometry
+            // is the difference between a real plate runway and a stack of
+            // rectangular UI cards.
+            addRoundedPlate(values, centerX, centerY, z, width, depth, 1.4f,
+                    Math.min(7f, width * 0.08f), -20f);
+            addBox(values, centerX - 11f, centerY - depth / 2f - 4.2f, z + 0.15f,
+                    centerX + 11f, centerY - depth / 2f + 1.2f, z + 0.9f, -20f);
             // A restrained inset stripe makes each plate readable without
             // turning the study into a second slicer viewport.
             addBox(values, centerX - width * 0.43f, centerY - 1.5f, z + 1.4f,
@@ -1439,6 +1445,49 @@ final class GlesViewportSurface extends GLSurfaceView {
             }
         }
         return toArray(values);
+    }
+
+    /** Rounded extruded PEI sheet, used only by the marketing study scene. */
+    private static void addRoundedPlate(ArrayList<Float> values, float centerX, float centerY,
+                                        float z, float width, float depth, float thickness,
+                                        float radius, float part) {
+        int segments = 4;
+        ArrayList<Float> outline = new ArrayList<>();
+        float left = centerX - width / 2f, right = centerX + width / 2f;
+        float front = centerY - depth / 2f, back = centerY + depth / 2f;
+        float[][] corners = {{right - radius, front + radius, -1f},
+                {right - radius, back - radius, 0f},
+                {left + radius, back - radius, 1f},
+                {left + radius, front + radius, 2f}};
+        // Walk counter-clockwise around the sheet, starting at the front
+        // right. The screen-facing top remains one continuous material.
+        for (int corner = 0; corner < corners.length; corner++) {
+            float cx = corners[corner][0], cy = corners[corner][1];
+            float start = corners[corner][2] * (float) (Math.PI / 2d);
+            for (int step = 0; step <= segments; step++) {
+                double angle = start + (Math.PI / 2d) * step / segments;
+                outline.add(cx + radius * (float) Math.cos(angle));
+                outline.add(cy + radius * (float) Math.sin(angle));
+            }
+        }
+        int count = outline.size() / 2;
+        for (int index = 0; index < count; index++) {
+            int next = (index + 1) % count;
+            float ax = outline.get(index * 2), ay = outline.get(index * 2 + 1);
+            float bx = outline.get(next * 2), by = outline.get(next * 2 + 1);
+            addFace(values, centerX, centerY, z + thickness,
+                    ax, ay, z + thickness, bx, by, z + thickness,
+                    0f, 0f, 1f, part);
+            addFace(values, ax, ay, z, bx, by, z, bx, by, z + thickness,
+                    0f, 0f, -1f, part);
+            float nx = by - ay, ny = -(bx - ax);
+            float length = (float) Math.sqrt(nx * nx + ny * ny);
+            if (length < 0.0001f) { nx = 0f; ny = -1f; length = 1f; }
+            addFace(values, ax, ay, z, ax, ay, z + thickness, bx, by, z + thickness,
+                    nx / length, ny / length, 0f, part);
+            addFace(values, ax, ay, z, bx, by, z + thickness, bx, by, z,
+                    nx / length, ny / length, 0f, part);
+        }
     }
 
     /** Soft contact ellipse for the standalone product-study composition. */
