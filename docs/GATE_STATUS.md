@@ -2,6 +2,16 @@
 
 Date: 2026-09-22
 
+The native-enabled ARM64 incremental target completed successfully after the
+material checkpoint: 37 changed objects compiled and `libslic3r.so` linked.
+The resulting debug APK packaged successfully, installed on the API-35 ARM64
+emulator, and launched the A1 study. The unobstructed runtime capture is
+retained at `/private/tmp/alloy-a1-native-materials-clean.png`; it shows the
+supplied mesh with the corrected frame/spool/accent separation, dark PEI
+runway, scale props, and study controls. This closes a native build/package
+and runtime smoke checkpoint, not the physical-printer or production-release
+gates.
+
 The latest A1 visual-material checkpoint (`ce4d3e76`) fixes a precedence bug
 in the renderer-only palette: the supplied mesh's spool-side components were
 being classified as generic frame because their spatial band overlapped the
