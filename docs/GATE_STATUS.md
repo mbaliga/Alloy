@@ -18,6 +18,15 @@ unit-test suite passed 66 tests. These validate the dependency-free Linux
 inspection/bridge and transport guardrails; they do not turn the Android
 native engine or physical A1 Mini transport into a production gate.
 
+The pinned Bambu Studio `v02.08.02.61` checkout was restored at commit
+`926a7192574bcb9b3a732e1ec59a46d79cb45466` and re-audited. The exact
+TreeSupport3D source set still reports `PORT_REQUIRED`: all 7 required source
+files differ, 30 of 36 direct support includes differ, and 7 transitive files
+are absent from Alloy. This is now a reproducible source audit rather than a
+missing-checkout observation. The native preview parser also now honors the
+existing cancelled-job interruption; the release instrumentation run completed
+**165 tests with 0 failures** (8 intentional skips).
+
 The latest Android visual checkpoint tightens the supplied handoff's runway
 composition: the standalone A1 study now uses four presentation-only 184 mm
 PEI sheets, with a lighter plate-local grid dissolve, overlays lifted above
