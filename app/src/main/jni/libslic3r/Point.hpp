@@ -668,6 +668,18 @@ inline constexpr ScaledCoordOnly<Tout> scaled(const Tin &v) noexcept
     return Tout(v / Tin(SCALING_FACTOR));
 }
 
+// Bambu support code also requests a plain integral output type (not Alloy's
+// coord_t-scaled type). Keep that conversion explicit while preserving the
+// runtime SCALING_FACTOR contract used by Android.
+template<class Tout, class Tin,
+         std::enable_if_t<std::is_integral<Tout>::value &&
+                          !is_scaled_coord<Tout>::value &&
+                          std::is_floating_point<Tin>::value, int> = 0>
+inline Tout scaled(const Tin &v) noexcept
+{
+    return static_cast<Tout>(v / Tin(SCALING_FACTOR));
+}
+
 // Conversion for Eigen vectors (N dimensional points)
 template<class Tout = coord_t,
          class Tin,

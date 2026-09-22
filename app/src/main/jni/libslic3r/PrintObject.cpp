@@ -809,7 +809,10 @@ void PrintObject::clear_overhangs_for_lift()
 {
     if (!m_shared_object) {
         for (Layer* l : m_layers)
+        {
             l->loverhangs.clear();
+            l->loverhangs_with_type.clear();
+        }
     }
 }
 
@@ -839,6 +842,9 @@ void PrintObject::detect_overhangs_for_lift()
 
                     ExPolygons overhangs = diff_ex(layer.lslices, offset_ex(lower_layer.lslices, scale_(min_overlap)));
                     layer.loverhangs = std::move(offset2_ex(overhangs, -0.1f * scale_(line_width), 0.1f * scale_(line_width)));
+                    layer.loverhangs_with_type.clear();
+                    for (const ExPolygon &overhang : layer.loverhangs)
+                        layer.loverhangs_with_type.emplace_back(overhang, 0);
                     layer.loverhangs_bbox = get_extents(layer.loverhangs);
                 }
             });

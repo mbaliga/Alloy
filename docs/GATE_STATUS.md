@@ -2151,3 +2151,9 @@ with it. A disposable exact-Bambu probe resolves the prior safe-union and
 safe-offset failures and now stops at the remaining scaling, legacy-layer, and
 integer/`constexpr` API differences. This narrows the port boundary but does
 not close the production parity gate.
+
+The scaling/layer compatibility increment adds a runtime-safe integral
+`scaled<T>` overload and typed overhang storage/propagation on `Layer`. The
+affected native ARM64 targets compile and are up to date. Exact Bambu
+`constexpr` scaling sites remain a source-port task; Alloy has not weakened
+its runtime scaling contract.

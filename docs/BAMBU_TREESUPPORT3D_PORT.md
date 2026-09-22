@@ -85,6 +85,14 @@ exact Bambu probe now advances past those missing symbols; its remaining
 errors are concentrated in compile-time scaling, legacy layer overhang
 storage, and integer/`constexpr` assumptions.
 
+The shared API now adds an explicit integral-output `scaled<T>` overload that
+still uses Alloy's runtime `SCALING_FACTOR`, plus typed overhang storage on
+`Layer` (`loverhangs_with_type`) and propagation for shared/lift-detected
+layers. The affected `Print.cpp`, `PrintObject.cpp`, and `TreeSupport3D.cpp`
+ARM64 targets compile successfully. Runtime `constexpr` sites in the exact
+Bambu sources remain intentionally unadapted until they are ported as source,
+not hidden by changing Alloy's scale contract.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one
