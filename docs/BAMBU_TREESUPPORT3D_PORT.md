@@ -41,6 +41,21 @@ Bambu source is included in the shipped build, and the Bambu parity gate
 remains open until this dependency closure is ported coherently and the
 support-enabled fixtures pass.
 
+### Focused compiler confirmation (2026-09-22)
+
+After the full overlay build stopped making useful progress, the three
+TreeSupport translation units were compiled directly in the disposable
+`/private/tmp/alloy-treeport` worktree with the pinned Android toolchain. The
+focused compile fails before linking and confirms the boundary is structural,
+not a single missing declaration. The first diagnostics include incomplete
+`Layer` access in `SupportParameters.hpp`, missing `PrintConfig` and
+`SupportParameters` fields, renamed support-layer enum values, runtime
+`SCALING_FACTOR` use in `constexpr` constants, the missing
+`ExPolygon::split_expoly_with_holes` helper, and undefined `safe_offset_inc`
+and `safe_union` helpers in `TreeSupport3D.cpp`. This evidence is retained as
+the next port specification; the disposable overlay remains excluded from the
+main branch and from all shipped artifacts.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one
