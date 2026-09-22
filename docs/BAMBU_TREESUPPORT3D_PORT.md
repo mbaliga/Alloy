@@ -69,6 +69,13 @@ setting to Alloy's `PrintConfig` schema with the same default (`false`) and
 advanced Support classification. `PrintConfig.cpp` recompiles successfully
 for ARM64; the focused native target reports no work remaining afterward.
 
+The support-parameter layer now also exposes Bambu-compatible
+`soluble_interface` and aggregate `interface_density` values. Solubility is
+derived from Alloy's selected support-interface filament, and the XY gap
+calculation honors the new top-Z override setting. The affected
+`TreeSupport3D.cpp` ARM64 target compiles successfully; the exact Bambu source
+set remains unpromoted until its broader API closure is complete.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one

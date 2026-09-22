@@ -2137,3 +2137,10 @@ The support configuration closure also now includes
 to `false` as in the pinned Bambu source. The focused `PrintConfig.cpp`
 ARM64 target compiles and is up to date; this still does not constitute full
 Bambu TreeSupport parity or an end-to-end APK result.
+
+The following support-parameter increment adds explicit soluble-interface and
+aggregate interface-density values, derives solubility from the selected
+interface filament, and applies the top-Z-over-XY gap policy. The affected
+`TreeSupport3D.cpp` ARM64 translation unit compiles successfully. This is
+still a compatibility increment, not a claim that the complete Bambu source
+set or production APK has passed.
