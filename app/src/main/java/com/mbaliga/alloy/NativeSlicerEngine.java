@@ -878,6 +878,13 @@ public final class NativeSlicerEngine implements SlicerEngine {
             String line;
             long bytes = 0L;
             while ((line = in.readLine()) != null) {
+                // Native slicing already observes model_cancel(). The
+                // post-slice preview pass runs on the same cancellable job,
+                // so it must observe the executor interruption as well;
+                // otherwise a large G-code file could keep the phone busy
+                // after the user has cancelled the slice.
+                if (Thread.currentThread().isInterrupted())
+                    throw new java.util.concurrent.CancellationException("G-code preview cancelled");
                 bytes += line.length() + 1L;
                 if (bytes > MAX_GCODE_BYTES) throw new IOException("Native G-code exceeds the 128 MB limit");
                 gcode.append(line).append('\n');

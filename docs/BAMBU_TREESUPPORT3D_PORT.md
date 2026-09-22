@@ -7,11 +7,11 @@ Date: 2026-09-22
 The pinned Bambu Studio checkout is `v02.08.02.61` at commit
 `926a7192574bcb9b3a732e1ec59a46d79cb45466`.
 
-The seven required support implementation files were staged from that exact
-checkout in a recoverable local overlay. The source audit reached
-`PORT_READY`: all seven required file hashes matched and all direct quoted
-includes were present. This status only proves that the source set was
-identified and staged; it is not a runtime or production-parity claim.
+The exact checkout is now restored locally for reproducible auditing. The
+source audit reports `PORT_REQUIRED`: all seven required implementation files
+differ from Alloy's current native tree, 30 of 36 direct support includes
+differ, and 7 transitive files are absent. This is a source-compatibility
+result, not a runtime or production-parity claim.
 
 ## ARM64 compatibility result
 

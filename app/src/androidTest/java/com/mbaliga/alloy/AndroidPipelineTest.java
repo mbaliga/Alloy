@@ -1743,6 +1743,27 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void nativePreviewHonorsCancelledSliceThread() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File gcode = new File(context.getCacheDir(), "native-preview-cancel-" + System.nanoTime() + ".gcode");
+        String source = "G90\nM83\n;LAYER:0\nG1 X1 Y1 E0.2\nM104 S0\n";
+        java.nio.file.Files.write(gcode.toPath(), source.getBytes(StandardCharsets.UTF_8));
+        try {
+            Thread.currentThread().interrupt();
+            try {
+                NativeSlicerEngine.parseGcode(gcode, new Slicer.Config());
+                Assert.fail("cancelled native preview should stop before parsing");
+            } catch (java.util.concurrent.CancellationException expected) {
+                Assert.assertTrue(expected.getMessage().contains("preview cancelled"));
+            } finally {
+                Thread.interrupted();
+            }
+        } finally {
+            Assert.assertTrue(!gcode.exists() || gcode.delete());
+        }
+    }
+
+    @Test
     public void plateSnapshotsSurviveReload() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         SharedPreferences preferences = context.getSharedPreferences("alloy-test-plates", Context.MODE_PRIVATE);
