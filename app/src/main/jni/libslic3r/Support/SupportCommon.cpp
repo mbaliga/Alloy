@@ -2086,4 +2086,70 @@ sub clip_with_shape {
 }
 */
 
+[[nodiscard]] Polygons safe_union(const Polygons first, const Polygons second)
+{
+    Polygons result;
+    if (!first.empty() || !second.empty()) {
+        result = union_(first, second);
+        if (result.empty()) {
+            BOOST_LOG_TRIVIAL(debug) << "Caught an area destroying union, enlarging areas a bit.";
+            result = union_(offset(to_polylines(first), scaled<float>(0.002), jtMiter, 1.2),
+                            offset(to_polylines(second), scaled<float>(0.002), jtMiter, 1.2));
+        }
+    }
+    return result;
+}
+
+[[nodiscard]] Polygons safe_offset_inc(
+    const Polygons &me, coord_t distance, const Polygons &collision,
+    coord_t safe_step_size, coord_t last_step_offset_without_check,
+    size_t min_amount_offset)
+{
+    bool do_final_difference = last_step_offset_without_check == 0;
+    Polygons ret = safe_union(me);
+    Polygons collision_trimmed_buffer;
+    auto collision_trimmed = [&]() -> const Polygons& {
+        if (collision_trimmed_buffer.empty() && !collision.empty())
+            collision_trimmed_buffer = ClipperUtils::clip_clipper_polygons_with_subject_bbox(
+                collision, get_extents(ret).inflated(std::max<coord_t>(0, distance) + SCALED_EPSILON));
+        return collision_trimmed_buffer;
+    };
+
+    if (distance == 0)
+        return do_final_difference ? diff(ret, collision_trimmed()) : union_(ret);
+    if (safe_step_size <= 0 || last_step_offset_without_check < 0)
+        return do_final_difference ? diff(ret, collision_trimmed()) : union_(ret);
+
+    coord_t step_size = safe_step_size;
+    int steps = distance > last_step_offset_without_check ?
+        (distance - last_step_offset_without_check) / step_size : 0;
+    if (distance - steps * step_size > last_step_offset_without_check) {
+        if ((steps + 1) * step_size <= distance)
+            ++steps;
+        else
+            do_final_difference = true;
+    }
+    if (steps + (distance < last_step_offset_without_check || (distance % step_size) != 0) < int(min_amount_offset) && min_amount_offset > 1) {
+        step_size = distance / min_amount_offset;
+        if (step_size >= safe_step_size) {
+            step_size = safe_step_size;
+            steps = int(min_amount_offset);
+        } else if (step_size > 0) {
+            steps = distance / step_size;
+        }
+    }
+    for (int i = 0; i < steps; ++i) {
+        ret = diff(offset(ret, step_size, ClipperLib::jtRound, scaled<float>(0.01)), collision_trimmed());
+        if (i % 10 == 7)
+            ret = polygons_simplify(ret, scaled<double>(0.015));
+    }
+    const float last_offset = distance - steps * step_size;
+    if (last_offset > SCALED_EPSILON)
+        ret = offset(ret, last_offset, ClipperLib::jtRound, scaled<float>(0.01));
+    ret = polygons_simplify(ret, scaled<double>(0.015));
+    if (do_final_difference)
+        ret = diff(ret, collision_trimmed());
+    return union_(ret);
+}
+
 } // namespace Slic3r

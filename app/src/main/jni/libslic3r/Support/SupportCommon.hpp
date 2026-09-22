@@ -12,6 +12,18 @@ namespace Slic3r {
 class PrintObject;
 class SupportLayer;
 
+// Transitional Bambu-compatible geometry helpers. The legacy Alloy
+// TreeSupport3D implementation keeps private versions while the shared API
+// is being converged; define SLIC3R_TREE_SUPPORT_LOCAL_HELPERS in that one
+// translation unit to avoid a declaration collision during the transition.
+#ifndef SLIC3R_TREE_SUPPORT_LOCAL_HELPERS
+[[nodiscard]] Polygons safe_union(const Polygons first, const Polygons second = {});
+[[nodiscard]] Polygons safe_offset_inc(
+    const Polygons &me, coord_t distance, const Polygons &collision,
+    coord_t safe_step_size, coord_t last_step_offset_without_check,
+    size_t min_amount_offset);
+#endif
+
 // Turn some of the base layers into base interface layers.
 // For soluble interfaces with non-soluble bases, print maximum two first interface layers with the base
 // extruder to improve adhesion of the soluble filament to the base.
