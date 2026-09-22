@@ -64,6 +64,11 @@ validate the complete native link, but was stopped after the clean native
 rebuild stopped emitting progress; therefore this increment is not counted as
 an end-to-end APK validation until that build completes.
 
+The next API increment adds Bambu's `top_z_overrides_xy_distance` support
+setting to Alloy's `PrintConfig` schema with the same default (`false`) and
+advanced Support classification. `PrintConfig.cpp` recompiles successfully
+for ARM64; the focused native target reports no work remaining afterward.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one

@@ -6281,6 +6281,13 @@ void PrintConfigDef::init_fff_params()
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(80));
 
+    def           = this->add("top_z_overrides_xy_distance", coBool);
+    def->label    = L("Z overrides X/Y");
+    def->category = L("Support");
+    def->tooltip  = L("When enabled, top Z distance takes priority over support/object XY distance beneath overhangs.");
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionBool(false));
+
     def = this->add("support_base_pattern", coEnum);
     def->label = L("Base pattern");
     def->category = L("Support");
