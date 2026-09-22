@@ -2125,3 +2125,9 @@ safe-offset/safe-union, incomplete-layer, and compile-time-scaling boundaries.
 The disposable overlay was discarded; the main native tree and shipped build
 remain unchanged. This is a dependency-closure task, not a production-ready
 Bambu parity result.
+
+The first implementation increment toward that dependency closure adds
+`ExPolygon::split_expoly_with_holes` to Alloy's native geometry API. The
+updated `ExPolygon.cpp` object compiles for ARM64. A clean full Gradle rebuild
+was then started, but native compilation stopped producing progress and was
+terminated before packaging; no APK success is claimed from that run.

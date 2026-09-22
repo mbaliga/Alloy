@@ -56,6 +56,14 @@ and `safe_union` helpers in `TreeSupport3D.cpp`. This evidence is retained as
 the next port specification; the disposable overlay remains excluded from the
 main branch and from all shipped artifacts.
 
+The first dependency-closure increment is now in the main native tree:
+`ExPolygon::split_expoly_with_holes` was added to `ExPolygon.hpp/.cpp` using
+Alloy's existing clipping and intersection primitives. Its ARM64 translation
+unit compiles successfully. The full clean Gradle package build was started to
+validate the complete native link, but was stopped after the clean native
+rebuild stopped emitting progress; therefore this increment is not counted as
+an end-to-end APK validation until that build completes.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one
