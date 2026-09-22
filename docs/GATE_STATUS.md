@@ -2116,3 +2116,12 @@ remains the only active product surface; it is not yet a production-grade
 Linux desktop replacement because the Alloy-owned native desktop engine,
 profiles, transport and packaging still need their own gates. No new Linux
 feature work is planned until Android's native/profile/printer gates pass.
+
+The follow-up focused ARM64 compile on 2026-09-22 confirms that the Bambu
+TreeSupport overlay cannot yet be promoted: `TreeModelVolumes.cpp`,
+`TreeSupport3D.cpp`, and `TreeSupport.cpp` fail against Alloy's surrounding
+API at the support-parameter/config, support-layer enum, polygon-helper,
+safe-offset/safe-union, incomplete-layer, and compile-time-scaling boundaries.
+The disposable overlay was discarded; the main native tree and shipped build
+remain unchanged. This is a dependency-closure task, not a production-ready
+Bambu parity result.
