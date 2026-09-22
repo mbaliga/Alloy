@@ -2131,3 +2131,9 @@ The first implementation increment toward that dependency closure adds
 updated `ExPolygon.cpp` object compiles for ARM64. A clean full Gradle rebuild
 was then started, but native compilation stopped producing progress and was
 terminated before packaging; no APK success is claimed from that run.
+
+The support configuration closure also now includes
+`top_z_overrides_xy_distance` in the native `PrintConfig` schema, defaulting
+to `false` as in the pinned Bambu source. The focused `PrintConfig.cpp`
+ARM64 target compiles and is up to date; this still does not constitute full
+Bambu TreeSupport parity or an end-to-end APK result.
