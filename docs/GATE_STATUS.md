@@ -27,6 +27,14 @@ bundle at `/private/tmp/alloy-g3-evidence.WCtwtz`. This is now native evidence
 for the desktop comparison step; it is not itself a parity pass until the
 retained desktop references are compared.
 
+The native-enabled release AAB also built successfully and was inspected at
+`app/build/outputs/bundle/release/app-release.aab`. SHA-256 is
+`257a5b7b1fad16382964e538b22b2cdd93ca0e4dbd22f60f9da48b7f59673fb8`. The
+bundle contains `libslic3r.so`, the supplied A1 reference mesh, packaged model
+assets, the Alloy launcher logo, and splash resources. This is a locally
+debug-signed distribution artifact; organization signing and signed
+install/upgrade acceptance remain open.
+
 The latest A1 visual-material checkpoint (`ce4d3e76`) fixes a precedence bug
 in the renderer-only palette: the supplied mesh's spool-side components were
 being classified as generic frame because their spatial band overlapped the
