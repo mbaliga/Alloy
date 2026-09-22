@@ -13,6 +13,14 @@ on the API-35 ARM64 emulator; the resulting capture is retained at
 material defect, but it is not final visual signoff for the entire supplied
 product scene.
 
+The native-enabled release AAB was rebuilt from this same checkpoint and
+verified at `app/build/outputs/bundle/release/app-release.aab`; SHA-256 is
+`3c64608bc49ca57b665a2ea63011397e140a57bec290115226795d1fcddec1aa`.
+The bundle contains `base/lib/arm64-v8a/libslic3r.so`, the supplied A1 mesh,
+`alloy_logo.png`, and `splash_screen.xml`; `jarsigner` reports `jar verified`.
+The signer is the local self-signed CI-debug certificate, so organization
+signing and production promotion remain open.
+
 After this renderer change, the native-enabled `connectedReleaseAndroidTest`
 suite was rerun on the API-35 ARM64 emulator: **157 executions, 0 failures,
 1 intentional opt-in G3 skip**. This reconfirms the Android runtime,
