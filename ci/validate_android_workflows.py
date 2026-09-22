@@ -58,7 +58,11 @@ def main() -> None:
 
     release_text = release.read_text(encoding="utf-8")
     for token in (
-        "gradle :app:assembleRelease -PalloyNativeEngine=true",
+        # The release-candidate job intentionally builds the APK and bundle
+        # in one Gradle invocation. Match the task contract independently of
+        # whether assembleRelease is followed by bundleRelease on that line.
+        "gradle :app:assembleRelease",
+        "-PalloyNativeEngine=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true",
         "app/build/outputs/apk/release/*.apk",
         "app/build/outputs/apk/androidTest/release",
