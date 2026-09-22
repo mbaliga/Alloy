@@ -22,6 +22,12 @@ struct SupportParameters {
         const PrintObjectConfig& object_config = object.config();
         const SlicingParameters& slicing_params = object.slicing_parameters();
 
+        // Bambu-compatible support material classification. Alloy does not
+        // currently carry this as a separate SlicingParameters flag, so
+        // derive it from the selected interface filament at the same point
+        // where support parameters are constructed.
+        this->soluble_interface = object_config.support_interface_filament.value > 0 &&
+            print_config.filament_soluble.get_at(object_config.support_interface_filament.value - 1);
         this->zero_gap_interface_top = slicing_params.zero_gap_interface_top;
         this->zero_gap_interface_bottom = slicing_params.zero_gap_interface_bottom;
         const bool soluble_interface_non_soluble_base =
@@ -88,7 +94,10 @@ struct SupportParameters {
             external_perimeter_width = std::max(external_perimeter_width, coordf_t(region.flow(object, frExternalPerimeter, slicing_params.layer_height).width()));
             bridge_flow_ratio += region.config().bridge_flow;
         }
-        this->gap_xy = object_config.support_object_xy_distance.value;
+        this->gap_xy = !print_config.top_z_overrides_xy_distance ?
+            object_config.support_object_xy_distance.value :
+            std::min(object_config.support_object_xy_distance.value,
+                     std::max(0.2, object_config.support_top_z_distance.value));
         this->gap_xy_first_layer = object_config.support_object_first_layer_gap.value;
         bridge_flow_ratio /= object.num_printing_regions();
 
@@ -112,6 +121,8 @@ struct SupportParameters {
         // ORCA: split top/bottom interface spacing and density, and force solid top when ironing.
         this->top_interface_spacing = (this->ironing ? 0 : object_config.support_interface_spacing.value) + this->support_material_interface_flow.spacing();
         this->top_interface_density = std::min(1., this->support_material_interface_flow.spacing() / this->top_interface_spacing);
+        this->interface_density = std::min(1., this->support_material_interface_flow.spacing() /
+                                           (object_config.support_interface_spacing.value + this->support_material_interface_flow.spacing()));
         // ORCA: bottom interface spacing/density separated from top settings.
         this->bottom_interface_spacing = object_config.support_bottom_interface_spacing.value + this->support_material_interface_flow.spacing();
         this->bottom_interface_density = std::min(1., this->support_material_interface_flow.spacing() / this->bottom_interface_spacing);
@@ -216,6 +227,7 @@ struct SupportParameters {
     // Zero-gap interface flags for top / bottom contact.
     bool                    zero_gap_interface_top;
     bool                    zero_gap_interface_bottom;
+    bool                    soluble_interface = false;
 
     // Is there at least a top contact layer extruded above support base?
     bool                    has_top_contacts;
@@ -264,6 +276,8 @@ struct SupportParameters {
     coordf_t				support_expansion=0;
     // Density of the top interface and contact layers.
     coordf_t 				top_interface_density;
+    // Aggregate interface density used by Bambu-style tree support code.
+    coordf_t                 interface_density;
     // Density of the bottom interface and contact layers.
     coordf_t 				bottom_interface_density;
     // Density of the raft interface and contact layers.
