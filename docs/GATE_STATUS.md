@@ -2,6 +2,16 @@
 
 Date: 2026-09-22
 
+The latest A1 visual-material checkpoint (`ce4d3e76`) fixes a precedence bug
+in the renderer-only palette: the supplied mesh's spool-side components were
+being classified as generic frame because their spatial band overlapped the
+right upright. The spool rule now runs first and uses the measured asset bounds.
+The read-only mesh audit resolves 4,359 PEI/base triangles, 3,784 spool-side
+triangles, 990 frame/upright triangles, and 1,355 Alloy-accent triangles, with
+additional rail and side-detail regions. This improves the supplied product
+study's component readability without modifying printable geometry, profile
+data, collision envelopes, or printer transport.
+
 The Bambu `TreeSupport3D` port was audited against the pinned
 `v02.08.02.61` checkout. An exact seven-file overlay reached `PORT_READY` in
 the source audit, but the ARM64 native compiler correctly rejected it because
