@@ -13,6 +13,13 @@ on the API-35 ARM64 emulator; the resulting capture is retained at
 material defect, but it is not final visual signoff for the entire supplied
 product scene.
 
+After this renderer change, the native-enabled `connectedReleaseAndroidTest`
+suite was rerun on the API-35 ARM64 emulator: **157 executions, 0 failures,
+1 intentional opt-in G3 skip**. This reconfirms the Android runtime,
+transport, inventory, recovery, and native wiring gates after the PEI shader
+change; it does not promote the unresolved physical-printer or release-signing
+gates.
+
 The native-enabled ARM64 incremental target completed successfully after the
 material checkpoint: 37 changed objects compiled and `libslic3r.so` linked.
 The resulting debug APK packaged successfully, installed on the API-35 ARM64
