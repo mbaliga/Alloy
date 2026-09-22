@@ -34,6 +34,10 @@ bundle contains `libslic3r.so`, the supplied A1 reference mesh, packaged model
 assets, the Alloy launcher logo, and splash resources. This is a locally
 debug-signed distribution artifact; organization signing and signed
 install/upgrade acceptance remain open.
+The AAB JAR signature verifies, and the matching release APK verifies with one
+signer under APK Signature Scheme v2. The local certificate is self-signed,
+so this is artifact-integrity evidence only and must not be promoted as the
+organization's production signing result.
 
 The latest A1 visual-material checkpoint (`ce4d3e76`) fixes a precedence bug
 in the renderer-only palette: the supplied mesh's spool-side components were
