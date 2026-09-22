@@ -14,24 +14,35 @@ namespace Slic3r {
 // about the support layer type than the final support layers stored in a PrintObject.
 enum class SupporLayerType {
 	Unknown = 0,
+	// Legacy Bambu spellings retained as aliases while the support port is
+	// converged on Alloy's clearer enum names.
+	sltUnknown = Unknown,
 	// Ratft base layer, to be printed with the support material.
 	RaftBase,
+	sltRaftBase = RaftBase,
 	// Raft interface layer, to be printed with the support interface material. 
 	RaftInterface,
+	sltRaftInterface = RaftInterface,
 	// Bottom contact layer placed over a top surface of an object. To be printed with a support interface material.
 	BottomContact,
+	sltBottomContact = BottomContact,
 	// Dense interface layer, to be printed with the support interface material.
 	// This layer is separated from an object by an BottomContact layer.
 	BottomInterface,
+	sltBottomInterface = BottomInterface,
 	// Sparse base support layer, to be printed with a support material.
 	Base,
+	sltBase = Base,
 	// Dense interface layer, to be printed with the support interface material.
 	// This layer is separated from an object with TopContact layer.
 	TopInterface,
+	sltTopInterface = TopInterface,
 	// Top contact layer directly supporting an overhang. To be printed with a support interface material.
 	TopContact,
+	sltTopContact = TopContact,
 	// Some undecided type yet. It will turn into Base first, then it may turn into BottomInterface or TopInterface.
 	Intermediate,
+	sltIntermediate = Intermediate,
 };
 
 // A support layer type used internally by the SupportMaterial class. This class carries a much more detailed

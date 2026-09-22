@@ -2144,3 +2144,10 @@ interface filament, and applies the top-Z-over-XY gap policy. The affected
 `TreeSupport3D.cpp` ARM64 translation unit compiles successfully. This is
 still a compatibility increment, not a claim that the complete Bambu source
 set or production APK has passed.
+
+The shared Bambu safe-geometry increment is now present in
+`SupportCommon.hpp/.cpp`, and Alloy's `TreeSupport3D.cpp` ARM64 target passes
+with it. A disposable exact-Bambu probe resolves the prior safe-union and
+safe-offset failures and now stops at the remaining scaling, legacy-layer, and
+integer/`constexpr` API differences. This narrows the port boundary but does
+not close the production parity gate.

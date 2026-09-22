@@ -76,6 +76,15 @@ calculation honors the new top-Z override setting. The affected
 `TreeSupport3D.cpp` ARM64 target compiles successfully; the exact Bambu source
 set remains unpromoted until its broader API closure is complete.
 
+The shared safe-geometry boundary is now implemented in Alloy:
+`SupportCommon.hpp/.cpp` exposes Bambu-compatible `safe_union` and
+`safe_offset_inc` polygon helpers, including collision trimming, stepped
+offsetting, simplification, and final-difference behavior. Alloy's own
+TreeSupport3D translation unit compiles with the shared implementation. The
+exact Bambu probe now advances past those missing symbols; its remaining
+errors are concentrated in compile-time scaling, legacy layer overhang
+storage, and integer/`constexpr` assumptions.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one
