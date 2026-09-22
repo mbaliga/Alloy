@@ -159,6 +159,9 @@ public:
 
     // BBS
     ExPolygons              loverhangs;
+    // Bambu-compatible overhang classification: the integer bit mask carries
+    // sharp-tail and related support hints alongside each polygon.
+    std::vector<std::pair<ExPolygon, int>> loverhangs_with_type;
     BoundingBox             loverhangs_bbox;
     size_t                  region_count() const { return m_regions.size(); }
     const LayerRegion*      get_region(int idx) const { return m_regions[idx]; }

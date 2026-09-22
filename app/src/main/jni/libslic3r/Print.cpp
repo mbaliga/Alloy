@@ -2110,6 +2110,7 @@ void  PrintObject::copy_layers_overhang_from_shared_object()
         {
             Layer* layer_src = m_layers[index];
             layer_src->loverhangs = m_shared_object->m_layers[index]->loverhangs;
+            layer_src->loverhangs_with_type = m_shared_object->m_layers[index]->loverhangs_with_type;
             layer_src->loverhangs_bbox = m_shared_object->m_layers[index]->loverhangs_bbox;
         }
         BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": this=%1%, copied layer overhang from object %2%")%this%m_shared_object;
