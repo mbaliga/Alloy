@@ -19,6 +19,14 @@ requires its explicit fixture request; the passing suite is strong Android
 runtime evidence but does not substitute for physical A1 Mini acceptance or
 organization signing.
 
+The opt-in G3 export was then run directly with the repository-defined
+instrumentation arguments (`export-g3=true`, `g3-gcode-flavor=marlin`). It
+completed its single test successfully, produced cube/overhang/thin-wall
+G-code plus configs, and `ci/validate_g3_evidence.py` accepted the retrieved
+bundle at `/private/tmp/alloy-g3-evidence.WCtwtz`. This is now native evidence
+for the desktop comparison step; it is not itself a parity pass until the
+retained desktop references are compared.
+
 The latest A1 visual-material checkpoint (`ce4d3e76`) fixes a precedence bug
 in the renderer-only palette: the supplied mesh's spool-side components were
 being classified as generic frame because their spatial band overlapped the
