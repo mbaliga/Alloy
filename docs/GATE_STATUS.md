@@ -2162,3 +2162,9 @@ The existing Alloy overhang classifier is now propagated into the Bambu-shaped
 `Layer::loverhangs_with_type` vector after final filtering, including the
 sharp-tail and enforced classifications. The ARM64 `TreeSupport.cpp` target
 is up to date; exact Bambu source parity remains open.
+
+The disposable exact-source probe was also advanced through the runtime-scale
+boundary by converting its local `constexpr` values to runtime constants. It
+now reaches only the `RichInterfacePlacer`/`InterfacePlacer` surrounding API
+boundary plus one class-member declaration issue. These probe-only edits are
+not counted as shipped Bambu parity or APK evidence.
