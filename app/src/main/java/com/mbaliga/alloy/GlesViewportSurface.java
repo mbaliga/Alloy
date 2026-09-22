@@ -1877,7 +1877,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "float alloyHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}"
                     + "float alloyNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(alloyHash(i),alloyHash(i+vec2(1.0,0.0)),f.x),mix(alloyHash(i+vec2(0.0,1.0)),alloyHash(i+vec2(1.0,1.0)),f.x),f.y);}"
                     + "void main(){"
-                    + "vec3 base;"
+                    + "vec3 base; float machinePart=floor(vPart+0.5);"
                     // Presentation plates are physical PEI sheets, not warm
                     // decorative cards. Keep them charcoal in the light
                     // study too, so the receding runway reads as a real
@@ -1893,25 +1893,18 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "else if(uMachine==2 && vPart<-19.0){float plateDepth=clamp((-20.0-vPart)*0.20,0.0,1.0); base=uNight==1?vec3(0.012,0.015,0.022):vec3(0.030,0.036,0.044); base*=1.0-0.28*plateDepth;}"
                     + "else if(uMachine==2 && vPart<-18.5){float gridDepth=clamp((-19.0-vPart)*0.20,0.0,1.0); base=uNight==1?vec3(0.045,0.052,0.065):vec3(0.085,0.100,0.115); base*=1.0-0.22*gridDepth;}"
                     + "else if(uMachine==2){base=uNight==1?vec3(0.13,0.15,0.19):vec3(0.22,0.17,0.13);}"
-                    + "else if(uMachine==1 && vPart<-18.5){base=vec3(0.18,0.50,0.48);}"
-                    + "else if(uMachine==1 && vPart<-17.5){base=vec3(0.075,0.085,0.095);}"
-                    + "else if(uMachine==1 && vPart<-16.5){base=vec3(0.78,0.80,0.82);}"
-                    + "else if(uMachine==1 && vPart>-1.5){base=vec3(0.055,0.060,0.065);}"
-                    + "else if(uMachine==1 && vPart>-2.5){base=vec3(0.17,0.18,0.19);}"
-                    + "else if(uMachine==1 && vPart>-3.5){base=vec3(0.28,0.25,0.22);}"
-                    + "else if(uMachine==1 && vPart>-4.5){base=vec3(0.10,0.11,0.13);}"
-                    + "else if(uMachine==1 && vPart>-5.5){base=vec3(0.13,0.14,0.16);}"
-                    + "else if(uMachine==1 && vPart>-6.5){base=vec3(0.18,0.20,0.23);}"
-                    + "else if(uMachine==1 && vPart>-7.5){base=vec3(0.82,0.84,0.86);}"
-                    + "else if(uMachine==1 && vPart>-8.5){base=vec3(0.58,0.61,0.65);}"
-                    + "else if(uMachine==1 && vPart>-9.5){base=vec3(0.24,0.27,0.31);}"
-                    + "else if(uMachine==1 && vPart>-10.5){base=vec3(0.12,0.14,0.17);}"
-                    + "else if(uMachine==1 && vPart>-11.5){base=vec3(0.34,0.36,0.39);}"
-                    + "else if(uMachine==1 && vPart>-12.5){base=vec3(0.16,0.18,0.23);}"
-                    + "else if(uMachine==1 && vPart>-13.5){base=vec3(0.78,0.80,0.84);}"
-                    + "else if(uMachine==1 && vPart>-14.5){base=vec3(0.22,0.24,0.27);}"
-                    + "else if(uMachine==1 && vPart>-15.5){base=vec3(0.08,0.10,0.13);}"
-                    + "else if(uMachine==1){base=vec3(0.24,0.27,0.31);}"
+                    // The imported A1 shell is welded, so every triangle carries
+                    // an authored spatial material tag. Quantise the interpolated
+                    // tag before choosing a colour; threshold comparisons on the
+                    // raw varying were making whole regions drift into the wrong
+                    // material across large triangles.
+                    + "else if(uMachine==1 && machinePart<-18.5){base=uNight==1?vec3(0.10,0.58,0.55):vec3(0.13,0.48,0.46);}"
+                    + "else if(uMachine==1 && machinePart<-17.5){base=uNight==1?vec3(0.035,0.045,0.055):vec3(0.075,0.090,0.105);}"
+                    + "else if(uMachine==1 && machinePart<-16.5){base=uNight==1?vec3(0.48,0.54,0.57):vec3(0.79,0.82,0.83);}"
+                    + "else if(uMachine==1 && machinePart<-11.5){base=uNight==1?vec3(0.23,0.20,0.17):vec3(0.42,0.32,0.22);}"
+                    + "else if(uMachine==1 && machinePart<-6.5){base=uNight==1?vec3(0.38,0.43,0.45):vec3(0.73,0.77,0.78);}"
+                    + "else if(uMachine==1 && machinePart<-5.5){base=uNight==1?vec3(0.18,0.21,0.23):vec3(0.50,0.54,0.56);}"
+                    + "else if(uMachine==1){base=uNight==1?vec3(0.025,0.030,0.038):vec3(0.070,0.078,0.088);}"
                     + "else if(vPart<0.5){base=vec3(0.56,0.24,0.09);}"
                     + "else if(vPart<1.5){base=vec3(0.83,0.64,0.33);}"
                     + "else if(vPart<2.5){base=vec3(0.70,0.47,0.20);}"
