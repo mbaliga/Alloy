@@ -1515,26 +1515,34 @@ final class GlesViewportSurface extends GLSurfaceView {
         // phone composition an unmistakable runway into the distance. The
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
-        for (int index = 0; index < 6; index++) {
+        // The supplied handoff uses four physical sheets. Four gives the
+        // runway a readable front-to-back rhythm on a portrait phone; adding
+        // more sheets only turns the scene into a grey conveyor of debug
+        // geometry.
+        for (int index = 0; index < 4; index++) {
             // The handoff's reference uses full physical 184 mm sheets. The
             // earlier 72 mm depth made the runway collapse into a few dark
             // grid fragments behind the printer on a portrait phone. Keep
             // the first sheet near the real A1 footprint, then use a bounded
-            // perspective reduction and overlap so all six plates read as
+            // perspective reduction and overlap so all four plates read as
             // a continuous conveyor receding into the scene.
-            float depth = 154f - index * 10f;
-            float width = 188f - index * 13f;
+            float depth = 184f - index * 10f;
+            float width = 184f - index * 13f;
             // Pull each subsequent plate farther behind the machine and a
             // little leftward. The diagonal procession remains visible on a
             // portrait phone instead of collapsing into one dark rectangle.
             float centerX = bedX / 2f - index * 9f;
-            float centerY = 92f - index * 80f;
+            float centerY = 92f - index * 76f;
             // The supplied machine mesh carries its own lower bed shell. Put
             // the presentation sheets on the physical top plane instead of
             // underneath that shell, otherwise the runway disappears behind
             // the machine in the hero camera. This z value is presentation
             // only and never participates in model placement or slicing.
-            float z = -0.2f - index * 0.12f;
+            // Lift the presentation sheet just above the imported mesh's
+            // welded bed shell. The source mesh includes its own bed skin;
+            // leaving the overlay below it makes the distant PEI sheets
+            // disappear and exposes only the pale reference shell.
+            float z = 1.2f - index * 0.12f;
             // Encode the stable runway index in the renderer-only material
             // channel. The fragment shader uses it to let distant sheets
             // recede without changing their geometry, plate planning, or
@@ -1565,30 +1573,30 @@ final class GlesViewportSurface extends GLSurfaceView {
      */
     private float[] studyPlateGridLines() {
         ArrayList<Float> values = new ArrayList<>();
-        for (int index = 0; index < 6; index++) {
-            float depth = 154f - index * 10f;
-            float width = 188f - index * 13f;
+        for (int index = 0; index < 4; index++) {
+            float depth = 184f - index * 10f;
+            float width = 184f - index * 13f;
             float centerX = bedX / 2f - index * 9f;
-            float centerY = 92f - index * 80f;
-            float z = 1.92f - index * 0.12f;
+            float centerY = 92f - index * 76f;
+            float z = 3.32f - index * 0.12f;
             float left = centerX - width / 2f, right = centerX + width / 2f;
             float front = centerY - depth / 2f, back = centerY + depth / 2f;
             float outsideX = Math.max(24f, width * 0.18f);
             float outsideY = Math.max(26f, depth * 0.18f);
-            float r = nightStage ? 0.34f : 0.24f;
-            float g = nightStage ? 0.39f : 0.28f;
-            float b = nightStage ? 0.48f : 0.31f;
+            float r = nightStage ? 0.27f : 0.17f;
+            float g = nightStage ? 0.32f : 0.20f;
+            float b = nightStage ? 0.41f : 0.23f;
             for (int column = -3; column <= 3; column++) {
                 float x = centerX + column * width * 0.12f;
-                addLine(values, x, front - outsideY, z, x, front, z, r, g, b, 0.035f);
-                addLine(values, x, front, z, x, back, z, r, g, b, 0.20f);
-                addLine(values, x, back, z, x, back + outsideY, z, r, g, b, 0.035f);
+                addLine(values, x, front - outsideY, z, x, front, z, r, g, b, 0.012f);
+                addLine(values, x, front, z, x, back, z, r, g, b, 0.095f);
+                addLine(values, x, back, z, x, back + outsideY, z, r, g, b, 0.012f);
             }
             for (int row = -2; row <= 2; row++) {
                 float y = centerY + row * depth * 0.14f;
-                addLine(values, left - outsideX, y, z, left, y, z, r, g, b, 0.035f);
-                addLine(values, left, y, z, right, y, z, r, g, b, 0.20f);
-                addLine(values, right, y, z, right + outsideX, y, z, r, g, b, 0.035f);
+                addLine(values, left - outsideX, y, z, left, y, z, r, g, b, 0.012f);
+                addLine(values, left, y, z, right, y, z, r, g, b, 0.095f);
+                addLine(values, right, y, z, right + outsideX, y, z, r, g, b, 0.012f);
             }
         }
         return toArray(values);

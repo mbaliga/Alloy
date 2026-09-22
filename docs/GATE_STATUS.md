@@ -2,6 +2,17 @@
 
 Date: 2026-09-22
 
+The latest Android visual checkpoint tightens the supplied handoff's runway
+composition: the standalone A1 study now uses four presentation-only 184 mm
+PEI sheets, with a lighter plate-local grid dissolve and the overlays lifted
+above the imported welded bed skin so the runway is not depth-occluded by the
+reference shell. The native-enabled debug APK rebuilt successfully and was
+installed on the API-35 ARM64 emulator; the resulting capture is retained at
+`/private/tmp/alloy-four-plate-overlay-study.png`. This is verified source and
+runtime progress, not final visual signoff: the supplied mesh still needs a
+proper authored material/geometry segmentation pass for the distant sheets to
+match the handoff's black textured PEI treatment consistently.
+
 The native-enabled ARM64 incremental target completed successfully after the
 material checkpoint: 37 changed objects compiled and `libslic3r.so` linked.
 The resulting debug APK packaged successfully, installed on the API-35 ARM64
