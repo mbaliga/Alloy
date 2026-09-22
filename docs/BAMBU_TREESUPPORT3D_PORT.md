@@ -107,6 +107,15 @@ remaining diagnostics: the `m_base_radius` member must be adapted from an
 mismatch. This is now the active source-port boundary; the disposable edits
 remain outside Alloy's shipped tree.
 
+The next dependency boundary is now closed in Alloy's Android build:
+the pinned Bambu Clipper2 sources are vendored under
+`app/src/main/jni/clipper2/Clipper2Lib`, exposed as a C++17 static `Clipper2`
+target, linked into `slic3r`, and used by the existing `Clipper2Utils.cpp`
+bridge. The ARM64 Clipper2 library and utility translation unit both compile
+successfully. This removes the missing-header/build-target blocker for the
+exact Bambu `TreeSupport.cpp` probe; full support-source promotion remains
+open.
+
 Alloy's existing `Detected`/`Enforced`/`SharpTail` classifier is now mirrored
 into `Layer::loverhangs_with_type` after the final overhang mutations, and the
 vector is cleared with each detection pass. The ARM64 `TreeSupport.cpp` target

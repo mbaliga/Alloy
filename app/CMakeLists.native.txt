@@ -483,6 +483,21 @@ set(MCUT_BUILD_TESTS OFF)
 set(MCUT_BUILD_TUTORIALS OFF)
 add_subdirectory(src/main/jni/mcut)
 
+# Bambu/Orca tree-support parity depends on Clipper2's 2D boolean and offset
+# implementation. Keep it as a pinned static target so Android uses the same
+# geometry engine as the support port rather than silently falling back to the
+# legacy Clipper implementation.
+add_library(Clipper2 STATIC
+        src/main/jni/clipper2/Clipper2Lib/src/clipper.engine.cpp
+        src/main/jni/clipper2/Clipper2Lib/src/clipper.offset.cpp
+        src/main/jni/clipper2/Clipper2Lib/src/clipper.rectclip.cpp
+        src/main/jni/clipper2/Clipper2Lib/src/clipper2_z.cpp
+)
+target_compile_features(Clipper2 PUBLIC cxx_std_17)
+target_include_directories(Clipper2 PUBLIC
+        src/main/jni/clipper2/Clipper2Lib/include
+)
+
 add_library(slic3r
         SHARED
         src/main/jni/semver/semver.c
@@ -811,6 +826,8 @@ add_library(slic3r
         src/main/jni/libslic3r/clipper.hpp
         src/main/jni/libslic3r/ClipperUtils.cpp
         src/main/jni/libslic3r/ClipperUtils.hpp
+        src/main/jni/libslic3r/Clipper2Utils.cpp
+        src/main/jni/libslic3r/Clipper2Utils.hpp
 
         src/main/jni/libslic3r/ClipperZUtils.hpp
         src/main/jni/libslic3r/Color.cpp
@@ -1210,6 +1227,7 @@ target_compile_definitions(slic3r PUBLIC -DUSE_TBB -DTBB_USE_CAPTURED_EXCEPTION=
 target_include_directories(slic3r PRIVATE
         src/main/jni
         src/main/jni/libslic3r
+        src/main/jni/clipper2/Clipper2Lib/include
         src/main/jni/openvdb
         src/main/jni/mpfr
         src/main/jni/zlib
@@ -1269,6 +1287,7 @@ target_link_libraries(slic3r PRIVATE
         heatshrink
         jpeg-static
         OCCTWrapper
+        Clipper2
         mcut
         BGCode_core
         BGCode_binarize

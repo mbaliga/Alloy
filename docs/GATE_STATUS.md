@@ -2174,3 +2174,9 @@ runtime member declaration and three `RichInterfacePlacer`/`InterfacePlacer`
 inheritance calls. Scaling, typed overhang storage, and safe geometry are no
 longer the first compiler failures; the source remains unpromoted pending a
 coherent class-layout port.
+
+The Android native build now vendors and wires the pinned Clipper2 geometry
+library as a static C++17 target. `Clipper2` and Alloy's `Clipper2Utils.cpp`
+ARM64 targets compile successfully, eliminating the prior missing-header
+failure in the exact Bambu `TreeSupport.cpp` probe. This is dependency evidence
+only; the full Bambu support route and production APK gate remain open.
