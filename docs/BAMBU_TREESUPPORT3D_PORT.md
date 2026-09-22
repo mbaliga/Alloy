@@ -100,6 +100,13 @@ at one class-member declaration issue and three `RichInterfacePlacer` calls
 whose surrounding inheritance API differs. Those source edits remain confined
 to `/private/tmp/alloy-treeport`; no exact Bambu implementation is shipped.
 
+The follow-up probe reaches the same runtime-scale contract with only four
+remaining diagnostics: the `m_base_radius` member must be adapted from an
+`auto` static member to a runtime object member, and three calls through
+`RichInterfacePlacer` expose a surrounding `InterfacePlacer` class-layout
+mismatch. This is now the active source-port boundary; the disposable edits
+remain outside Alloy's shipped tree.
+
 Alloy's existing `Detected`/`Enforced`/`SharpTail` classifier is now mirrored
 into `Layer::loverhangs_with_type` after the final overhang mutations, and the
 vector is cleared with each detection pass. The ARM64 `TreeSupport.cpp` target

@@ -2168,3 +2168,9 @@ boundary by converting its local `constexpr` values to runtime constants. It
 now reaches only the `RichInterfacePlacer`/`InterfacePlacer` surrounding API
 boundary plus one class-member declaration issue. These probe-only edits are
 not counted as shipped Bambu parity or APK evidence.
+
+The latest disposable compile narrows the exact Bambu source boundary to one
+runtime member declaration and three `RichInterfacePlacer`/`InterfacePlacer`
+inheritance calls. Scaling, typed overhang storage, and safe geometry are no
+longer the first compiler failures; the source remains unpromoted pending a
+coherent class-layout port.
