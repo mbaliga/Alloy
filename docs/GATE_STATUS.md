@@ -12,6 +12,13 @@ runway, scale props, and study controls. This closes a native build/package
 and runtime smoke checkpoint, not the physical-printer or production-release
 gates.
 
+The subsequent native-enabled `connectedReleaseAndroidTest` run completed
+**157 executions with 0 failures and 1 intentional skip** on the same API-35
+ARM64 emulator. The skip is the opt-in native G3 evidence export, which still
+requires its explicit fixture request; the passing suite is strong Android
+runtime evidence but does not substitute for physical A1 Mini acceptance or
+organization signing.
+
 The latest A1 visual-material checkpoint (`ce4d3e76`) fixes a precedence bug
 in the renderer-only palette: the supplied mesh's spool-side components were
 being classified as generic frame because their spatial band overlapped the
