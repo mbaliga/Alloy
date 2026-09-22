@@ -2157,3 +2157,8 @@ The scaling/layer compatibility increment adds a runtime-safe integral
 affected native ARM64 targets compile and are up to date. Exact Bambu
 `constexpr` scaling sites remain a source-port task; Alloy has not weakened
 its runtime scaling contract.
+
+The existing Alloy overhang classifier is now propagated into the Bambu-shaped
+`Layer::loverhangs_with_type` vector after final filtering, including the
+sharp-tail and enforced classifications. The ARM64 `TreeSupport.cpp` target
+is up to date; exact Bambu source parity remains open.

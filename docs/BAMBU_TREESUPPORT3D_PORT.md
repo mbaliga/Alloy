@@ -93,6 +93,12 @@ ARM64 targets compile successfully. Runtime `constexpr` sites in the exact
 Bambu sources remain intentionally unadapted until they are ported as source,
 not hidden by changing Alloy's scale contract.
 
+Alloy's existing `Detected`/`Enforced`/`SharpTail` classifier is now mirrored
+into `Layer::loverhangs_with_type` after the final overhang mutations, and the
+vector is cleared with each detection pass. The ARM64 `TreeSupport.cpp` target
+compiles successfully. This closes the data-shape gap without claiming that
+the exact Bambu source has been promoted.
+
 ## Next port boundary
 
 The next implementation pass must port the surrounding support API as one
