@@ -865,6 +865,7 @@ void TreeSupport::detect_overhangs(bool check_support_necessity/* = false*/)
                 // Filter out areas whose diameter that is smaller than extrusion_width, but we don't want to lose any details.
                 layer->lslices_extrudable = intersection_ex(layer->lslices, offset2_ex(layer->lslices, -extrusion_width_scaled / 2, extrusion_width_scaled));
                 layer->loverhangs.clear();
+                layer->loverhangs_with_type.clear();
             }
         });
 
@@ -1233,6 +1234,7 @@ void TreeSupport::detect_overhangs(bool check_support_necessity/* = false*/)
     // stored pointers remain stable while the support-node pass consumes them.
     for (int layer_nr = 0; layer_nr < m_object->layer_count(); ++layer_nr) {
         Layer* layer = m_object->get_layer(layer_nr);
+        layer->loverhangs_with_type.clear();
         for (ExPolygon& overhang : layer->loverhangs) {
             OverhangType type = Detected;
             if (overlaps({ overhang }, layer->sharp_tails))
@@ -1241,6 +1243,7 @@ void TreeSupport::detect_overhangs(bool check_support_necessity/* = false*/)
                      overlaps({ overhang }, to_expolygons(enforcers[layer_nr])))
                 type = Enforced;
             overhang_types.emplace(&overhang, type);
+            layer->loverhangs_with_type.emplace_back(overhang, static_cast<int>(type));
         }
     }
 
