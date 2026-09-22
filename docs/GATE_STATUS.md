@@ -12,6 +12,12 @@ checks remain intentionally opt-in in this non-native invocation. This is a
 visual-quality improvement, not final visual signoff or physical-printer
 acceptance.
 
+The Linux companion checks were rerun from the same tree: `tools/test_alloy_linux.py`
+passed 19 tests, `tools/test_bambu_lan_probe.py` passed 6 tests, and the parity
+unit-test suite passed 66 tests. These validate the dependency-free Linux
+inspection/bridge and transport guardrails; they do not turn the Android
+native engine or physical A1 Mini transport into a production gate.
+
 The latest Android visual checkpoint tightens the supplied handoff's runway
 composition: the standalone A1 study now uses four presentation-only 184 mm
 PEI sheets, with a lighter plate-local grid dissolve, overlays lifted above
