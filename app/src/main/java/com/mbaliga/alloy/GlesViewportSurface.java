@@ -1203,14 +1203,17 @@ final class GlesViewportSurface extends GLSurfaceView {
             // follow the visible A1 construction: pale side uprights and a
             // darker front carriage. They never enter preparation, collision
             // or printer transport.
-            if ((x < -95f || x > 175f) && z > 20f) return -17f; // uprights
-            if (y < 45f && z > 24f && z < 116f) return -18f;    // front carriage
             // The extracted handoff mesh is centred on the physical bed but
             // the spool and toolhead are not at the nominal 90/110 anchors
             // used by the first Android port. These regions are deliberately
             // visual-only: they provide material separation for the study,
             // never machine collision or print geometry.
-            if (x > 190f && y > 75f && y < 125f && z > 55f) return -12f; // spool
+            // Keep this before the upright test: on the supplied welded mesh
+            // the spool-side components occupy the same x band as the right
+            // upright, and the generic frame rule otherwise swallows them.
+            if (x > 180f && y > 70f && y < 130f && z > 28f) return -12f; // spool
+            if ((x < -95f || x > 175f) && z > 20f) return -17f; // uprights
+            if (y < 45f && z > 24f && z < 116f) return -18f;    // front carriage
             if (x > 55f && x < 110f && y > 55f && y < 135f && z > 100f && z < 122f)
                 return -19f; // Alloy accent on carriage/nozzle assembly
             if (z > 145f) return -7f;               // light upper rails
