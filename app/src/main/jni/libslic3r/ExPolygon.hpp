@@ -74,6 +74,7 @@ public:
     void medial_axis(double min_width, double max_width, Polylines* polylines) const;
     Polylines medial_axis(double min_width, double max_width) const 
         { Polylines out; this->medial_axis(min_width, max_width, &out); return out; }
+    ExPolygons split_expoly_with_holes(coord_t gap_width, const ExPolygons& collision) const;
     Lines lines() const;
 
     // Number of contours (outer contour with holes).
