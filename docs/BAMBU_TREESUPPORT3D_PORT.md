@@ -116,6 +116,14 @@ successfully. This removes the missing-header/build-target blocker for the
 exact Bambu `TreeSupport.cpp` probe; full support-source promotion remains
 open.
 
+With Clipper2 wired into the disposable probe, exact Bambu `TreeSupport.cpp`
+now compiles past its missing-header/build-target failure and reaches the next
+API boundary. The remaining diagnostics include support-ironing parameter and
+extrusion-role fields, `turn90_ccw`, the Bambu bridge-removal signature,
+overhang bounding-box comparison helpers, and support-layer cooling metadata.
+This confirms Clipper2 is a real dependency closure, while the full Bambu
+support-material integration is still a separate port unit.
+
 Alloy's existing `Detected`/`Enforced`/`SharpTail` classifier is now mirrored
 into `Layer::loverhangs_with_type` after the final overhang mutations, and the
 vector is cleared with each detection pass. The ARM64 `TreeSupport.cpp` target

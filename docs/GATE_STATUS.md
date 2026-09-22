@@ -2180,3 +2180,9 @@ library as a static C++17 target. `Clipper2` and Alloy's `Clipper2Utils.cpp`
 ARM64 targets compile successfully, eliminating the prior missing-header
 failure in the exact Bambu `TreeSupport.cpp` probe. This is dependency evidence
 only; the full Bambu support route and production APK gate remain open.
+
+The Clipper2-enabled exact-source probe now reaches support-material API
+differences instead of failing on missing Clipper2 headers. The active boundary
+is support ironing/cooling fields and roles, bridge-removal signatures,
+geometry helper names, and bounding-box APIs. Clipper2 wiring is verified, but
+this does not close Bambu TreeSupport parity.
