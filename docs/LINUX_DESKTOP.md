@@ -115,24 +115,31 @@ portable batch archives and the fail-closed Bambu LAN probe payload rules.
 ## Linux alternatives today
 
 Linux already has credible slicers (checked against upstream release pages on
-2026-09-21):
+2026-09-22):
 
 - [Bambu Studio](https://github.com/bambulab/BambuStudio) itself publishes
   Ubuntu AppImages through its upstream releases and points Linux users to
-  its Flathub build. The current public release listed upstream is
-  **v02.08.02.61**; **v02.08.03.66** is listed as a beta. The locally pinned
-  v02.08.02.61 checkout is an audit reference, not a claim about the newest
-  public release.
+  its [Flathub build](https://flathub.org/apps/com.bambulab.BambuStudio).
+  The upstream releases page currently lists **v02.08.02.61** as public;
+  the locally pinned checkout is an audit reference, not a claim that Alloy
+  embeds or redistributes Bambu Studio.
 - [OrcaSlicer](https://www.orcaslicer.com/download/) 2.4.2 is the strongest
   open-source Bambu-oriented alternative for profiles, calibration, and LAN
-  workflows, with project/Flatpak Linux packages.
+  workflows, with official Linux AppImage and Flatpak packages.
 - [PrusaSlicer](https://www.prusa3d.com/p/prusaslicer/) is the mature general
   purpose engine and CLI reference used by Alloy's current Path B native work;
-  the current stable release is 2.9.6 and official Linux distribution is via
-  Flathub.
+  Prusa's current page lists stable **2.9.6** and links Linux downloads from
+  the official release channel. It also advertises EasyPrint/Prusa Connect,
+  but those are Prusa services rather than Bambu transport.
 - [UltiMaker Cura](https://ultimaker.com/software/ultimaker-cura/) remains a
-  broad general-purpose option (5.13.0 stable upstream), but is less relevant
-  to Bambu-specific parity.
+  broad general-purpose option, but is less relevant to Bambu-specific parity.
+
+Conclusion: Linux is not the reason to delay Alloy. A capable desktop path
+already exists today; Alloy's differentiator is the Android-first, phone-only
+workflow, richer visual inspection, inventory/maintenance surface, and a
+controlled Bambu A1 Mini transport path. The Linux companion remains useful
+for fallback slicing and recovery, but Android should receive the primary
+product investment.
 
 Alloy's differentiator remains a phone-native workflow, local project recovery,
 visual part inspection, and a controlled future printer transport. The Linux
