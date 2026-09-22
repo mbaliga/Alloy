@@ -920,8 +920,6 @@ final class GlesViewportSurface extends GLSurfaceView {
         private MeshModel referenceMachineModel;
         private FloatBuffer referenceMachineBuffer;
         private int referenceMachineVertexCount;
-        private FloatBuffer studyAccessoryBuffer;
-        private int studyAccessoryVertexCount;
         private FloatBuffer studyPlateBuffer;
         private int studyPlateVertexCount;
         private FloatBuffer studyGridBuffer;
@@ -976,8 +974,6 @@ final class GlesViewportSurface extends GLSurfaceView {
             // those objects as Alloy-authored presentation geometry rather
             // than bundling another third-party model or mixing them into
             // the printable scene.
-            studyAccessoryBuffer = floatBuffer(studyAccessories());
-            studyAccessoryVertexCount = studyAccessoryBuffer.limit() / 7;
             studyPlateBuffer = floatBuffer(studyPlates());
             studyPlateVertexCount = studyPlateBuffer.limit() / 7;
             studyGridBuffer = floatBuffer(studyPlateGridLines());
@@ -1042,9 +1038,6 @@ final class GlesViewportSurface extends GLSurfaceView {
                 // plate. This is presentation geometry only and is never
                 // included in the printable scene or collision envelope.
                 drawMeshBuffer(studyShadowBuffer, studyShadowVertexCount, mvp, -1, 0, 2, 0.22f);
-            }
-            if (machineStudy && studyAccessoryBuffer != null) {
-                drawMeshBuffer(studyAccessoryBuffer, studyAccessoryVertexCount, mvp, -1, 0, 3, 1f);
             }
             drawLines(machineBuffer, machineVertexCount, mvp);
             if (current != uploadedModel || uploadedExplodedPresentation != explodedPresentation)

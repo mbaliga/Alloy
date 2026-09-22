@@ -2,6 +2,16 @@
 
 Date: 2026-09-22
 
+The latest presentation cleanup removes the unrelated can, ball, and key
+scale props from the A1 Mini marketing study. The printer mesh and receding
+PEI runway are now the only foreground subjects, which keeps the composition
+aligned with the supplied printer/plates brief instead of reading as an
+unfinished dimensional-prop demo. The release-variant Android instrumentation
+run after this change completed **164 tests with 0 failures**; the native-only
+checks remain intentionally opt-in in this non-native invocation. This is a
+visual-quality improvement, not final visual signoff or physical-printer
+acceptance.
+
 The latest Android visual checkpoint tightens the supplied handoff's runway
 composition: the standalone A1 study now uses four presentation-only 184 mm
 PEI sheets, with a lighter plate-local grid dissolve, overlays lifted above
