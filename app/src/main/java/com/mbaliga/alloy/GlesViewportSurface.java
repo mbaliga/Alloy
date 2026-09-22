@@ -1532,7 +1532,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             // little leftward. The diagonal procession remains visible on a
             // portrait phone instead of collapsing into one dark rectangle.
             float centerX = bedX / 2f - index * 9f;
-            float centerY = 92f - index * 76f;
+            float centerY = 92f - index * 112f;
             // The supplied machine mesh carries its own lower bed shell. Put
             // the presentation sheets on the physical top plane instead of
             // underneath that shell, otherwise the runway disappears behind
@@ -1577,7 +1577,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             float depth = 184f - index * 10f;
             float width = 184f - index * 13f;
             float centerX = bedX / 2f - index * 9f;
-            float centerY = 92f - index * 76f;
+            float centerY = 92f - index * 112f;
             float z = 3.32f - index * 0.12f;
             float left = centerX - width / 2f, right = centerX + width / 2f;
             float front = centerY - depth / 2f, back = centerY + depth / 2f;
@@ -1946,6 +1946,12 @@ final class GlesViewportSurface extends GLSurfaceView {
                     + "else if(uMachine==0 && uFinish==3){base=mix(base,vec3(0.96,0.19,0.025),0.84);}"
                     + "else if(uMachine==0 && uFinish==4){float lum=dot(base,vec3(0.299,0.587,0.114)); base=mix(vec3(lum),vec3(0.34,0.40,0.48),0.72);}"
                     + "if(uOutOfBounds==1) base=vec3(0.42,0.43,0.45);"
+                    // Physical PEI sheets are presentation geometry, not
+                    // painted machine solids. Keep their charcoal treatment
+                    // unlit so the runway cannot turn pale when a distant
+                    // sheet catches the studio key light; the separate line
+                    // pass remains responsible for the subtle grid cue.
+                    + "if((uMachine==2 || uMachine==4) && vPart<-19.0){gl_FragColor=vec4(uNight==1?vec3(0.010,0.013,0.018):vec3(0.026,0.031,0.038),uAlpha*(uNight==1?0.96:0.90));return;}"
                     + "float focus=(uMachine==1 || uSelectedPart<0 || abs(vPart-float(uSelectedPart))<0.5)?1.0:0.22;"
                     // A small three-point studio rig makes the supplied
                     // product-study mesh read as an object rather than a
