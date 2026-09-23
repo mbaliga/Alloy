@@ -39,6 +39,8 @@ final class GlesViewportSurface extends GLSurfaceView {
     private volatile float bedY = 180f;
     private volatile float buildZ = 180f;
     private static final int MAX_TOOLPATH_SEGMENTS = 80_000;
+    /** A little more than one sheet of spacing keeps each study plate distinct. */
+    private static final float STUDY_PLATE_SPACING = 224f;
 
     private final int maxDrawTriangles;
     private final ScaleGestureDetector scaleDetector;
@@ -1508,24 +1510,18 @@ final class GlesViewportSurface extends GLSurfaceView {
         // phone composition an unmistakable runway into the distance. The
         // plates are presentation-only geometry; they never enter layout,
         // collision, slicing, thumbnails, or printer transport.
-        // The supplied handoff uses four physical sheets. Four gives the
-        // runway a readable front-to-back rhythm on a portrait phone; adding
-        // more sheets only turns the scene into a grey conveyor of debug
-        // geometry.
+        // The supplied handoff uses full-size physical sheets. Keep them at
+        // their measured 184 mm footprint and let camera perspective create
+        // the receding scale; manually shrinking them makes the runway read
+        // like decorative slats rather than a continuation of the printer.
         for (int index = 0; index < 4; index++) {
-            // The handoff's reference uses full physical 184 mm sheets. The
-            // earlier 72 mm depth made the runway collapse into a few dark
-            // grid fragments behind the printer on a portrait phone. Keep
-            // the first sheet near the real A1 footprint, then use a bounded
-            // perspective reduction and overlap so all four plates read as
-            // a continuous conveyor receding into the scene.
-            float depth = 184f - index * 10f;
-            float width = 184f - index * 13f;
-            // Pull each subsequent plate farther behind the machine and a
-            // little leftward. The diagonal procession remains visible on a
-            // portrait phone instead of collapsing into one dark rectangle.
-            float centerX = bedX / 2f - index * 9f;
-            float centerY = 92f - index * 112f;
+            float depth = 184f;
+            float width = 184f;
+            // Space the sheets just beyond their physical depth. Perspective,
+            // rather than hand-authored size reduction, carries them into the
+            // distance as in the supplied Three.js study.
+            float centerX = bedX / 2f;
+            float centerY = 92f - index * STUDY_PLATE_SPACING;
             // The supplied machine mesh carries its own lower bed shell. Put
             // the presentation sheets on the physical top plane instead of
             // underneath that shell, otherwise the runway disappears behind
@@ -1567,10 +1563,10 @@ final class GlesViewportSurface extends GLSurfaceView {
     private float[] studyPlateGridLines() {
         ArrayList<Float> values = new ArrayList<>();
         for (int index = 0; index < 4; index++) {
-            float depth = 184f - index * 10f;
-            float width = 184f - index * 13f;
-            float centerX = bedX / 2f - index * 9f;
-            float centerY = 92f - index * 112f;
+            float depth = 184f;
+            float width = 184f;
+            float centerX = bedX / 2f;
+            float centerY = 92f - index * STUDY_PLATE_SPACING;
             float z = 3.32f - index * 0.12f;
             float left = centerX - width / 2f, right = centerX + width / 2f;
             float front = centerY - depth / 2f, back = centerY + depth / 2f;

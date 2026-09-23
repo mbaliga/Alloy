@@ -177,6 +177,13 @@ source machine remains a welded reference shell and still needs authored
 material segmentation and richer interaction choreography to match the
 provided luxury configurator at production quality.
 
+The 2026-09-23 renderer correction moves the machine-study callouts out of the
+middle of the portrait composition and restores four full 184 mm presentation
+plates, separated by 224 mm so camera perspective creates their retreat into
+depth. Java compilation succeeded in the native visual-review build; its
+ARM64 native compilation is still in progress, so this correction has not yet
+been re-captured on the emulator and is not marked as visually approved.
+
 The subsequent material pass was rebuilt and installed as
 `/private/tmp/alloy-visual-v16-accent.png`. The real A1 reference mesh now
 uses a bounded authored palette for the white frame, charcoal PEI, dark
