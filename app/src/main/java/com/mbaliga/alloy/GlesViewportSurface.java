@@ -924,6 +924,8 @@ final class GlesViewportSurface extends GLSurfaceView {
         private int referenceMachineVertexCount;
         private FloatBuffer studyPlateBuffer;
         private int studyPlateVertexCount;
+        private FloatBuffer studyAccessoryBuffer;
+        private int studyAccessoryVertexCount;
         private FloatBuffer studyGridBuffer;
         private int studyGridVertexCount;
         private FloatBuffer studyShadowBuffer;
@@ -978,6 +980,8 @@ final class GlesViewportSurface extends GLSurfaceView {
             // the printable scene.
             studyPlateBuffer = floatBuffer(studyPlates());
             studyPlateVertexCount = studyPlateBuffer.limit() / 7;
+            studyAccessoryBuffer = floatBuffer(studyAccessories(bedX / 2f, bedY + 68f));
+            studyAccessoryVertexCount = studyAccessoryBuffer.limit() / 7;
             studyGridBuffer = floatBuffer(studyPlateGridLines());
             studyGridVertexCount = studyGridBuffer.limit() / 7;
             studyShadowBuffer = floatBuffer(studyShadow());
@@ -1028,6 +1032,13 @@ final class GlesViewportSurface extends GLSurfaceView {
                 // never part of the printable model, plate planner, or
                 // collision envelope.
                 drawMeshBuffer(studyPlateBuffer, studyPlateVertexCount, mvp, -1, 0, 4, 1f);
+            }
+            if (machineStudy && studyAccessoryBuffer != null) {
+                // The can, tennis ball and key are scale references from the
+                // supplied study. They are presentation-only solids and do
+                // not enter a plate, model archive, slicer input or collision
+                // decision.
+                drawMeshBuffer(studyAccessoryBuffer, studyAccessoryVertexCount, mvp, -1, 0, 3, 1f);
             }
             if (machineStudy && studyGridBuffer != null) {
                 // The handoff deliberately lets the grid leave the physical
@@ -1485,21 +1496,29 @@ final class GlesViewportSurface extends GLSurfaceView {
      * These are deliberately not user models: they are simple Alloy-owned
      * solids, placed outside the print bed, and rendered only by A1 study.
      */
-    private static float[] studyAccessories() {
+    private static float[] studyAccessories(float centerX, float y) {
         ArrayList<Float> values = new ArrayList<>();
-        // A compact can silhouette, a tennis-ball sphere and a key-shaped
-        // object sit in the quiet foreground of the machine study. Their
-        // reduced scale keeps the full printer frame legible on a phone.
-        addSmoothCylinderZ(values, -102f, 226f, -30f, 10f, 30f, 48, 0f);
-        // A shallow shoulder and inset lid keep this from reading as an
-        // arbitrary cylinder while staying within the small study budget.
-        addSmoothCylinderZ(values, -102f, 226f, -14.4f, 9.5f, 2.4f, 48, 0f);
-        addSmoothCylinderZ(values, -102f, 226f, -12.2f, 8.6f, 1.2f, 48, 0f);
-        addSphere(values, -69f, 226f, -35f, 17f, 17f, 17f, 56, 32, 1f);
-        addCylinderZ(values, -34f, 226f, -43f, 6.5f, 2.5f, 32, 2f);
-        addBox(values, -43f, 224f, -42f, -27f, 228f, -34f, 2f);
-        addBox(values, -22f, 225f, -41f, 4f, 227f, -37f, 2f);
-        addCylinderZ(values, -34f, 226f, -31f, 2.3f, 2.8f, 16, 3f);
+        // Use the handoff's approximate real dimensions: 66 × 122 mm can,
+        // 67 mm tennis ball and a roughly 95 mm key. These simple authored
+        // shapes stay outside the printable footprint and make the scene's
+        // scale legible without adding another bundled model.
+        // Screen-right is reversed by the study camera's three-quarter view;
+        // reverse the world-space order so the callout's can / ball / key
+        // sequence also reads left-to-right in the rendered scene.
+        float canX = centerX + 55f;
+        addSmoothCylinderZ(values, canX, y, 0f, 33f, 112f, 48, 0f);
+        addSmoothCylinderZ(values, canX, y, 112f, 31.5f, 5f, 48, 0f);
+        addSmoothCylinderZ(values, canX, y, 117f, 29f, 3f, 48, 3f);
+
+        float ballX = centerX - 20f;
+        addSphere(values, ballX, y, 33.5f, 33.5f, 33.5f, 33.5f, 56, 32, 1f);
+
+        float keyX = centerX - 102f;
+        addCylinderZ(values, keyX - 28f, y, 0f, 8f, 3f, 32, 2f);
+        addCylinderZ(values, keyX - 28f, y, 2f, 4.5f, 2f, 24, 3f);
+        addBox(values, keyX - 24f, y - 3f, 2f, keyX + 43f, y + 3f, 5f, 2f);
+        addBox(values, keyX + 27f, y - 6f, 1f, keyX + 34f, y + 6f, 4f, 3f);
+        addBox(values, keyX + 38f, y - 5f, 1f, keyX + 44f, y + 5f, 4f, 3f);
         return toArray(values);
     }
 
@@ -1898,10 +1917,10 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // tag before choosing a colour; threshold comparisons on the
                     // raw varying were making whole regions drift into the wrong
                     // material across large triangles.
-                    + "else if(uMachine==1 && machinePart<-18.5){base=uNight==1?vec3(0.10,0.58,0.55):vec3(0.13,0.48,0.46);}"
+                    + "else if(uMachine==1 && machinePart<-18.5){base=uNight==1?vec3(0.34,0.40,0.46):vec3(0.58,0.61,0.64);}"
                     + "else if(uMachine==1 && machinePart<-17.5){base=uNight==1?vec3(0.035,0.045,0.055):vec3(0.075,0.090,0.105);}"
                     + "else if(uMachine==1 && machinePart<-16.5){base=uNight==1?vec3(0.48,0.54,0.57):vec3(0.79,0.82,0.83);}"
-                    + "else if(uMachine==1 && machinePart<-11.5){base=uNight==1?vec3(0.23,0.20,0.17):vec3(0.42,0.32,0.22);}"
+                    + "else if(uMachine==1 && machinePart<-11.5){base=uNight==1?vec3(0.20,0.22,0.25):vec3(0.38,0.40,0.42);}"
                     + "else if(uMachine==1 && machinePart<-6.5){base=uNight==1?vec3(0.38,0.43,0.45):vec3(0.73,0.77,0.78);}"
                     + "else if(uMachine==1 && machinePart<-5.5){base=uNight==1?vec3(0.18,0.21,0.23):vec3(0.50,0.54,0.56);}"
                     + "else if(uMachine==1){base=uNight==1?vec3(0.025,0.030,0.038):vec3(0.070,0.078,0.088);}"
