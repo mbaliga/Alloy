@@ -18,6 +18,14 @@
 
 namespace Slic3r
 {
+inline Point turn90_ccw(const Point pt)
+{
+    Point ret;
+    ret(0) = -pt(1);
+    ret(1) = pt(0);
+    return ret;
+}
+
     // The number of vertices in each circle.
     static constexpr const size_t SUPPORT_TREE_CIRCLE_RESOLUTION = 25;
 namespace TreeSupport3D

@@ -56,7 +56,7 @@ inline double vsize2_with_unscale(const Point pt)
     return dot_with_unscale(pt, pt);
 }
 
-inline Point turn90_ccw(const Point pt)
+inline Point tree_turn90_ccw(const Point pt)
 {
     Point ret;
 
@@ -361,7 +361,7 @@ static bool move_inside_expoly(const ExPolygon &polygon, Point& from, double dis
                     else
                     {
                         // TODO: check whether it needs scale_()
-                        Point inward_dir = turn90_ccw(normal(ab, 10.0) + normal(p1 - p0, 10.0)); // inward direction irrespective of sign of [distance]
+                        Point inward_dir = tree_turn90_ccw(normal(ab, 10.0) + normal(p1 - p0, 10.0)); // inward direction irrespective of sign of [distance]
                         // MM2INT(10.0) to retain precision for the eventual normalization
                         ret = x + normal(inward_dir, scale_(distance));
                         is_already_on_correct_side_of_boundary = dot_with_unscale(inward_dir, p - x) * distance >= 0;
@@ -398,7 +398,7 @@ static bool move_inside_expoly(const ExPolygon &polygon, Point& from, double dis
                 }
                 else
                 {
-                    Point inward_dir = turn90_ccw(normal(ab, scale_(distance))); // inward or outward depending on the sign of [distance]
+                    Point inward_dir = tree_turn90_ccw(normal(ab, scale_(distance))); // inward or outward depending on the sign of [distance]
                     ret = x + inward_dir;
                     is_already_on_correct_side_of_boundary = dot_with_unscale(inward_dir, p - x) >= 0;
                 }
@@ -480,7 +480,7 @@ static bool move_inside_expolys(const ExPolygons& polygons, Point& from, double 
                         if (distance == 0) { ret = x; }
                         else
                         {
-                            inward_dir = turn90_ccw(normal(ab, 10.0) + normal(p1 - p0, 10.0)); // inward direction irrespective of sign of [distance]
+                            inward_dir = tree_turn90_ccw(normal(ab, 10.0) + normal(p1 - p0, 10.0)); // inward direction irrespective of sign of [distance]
                             // MM2INT(10.0) to retain precision for the eventual normalization
                             ret = x + normal(inward_dir, scale_(distance));
                             is_already_on_correct_side_of_boundary = dot_with_unscale(inward_dir, p - x) * distance >= 0;
@@ -517,7 +517,7 @@ static bool move_inside_expolys(const ExPolygons& polygons, Point& from, double 
                     if (distance == 0) { ret = x; }
                     else
                     {
-                        inward_dir = turn90_ccw(normal(ab, scale_(distance))); // inward or outward depending on the sign of [distance]
+                        inward_dir = tree_turn90_ccw(normal(ab, scale_(distance))); // inward or outward depending on the sign of [distance]
                         ret = x + inward_dir;
                         is_already_on_correct_side_of_boundary = dot_with_unscale(inward_dir, p - x) >= 0;
                         if (is_already_on_correct_side_of_boundary && dist2<distance*distance)

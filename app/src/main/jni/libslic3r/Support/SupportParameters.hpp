@@ -70,6 +70,11 @@ struct SupportParameters {
     	this->raft_interface_flow                = support_material_interface_flow;
 
         this->ironing = object_config.support_ironing;
+        this->enable_support_ironing = this->ironing;
+        this->ironing_angle = 0.;
+        this->ironing_flow_percent = object_config.support_ironing_flow.value;
+        this->ironing_inset = 0.;
+        this->ironing_line_spacing = object_config.support_ironing_spacing;
         this->ironing_flow = support_material_interface_flow.with_height(support_material_interface_flow.height() * 0.01 * object_config.support_ironing_flow.value);
         this->ironing_spacing = object_config.support_ironing_spacing;
         this->ironing_pattern = object_config.support_ironing_pattern;
@@ -153,6 +158,7 @@ struct SupportParameters {
             support_pattern == smpLightning ? ipLightning :
             support_pattern == smpHoneycomb ? ipHoneycomb :
             this->support_density > 0.95 || this->with_sheath ? ipRectilinear : ipSupportBase;
+        this->support_base_pattern = support_pattern;
         this->interface_fill_pattern = (this->top_interface_density > 0.95 ? ipRectilinear : ipSupportBase);
         this->raft_interface_fill_pattern = this->raft_interface_density > 0.95 ? ipRectilinear : ipSupportBase;
         if (object_config.support_interface_pattern == smipGrid)
@@ -287,6 +293,7 @@ struct SupportParameters {
     // Density of the base support layers.
     coordf_t 				support_density;
     SupportMaterialStyle    support_style = smsDefault;
+    SupportMaterialPattern  support_base_pattern = smpDefault;
 
     // Pattern of the sparse infill including sparse raft layers.
     InfillPattern           base_fill_pattern;
@@ -312,7 +319,12 @@ struct SupportParameters {
     bool independent_layer_height = false;
     const double thresh_big_overhang = Slic3r::sqr(scale_(10));
 
-	bool          ironing;
+    bool          ironing;
+    bool          enable_support_ironing = false;
+    double        ironing_line_spacing = 0.;
+    double        ironing_flow_percent = 0.;
+    double        ironing_angle = 0.;
+    double        ironing_inset = 0.;
     Flow          ironing_flow; // Flow at the interface ironing.
     InfillPattern ironing_pattern;
     float         ironing_spacing;

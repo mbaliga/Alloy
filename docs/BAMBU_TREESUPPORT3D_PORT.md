@@ -132,6 +132,27 @@ the exact Bambu source has been promoted.
 
 ## Next port boundary
 
+The support-parameter compatibility increment now exposes Bambu's ironing
+aliases (`enable_support_ironing`, ironing angle/inset/spacing/flow fields)
+and the base-pattern alias while preserving Alloy's existing configuration
+names. The shared geometry boundary also now includes `ExPolygons` overloads
+for `safe_union` and stepped `safe_offset_inc`. Alloy's `SupportCommon.cpp`,
+`TreeSupport.cpp`, and `TreeSupport3D.cpp` ARM64 targets compile with these
+changes.
+
+The exact pinned Bambu `TreeSupport.cpp` probe consequently advances past the
+geometry and ironing-field diagnostics. Its remaining first-order boundary
+is now twelve surrounding-API differences: scalar `Point::any_comp`, the
+seven-argument bridge-removal call, support-ironing role, cooling metadata,
+overhang-degree setters, soluble-interface state, moment-to-expansion and
+config-value access, and `ExPolygon::remove_colinear_points`. Those differences
+remain deliberately unpromoted; passing Alloy's focused targets is not a
+claim of exact Bambu parity or production readiness.
+
+`SupportDebug.hpp` also had a guard collision with `SupportCommon.hpp`, which
+could suppress the shared support API under upstream include ordering. The
+guard is now unique and the fix is covered by the same focused native build.
+
 The next implementation pass must port the surrounding support API as one
 reviewable unit—at minimum the Bambu-compatible support parameters/layer
 types, polygon helpers, Clipper2 build target, and scaling contract—before

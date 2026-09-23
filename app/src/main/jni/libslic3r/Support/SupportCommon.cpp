@@ -2100,6 +2100,21 @@ sub clip_with_shape {
     return result;
 }
 
+[[nodiscard]] ExPolygons safe_union(const ExPolygons first, const ExPolygons second)
+{
+    ExPolygons result;
+    if (!first.empty() || !second.empty()) {
+        result = union_ex(first, second);
+        if (result.empty()) {
+            const Polygons fallback = union_(offset(to_polylines(first), scaled<float>(0.002), jtMiter, 1.2),
+                                             offset(to_polylines(second), scaled<float>(0.002), jtMiter, 1.2));
+            for (const Polygon &polygon : fallback)
+                result.emplace_back(polygon);
+        }
+    }
+    return result;
+}
+
 [[nodiscard]] Polygons safe_offset_inc(
     const Polygons &me, coord_t distance, const Polygons &collision,
     coord_t safe_step_size, coord_t last_step_offset_without_check,

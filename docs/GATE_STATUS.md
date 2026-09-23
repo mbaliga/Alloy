@@ -2186,3 +2186,14 @@ differences instead of failing on missing Clipper2 headers. The active boundary
 is support ironing/cooling fields and roles, bridge-removal signatures,
 geometry helper names, and bounding-box APIs. Clipper2 wiring is verified, but
 this does not close Bambu TreeSupport parity.
+
+The latest support compatibility increment adds Bambu ironing/base-pattern
+aliases, unique support-debug include guards, and shared `ExPolygons`
+`safe_union`/`safe_offset_inc` helpers. Alloy's focused ARM64 support targets
+compile successfully. The exact pinned Bambu `TreeSupport.cpp` probe now gets
+past those geometry and ironing boundaries and reports twelve remaining
+surrounding-API diagnostics: scalar bounding-box comparison, bridge-removal
+arity, support-ironing role, cooling metadata, overhang-degree setters,
+soluble-interface state, moment/config access, and colinear-point cleanup.
+This is measurable source-compatibility progress only; it does not establish
+exact Bambu support parity, a complete slicer, or a production APK.
