@@ -2,8 +2,8 @@
 ///|/
 ///|/ PrusaSlicer is released under the terms of the AGPLv3 or higher
 ///|/
-#ifndef slic3r_SupportCommon_hpp_
-#define slic3r_SupportCommon_hpp_
+#ifndef slic3r_SupportDebug_hpp_
+#define slic3r_SupportDebug_hpp
 
 namespace Slic3r {
 
@@ -19,4 +19,4 @@ void export_print_z_polygons_and_extrusions_to_svg(const char *path, SupportGene
 
 } // namespace Slic3r
 
-#endif /* slic3r_SupportCommon_hpp_ */
+#endif /* slic3r_SupportDebug_hpp */
