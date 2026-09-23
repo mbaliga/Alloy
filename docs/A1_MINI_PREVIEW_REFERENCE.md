@@ -25,6 +25,14 @@ presentation asset, not a printable model or production collision envelope.
 
 ## Interaction direction
 
+The current phone study keeps the size/material/nozzle controls in a narrow
+top band and printer/scale controls at the bottom edge. This prevents the
+portrait layout from placing large callouts over the gantry and frame. Its
+four presentation sheets now retain the same 184 mm width and depth and are
+spaced 224 mm apart; perspective supplies their apparent size reduction. The
+runway remains visual-only and does not participate in build-plate placement
+or slicing.
+
 - Keep the solid model and toolpath preview as two views of the same plate.
 - Make layer scrubbing cheap by keeping toolpath buffers in layer order and
   changing the visible draw range rather than clipping or reallocating.

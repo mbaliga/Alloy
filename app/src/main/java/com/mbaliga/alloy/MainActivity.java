@@ -1289,15 +1289,19 @@ public final class MainActivity extends Activity {
         // and only two small context selectors near the lower edge. The
         // labels are presentation-only; printer configuration remains in the
         // actual preparation and pairing flows.
+        // Keep the configurable labels in quiet top/bottom bands. The older
+        // orbit layout put material and nozzle pills directly over the
+        // machine's gantry and uprights on portrait phones, obscuring the
+        // very mesh this study is meant to present.
         View sizeTag = compactSceneTag("□", "SIZE", "180 × 180 × 180 MM",
-                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(126));
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(78));
         sizeTag.setOnClickListener(v -> {
             scene.fitModel();
             Toast.makeText(this, "A1 Mini volume · 180 × 180 × 180 mm", Toast.LENGTH_SHORT).show();
         });
         stage.addView(sizeTag);
         View materialTag = compactSceneTag("◌", "MATERIAL", "NATURAL PLA",
-                Gravity.CENTER_VERTICAL | Gravity.START, dp(16), dp(44));
+                Gravity.TOP | Gravity.START, dp(8), dp(78));
         materialTag.setOnClickListener(v -> {
             int next = (scene.getFinishMode() + 1) % 5;
             scene.setFinishMode(next);
@@ -1306,15 +1310,15 @@ public final class MainActivity extends Activity {
         });
         stage.addView(materialTag);
         View nozzleTag = compactSceneTag("⌁", "NOZZLE", "0.4 MM",
-                Gravity.CENTER_VERTICAL | Gravity.END, dp(16), dp(26));
+                Gravity.TOP | Gravity.END, dp(8), dp(78));
         nozzleTag.setOnClickListener(v -> showProfileReview());
         stage.addView(nozzleTag);
         View printerTag = compactSceneTag("A1", "PRINTER", "A1 MINI",
-                Gravity.BOTTOM | Gravity.START, dp(16), dp(92));
+                Gravity.BOTTOM | Gravity.START, dp(12), dp(18));
         printerTag.setOnClickListener(v -> showPrinterStatus());
         stage.addView(printerTag);
         View scaleTag = compactSceneTag("≈", "SCALE", "CAN  ·  BALL  ·  KEY",
-                Gravity.BOTTOM | Gravity.END, dp(16), dp(88));
+                Gravity.BOTTOM | Gravity.END, dp(12), dp(18));
         scaleTag.setOnClickListener(v -> {
             if (model == null) {
                 Toast.makeText(this, "Import a model to use known-dimension scaling", Toast.LENGTH_SHORT).show();
