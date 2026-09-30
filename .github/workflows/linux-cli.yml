@@ -37,6 +37,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Install Tkinter for the optional workspace entry point
+        run: sudo apt-get update && sudo apt-get install --yes python3-tk
       - name: Run Linux bridge tests
         run: python3 -m unittest -v tools/test_alloy_linux.py tools/test_bambu_lan_probe.py
       - name: Inspect bundled assembly
