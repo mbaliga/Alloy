@@ -292,13 +292,16 @@ final class GlesViewportSurface extends GLSurfaceView {
 
     /**
      * Capture the rendered GLES surface, including the supplied A1 mesh and
-     * presentation-only runway. The older CPU thumbnail remains the durable
-     * archive/BYOK fallback, but it cannot represent the machine study.
+     * presentation-only runway. PixelCopy is not guaranteed to be available
+     * while a surface is warming up (notably after process restore or on
+     * software-rendered devices), so its failure falls back to the bounded
+     * CPU thumbnail. A failed presentation capture must never make artifact
+     * staging fail or leave its caller waiting indefinitely.
      */
     void capturePng(int maxSize, ViewportView.PngCaptureListener listener) {
         if (listener == null) return;
         if (getWidth() <= 0 || getHeight() <= 0 || !getHolder().getSurface().isValid()) {
-            listener.onCaptured(null);
+            listener.onCaptured(thumbnailPng(maxSize));
             return;
         }
         final int bound = Math.max(64, Math.min(2_048, maxSize));
@@ -307,7 +310,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             PixelCopy.request(getHolder().getSurface(), full, result -> {
                 if (result != PixelCopy.SUCCESS) {
                     full.recycle();
-                    listener.onCaptured(null);
+                    listener.onCaptured(thumbnailPng(bound));
                     return;
                 }
                 Bitmap output = full;
@@ -334,7 +337,7 @@ final class GlesViewportSurface extends GLSurfaceView {
             }, new Handler(Looper.getMainLooper()));
         } catch (RuntimeException error) {
             full.recycle();
-            listener.onCaptured(null);
+            listener.onCaptured(thumbnailPng(bound));
         }
     }
 

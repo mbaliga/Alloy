@@ -7,6 +7,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class NativeDependencyWiringTests(unittest.TestCase):
+    def test_explicit_cmake_sources_exist_with_exact_case(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        pattern = re.compile(r"\bsrc/main/jni/[A-Za-z0-9_./-]+\.(?:c|cc|cpp|cxx|h|hpp)\b")
+        sources = []
+        for line in cmake.splitlines():
+            if not line.lstrip().startswith("#"):
+                sources.extend(pattern.findall(line))
+        missing = sorted({source for source in sources if not (ROOT / "app" / source).is_file()})
+        self.assertEqual([], missing)
+        self.assertIn("src/main/jni/libslic3r/Format/SVG.cpp", sources)
+
     def test_source_build_is_pinned_and_cross_compiled(self) -> None:
         script = (ROOT / "ci/build_gmp_mpfr_android.sh").read_text(encoding="utf-8")
         for token in (
