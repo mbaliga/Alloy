@@ -68,7 +68,7 @@ jobs:
         with:
           api-level: 35
           arch: x86_64
-          profile: Pixel 6
+          profile: pixel_6
           script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
         with:

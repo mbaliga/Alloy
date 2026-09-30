@@ -183,14 +183,14 @@ jobs:
         with:
           api-level: 35
           arch: arm64-v8a
-          profile: Pixel 6
+          profile: pixel_6
           script: gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Export native G3 evidence from the arm64 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           arch: arm64-v8a
-          profile: Pixel 6
+          profile: pixel_6
           script: |
             set -euxo pipefail
             adb install -r app/build/outputs/apk/release/app-release.apk
