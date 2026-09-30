@@ -865,15 +865,15 @@ public final class MainActivity extends Activity {
         detailsLp.bottomMargin = dp(8);
         root.addView(details, detailsLp);
 
-        // Dynamic task actions stay in this off-screen source of truth, then
-        // open from the upper curved bar as an accessible action sheet. This
-        // avoids a clipped horizontal button parade while keeping every
-        // state-dependent operation discoverable.
+        // Dynamic task actions stay in this off-screen source of truth. The
+        // upper curve triggers one contextual next step; the lower "more"
+        // destination exposes the remaining routes. This avoids turning the
+        // contextual bar into an unstructured list of every action.
         actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
         arcNavigation = new ArcNavigationBar(this);
         arcNavigation.setListener(new ArcNavigationBar.Listener() {
-            @Override public void onContext() { showActionSheet(); }
+            @Override public void onContext() { openArcContext(); }
             @Override public void onSearch() { showModelLibrary(); }
             @Override public void onAlerts() { showPrinterReadiness(); }
             @Override public void onHome() {
@@ -883,7 +883,7 @@ public final class MainActivity extends Activity {
             @Override public void onLibrary() { showModelLibrary(); }
             @Override public void onPrepare() { showPrepare(); }
             @Override public void onHistory() { showModelHistory(); }
-            @Override public void onMore() { showActionSheet(); }
+            @Override public void onMore() { showMoreActions(); }
         });
         root.addView(arcNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
 
@@ -2354,16 +2354,73 @@ public final class MainActivity extends Activity {
     }
 
     private String arcContextLabel() {
+        if (projectTransferring) return "Saving project";
+        if (batchTransferring) return "Saving plates";
+        if (visualizing) return "Visualizing";
         if (importing) return "Importing";
         if (modeling) return "Modeling";
         if (repairingGeometry) return "Repairing";
         if (batchSlicing) return "Slicing plates";
         if (slicing) return "Slicing";
+        if (printerBusy) return "Sending job";
+        if (printActive) return "Printer status";
         if (model == null) return "Start a project";
         return slice == null ? "Prepare" : "Inspect";
     }
 
-    private void showActionSheet() {
+    /**
+     * The upper arc is deliberately a single, state-specific action. It is
+     * not a menu: this preserves the visual hierarchy of the two-level Hyle
+     * navigation and means a tap always advances the print workflow.
+     */
+    private void openArcContext() {
+        if (projectTransferring || batchTransferring || visualizing || importing || modeling
+                || repairingGeometry || batchSlicing || slicing || printerBusy || printActive) {
+            showActiveArcOperation();
+            return;
+        }
+        if (model == null) {
+            openModel();
+            return;
+        }
+        if (slice == null) {
+            showPrepare();
+            return;
+        }
+        showInspection();
+    }
+
+    /** Surface a long-running operation without reopening the global action menu. */
+    private void showActiveArcOperation() {
+        String label = arcContextLabel();
+        Button cancel = findAction("Cancel");
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(label)
+                .setMessage(label + " is in progress. Alloy will keep this work on-device and preserve the current project.")
+                .setNegativeButton("Keep working", null);
+        if (cancel != null && cancel.isEnabled()) {
+            builder.setPositiveButton("Cancel", (dialog, which) -> cancel.performClick());
+        } else if (printActive) {
+            builder.setPositiveButton("View printer", (dialog, which) -> showPrinterStatus());
+        } else {
+            builder.setPositiveButton("OK", null);
+        }
+        builder.show();
+    }
+
+    private Button findAction(String label) {
+        if (actions == null) return null;
+        for (int index = 0; index < actions.getChildCount(); index++) {
+            View child = actions.getChildAt(index);
+            if (child instanceof Button && label.equals(((Button) child).getText().toString())) {
+                return (Button) child;
+            }
+        }
+        return null;
+    }
+
+    /** The lower ellipsis is the explicit overflow route, never the upper action. */
+    private void showMoreActions() {
         if (actions == null || actions.getChildCount() == 0) return;
         ArrayList<String> labels = new ArrayList<>();
         ArrayList<View> destinations = new ArrayList<>();
@@ -2372,13 +2429,19 @@ public final class MainActivity extends Activity {
             if (!(child instanceof Button)) continue;
             Button button = (Button) child;
             String label = button.getText().toString();
+            // Primary destinations already have dedicated controls in the
+            // lower curve or are the upper curve's direct next action.
+            if ("Import model".equals(label) || "Import another".equals(label)
+                    || "Prepare".equals(label) || "Inspect".equals(label)
+                    || "Library".equals(label) || "Model".equals(label)
+                    || "History".equals(label)) continue;
             if (!button.isEnabled()) label += "  ·  working";
             labels.add(label);
             destinations.add(button);
         }
         if (labels.isEmpty()) return;
         new AlertDialog.Builder(this)
-                .setTitle(arcContextLabel())
+                .setTitle("More")
                 .setItems(labels.toArray(new String[0]), (dialog, which) -> {
                     View target = destinations.get(which);
                     if (target.isEnabled()) target.performClick();
