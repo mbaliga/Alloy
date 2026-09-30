@@ -13,6 +13,19 @@ differ from Alloy's current native tree, 30 of 36 direct support includes
 differ, and 7 transitive files are absent. This is a source-compatibility
 result, not a runtime or production-parity claim.
 
+### Reproducible upstream re-audit (2026-09-29)
+
+The pinned source was freshly sparse-checked out from the public Bambu Studio
+tag above and audited with `ci/audit_bambu_treesupport3d.py`. The result stays
+`PORT_REQUIRED`: all seven required TreeSupport files differ; 30 of 36 direct
+files differ; the transitive surface contains 94 files, with 12 unresolved
+quoted includes, 9 missing transitive files and 68 differing same-path files.
+The audit resolver now follows
+both local includes and Bambu's `src`-rooted `libslic3r/...` includes, so this
+is not inflated by that former false-positive category. It remains a
+dependency-closure inventory, not evidence of compilable Bambu support,
+support geometry parity, a physical print, or a production claim.
+
 ## ARM64 compatibility result
 
 The clean native build was then run with:
@@ -131,6 +144,18 @@ compiles successfully. This closes the data-shape gap without claiming that
 the exact Bambu source has been promoted.
 
 ## Next port boundary
+
+2026-09-24 update: the repository's current native tree has advanced beyond
+several earlier probe notes: `turn90_ccw`, typed overhang storage, support
+ironing aliases, and support overhang cooling metadata are now present. The
+remaining geometry naming gap `ExPolygon::remove_colinear_points()` is now
+provided as a compatibility wrapper over Alloy's existing collinear-point
+removal for the outer contour and every hole. A parity source-contract test
+guards the API shape. The focused Python source-audit/profile tests pass, but
+the native compiler and Android instrumentation could not be run in this
+workspace (no CMake executable or Java runtime); this is not compile or Bambu
+parity evidence. The exact pinned Bambu source set, complete dependency audit,
+and support-enabled desktop comparisons are still required.
 
 The support-parameter compatibility increment now exposes Bambu's ironing
 aliases (`enable_support_ironing`, ironing angle/inset/spacing/flow fields)

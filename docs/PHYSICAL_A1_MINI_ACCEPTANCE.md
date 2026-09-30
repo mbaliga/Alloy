@@ -16,6 +16,19 @@ publish do not satisfy this runbook.
 - Start with a clean build plate, a known PLA spool, and a documented nozzle
   and bed condition.
 
+## Controlled no-support pilot APK
+
+Before production qualification, a deliberately restricted CI-debug pilot APK
+may collect the first real A1 Mini transport evidence. Build it only with
+`-PalloyNativeEngine=true -PalloyPhysicalPilot=true -PalloyCiDebugSign=true`.
+Gradle rejects that property combination when production or native-engine
+verification is requested. The app labels the route **PILOT BUILD** and allows
+only the five immutable bundled fixtures under the pinned A1 Mini / 0.4 mm /
+PLA Basic / supports-off recipe. It still requires an N1 discovery result and
+leaf SHA-256 certificate pin, then presents distinct upload and start
+confirmations. Treat all results as acceptance evidence, never as a general
+direct-print authorization.
+
 ## Required evidence matrix
 
 | Case | Action | Required evidence | Failure condition |

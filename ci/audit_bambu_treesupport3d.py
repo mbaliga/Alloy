@@ -93,14 +93,22 @@ def include_names(paths: Iterable[Path]) -> list[str]:
 
 
 def resolve_include(root: Path, including: Path, include: str) -> Path | None:
-    """Resolve a quoted Bambu-style include within a libslic3r checkout."""
+    """Resolve a quoted Bambu-style include within Bambu's ``src`` tree.
+
+    Bambu's support files use both local includes (``"Layer.hpp"``) and
+    source-rooted includes (``"libslic3r/Layer.hpp"``). The older audit only
+    considered the ``libslic3r`` root, incorrectly classifying the latter as
+    unresolved even in a complete checkout.
+    """
+    source_root = root.parent
     candidates = (
         including.parent / include,
         root / include,
+        source_root / include,
     )
     for candidate in candidates:
         candidate = candidate.resolve()
-        if candidate.is_file() and candidate.is_relative_to(root.resolve()):
+        if candidate.is_file() and candidate.is_relative_to(source_root.resolve()):
             return candidate
     return None
 
@@ -152,6 +160,7 @@ def transitive_include_surface(root: Path, entry_paths: Iterable[Path]) -> dict[
 def unresolved_quoted_includes(root: Path, entry_paths: Iterable[Path]) -> dict[str, list[str]]:
     """Return quoted includes that cannot be resolved inside the Bambu tree."""
     resolved_root = root.resolve()
+    source_root = resolved_root.parent
     pending = [path.resolve() for path in entry_paths]
     visited: set[Path] = set()
     unresolved: dict[str, set[str]] = {}
@@ -168,7 +177,11 @@ def unresolved_quoted_includes(root: Path, entry_paths: Iterable[Path]) -> dict[
             elif resolved not in visited:
                 pending.append(resolved)
         if missing:
-            unresolved[including.relative_to(resolved_root).as_posix()] = missing
+            try:
+                label = including.relative_to(resolved_root).as_posix()
+            except ValueError:
+                label = including.relative_to(source_root).as_posix()
+            unresolved[label] = missing
     return {path: sorted(values) for path, values in sorted(unresolved.items())}
 
 

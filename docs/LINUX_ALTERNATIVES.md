@@ -1,39 +1,47 @@
 # Linux slicer landscape
 
-As of 2026-09-22, Linux already has several credible ways to prepare Bambu
-prints. Alloy should complement them with a phone-native workflow rather than
-pretend the Linux ecosystem is empty.
+Verified 2026-09-24 against the projects' current release pages. Linux already
+has production-grade desktop slicers for Bambu printers, including Bambu Lab's
+own Bambu Studio. Alloy should complement them with a phone-native workflow,
+not duplicate the desktop target.
 
 | Option | Linux status | Best fit | Alloy implication |
 | --- | --- | --- | --- |
-| [Bambu Studio releases](https://github.com/bambulab/BambuStudio/releases) | Bambu’s upstream release notes explicitly point Linux users to a Flathub build. Treat the exact tag and package provenance as release-time data; the Flathub package is maintained outside the upstream desktop repository. | The closest Bambu-specific desktop solution because it is Bambu’s own slicer. | Do not prioritize a Linux desktop clone; use Bambu Studio as the compatibility baseline. |
-| [OrcaSlicer releases](https://github.com/OrcaSlicer/OrcaSlicer/releases) | The official project currently publishes Linux AppImage and Flatpak builds, including x86_64 and ARM64 variants. | Strong open-source Bambu-oriented alternative with broad printer support, calibration and network workflows. | Compatibility/reference baseline; Alloy’s audited mobile engine lineage did not meet the exact-engine provenance gate. |
-| [PrusaSlicer releases](https://github.com/prusa3d/PrusaSlicer/releases) | The upstream release notes currently identify Flathub as the official Linux distribution channel; stable and beta/alpha channels are separate. | General-purpose slicer and automation reference. | Useful for engine/profile comparison, but not a Bambu-specific replacement by itself. |
-| [UltiMaker Cura](https://ultimaker.com/ultimaker-software/) | UltiMaker continues to publish Cura as a free cross-platform slicer with Linux support; use the vendor download page for the current package. | Broad, mature FDM slicer for many non-Bambu printers. | A viable general Linux alternative, but not our A1 Mini parity target. |
+| [Bambu Studio releases](https://github.com/bambulab/BambuStudio/releases) | Bambu's release notes link to the [Flathub package](https://flathub.org/apps/com.bambulab.BambuStudio). At verification, upstream's latest stable was **2.8.2.61** and latest beta **2.8.4**; Flathub identifies the package as “by Bambu Lab,” lists **2.8.2.61**, and provides x86_64 and aarch64 builds. The Flatpak manifest is maintained outside Bambu's desktop repository. | Bambu's own full desktop slicer and the closest compatibility baseline. | Linux desktop coverage already exists; don't spend Alloy's Android-first effort on cloning it. |
+| [OrcaSlicer releases](https://github.com/OrcaSlicer/OrcaSlicer/releases) | **2.4.2** was the latest official release at verification. The project documents Flathub and Linux AppImage packages, including x86_64 and aarch64 AppImages. | Strong open-source Bambu-oriented alternative with broad printer support, calibration and network workflows. | Compatibility/reference baseline; Alloy's audited mobile engine lineage has not met the exact-engine provenance gate. |
+| [PrusaSlicer releases](https://github.com/prusa3d/PrusaSlicer/releases) | **2.9.6** was the latest stable release; **3.0.0-alpha12** was the latest pre-release. Upstream now identifies Flathub as its only official Linux distribution channel. | General-purpose slicer and automation reference. | Useful for engine/profile comparison, but not a Bambu-specific replacement by itself. |
+| [UltiMaker Cura](https://ultimaker.com/ultimaker-software/) | UltiMaker offers Cura as a free, open-source slicer with Linux packages; use its download page for the current build. | Broad, mature FDM slicer for many non-Bambu printers. | A viable general Linux alternative, but not our A1 Mini parity target. |
 | [SliceBeam](https://github.com/utkabobr/SliceBeam) | Android FFF slicer based on PrusaSlicer core; not a Linux desktop product. | Touch-first mobile reference. | Useful as an Android UX/build reference, not a Linux target. |
 
 ## Product decision
 
-Linux support is intentionally frozen as an appreciated secondary platform, not
-the current phone-first release gate. The shared architecture should remain:
+Linux support is intentionally secondary, not the current phone-first release
+gate. Do not pursue full Linux desktop feature parity while the Android phone
+workflow is incomplete. Keep Linux utilities and buildability healthy where
+they provide low-cost value, and revisit a native desktop shell only after the
+Android release gates are met. The shared engine and transport architecture
+may eventually support:
 
 `validated native engine → Android shell + Linux shell → Bambu LAN transport`
 
 For Alloy's current native work, Path B uses the pinned SliceBeam/PrusaSlicer
 lineage; Orca remains a compatibility reference and profile comparison source.
 
-The completed Linux milestone is the dependency-free headless bridge in
-`tools/alloy_linux.py`. It makes model inspection and safe artifact validation
-available on Linux now, and can invoke an installed slicer without giving the
-shell arbitrary command text. `tools/alloy_linux_gui.py` adds a resizable
-Tkinter model workspace for the bundled box/parts and imported STL/OBJ/3MF files;
-the Alloy-owned native desktop engine and production packaging remain later
-gates. The Android phone workflow is the only active product gate for now.
+The current Linux utility milestones are the dependency-free headless bridge in
+`tools/alloy_linux.py` (model inspection, safe artifact validation, and
+controlled invocation of an installed slicer) and the resizable Tkinter model
+workspace in `tools/alloy_linux_gui.py`. They are supplementary tools, not a
+finished Linux Bambu Studio replacement: Alloy-owned native desktop slicing,
+printer-control parity, and production packaging remain open. The Android phone
+workflow is the active product gate.
 
-This confirms the product decision behind the current roadmap: Linux already
-has usable desktop alternatives, including Bambu Studio itself, OrcaSlicer and
-PrusaSlicer. Alloy’s differentiator is phone-only preparation and printer
-control, not another desktop slicer distribution.
+This confirms the product decision behind the current roadmap: Linux has
+usable, actively maintained desktop options, and Bambu Studio itself is
+available there. Current upstream notes distinguish the stable release from
+the beta channel; use stable builds for production work. Alloy's differentiator
+is phone-only preparation and printer control, not another desktop slicer
+distribution. Re-check versions and package channels before any future Linux
+release because these values change over time.
 
 Alloy is not production-grade until its engine/profile output is compared with
 known-good Bambu/Orca slices, the generated `.gcode.3mf` is structurally and

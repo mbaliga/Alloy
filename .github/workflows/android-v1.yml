@@ -3,9 +3,9 @@ name: Alloy Android v1
 on:
   push:
     branches: [main, 'codex/**']
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   pull_request:
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   workflow_dispatch:
 
 permissions:
@@ -40,6 +40,7 @@ jobs:
       - name: Validate packaged profiles
         run: |
           python3 ci/validate_profile_assets.py
+          python3 ci/validate_capability_catalog.py
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
       - name: Validate Android shell and import wiring
         run: python3 ci/validate_android_wiring.py

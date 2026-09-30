@@ -1,6 +1,14 @@
 import tempfile
 import unittest
 from pathlib import Path
+import sys
+
+# This module is invoked directly by local parity runs as well as through CI.
+# Put the repository root on the import path so `python3 parity/<test>.py`
+# exercises the same audit code instead of failing before the first test.
+REPOSITORY = Path(__file__).resolve().parents[1]
+if str(REPOSITORY) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY))
 
 from ci import audit_bambu_treesupport3d as audit
 
@@ -29,6 +37,19 @@ class BambuTreeSupportAuditTests(unittest.TestCase):
                 "Geometry.hpp": audit.sha256(root / "Geometry.hpp"),
                 "Support/TreeSupport3D.hpp": audit.sha256(root / "Support/TreeSupport3D.hpp"),
             }, result)
+
+    def test_resolver_accepts_bambu_src_rooted_libslic3r_include(self):
+        with tempfile.TemporaryDirectory() as directory:
+            src = Path(directory) / "src"
+            root = src / "libslic3r"
+            support = root / "Support"
+            support.mkdir(parents=True)
+            entry = support / "TreeSupport3D.cpp"
+            header = root / "Point.hpp"
+            entry.write_text('#include "libslic3r/Point.hpp"\n', encoding="utf-8")
+            header.write_text("point", encoding="utf-8")
+            self.assertEqual(header.resolve(), audit.resolve_include(root, entry, "libslic3r/Point.hpp"))
+            self.assertEqual({}, audit.unresolved_quoted_includes(root, [entry]))
 
     def test_transitive_surface_follows_quoted_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -142,6 +163,15 @@ class BambuTreeSupportAuditTests(unittest.TestCase):
             "check_overhang_fan(processed_point.overlap, path.overhang_degree, path.role())",
             gcode,
         )
+
+    def test_bambu_polygon_cleanup_api_preserves_contour_and_hole_paths(self):
+        repository = Path(__file__).resolve().parents[1]
+        expolygon = (repository / "app/src/main/jni/libslic3r/ExPolygon.hpp").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("void remove_colinear_points()", expolygon)
+        self.assertIn("remove_collinear(contour);", expolygon)
+        self.assertIn("remove_collinear(holes);", expolygon)
 
 
 if __name__ == "__main__":

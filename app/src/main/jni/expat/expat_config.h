@@ -10,7 +10,7 @@
 /* #undef HAVE_ARC4RANDOM_BUF */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H
+/* #undef HAVE_DLFCN_H */
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 /* #undef HAVE_FCNTL_H */
@@ -22,40 +22,40 @@
 /* #undef HAVE_GETRANDOM */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#define HAVE_INTTYPES_H
+/* #undef HAVE_INTTYPES_H */
 
 /* Define to 1 if you have the `bsd' library (-lbsd). */
 /* #undef HAVE_LIBBSD */
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H
+/* #undef HAVE_MEMORY_H */
 
 /* Define to 1 if you have a working `mmap' system call. */
 /* #undef HAVE_MMAP */
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H
+/* #undef HAVE_STDINT_H */
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H
+/* #undef HAVE_STDLIB_H */
 
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H
+/* #undef HAVE_STRINGS_H */
 
 /* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H
+/* #undef HAVE_STRING_H */
 
 /* Define to 1 if you have `syscall' and `SYS_getrandom'. */
 /* #undef HAVE_SYSCALL_GETRANDOM */
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H
+/* #undef HAVE_SYS_STAT_H */
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H
+/* #undef HAVE_SYS_TYPES_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H
+/* #undef HAVE_UNISTD_H */
 
 /* Name of package */
 #define PACKAGE ""

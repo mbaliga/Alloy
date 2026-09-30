@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "bambu.p1s.0.4.pla-basic",
+  "name": "Bambu Lab P1S · 0.4 mm · PLA Basic",
+  "verified": false,
+  "provenance": {
+    "source": "https://github.com/bambulab/BambuStudio/tree/da8b44ee34dd349f2ae0df3f1cbae366df482354/resources/profiles/BBL",
+    "revision": "da8b44ee34dd349f2ae0df3f1cbae366df482354",
+    "files": [
+      {"path":"resources/profiles/BBL/machine/Bambu Lab P1S 0.4 nozzle.json","sha":"960814b8812d2a8308da3eec28bfc45bb323103d"},
+      {"path":"resources/profiles/BBL/machine/fdm_bbl_3dp_001_common.json","sha":"7257c1b91928775b3303ad2526a52ef463eefb8c"},
+      {"path":"resources/profiles/BBL/machine/fdm_machine_common.json","sha":"5516e8c10c6aab4a94408db29b11a112b9078b77"},
+      {"path":"resources/profiles/BBL/process/0.20mm Standard @BBL X1C.json","sha":"a9f658ce4526db060909fdbc9308c56cfb9519ff"},
+      {"path":"resources/profiles/BBL/process/fdm_process_single_0.20.json","sha":"7be86d5e24c39c417526926c7aa8ea6116f17121"},
+      {"path":"resources/profiles/BBL/process/fdm_process_single_common.json","sha":"12aee1948882751b57e6a9d8c06fce6c67b785ef"},
+      {"path":"resources/profiles/BBL/process/fdm_process_common.json","sha":"6a1c7e9e911b4e6d64845f26c5047d7823176f1d"},
+      {"path":"resources/profiles/BBL/filament/Bambu PLA Basic @BBL P1S 0.4 nozzle.json","sha":"9b647c06058d68f4e18d0e6d971357544bf00c38"},
+      {"path":"resources/profiles/BBL/filament/Bambu PLA Basic @base.json","sha":"5021dc12b1309af225d0c04bad31760cbddaf501"},
+      {"path":"resources/profiles/BBL/filament/fdm_filament_pla.json","sha":"eb0ee310d12701483a701161476d9736ce6adb3b"},
+      {"path":"resources/profiles/BBL/filament/fdm_filament_common.json","sha":"29f0d6a5297dca6f451dd98e4d406b61328c1670"}
+    ],
+    "note": "Planning-only scalar projection from the pinned Bambu Studio P1S machine, 0.20 mm Standard and PLA Basic inheritance chains. It is not a direct-send or physical-print qualification."
+  },
+  "printer": {"id":"bambu.p1s","bed_x_mm":256.0,"bed_y_mm":256.0,"build_z_mm":256.0,"nozzle_mm":0.4},
+  "process": {"layer_height_mm":0.2,"first_layer_height_mm":0.2,"infill_percent":15.0,"perimeters":2,"top_layers":5,"bottom_layers":3,"support_enabled":false,"support_threshold_degrees":30.0,"travel_speed_mm_s":500.0,"outer_wall_speed_mm_s":200.0,"inner_wall_speed_mm_s":300.0,"infill_speed_mm_s":270.0,"initial_layer_speed_mm_s":50.0},
+  "filament": {"id":"bambu.pla-basic.p1s","name":"Bambu PLA Basic","material":"PLA","diameter_mm":1.75,"nozzle_temperature_c":220.0,"first_layer_nozzle_temperature_c":220.0,"bed_temperature_c":55.0,"first_layer_bed_temperature_c":55.0,"flow_ratio":0.98,"max_volumetric_speed_mm3_s":21.0,"fan_min_percent":60.0,"fan_max_percent":80.0},
+  "native_settings": {"machine_max_feedrate_x":"500,500","machine_max_feedrate_y":"500,500","machine_max_feedrate_z":"20,20","retract_lift":"0.4","retract_length":"0.8","retract_speed":"30","brim_width":"5","extrusion_width":"0.42","support_material_style":"organic"}
+}

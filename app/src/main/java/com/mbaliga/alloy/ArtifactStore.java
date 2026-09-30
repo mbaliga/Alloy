@@ -125,6 +125,14 @@ public final class ArtifactStore {
         return artifact;
     }
 
+    /** Recover only the narrow, explicitly compiled A1 Mini acceptance pilot artifact. */
+    public static PrinterTransport.Artifact recoverForA1MiniNoSupportPilot(File storageDir, String displayName,
+                                                                            long expectedSize, String expectedSha256) throws IOException {
+        PrinterTransport.Artifact artifact = recover(storageDir, displayName, expectedSize, expectedSha256);
+        GcodePackageValidator.validateForA1MiniNoSupportPilot(artifact.sourceFile, new Slicer.Config());
+        return artifact;
+    }
+
     public static String sha256(File file) throws IOException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

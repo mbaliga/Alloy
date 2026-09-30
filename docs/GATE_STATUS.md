@@ -2,6 +2,193 @@
 
 Date: 2026-09-22
 
+2026-09-29 TreeSupport audit reproducibility checkpoint: the source-pinned
+Bambu Studio `v02.08.02.61` TreeSupport3D audit was re-run from a fresh public
+checkout. It remains `PORT_REQUIRED` (seven required files differ; 30 of 36
+direct support files differ; 94 transitive files, with 12 unresolved quoted
+includes, 9 absent transitive files and 68 differing same-path files). The auditor now resolves Bambu's
+`src`-rooted `libslic3r/...` includes as well as local quoted includes, which
+removes a false unresolved category without relaxing the gate. This is only a
+more accurate port inventory—not support parity, runtime proof, a physical
+print, or authorization to market tree supports as Bambu-compatible.
+
+2026-09-29 initial printer/material catalog checkpoint: A1 mini, A1 and P1S
+now load from one bounded capability catalog with explicit material, feed-route
+and spool-form records. The A1 mini record distinguishes Bambu-spooled,
+refill-on-reusable-spool, third-party direct and regular-AMS-incompatible
+forms; every record includes a source/scope and keeps direct send
+unqualified. The native-enabled isolated pilot APK and matching test APK built
+successfully, and the complete ARM64 API-35 emulator suite completed **172
+tests, 0 failures**. APK SHA-256:
+`c0a31ac8779b1ce908174c838c1ef562c5cf997ffb4b2c94992f6409ebd0b271`;
+matching instrumentation APK SHA-256:
+`c0e295697e17d9d329fa958d44b9f2e0484f47f59ecd8c9a01b78f445dfd804e`.
+This validates the shipped data/UI boundary, not a physical spool fit,
+material qualification, direct send, Bambu Handy import, or production
+release.
+
+2026-09-29 capability-source checkpoint: every initial printer catalog record
+now requires a direct official `https://*.bambulab.com` source URL at parse
+time, and the Material/Spool review exposes a user-invoked official-source
+action. A generic “see documentation” string can no longer satisfy the
+catalog contract. The rebuilt native-enabled pilot APK and matching test APK
+passed the five focused learning/capability tests on the ARM64 emulator. This
+checks provenance formatting and offline rendering only; it cannot establish
+that an external page is current, a spool fits, a material recipe works, or a
+printer accepts a job.
+
+2026-09-29 capability-CI checkpoint: `ci/validate_capability_catalog.py` now
+rejects malformed data before APK assembly and runs in the Android v1, native,
+and release-candidate workflows. It requires exactly A1 mini/A1/P1S, official
+HTTPS source URLs, valid review dates, direct-send states that remain *not
+qualified*, non-empty material/feed/spool records, and the four explicit A1
+mini spool forms plus the unsupported regular-AMS route. This makes the
+compatibility catalog a release input, not an unreviewed UI asset; physical
+material and printer qualification still remain separate evidence gates.
+
+2026-09-29 capability-CI adversarial checkpoint: four parity tests now cover
+the catalog happy path and reject a non-official source URL, an accidental
+direct-send promotion, and a missing A1 mini spool form. The test is included
+in the parity tooling workflow, preventing a later validator regression from
+quietly broadening the displayed capability claim.
+
+2026-09-29 offline learning-content checkpoint: the versioned offline catalog
+contains 45 bounded records (7 onboarding, 12 cheat-sheet and 26
+symptom-first troubleshooting cards). Every record carries safety, scope and
+source fields; malformed or missing artwork/content is rejected before the UI
+renders it, and text-only fallback diagrams retain a spoken description. This
+meets the software content floor, but does not replace human editorial,
+accessibility or visual review on real Android devices.
+
+2026-09-29 controlled physical-pilot wiring checkpoint: an explicitly
+CI-debug-signed `alloyPhysicalPilot` build now provides a fail-narrow A1 Mini
+acceptance lane. It is rejected at Gradle configuration time when paired with
+production or native-engine verification flags, allows only five untouched
+bundled fixtures under the exact A1 Mini 0.4 mm PLA Basic no-support recipe,
+requires native output, N1 pairing, a leaf certificate pin and recovery-clear
+state, and presents separate upload and start confirmations. The package
+boundary requires unverified native metadata, the A1 Mini recipe and supports
+disabled; normal and production builds retain the stricter verified-engine and
+support-parity boundary. The pilot APK and matching instrumentation APK built
+successfully, and the five-fixture native emulator run passed, including the
+pilot package validator. This is build/runtime evidence only—not a physical
+upload, start, print, Bambu Handy acceptance, TreeSupport3D parity or
+production certification.
+
+2026-09-29 final software-quality checkpoint: Learn cards without supplied
+artwork now render a native, labelled teaching diagram rather than a
+text-only void. The diagrams distinguish plate/model, material/feed path,
+support, layer/wall/infill, orientation, hard-stop safety, and
+connection/recovery concepts; each has a concise TalkBack description and is
+not presented as live printer data. The release APK was launched on the
+native-enabled API-35 ARM64 emulator and the Learn hub, quick-cheat route,
+raster-artwork alternative text, and native-diagram alternative text were
+observed at runtime. The matching installed instrumentation suite then
+completed **172 tests, 0 failures**. Profile assets and release, transport,
+and Android-workflow wiring validators also pass; `git diff --check` is
+clean. This closes the final software-only milestone. It does not certify a
+physical print, direct Bambu job transfer, Bambu Handy acceptance, TreeSupport3D
+parity, human editorial/visual approval, or organization production signing.
+
+2026-09-29 no-support pilot-evidence checkpoint: the opt-in
+`NoSupportPlaPilotTest` route now retains (only when invoked with
+`-e export-no-support-pilot true`) all five A1 Mini / 0.4 mm / PLA Basic /
+no-support `.gcode.3mf` fixtures, the pinned planning profile, and a
+software-only manifest with APK, instrumentation APK, profile, and per-package
+SHA-256 identities. The ordinary test route remains disposable. The explicit
+export was exercised on the native-enabled API-35 ARM64 emulator: all five
+packages were retained and the manifest recorded `software_only: true`,
+`physical_qualification: PENDING`, and `direct_send_qualification: PENDING`.
+This closes the evidence-retention tooling gap for the physical pilot; it is
+not physical print, upload/start, Bambu Handy, or direct-send evidence.
+
+2026-09-29 offline-learning integrity checkpoint: the versioned learning loader
+now rejects duplicate article identifiers, unsupported card kinds, malformed
+or escaping artwork paths, unbounded card lists, and absent/corrupt or
+oversized declared PNGs before rendering the Learn UI. The bounded validator
+was exercised on the native-enabled API-35 ARM64 emulator with the four-test
+learning/capability/profile contract suite passing (including deliberately
+malformed catalogue fixtures); the subsequent complete matching Android suite
+completed **171 tests, 0 failures, 2 intentional fixture-gated skips**. The
+refreshed CI-debug APK SHA-256 is
+`5f258f0d6e517fbe967a11ce8f911d1897bf6e02f6f2d28c16cd42a86da1c2b6`.
+This makes the published offline field guide fail safely when a content update
+is incomplete; it is not evidence of human editorial approval, Bambu
+compatibility, physical printer qualification, or production signing.
+
+2026-09-29 learning-content checkpoint: the offline catalogue now contains
+**26** searchable symptom-first troubleshooting cards, exceeding the v1
+24-card floor. Every card keeps source, scope and reversible/safe next steps;
+hard-stop guidance remains separate from diagnosis. The original unbranded
+`learn/printer-phone-recovery-v1.png` explanatory illustration is packaged in
+the release APK with a SHA-256/provenance/prompt/alt-text record in
+`docs/LEARNING_ASSET_MANIFEST.md`; it is used only to explain an unconfirmed
+connection/recovery state, never as fake printer telemetry. The live Learn
+hub and symptom-first route were exercised on the API-35 ARM64 emulator, and
+the matching native CI-debug release/instrumentation pair then completed
+**170 tests, 0 failures**. This improves offline onboarding, cheat-sheet and
+troubleshooting completeness; a named human visual/safety review, physical
+printer qualification, and production release signing still remain explicit
+gates.
+
+2026-09-29 navigation-system checkpoint: the workshop now uses the shared
+`ArcNavigationBar` rather than a horizontally clipped action rail. Its two
+bands are mapped from Hyle's shared tokenized curve family; contextual action, search and
+readiness controls retain semantic Android hit targets while the visible marks
+are canvas drawn to avoid OEM missing-glyph substitutions. The `Library`
+terminology is now used in the product UI and README. `ArcNavigationBarTest`
+checks eight named, unclipped targets on a 1080 px phone width. The Java/native
+release package was rebuilt successfully through the CI-debug signing path and
+the debug UI was installed and visually checked on the API-35 ARM64 emulator
+(`/private/tmp/alloy-hyle-nav-final.png`). The matching packaged release and
+instrumentation APKs then completed the full emulator suite: **170 tests, 0
+failures**. This includes the focused arc test, source-pinned planning profiles,
+learning/capability catalog, artifact-share boundary, inventory, native
+estimate, no-support pilot harness, and transport fail-closed cases. It does
+not promote any physical-printer, Bambu Handy, tree-support parity, or
+organization release-signing gate.
+
+2026-09-29 native Android checkpoint: a clean arm64 API-35 emulator run of
+the native-enabled CI-debug release suite completed **169 tests, 0 failures,
+2 intentional fixture-gated skips**. This includes the source-pinned A1 mini,
+A1 and P1S planning-profile contract, offline learning/capability catalog,
+artifact-share provider, inventory starter material rows, the profile-density
+print-plan estimate, and the narrow no-support A1 Mini packageability harness.
+The run does not promote `NATIVE_ENGINE_VERIFIED`, physical printer transport,
+support parity, Bambu Handy compatibility, or production signing. A visual
+runtime capture on the same emulator also verifies the real Alloy logo is
+centered and circle-clipped in the main header, with the four utility controls
+balanced around it; this is a product-shell correction, not printer evidence.
+
+2026-09-24 inventory mutation reliability: quantity adjustments and completed
+print material reconciliation now serialize read/modify/write operations on
+the shared preferences instance. This prevents stale UI rows and separate
+Activity/service stores from overwriting each other's stock changes. An Android
+regression reuses one stale custom-item snapshot, then concurrently writes from
+two store instances. Source diff checks pass; instrumentation is not counted as
+executed here because no Java runtime is installed.
+
+2026-09-24 transport lifecycle hardening: asynchronous LAN operation submission
+and transport teardown now share a synchronization boundary, with a defensive
+closed-state callback if the executor rejects a submission. An Android
+regression races 32 `probe` submissions against teardown. Source diff checks
+pass; this workspace currently has no Java runtime, so the instrumentation
+test has not yet been executed and is not counted as verified evidence.
+
+2026-09-24 visual-reference correction: the supplied preview sets adjacent
+station spacing to 450 mm, while this renderer had compressed it to 224 mm.
+The current Android study now uses the source spacing, identical dark PEI on
+all four sheets, a portrait-specific orbit, a 6,000 mm far plane, the
+specified 10 mm plate grid, and a radial contact-shadow shader. Machine
+plastics receive an sRGB output transform without changing printable-model
+colors. The native ARM64 debug APK builds; the latest API-35 capture is
+`/private/tmp/alloy-a1-soft-contact.png`. The native-enabled connected
+instrumentation suite completed with 158 tests, 0
+failures/errors, and 2 fixture-gated skips; the 68-test parity suite and
+release-wiring validation also pass. The supplied machine mesh still reads
+too blocky and the composition is not approved for marketing. Physical A1
+Mini acceptance and production signing remain open.
+
 The latest presentation cleanup removes the unrelated can, ball, and key
 scale props from the A1 Mini marketing study. The printer mesh and receding
 PEI runway are now the only foreground subjects, which keeps the composition
@@ -2207,3 +2394,35 @@ arity, support-ironing role, cooling metadata, overhang-degree setters,
 soluble-interface state, moment/config access, and colinear-point cleanup.
 This is measurable source-compatibility progress only; it does not establish
 exact Bambu support parity, a complete slicer, or a production APK.
+
+## 2026-09-24 local Android verification increment
+
+The staged ARM64 JDK and Android 35 SDK were recovered from `/private/tmp`.
+Gradle ran after its user/cache directory was pointed at the writable
+temporary toolchain area and local worker sockets were allowed. The
+Java-only `:app:assembleDebug -PalloyCiDebugSign=true` task completed
+successfully, producing `app/build/outputs/apk/debug/app-debug.apk`. The
+configured `:app:assembleReleaseAndroidTest -PalloyCiDebugSign=true` task also
+completed successfully, compiling the instrumentation source set, including
+`inventoryShowsUrgentNeedsBeforeRoutineStock`.
+
+This is compile evidence only: ADB found no connected device, the staged SDK
+has no emulator executable, and neither instrumentation execution nor visual
+inspection of the updated A1 Mini study was possible. The debug artifact has
+no native slicer because this build did not enable `alloyNativeEngine`; it is
+not a release candidate or production-readiness evidence. Native/profile/
+support parity, G-code parity, physical printer, lifecycle/recovery, visual
+signoff and release-signing gates remain open.
+
+The production packaging audit found a mismatch between the asset-license
+documentation and Gradle: release variants defaulted to including private
+reference meshes even though public redistribution rights are not documented.
+Release inclusion now defaults off, private visual-review builds retain an
+explicit opt-in, and the production build guard rejects that opt-in. The
+release-wiring validator checks this policy. A fresh `:app:assembleRelease`
+build succeeded, and direct APK listing confirmed that the A1 reference mesh
+and private model catalog are absent while the ordinary bundled examples and
+profile remain. A negative production-configuration check emitted the intended
+redistribution-rights failure when private visuals were explicitly enabled.
+Debug builds are unchanged so the owner can continue reviewing the supplied
+scene locally.

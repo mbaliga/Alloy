@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.res.ColorStateList;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -61,6 +62,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_VIEW_EXPORT = 49;
     private static final int REQUEST_VISUALIZATION_EXPORT = 50;
     private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
+    private static final String BUNDLED_PROFILE_PRINTER_ID = "bundled_profile_printer_id";
     private static final int HISTORY_RESET = 0;
     private static final int HISTORY_RESTORE = 1;
     private static final int HISTORY_MUTATION = 2;
@@ -71,6 +73,8 @@ public final class MainActivity extends Activity {
     // view once after this visual-review milestone.
     private static final String IMMERSIVE_INTRO_VERSION = "immersive_intro_version";
     private static final int CURRENT_IMMERSIVE_INTRO_VERSION = 2;
+    private static final String FIRST_RUN_ONBOARDING_VERSION = "first_run_onboarding_version";
+    private static final int CURRENT_FIRST_RUN_ONBOARDING_VERSION = 1;
     private static final int BG = Color.rgb(246, 245, 241);
     private static final int SURFACE = Color.WHITE;
     private static final int PANEL = Color.rgb(237, 234, 227);
@@ -86,6 +90,7 @@ public final class MainActivity extends Activity {
     };
 
     private LinearLayout root, actions, layerInspector;
+    private ArcNavigationBar arcNavigation;
     private SeekBar layerSeek;
     private TextView layerInspectorLabel;
     private TextView status, details, modelMeta, inventorySummary, inventoryStatusDot;
@@ -116,6 +121,9 @@ public final class MainActivity extends Activity {
     private BambuLanTransport printerTransport;
     private BambuPrinterDiscovery.Scan activeDiscovery;
     private PrinterTransport.Artifact stagedArtifact;
+    // Set only after an untouched bundled fixture finishes importing. User
+    // imports, restored projects and all geometry mutations clear this proof.
+    private String trustedPilotFixtureAssetPath;
     /**
      * A recovered artifact belongs to the interrupted printer transaction,
      * not to whichever model the user loads next. Keep it separate from the
@@ -216,8 +224,7 @@ public final class MainActivity extends Activity {
         }
         if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
             try {
-                recoveredArtifact = ArtifactStore.recoverForPhysicalPrint(getFilesDir(), recoveredJob.artifactName,
-                        recoveredJob.artifactSize, recoveredJob.artifactSha256);
+                recoveredArtifact = recoverPrinterArtifact(recoveredJob);
             } catch (Exception ignored) {
                 // A missing or evicted artifact never becomes a reason to
                 // retry a printer job; the checkpoint remains fail-closed.
@@ -245,7 +252,9 @@ public final class MainActivity extends Activity {
             batchSlicing = true;
         }
         try {
-            profile = ProfileCatalog.loadDefault(getAssets());
+            String bundledPrinterId = getPreferences(MODE_PRIVATE)
+                    .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+            profile = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
             java.io.File importedProfileFile = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
             if (importedProfileFile.isFile()) {
                 try {
@@ -314,7 +323,7 @@ public final class MainActivity extends Activity {
                         // A very early build used only IMMERSIVE_INTRO_SHOWN;
                         // treat that legacy preference shape as version zero.
                     }
-                    if (introVersion < CURRENT_IMMERSIVE_INTRO_VERSION) {
+                    if (introVersion < CURRENT_IMMERSIVE_INTRO_VERSION && !firstRunOnboardingPending()) {
                         getPreferences(MODE_PRIVATE).edit()
                                 .putInt(IMMERSIVE_INTRO_VERSION, CURRENT_IMMERSIVE_INTRO_VERSION)
                                 .putBoolean(IMMERSIVE_INTRO_SHOWN, true)
@@ -337,6 +346,7 @@ public final class MainActivity extends Activity {
                 }
             }
         }
+        if (incoming == null) scheduleFirstRunOnboarding();
     }
 
     /**
@@ -742,10 +752,19 @@ public final class MainActivity extends Activity {
 
     private void recoverUploadedArtifact(PrinterJobStore.Job job) {
         try {
-            recoveredArtifact = ArtifactStore.recoverForPhysicalPrint(getFilesDir(), job.artifactName, job.artifactSize, job.artifactSha256);
+            recoveredArtifact = recoverPrinterArtifact(job);
         } catch (Exception ignored) {
             recoveredArtifact = null;
         }
+    }
+
+    private PrinterTransport.Artifact recoverPrinterArtifact(PrinterJobStore.Job job) throws Exception {
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            return ArtifactStore.recoverForA1MiniNoSupportPilot(getFilesDir(), job.artifactName,
+                    job.artifactSize, job.artifactSha256);
+        }
+        return ArtifactStore.recoverForPhysicalPrint(getFilesDir(), job.artifactName,
+                job.artifactSize, job.artifactSha256);
     }
 
     private PrinterTransport.PrinterTarget printerTarget(PrinterJobStore.Job job) {
@@ -846,18 +865,27 @@ public final class MainActivity extends Activity {
         detailsLp.bottomMargin = dp(8);
         root.addView(details, detailsLp);
 
+        // Dynamic task actions stay in this off-screen source of truth, then
+        // open from the upper curved bar as an accessible action sheet. This
+        // avoids a clipped horizontal button parade while keeping every
+        // state-dependent operation discoverable.
         actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
-        // Leave a real trailing inset so the final action can be fully brought
-        // into view on narrow phones instead of appearing cut off at the edge.
-        actions.setPadding(0, dp(5), dp(16), dp(5));
-        actions.setGravity(Gravity.CENTER_VERTICAL);
-        HorizontalScrollView actionScroll = new HorizontalScrollView(this);
-        actionScroll.setHorizontalScrollBarEnabled(false);
-        actionScroll.setClipToPadding(false);
-        actionScroll.setContentDescription("More preparation and print actions");
-        actionScroll.addView(actions, new HorizontalScrollView.LayoutParams(-2, dp(62)));
-        root.addView(actionScroll, new LinearLayout.LayoutParams(-1, dp(62)));
+        arcNavigation = new ArcNavigationBar(this);
+        arcNavigation.setListener(new ArcNavigationBar.Listener() {
+            @Override public void onContext() { showActionSheet(); }
+            @Override public void onSearch() { showModelLibrary(); }
+            @Override public void onAlerts() { showPrinterReadiness(); }
+            @Override public void onHome() {
+                if (viewport != null) viewport.resetView();
+                status.setText(model == null ? "Start  ·  choose a model" : "Prepare  ·  " + model.displayName);
+            }
+            @Override public void onLibrary() { showModelLibrary(); }
+            @Override public void onPrepare() { showPrepare(); }
+            @Override public void onHistory() { showModelHistory(); }
+            @Override public void onMore() { showActionSheet(); }
+        });
+        root.addView(arcNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
 
         layerInspector = new LinearLayout(this);
         layerInspector.setOrientation(LinearLayout.VERTICAL);
@@ -1194,41 +1222,49 @@ public final class MainActivity extends Activity {
         contextLp.leftMargin = dp(8);
         contextLp.bottomMargin = 0;
         header.addView(context, contextLp);
+        context.setContentDescription("Open Learn: beginner guide, materials and troubleshooting");
+        context.setOnClickListener(v -> showLearnHub());
 
-        TextView title = label("ALLOY", 23, TEXT);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setLetterSpacing(0.14f);
-        // Keep the wordmark in its own left header lane now that the phone
-        // header also exposes the A1 Mini study shortcut. A centered wordmark
-        // would collide with the four compact controls on narrow screens.
-        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(132), -2, Gravity.TOP | Gravity.START);
-        titleLp.leftMargin = dp(8);
-        titleLp.topMargin = 0;
-        header.addView(title, titleLp);
+        // The real mark owns the visual centre of the header. It is clipped
+        // to a circle, rather than being scaled down inside one, so the black
+        // field and luminous lettering retain the intended icon treatment.
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.alloy_logo);
+        logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        logo.setBackground(round(Color.BLACK, Color.rgb(99, 224, 211), 1, 21));
+        logo.setClipToOutline(true);
+        logo.setContentDescription("Alloy");
+        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        logoLp.topMargin = 0;
+        header.addView(logo, logoLp);
 
-        LinearLayout controls = new LinearLayout(this);
-        controls.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout leftControls = new LinearLayout(this);
+        leftControls.setGravity(Gravity.CENTER_VERTICAL);
         TextView printerStudy = control("3D", "Open model 3D study", v -> {
             if (model == null) showModelLibrary();
             else showImmersiveView();
         });
         TextView machineStudy = control("A1", "Open A1 Mini 3D study", v -> showPrinterStudy());
-        TextView inventory = control("▦", "Workshop inventory", v -> showInventory());
-        TextView menu = control("·", "Project menu", v -> showProjectMenu());
-        controls.addView(printerStudy, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        leftControls.addView(printerStudy, new LinearLayout.LayoutParams(dp(42), dp(42)));
         LinearLayout.LayoutParams machineStudyLp = new LinearLayout.LayoutParams(dp(42), dp(42));
         machineStudyLp.leftMargin = dp(6);
-        controls.addView(machineStudy, machineStudyLp);
+        leftControls.addView(machineStudy, machineStudyLp);
+        FrameLayout.LayoutParams leftControlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+        leftControlsLp.leftMargin = dp(2);
+        header.addView(leftControls, leftControlsLp);
+
+        LinearLayout rightControls = new LinearLayout(this);
+        rightControls.setGravity(Gravity.CENTER_VERTICAL);
+        TextView inventory = control("▦", "Workshop inventory", v -> showInventory());
+        TextView menu = control("·", "Project menu", v -> showProjectMenu());
         LinearLayout.LayoutParams printerInventoryLp = new LinearLayout.LayoutParams(dp(42), dp(42));
-        printerInventoryLp.leftMargin = dp(6);
-        controls.addView(inventory, printerInventoryLp);
+        rightControls.addView(inventory, printerInventoryLp);
         LinearLayout.LayoutParams menuLp = new LinearLayout.LayoutParams(dp(42), dp(42));
         menuLp.leftMargin = dp(6);
-        controls.addView(menu, menuLp);
-        FrameLayout.LayoutParams controlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
-        controlsLp.topMargin = 0;
-        controlsLp.rightMargin = dp(2);
-        header.addView(controls, controlsLp);
+        rightControls.addView(menu, menuLp);
+        FrameLayout.LayoutParams rightControlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
+        rightControlsLp.rightMargin = dp(2);
+        header.addView(rightControls, rightControlsLp);
         return header;
     }
 
@@ -1293,15 +1329,23 @@ public final class MainActivity extends Activity {
         // orbit layout put material and nozzle pills directly over the
         // machine's gantry and uprights on portrait phones, obscuring the
         // very mesh this study is meant to present.
+        // The fit button occupies the upper-right control rail. Keep all
+        // three configurator callouts below that rail on portrait screens;
+        // the previous 78dp row collided with the nozzle pill and fit button
+        // on narrow devices, making the first frame feel like a debug HUD.
+        // Leave a full control-height plus touch-spacing below the fit button.
+        // On tall, dense phones 124dp still landed on that rail after status
+        // bar/window insets were applied to the stage.
+        int calloutTop = dp(160);
         View sizeTag = compactSceneTag("□", "SIZE", "180 × 180 × 180 MM",
-                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(78));
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, calloutTop);
         sizeTag.setOnClickListener(v -> {
             scene.fitModel();
             Toast.makeText(this, "A1 Mini volume · 180 × 180 × 180 mm", Toast.LENGTH_SHORT).show();
         });
         stage.addView(sizeTag);
         View materialTag = compactSceneTag("◌", "MATERIAL", "NATURAL PLA",
-                Gravity.TOP | Gravity.START, dp(8), dp(78));
+                Gravity.TOP | Gravity.START, dp(8), calloutTop);
         materialTag.setOnClickListener(v -> {
             int next = (scene.getFinishMode() + 1) % 5;
             scene.setFinishMode(next);
@@ -1310,7 +1354,7 @@ public final class MainActivity extends Activity {
         });
         stage.addView(materialTag);
         View nozzleTag = compactSceneTag("⌁", "NOZZLE", "0.4 MM",
-                Gravity.TOP | Gravity.END, dp(8), dp(78));
+                Gravity.TOP | Gravity.END, dp(8), calloutTop);
         nozzleTag.setOnClickListener(v -> showProfileReview());
         stage.addView(nozzleTag);
         View printerTag = compactSceneTag("A1", "PRINTER", "A1 MINI",
@@ -1825,7 +1869,8 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(-1, 48);
         addLp.setMargins(0, 0, 0, 10);
         content.addView(add, addLp);
-        for (InventoryStore.Item item : inventoryStore.items()) content.addView(inventoryRow(item));
+        for (InventoryStore.Item item : InventoryStore.orderedForAttention(inventoryStore.items()))
+            content.addView(inventoryRow(item));
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -2181,6 +2226,9 @@ public final class MainActivity extends Activity {
 
     private void refreshActions() {
         actions.removeAllViews();
+        // Help stays available during every task state. It is intentionally a
+        // read-only route: lessons may explain a blocked gate, never open it.
+        action("Learn", v -> showLearnHub());
         if (projectTransferring || batchTransferring) {
             Button busy = action(projectTransferring ? "Project file…" : "Batch archive…", null);
             busy.setEnabled(false);
@@ -2213,7 +2261,8 @@ public final class MainActivity extends Activity {
             action("Import model", v -> openModel());
             action("A1 3D", v -> showPrinterStudy());
             action("Model", v -> showModelWorkbench());
-            action("Model atlas", v -> showModelLibrary());
+            action("Library", v -> showModelLibrary());
+            action("Profile", v -> showProfileReview());
             action("Recipe", v -> showRecipe());
             action("Print readiness", v -> showPrinterReadiness());
             if (hasPrinterRecovery()) {
@@ -2231,13 +2280,14 @@ public final class MainActivity extends Activity {
             action("Import another", v -> openModel());
             action("A1 3D", v -> showPrinterStudy());
             action("Model", v -> showModelWorkbench());
-            action("Model atlas", v -> showModelLibrary());
+            action("Library", v -> showModelLibrary());
             action("Model 3D", v -> showImmersiveView());
             action("Print readiness", v -> showPrinterReadiness());
             addHistoryActions();
             action("Visualize", v -> showVisualization());
             if (model.parts != null && model.parts.length > 1) action("Parts", v -> showParts());
             if (model.parts != null && model.parts.length > 1) action("Arrange", v -> autoArrangeParts());
+            action("Profile", v -> showProfileReview());
             action("Prepare", v -> showPrepare());
             Button sliceButton = action("Slice", v -> startSlice());
             sliceButton.setTextColor(GOLD);
@@ -2249,13 +2299,15 @@ public final class MainActivity extends Activity {
         } else {
             action("Model", v -> showModelWorkbench());
             action("A1 3D", v -> showPrinterStudy());
-            action("Model atlas", v -> showModelLibrary());
+            action("Library", v -> showModelLibrary());
             action("Model 3D", v -> showImmersiveView());
             action("Print readiness", v -> showPrinterReadiness());
             addHistoryActions();
             action("Visualize", v -> showVisualization());
             action("Prepare", v -> showPrepare());
+            action("Profile", v -> showProfileReview());
             if (model.parts != null && model.parts.length > 1) action("Parts", v -> showParts());
+            action("Print plan", v -> showPrintPlan());
             action("Inspect", v -> showInspection());
             action(viewport.isToolpathOnly() ? "Model view" : "Path view", v -> {
                 viewport.setToolpathOnly(!viewport.isToolpathOnly());
@@ -2295,8 +2347,44 @@ public final class MainActivity extends Activity {
                 }
             }
             Button export = action("Export .3mf", v -> exportPackage()); export.setTextColor(GOLD);
+            action("Share package", v -> sharePackage());
         }
+        if (arcNavigation != null) arcNavigation.setContextLabel(arcContextLabel());
         updateLayerInspector();
+    }
+
+    private String arcContextLabel() {
+        if (importing) return "Importing";
+        if (modeling) return "Modeling";
+        if (repairingGeometry) return "Repairing";
+        if (batchSlicing) return "Slicing plates";
+        if (slicing) return "Slicing";
+        if (model == null) return "Start a project";
+        return slice == null ? "Prepare" : "Inspect";
+    }
+
+    private void showActionSheet() {
+        if (actions == null || actions.getChildCount() == 0) return;
+        ArrayList<String> labels = new ArrayList<>();
+        ArrayList<View> destinations = new ArrayList<>();
+        for (int index = 0; index < actions.getChildCount(); index++) {
+            View child = actions.getChildAt(index);
+            if (!(child instanceof Button)) continue;
+            Button button = (Button) child;
+            String label = button.getText().toString();
+            if (!button.isEnabled()) label += "  ·  working";
+            labels.add(label);
+            destinations.add(button);
+        }
+        if (labels.isEmpty()) return;
+        new AlertDialog.Builder(this)
+                .setTitle(arcContextLabel())
+                .setItems(labels.toArray(new String[0]), (dialog, which) -> {
+                    View target = destinations.get(which);
+                    if (target.isEnabled()) target.performClick();
+                })
+                .setNegativeButton("Close", null)
+                .show();
     }
 
     /** Scrub the selected toolpath layer directly on a phone. */
@@ -2381,6 +2469,25 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "Printer preview staging failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Upload controlled pilot package?")
+                    .setMessage("PILOT BUILD · This can upload only the pinned bundled A1 Mini PLA fixture with supports off. It collects acceptance evidence; it does not qualify ordinary direct printing.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Upload pilot", (dialog, which) -> beginPrinterUpload(credentials))
+                    .show();
+            return;
+        }
+        beginPrinterUpload(credentials);
+    }
+
+    private void beginPrinterUpload(PrinterCredentialStore.Credentials credentials) {
+        PrinterReadiness.Report readiness = printerReadinessReport();
+        if (!readiness.canSend() || credentials == null || stagedArtifact == null) {
+            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
+            showPrinterReadiness();
+            return;
+        }
         final PrinterTransport.Artifact artifact = stagedArtifact;
         final String filament = config.filament;
         final float filamentMm = slice.filamentMm;
@@ -2432,6 +2539,14 @@ public final class MainActivity extends Activity {
         boolean artifactReady = artifact != null && artifact.hasSourceFile()
                 && artifact.sourceFile.isFile()
                 && artifact.sourceFile.length() == artifact.sizeBytes;
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            A1MiniNoSupportPilot.Verdict pilot = A1MiniNoSupportPilot.evaluate(
+                    profile, config, slice, trustedPilotFixtureAssetPath);
+            return PrinterReadiness.evaluateA1MiniNoSupportPilot(
+                    true, BuildConfig.NATIVE_ENGINE_ENABLED, pilot, artifactReady,
+                    credentials != null, credentials != null && credentials.isA1Mini(),
+                    credentials != null && credentials.hasCertificatePin(), !hasPrinterRecovery());
+        }
         return PrinterReadiness.evaluate(
                 BuildConfig.NATIVE_ENGINE_ENABLED,
                 BuildConfig.NATIVE_ENGINE_VERIFIED,
@@ -2456,7 +2571,11 @@ public final class MainActivity extends Activity {
                     .append(check.label).append("  ·  ")
                     .append(check.detail).append('\n');
         }
-        message.append("\nThis checklist is local and fail-closed. A green checklist still requires the target A1 Mini's physical acceptance evidence before this build can be promoted.");
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            message.append("\nPILOT BUILD · This lane is only for collecting A1 Mini acceptance evidence with an immutable bundled fixture. It is excluded from production and does not qualify general direct printing.");
+        } else {
+            message.append("\nThis checklist is local and fail-closed. A green checklist still requires the target A1 Mini's physical acceptance evidence before this build can be promoted.");
+        }
         AlertDialog.Builder dialog = new AlertDialog.Builder(this)
                 .setTitle("Print readiness")
                 .setMessage(message.toString())
@@ -2502,7 +2621,9 @@ public final class MainActivity extends Activity {
         }
         new AlertDialog.Builder(this)
                 .setTitle("Start print?")
-                .setMessage("The artifact was uploaded to " + target.name + ". The printer must confirm PREPARE/RUNNING telemetry before Alloy reports a start.")
+                .setMessage((BuildConfig.PHYSICAL_PILOT_ENABLED
+                        ? "PILOT BUILD · This is an acceptance fixture, not a qualified direct-send job.\n\n" : "")
+                        + "The artifact was uploaded to " + target.name + ". The printer must confirm PREPARE/RUNNING telemetry before Alloy reports a start.")
                 .setNegativeButton("Keep uploaded", (dialog, which) -> {
                     if (!printerJobStore.updateIfMatches(jobId, target, artifact, PrinterTransport.State.UPLOADED,
                             "Artifact uploaded; start was not requested", remotePath)) return;
@@ -2772,6 +2893,53 @@ public final class MainActivity extends Activity {
         return profile != null && "Bambu JSON preset import".equals(profile.provenanceSource);
     }
 
+    private void showBundledProfilePicker() {
+        if (importedProfileActive()) {
+            Toast.makeText(this, "Reset the imported profile before selecting a bundled planning profile", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadInitial(getAssets());
+            String[] labels = new String[choices.size()];
+            for (int index = 0; index < choices.size(); index++) {
+                ProfileCatalog.Profile choice = choices.get(index);
+                labels[index] = choice.name + "\nPlanning / inspection only · direct printing remains locked";
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("Select planning printer")
+                    .setMessage("This changes the build envelope and starter PLA recipe. It clears the current slice for review; it does not pair, send to, or qualify a physical printer.")
+                    .setItems(labels, (ignored, which) -> applyBundledProfile(choices.get(which)))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Bundled profiles are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void applyBundledProfile(ProfileCatalog.Profile selected) {
+        if (selected == null) return;
+        profile = selected;
+        profile.applyTo(config);
+        getPreferences(MODE_PRIVATE).edit()
+                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId).apply();
+        projectStore.saveRecipe(config);
+        slice = null;
+        stagedArtifact = null;
+        lastBatch = null;
+        if (viewport != null) viewport.setResult(null);
+        if (model != null) {
+            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+            details.setText(modelDetails(model));
+        } else {
+            modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
+            details.setText("STL, OBJ, 3MF and STEP  ·  " + profileBuildVolumeLabel() + " build volume");
+        }
+        updateRecipeMarkers();
+        status.setText("Prepare  ·  " + profilePrinterLabel() + " planning profile selected; re-slice to review");
+        refreshActions();
+        Toast.makeText(this, "Planning profile selected · direct printing remains locked", Toast.LENGTH_LONG).show();
+    }
+
     private void showProfileReview() {
         if (profile == null) {
             new AlertDialog.Builder(this).setTitle("Active profile")
@@ -2795,6 +2963,8 @@ public final class MainActivity extends Activity {
                 .setPositiveButton("Export JSON", (ignored, which) -> openProfileExport());
         if (importedProfileActive()) {
             dialog.setNeutralButton("Reset to bundled", (ignored, which) -> resetImportedProfile());
+        } else {
+            dialog.setNeutralButton("Select planning printer", (ignored, which) -> showBundledProfilePicker());
         }
         dialog.show();
     }
@@ -2827,12 +2997,12 @@ public final class MainActivity extends Activity {
 
     private void resetImportedProfile() {
         if (!importedProfileActive()) {
-            Toast.makeText(this, "The bundled A1 Mini profile is already active", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "A bundled planning profile is already active", Toast.LENGTH_SHORT).show();
             return;
         }
         new AlertDialog.Builder(this)
                 .setTitle("Reset imported profile?")
-                .setMessage("This removes only Alloy's private imported-profile override and restores the bundled A1 Mini / PLA profile. Saved models, plates, project archives, and inventory remain unchanged. Any slice must be reviewed again.")
+                    .setMessage("This removes only Alloy's private imported-profile override and restores the selected bundled planning profile. Saved models, plates, project archives, and inventory remain unchanged. Any slice must be reviewed again.")
                 .setNegativeButton("Keep it", null)
                 .setPositiveButton("Reset profile", (ignored, which) -> {
                     java.io.File destination = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
@@ -2841,7 +3011,9 @@ public final class MainActivity extends Activity {
                         return;
                     }
                     try {
-                        ProfileCatalog.Profile restored = ProfileCatalog.loadDefault(getAssets());
+                        String bundledPrinterId = getPreferences(MODE_PRIVATE)
+                                .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+                        ProfileCatalog.Profile restored = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
                         profile = restored;
                         profile.applyTo(config);
                         projectStore.saveRecipe(config);
@@ -2857,9 +3029,9 @@ public final class MainActivity extends Activity {
                             details.setText("STL, OBJ, 3MF and STEP  ·  " + profileBuildVolumeLabel() + " build volume");
                         }
                         updateRecipeMarkers();
-                        status.setText(model == null ? "Profile  ·  bundled A1 Mini restored" : "Prepare  ·  recipe reset, review model");
+                        status.setText(model == null ? "Profile  ·  bundled planning profile restored" : "Prepare  ·  recipe reset, review model");
                         refreshActions();
-                        Toast.makeText(this, "Bundled A1 Mini profile restored", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Bundled planning profile restored", Toast.LENGTH_LONG).show();
                     } catch (Exception error) {
                         Toast.makeText(this, "Profile reset failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
                     }
@@ -2889,9 +3061,16 @@ public final class MainActivity extends Activity {
     }
 
     private void loadUris(ArrayList<Uri> uris, ArrayList<String> preferredNames, boolean restoreTransform) {
+        loadUris(uris, preferredNames, restoreTransform, null);
+    }
+
+    private void loadUris(ArrayList<Uri> uris, ArrayList<String> preferredNames, boolean restoreTransform,
+                          String pilotFixtureAssetPath) {
         if (uris == null || uris.isEmpty()) return;
         final ArrayList<Uri> requestedUris = new ArrayList<>(uris);
         final ArrayList<String> requestedNames = preferredNames == null ? null : new ArrayList<>(preferredNames);
+        final String requestedPilotFixture = A1MiniNoSupportPilot.isFixtureAsset(pilotFixtureAssetPath)
+                ? pilotFixtureAssetPath : null;
         // A document import runs off the UI thread. Snapshot the recipe used
         // for STEP conversion so a concurrent editor change cannot produce a
         // converted mesh whose cache identity and visible recipe disagree.
@@ -3009,6 +3188,7 @@ public final class MainActivity extends Activity {
                     }
                     applyLoadedModel(combined, pristineCombined, projectName, importedUris, importedNames,
                             scale, rotation, tiltX, tiltY, restoreTransform, restoreGeometryRepair);
+                    trustedPilotFixtureAssetPath = !restoreTransform ? requestedPilotFixture : null;
                     if (!restoreTransform && importedModelStore != null)
                         importedModelStore.remember(getFilesDir(), importedUris, importedNames);
                     // A new import is a visual handoff as much as it is a
@@ -3091,6 +3271,305 @@ public final class MainActivity extends Activity {
         refreshActions();
     }
 
+    private boolean firstRunOnboardingPending() {
+        try {
+            return getPreferences(MODE_PRIVATE).getInt(FIRST_RUN_ONBOARDING_VERSION, 0)
+                    < CURRENT_FIRST_RUN_ONBOARDING_VERSION;
+        } catch (ClassCastException ignored) {
+            return true;
+        }
+    }
+
+    /**
+     * A first run needs orientation, not an unexplained model canvas or a
+     * premature permission prompt. This deliberately stays independent of the
+     * immersive visual intro so an external Android share can still open its
+     * model immediately.
+     */
+    private void scheduleFirstRunOnboarding() {
+        if (!firstRunOnboardingPending()) return;
+        mainHandler.postDelayed(() -> {
+            if (!isFinishing() && firstRunOnboardingPending()) showFirstRunOnboarding(0);
+        }, 280L);
+    }
+
+    private void finishFirstRunOnboarding() {
+        getPreferences(MODE_PRIVATE).edit()
+                .putInt(FIRST_RUN_ONBOARDING_VERSION, CURRENT_FIRST_RUN_ONBOARDING_VERSION)
+                .apply();
+    }
+
+    private void showFirstRunOnboarding(int step) {
+        final int safeStep = Math.max(0, Math.min(4, step));
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = learnPage();
+        TextView eyebrow = label("WELCOME TO ALLOY  ·  " + (safeStep + 1) + " / 5", 10, MUTED);
+        eyebrow.setLetterSpacing(0.10f);
+        page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(26)));
+
+        String title;
+        String body;
+        if (safeStep == 0) {
+            title = "Your print workshop, on your phone";
+            body = "Import a model, arrange real geometry, prepare a plate and inspect the result without needing a desktop. Start with a small, familiar object and keep the printer in view for any physical work.";
+        } else if (safeStep == 1) {
+            title = "Pair later, or explore now";
+            body = "You can use Library, 3D planning and Learn without pairing a printer. Pairing is only for a future qualified LAN route; Alloy will ask for printer details and notifications when there is a clear reason, never during this tour.";
+        } else if (safeStep == 2) {
+            title = "Match the physical setup";
+            body = "A printer name is not enough. Before slicing, identify the printer, nozzle, build plate, material and feed route in front of you. The active profile changes the printable envelope, but it cannot verify the machine automatically.";
+        } else if (safeStep == 3) {
+            title = "Start with one understandable object";
+            body = "Import a small STL, OBJ, 3MF or supported STEP source, or choose a Library model. Place it inside the real plate boundary, then inspect the first layer, thin features, bridges and warnings after slicing.";
+        } else {
+            title = "Review before any physical step";
+            body = "A recipe, estimate, preview and export are planning tools. A direct printer job stays locked until the exact printer, profile, native engine, package and physical evidence are qualified. A lock is a safety boundary, not an error to bypass.";
+        }
+        TextView heading = label(title, 25, TEXT);
+        heading.setTypeface(null, android.graphics.Typeface.BOLD);
+        heading.setLineSpacing(dp(3), 1f);
+        page.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+        TextView intro = label(body, 14, MUTED);
+        intro.setLineSpacing(dp(4), 1f);
+        LinearLayout.LayoutParams introLp = new LinearLayout.LayoutParams(-1, -2);
+        introLp.topMargin = dp(12);
+        page.addView(intro, introLp);
+        boolean feedArtwork = safeStep == 1 || safeStep == 2 || safeStep == 4;
+        addLearnArtwork(page, feedArtwork ? "learn/material-feed-route-v1.png" : "learn/first-layer-hotend-v1.png",
+                feedArtwork ? "Illustration of a spool and feed route" : "Illustration of a hotend placing a line");
+
+        TextView boundary = label(safeStep == 4
+                        ? "DIRECT PRINTING REMAINS FAIL-CLOSED UNTIL ITS SEPARATE EVIDENCE GATES PASS"
+                        : "NO NOTIFICATIONS OR PRINTER PERMISSIONS ARE REQUESTED DURING ONBOARDING",
+                10, safeStep == 4 ? RED : INK);
+        boundary.setLetterSpacing(0.06f);
+        boundary.setLineSpacing(dp(2), 1f);
+        LinearLayout.LayoutParams boundaryLp = new LinearLayout.LayoutParams(-1, -2);
+        boundaryLp.topMargin = dp(8);
+        page.addView(boundary, boundaryLp);
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+        actions.setPadding(0, dp(18), 0, 0);
+        Button skip = dialogButton(safeStep == 4 ? "Not now" : "Skip tour", v -> {
+            finishFirstRunOnboarding();
+            dialog.dismiss();
+        });
+        actions.addView(skip, new LinearLayout.LayoutParams(0, dp(50), 1));
+        Button next = dialogButton(safeStep == 4 ? "Open Library" : "Continue", v -> {
+            if (safeStep < 4) {
+                dialog.dismiss();
+                showFirstRunOnboarding(safeStep + 1);
+            } else {
+                finishFirstRunOnboarding();
+                dialog.dismiss();
+                showModelLibrary();
+            }
+        });
+        next.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams nextLp = new LinearLayout.LayoutParams(0, dp(50), 1);
+        nextLp.leftMargin = dp(8);
+        actions.addView(next, nextLp);
+        page.addView(actions, new LinearLayout.LayoutParams(-1, dp(70)));
+        setDialogPage(dialog, page);
+    }
+
+    /** Offline, data-driven field guide. It deliberately has no print-control affordance. */
+    private void showLearnHub() {
+        try {
+            LearningCatalog catalog = LearningCatalog.load(getAssets());
+            final Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            LinearLayout page = learnPage();
+            TextView eyebrow = label("LEARN · OFFLINE FIELD GUIDE", 10, MUTED);
+            eyebrow.setLetterSpacing(0.10f);
+            page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+            TextView title = label("A calm start, when you need it", 22, TEXT);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            page.addView(title, new LinearLayout.LayoutParams(-1, dp(38)));
+            TextView intro = label("Short, source-labelled guidance for preparing a model, choosing material and recognising when to stop. Learning never unlocks physical printing.", 13, MUTED);
+            intro.setLineSpacing(dp(3), 1f);
+            page.addView(intro, new LinearLayout.LayoutParams(-1, -2));
+            addLearnArtwork(page, "learn/first-layer-hotend-v1.png", "Illustration of a hotend placing a first-layer line");
+
+            addLearnButton(page, "Replay welcome", "A short, skippable tour of the safe phone-first route", v -> { dialog.dismiss(); showFirstRunOnboarding(0); });
+            addLearnButton(page, "Start here", "A first-print checklist with no hidden promises", v -> showLearnArticles(dialog, catalog.ofKind("start"), "Start here"));
+            addLearnButton(page, "Quick cheat sheet", "Plain-language layers, materials, supports and first-layer basics", v -> showLearnArticles(dialog, catalog.ofKind("cheatsheet"), "Quick cheat sheet"));
+            addLearnButton(page, "Materials & compatibility", "A1 mini, A1 and P1S records; Bambu capability is separate from Alloy send approval", v -> showMaterials(dialog));
+            addLearnButton(page, "Fix a symptom", "Search by what you see. Hard-stop guidance comes first.", v -> showTroubleshooting(dialog, catalog));
+            TextView boundary = label("Safety boundary · Never remove a certificate, readiness gate or physical safeguard to continue. Use the printer and current manufacturer guidance as the source of truth during a fault.", 11, RED);
+            boundary.setPadding(dp(4), dp(12), dp(4), dp(8));
+            page.addView(boundary, new LinearLayout.LayoutParams(-1, -2));
+            Button close = dialogButton("Done", v -> dialog.dismiss());
+            page.addView(close, new LinearLayout.LayoutParams(-1, dp(48)));
+            setDialogPage(dialog, page);
+        } catch (IOException error) {
+            Toast.makeText(this, "Learn is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private LinearLayout learnPage() {
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(20), dp(18), dp(20), dp(24));
+        content.setBackgroundColor(BG);
+        return content;
+    }
+
+    // Dialog accepts the content root directly; wrapping makes long articles
+    // readable with large text and keeps the action rail off the content.
+    private void setDialogPage(Dialog dialog, LinearLayout content) {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+        dialog.setContentView(scroll);
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setLayout(-1, -1);
+        }
+    }
+
+    private void addLearnButton(LinearLayout page, String title, String detail, View.OnClickListener listener) {
+        Button button = dialogButton(title + "\n" + detail, listener);
+        button.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        button.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        button.setTextSize(14);
+        button.setPadding(dp(16), dp(8), dp(16), dp(8));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(68));
+        lp.topMargin = dp(10);
+        page.addView(button, lp);
+    }
+
+    private void addLearnArtwork(LinearLayout page, String asset, String description) {
+        if (asset == null || asset.length() == 0) return;
+        try (InputStream input = getAssets().open(asset)) {
+            Bitmap bitmap = BitmapFactory.decodeStream(input);
+            if (bitmap == null) return;
+            ImageView image = new ImageView(this);
+            image.setImageBitmap(bitmap);
+            image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            image.setAdjustViewBounds(true);
+            image.setContentDescription(description);
+            image.setBackground(round(PANEL, Color.rgb(226, 222, 213), 1, 22));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(164));
+            lp.topMargin = dp(14); lp.bottomMargin = dp(4);
+            page.addView(image, lp);
+        } catch (IOException ignored) {
+            // Text remains a complete accessible equivalent when art is absent.
+        }
+    }
+
+    private void showLearnArticles(Dialog parent, List<LearningCatalog.Article> articles, String heading) {
+        parent.dismiss();
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = learnPage();
+        TextView eyebrow = label("LEARN · " + heading.toUpperCase(Locale.US), 10, MUTED);
+        eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+        TextView title = label(heading, 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD);
+        page.addView(title, new LinearLayout.LayoutParams(-1, dp(40)));
+        for (LearningCatalog.Article article : articles) addLearnArticle(page, article);
+        Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); });
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.topMargin = dp(12); page.addView(back, lp);
+        setDialogPage(dialog, page);
+    }
+
+    private void addLearnArticle(LinearLayout page, LearningCatalog.Article article) {
+        LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(14), dp(13), dp(14), dp(13)); card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
+        TextView safety = label(article.safety.toUpperCase(Locale.US), 10, "Hard stop".equals(article.safety) ? RED : AMBER);
+        safety.setLetterSpacing(0.10f); card.addView(safety);
+        TextView title = label(article.title, 17, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setPadding(0, dp(4), 0, dp(5)); card.addView(title);
+        TextView summary = label(article.summary, 13, MUTED); summary.setLineSpacing(dp(3), 1f); card.addView(summary);
+        if (article.artwork.length() > 0) {
+            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary);
+        } else {
+            addLearnDiagram(card, article);
+        }
+        TextView next = label("SAFE NEXT STEPS", 10, INK); next.setLetterSpacing(0.08f); next.setPadding(0, dp(10), 0, dp(2)); card.addView(next);
+        for (int i = 0; i < article.steps.size(); i++) {
+            TextView step = label((i + 1) + ". " + article.steps.get(i), 13, TEXT); step.setPadding(0, dp(3), 0, 0); step.setLineSpacing(dp(2), 1f); card.addView(step);
+        }
+        TextView scope = label("Scope · " + article.scope + "\nSource · " + article.source, 10, MUTED);
+        scope.setPadding(0, dp(10), 0, 0); scope.setLineSpacing(dp(2), 1f); card.addView(scope);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(12); page.addView(card, lp);
+    }
+
+    /** Every text-only field-guide article gets an offline visual and accessible equivalent. */
+    private void addLearnDiagram(LinearLayout page, LearningCatalog.Article article) {
+        LearningIllustrationView illustration = new LearningIllustrationView(this, article.id,
+                "Diagram for " + article.title + ". " + article.summary);
+        illustration.setBackground(round(PANEL, Color.rgb(226, 222, 213), 1, 18));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(144));
+        lp.topMargin = dp(14); lp.bottomMargin = dp(4);
+        page.addView(illustration, lp);
+    }
+
+    private void showTroubleshooting(Dialog parent, LearningCatalog catalog) {
+        parent.dismiss();
+        final Dialog dialog = new Dialog(this); dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = learnPage();
+        TextView eyebrow = label("LEARN · SYMPTOM FIRST", 10, MUTED); eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+        TextView title = label("What are you seeing?", 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD); page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
+        EditText search = new EditText(this); search.setHint("Search: lifting, stringing, collision, pairing"); search.setSingleLine(true); search.setContentDescription("Search troubleshooting symptoms");
+        search.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 14)); search.setPadding(dp(14), 0, dp(14), 0); page.addView(search, new LinearLayout.LayoutParams(-1, dp(52)));
+        LinearLayout results = new LinearLayout(this); results.setOrientation(LinearLayout.VERTICAL); page.addView(results, new LinearLayout.LayoutParams(-1, -2));
+        View.OnClickListener render = ignored -> renderTroubleshootingResults(results, catalog, search.getText().toString());
+        Button find = dialogButton("Find guidance", render); LinearLayout.LayoutParams findLp = new LinearLayout.LayoutParams(-1, dp(48)); findLp.topMargin = dp(8); page.addView(find, findLp);
+        renderTroubleshootingResults(results, catalog, "");
+        Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); }); LinearLayout.LayoutParams backLp = new LinearLayout.LayoutParams(-1, dp(48)); backLp.topMargin = dp(12); page.addView(back, backLp);
+        setDialogPage(dialog, page);
+    }
+
+    private void renderTroubleshootingResults(LinearLayout results, LearningCatalog catalog, String query) {
+        results.removeAllViews(); int count = 0;
+        for (LearningCatalog.Article article : catalog.ofKind("troubleshoot")) if (article.matches(query)) { addLearnArticle(results, article); count++; }
+        if (count == 0) { TextView empty = label("No exact offline match. If the printer is hot, moving, smoking, colliding, or has damaged wiring, stop and use current manufacturer support.", 13, RED); empty.setPadding(0, dp(14), 0, 0); results.addView(empty); }
+    }
+
+    private void showMaterials(Dialog parent) {
+        parent.dismiss();
+        try {
+            PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
+            final Dialog dialog = new Dialog(this); dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            LinearLayout page = learnPage();
+            TextView eyebrow = label("LEARN · MATERIALS & COMPATIBILITY", 10, MUTED); eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+            TextView title = label("Choose a known setup", 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD); page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
+            TextView note = label("Bambu-published capability is not an Alloy direct-send approval. Every record below remains blocked until its printer, profile, native engine and physical evidence gates pass.", 13, RED); note.setLineSpacing(dp(3), 1f); page.addView(note, new LinearLayout.LayoutParams(-1, -2));
+            addLearnArtwork(page, "learn/material-feed-route-v1.png", "Illustration of material spool and feed route");
+            for (PrinterCapabilityCatalog.Printer printer : catalog.printers) addPrinterCapability(page, printer);
+            Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); }); LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.topMargin = dp(12); page.addView(back, lp);
+            setDialogPage(dialog, page);
+        } catch (IOException error) { Toast.makeText(this, "Material catalog is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show(); }
+    }
+
+    private void addPrinterCapability(LinearLayout page, PrinterCapabilityCatalog.Printer printer) {
+        LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL); card.setPadding(dp(14), dp(13), dp(14), dp(13)); card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
+        TextView name = label(printer.name, 18, TEXT); name.setTypeface(null, android.graphics.Typeface.BOLD); card.addView(name);
+        TextView facts = label(printer.buildVolume + " · " + printer.nozzle + " · Bed " + printer.bed, 12, MUTED); facts.setPadding(0, dp(3), 0, 0); card.addView(facts);
+        TextView direct = label("ALLOY DIRECT SEND · " + printer.directSendState, 10, RED); direct.setLetterSpacing(0.07f); direct.setPadding(0, dp(10), 0, dp(4)); card.addView(direct);
+        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu: " + material.bambuStatus + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
+        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) { TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT); row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
+        for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
+            TextView row = label(form.title + " · " + form.state + "\n"
+                    + "Form: " + form.form + " · Routes: " + form.compatibleRoutes + "\n"
+                    + "Fit: " + form.geometry + "\n" + form.note, 12, TEXT);
+            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
+        }
+        TextView spool = label("SPOOL CHECK", 10, INK); spool.setLetterSpacing(0.08f); spool.setPadding(0, dp(12), 0, dp(2)); card.addView(spool);
+        for (String guidance : printer.spoolGuidance) { TextView row = label("• " + guidance, 12, TEXT); row.setPadding(0, dp(4), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        TextView source = label("Source/scope · " + printer.source + " · reviewed " + printer.reviewed, 10, MUTED); source.setPadding(0, dp(10), 0, 0); source.setLineSpacing(dp(2), 1f); card.addView(source);
+        Button openSource = dialogButton("Open official Bambu source", v -> openCapabilitySource(printer.sourceUrl));
+        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(8); card.addView(openSource, sourceLp);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(12); page.addView(card, lp);
+    }
+
     private void showModelLibrary() {
         if (printerBusy || slicing || batchSlicing || batchTransferring) {
             Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
@@ -3109,7 +3588,7 @@ public final class MainActivity extends Activity {
             page.setBackgroundColor(BG);
             page.setPadding(dp(14), dp(12), dp(14), dp(12));
 
-            TextView eyebrow = label("MODEL ATLAS", 11, MUTED);
+            TextView eyebrow = label("LIBRARY", 11, MUTED);
             eyebrow.setLetterSpacing(0.16f);
             page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(28)));
             TextView title = label("See the object before you slice it", 22, TEXT);
@@ -3913,7 +4392,7 @@ public final class MainActivity extends Activity {
             // Route bundled sources through the same worker-backed import
             // path as phone-selected files. This is important for the private
             // STEP assembly: OCCT tessellation must never block the UI thread.
-            loadUris(uris, names, false);
+            loadUris(uris, names, false, assetPath);
         } catch (Exception e) {
             Toast.makeText(this, "Example failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -4008,6 +4487,7 @@ public final class MainActivity extends Activity {
                                   ArrayList<String> names, float scale, float rotationDegrees,
                                   float tiltXDegrees, float tiltYDegrees, boolean restoreTransform,
                                   boolean repairEnabled, int historyMode) throws Exception {
+        trustedPilotFixtureAssetPath = null;
         // A foreground slice owns an immutable request snapshot. Loading the
         // same project again during Activity recreation must not cancel it;
         // a genuinely new model is blocked by the slicing UI until the job is
@@ -4427,6 +4907,36 @@ public final class MainActivity extends Activity {
                 .show();
     }
 
+    /**
+     * A preflight summary deliberately distinguishes the model toolpath from
+     * consumables a phone-side engine cannot measure. In particular, a
+     * single-material slice must never claim a purge, prime, or separately
+     * weighed support total that has not been emitted by the engine.
+     */
+    private void showPrintPlan() {
+        if (slice == null || slice.layers == null || slice.layers.isEmpty()) {
+            Toast.makeText(this, "Slice the model before opening its print plan", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
+        String orientation = String.format(Locale.US, "Z rotation %.0f°  ·  X tilt %.0f°  ·  Y tilt %.0f°  ·  scale %.0f%%",
+                modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
+        String message = String.format(Locale.US,
+                "MODEL TOOLPATH\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\nNot available. This is not a verified multi-material or printer-telemetry estimate.\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
+                estimate.modelFilamentMm, estimate.approximateModelFilamentGrams, config.filament,
+                estimate.supportMaterial, estimate.time,
+                config.nozzleTemperature, config.firstLayerNozzleTemperature,
+                config.bedTemperature, config.firstLayerBedTemperature,
+                config.layerHeight, config.infill * 100f, config.perimeters, orientation);
+        new AlertDialog.Builder(this)
+                .setTitle("Print plan")
+                .setMessage(message)
+                .setNegativeButton("Inspect toolpath", (dialog, which) -> showInspection())
+                .setNeutralButton("Orientation", (dialog, which) -> showModelWorkbench())
+                .setPositiveButton("Done", null)
+                .show();
+    }
+
     private static String formatDuration(float seconds) {
         int total = Math.max(0, Math.round(seconds));
         int hours = total / 3600;
@@ -4447,6 +4957,36 @@ public final class MainActivity extends Activity {
         }
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("application/octet-stream");
         intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
+    }
+
+    /** Offer a bounded package to another Android app without implying recipient compatibility. */
+    private void sharePackage() {
+        if (importing || model == null || slice == null) {
+            Toast.makeText(this, "Slice a model before sharing a package", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ArtifactValidator.Report report = ArtifactValidator.validate(model, slice, config);
+        if (!report.isValid()) {
+            Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            if (stagedArtifact == null || stagedArtifact.sourceFile == null
+                    || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
+                    || !ArtifactStore.sha256(stagedArtifact.sourceFile).equalsIgnoreCase(stagedArtifact.sha256)) {
+                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
+                        artifactDisplayName(), viewport.thumbnailPng(512));
+            }
+            Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
+            Intent send = new Intent(Intent.ACTION_SEND).setType("application/octet-stream")
+                    .putExtra(Intent.EXTRA_STREAM, uri)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            send.setClipData(ClipData.newRawUri("Alloy printer package", uri));
+            startActivity(Intent.createChooser(send,
+                    "Share validated package — confirm recipient compatibility"));
+        } catch (Exception error) {
+            Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void openViewExport() {
@@ -4626,6 +5166,13 @@ public final class MainActivity extends Activity {
         fields.addView(layer); fields.addView(firstLayer); fields.addView(infill);
         fields.addView(perimeters); fields.addView(topLayers); fields.addView(bottomLayers);
         fields.addView(sectionLabel("MATERIAL"));
+        Button materialScope = dialogButton("Review material, feed route & spool fit", v -> showMaterialScopeReview());
+        materialScope.setContentDescription("Review material compatibility, feed route and spool fit for the active planning printer");
+        fields.addView(materialScope, new LinearLayout.LayoutParams(-1, dp(46)));
+        TextView materialScopeNote = label("The active recipe stays profile-locked. This review explains compatible material and spool forms; it never changes temperatures or qualifies a printer send.", 12, MUTED);
+        materialScopeNote.setPadding(0, dp(4), 0, dp(8));
+        materialScopeNote.setLineSpacing(dp(2), 1f);
+        fields.addView(materialScopeNote);
         fields.addView(nozzleTemperature); fields.addView(firstLayerNozzleTemperature);
         fields.addView(label("BUILD PLATE", 10, GOLD)); fields.addView(buildPlateTypes);
         fields.addView(label("The selected surface and its temperatures are used for this job. Confirm the physical plate before sending.", 12, MUTED));
@@ -4756,6 +5303,82 @@ public final class MainActivity extends Activity {
                 refreshActions();
             } catch (Exception e) { Toast.makeText(this, "Recipe values were not valid", Toast.LENGTH_SHORT).show(); }
         }).show();
+    }
+
+    /**
+     * Keep Bambu-published material/spool capability beside the actual recipe
+     * decision. This deliberately is not a material selector: choosing PETG
+     * while retaining a PLA profile would be an unsafe, misleading shortcut.
+     */
+    private void showMaterialScopeReview() {
+        if (profile == null) {
+            Toast.makeText(this, "Load a planning profile before reviewing materials", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
+            PrinterCapabilityCatalog.Printer printer = catalog.byId(profile.printerId);
+            if (printer == null) {
+                Toast.makeText(this, "No bounded material catalog is available for this profile", Toast.LENGTH_LONG).show();
+                return;
+            }
+            LinearLayout page = new LinearLayout(this);
+            page.setOrientation(LinearLayout.VERTICAL);
+            page.setPadding(dp(22), dp(8), dp(22), dp(4));
+            TextView active = label("ACTIVE PROFILE\n" + profile.name + "\n" + profile.filamentName
+                    + " · " + profile.material + " · " + String.format(Locale.US, "%.2f mm", profile.filamentDiameter), 14, TEXT);
+            active.setLineSpacing(dp(2), 1f);
+            page.addView(active);
+            TextView boundary = label("Compatibility is not a recipe. To change filament, select or import a source-backed material profile, then re-slice and review. Direct send remains " + printer.directSendState + ".", 12, RED);
+            boundary.setPadding(0, dp(10), 0, dp(6)); boundary.setLineSpacing(dp(2), 1f);
+            page.addView(boundary);
+            TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
+            materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
+            for (PrinterCapabilityCatalog.Material material : printer.materials) {
+                TextView row = label(material.name + "\nBambu: " + material.bambuStatus
+                        + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT);
+                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            TextView routes = label("FEED ROUTES", 10, GOLD); routes.setLetterSpacing(0.08f);
+            routes.setPadding(0, dp(12), 0, 0); page.addView(routes);
+            for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
+                TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT);
+                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            TextView forms = label("SPOOL FORM & FIT", 10, GOLD); forms.setLetterSpacing(0.08f);
+            forms.setPadding(0, dp(12), 0, 0); page.addView(forms);
+            for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
+                TextView row = label(form.title + " · " + form.state + "\n"
+                        + "Form: " + form.form + "\nRoutes: " + form.compatibleRoutes
+                        + "\nFit: " + form.geometry + "\n" + form.note, 12, TEXT);
+                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            TextView source = label("Source/scope · " + printer.source + " · reviewed " + printer.reviewed, 10, MUTED);
+            source.setPadding(0, dp(12), 0, 0); source.setLineSpacing(dp(2), 1f); page.addView(source);
+            Button openSource = dialogButton("Open official Bambu source", v -> openCapabilitySource(printer.sourceUrl));
+            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(44)); sourceLp.topMargin = dp(8); page.addView(openSource, sourceLp);
+            ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true); scroll.addView(page);
+            new AlertDialog.Builder(this)
+                    .setTitle("Material & spool review")
+                    .setView(scroll)
+                    .setPositiveButton("Done", null)
+                    .show();
+        } catch (IOException error) {
+            Toast.makeText(this, "Material catalog is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void openCapabilitySource(String sourceUrl) {
+        try {
+            Uri uri = Uri.parse(sourceUrl);
+            if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null
+                    || !(uri.getHost().equalsIgnoreCase("bambulab.com")
+                    || uri.getHost().toLowerCase(Locale.US).endsWith(".bambulab.com")))
+                throw new IllegalArgumentException("The capability source is not an official HTTPS URL");
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception error) {
+            Toast.makeText(this, "Could not open the official source: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void showPlates() {
@@ -5060,6 +5683,7 @@ public final class MainActivity extends Activity {
     }
 
     private void prepareModelMutation(String label) {
+        trustedPilotFixtureAssetPath = null;
         if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
         try {
             modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "Current model");

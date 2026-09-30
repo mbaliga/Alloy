@@ -25,6 +25,11 @@ the template intentionally contains only `PENDING` gates and cannot satisfy
 the production validator on its own.
 The ordinary CI-debug and emulator commands remain available for development
 and test verification, but they cannot be mistaken for a production build.
+Supplied printer and owner-study meshes are excluded from release variants by
+default because their current files do not document public redistribution
+rights. The private visual-review flow may opt in with
+`-PalloyIncludeSuppliedReferenceVisuals=true`; production promotion rejects
+that option until the required rights are documented and reviewed.
 
 Release-candidate dispatch requires the organization-owned Android signing
 key, protected CI secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEY_ALIAS`,
@@ -40,6 +45,12 @@ Before any pushed `v*` tag can reach the signing step, CI also requires a
 reviewed `release/production-readiness.json` record. The record must mark every
 required gate `PASS`, including Bambu TreeSupport3D parity and a physical A1
 Mini transport run; emulator/build success alone cannot satisfy those fields.
+Before treating the first no-support PLA direct-print beta as a candidate for
+that physical transport run, complete the narrower
+[`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) evidence record. It
+qualifies native output and visible print quality for the initial A1 Mini / 0.4
+mm / PLA Basic / no-support scope. It is intentionally **not** a substitute
+for the production support-parity or physical transport gates.
 When physical transport is marked `PASS`, the record must additionally point to
 the reviewed `physical-a1-mini-acceptance.json` beside it. That nested record
 is validated for the A1 Mini `N1` model code, APK/signer/certificate hashes,

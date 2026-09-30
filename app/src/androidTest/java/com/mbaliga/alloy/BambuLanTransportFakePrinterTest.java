@@ -50,6 +50,55 @@ import javax.net.ssl.SSLSocketFactory;
 @RunWith(AndroidJUnit4.class)
 public final class BambuLanTransportFakePrinterTest {
     @Test(timeout = 10_000)
+    public void concurrentCloseAndOperationSubmissionNeverLeaksExecutorRejection() throws Exception {
+        PrinterCredentialStore.Credentials credentials = new PrinterCredentialStore.Credentials(
+                "Fake A1 Mini", "127.0.0.1", "01SCLOSE", "12345678");
+        PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(
+                credentials.name, credentials.host, credentials.serial);
+        BambuLanTransport transport = new BambuLanTransport(credentials, new PlaintextSocketFactory(),
+                1, 2, true);
+        int submitters = 32;
+        CountDownLatch ready = new CountDownLatch(submitters + 1);
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(submitters + 1);
+        AtomicReference<Throwable> leaked = new AtomicReference<>();
+        ExecutorService callers = Executors.newFixedThreadPool(submitters + 1);
+        try {
+            for (int i = 0; i < submitters; i++) {
+                callers.execute(() -> {
+                    ready.countDown();
+                    try {
+                        start.await();
+                        transport.probe(target, (state, detail) -> { });
+                    } catch (Throwable error) {
+                        leaked.compareAndSet(null, error);
+                    } finally {
+                        done.countDown();
+                    }
+                });
+            }
+            callers.execute(() -> {
+                ready.countDown();
+                try {
+                    start.await();
+                    transport.close();
+                } catch (Throwable error) {
+                    leaked.compareAndSet(null, error);
+                } finally {
+                    done.countDown();
+                }
+            });
+            Assert.assertTrue("submitters did not become ready", ready.await(3, TimeUnit.SECONDS));
+            start.countDown();
+            Assert.assertTrue("close/submission race did not finish", done.await(5, TimeUnit.SECONDS));
+            Assert.assertNull("operation submission leaked an executor rejection", leaked.get());
+        } finally {
+            transport.close();
+            callers.shutdownNow();
+        }
+    }
+
+    @Test(timeout = 10_000)
     public void unpinnedAuthenticatedTransportFailsClosedBeforeNetwork() throws Exception {
         FakeBambuPrinter fake = new FakeBambuPrinter();
         PrinterCredentialStore.Credentials credentials = new PrinterCredentialStore.Credentials(

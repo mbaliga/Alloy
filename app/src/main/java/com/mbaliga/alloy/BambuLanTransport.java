@@ -378,7 +378,7 @@ public final class BambuLanTransport implements PrinterTransport, Closeable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         closed = true;
         closeQuietly(activeSession);
         executor.shutdownNow();
@@ -524,12 +524,19 @@ public final class BambuLanTransport implements PrinterTransport, Closeable {
         return "/" + name;
     }
 
-    private void execute(Runnable task, Callback callback) {
+    private synchronized void execute(Runnable task, Callback callback) {
         if (closed) {
             state(callback, State.FAILED, "Transport is closed");
             return;
         }
-        executor.execute(task);
+        // Serialize the closed check with close(): otherwise shutdownNow()
+        // can land between the check and execute(), leaking
+        // RejectedExecutionException through the public transport API.
+        try {
+            executor.execute(task);
+        } catch (java.util.concurrent.RejectedExecutionException rejected) {
+            state(callback, State.FAILED, "Transport is closed");
+        }
     }
 
     private void requirePinnedAuthentication() throws IOException {
