@@ -243,6 +243,20 @@ def main() -> None:
     cmake = cmake_path.read_text()
     for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"'):
         require(cmake, token, cmake_path)
+    # CMake accepts paths on case-insensitive developer volumes that fail
+    # later on Linux/Android builders. Validate every explicit JNI source and
+    # header reference before the expensive source-built native job starts.
+    source_pattern = re.compile(r"\bsrc/main/jni/[A-Za-z0-9_./-]+\.(?:c|cc|cpp|cxx|h|hpp)\b")
+    missing_sources = []
+    for line in cmake.splitlines():
+        if line.lstrip().startswith("#"):
+            continue
+        for relative in source_pattern.findall(line):
+            if not (ROOT / "app" / relative).is_file():
+                missing_sources.append(relative)
+    if missing_sources:
+        raise SystemExit(f"{cmake_path}: missing explicit native source(s): "
+                         + ", ".join(sorted(set(missing_sources))))
     require(workflow, "-PalloyNativeEngine=true", workflow_path)
     require(workflow, "ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26", workflow_path)
     require(workflow, "ci/validate_native_dependency_inputs.py arm64-v8a", workflow_path)

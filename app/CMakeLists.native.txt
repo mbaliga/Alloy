@@ -932,8 +932,11 @@ add_library(slic3r
         src/main/jni/libslic3r/Format/SL1.hpp
         src/main/jni/libslic3r/Format/STL.cpp
         src/main/jni/libslic3r/Format/STL.hpp
-        src/main/jni/libslic3r/Format/svg.cpp
-        src/main/jni/libslic3r/Format/svg.hpp
+        # SliceBeam's pinned engine keeps these filenames case-sensitive.
+        # Linux/Android builders must use the upstream `SVG` spelling rather
+        # than the macOS-tolerated lowercase paths.
+        src/main/jni/libslic3r/Format/SVG.cpp
+        src/main/jni/libslic3r/Format/SVG.hpp
         src/main/jni/libslic3r/Format/ZipperArchiveImport.cpp
         src/main/jni/libslic3r/Format/ZipperArchiveImport.hpp
         src/main/jni/libslic3r/GCode/AdaptivePAInterpolator.cpp

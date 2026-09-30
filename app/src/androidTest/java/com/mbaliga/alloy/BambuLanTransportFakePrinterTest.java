@@ -49,6 +49,19 @@ import javax.net.ssl.SSLSocketFactory;
  */
 @RunWith(AndroidJUnit4.class)
 public final class BambuLanTransportFakePrinterTest {
+    // The loopback test verifies the LAN protocol, not slicing throughput.
+    // Keeping a small structurally valid fixture here avoids spending most of
+    // its wall-clock budget in LegacyOfflineEngine before the fake printer is
+    // even contacted on a cold hosted emulator.
+    private static final String LOOPBACK_GCODE = "G90\n"
+            + "M82\n"
+            + "G28\n"
+            + "G1 X10 Y10 Z0.20 F6000\n"
+            + "G1 X20 Y10 E0.50 F1200\n"
+            + "M104 S0\n"
+            + "M140 S0\n"
+            + "M84\n";
+
     @Test(timeout = 10_000)
     public void concurrentCloseAndOperationSubmissionNeverLeaksExecutorRejection() throws Exception {
         PrinterCredentialStore.Credentials credentials = new PrinterCredentialStore.Credentials(
@@ -173,13 +186,15 @@ public final class BambuLanTransportFakePrinterTest {
         try (InputStream input = context.getAssets().open("models/box-20mm.stl")) {
             mesh = MeshModel.read("box-20mm.stl", input);
         }
-        Slicer.Result offline = new LegacyOfflineEngine().slice(mesh, config, null);
         // The protocol test intentionally uses a verified no-support package;
         // the transport must not be the place where an unverified slicer is
         // promoted into a physical-print claim.
-        Slicer.Result result = new Slicer.Result(offline.gcode, offline.layers, offline.filamentMm,
-                offline.warnings, "verified-test-engine", true,
-                offline.printTimeSeconds, offline.travelMm);
+        Slicer.Layer layer = new Slicer.Layer(0, 0.20f);
+        layer.segments.add(new Slicer.Segment(new Slicer.Point(10f, 10f), new Slicer.Point(20f, 10f)));
+        ArrayList<Slicer.Layer> layers = new ArrayList<>();
+        layers.add(layer);
+        Slicer.Result result = new Slicer.Result(LOOPBACK_GCODE, layers, 0.50f,
+                0, "verified-test-engine", true, 1f, 10f);
         FileTree root = new FileTree(context.getCacheDir(), "fake-bambu-" + System.nanoTime());
         Assert.assertTrue(root.directory.mkdirs());
 
