@@ -239,8 +239,19 @@ public final class InventoryStore {
     }
 
     private void setQuantity(Item item, int quantity) {
-        if (!preferences.edit().putInt(quantityKey(item.id), clampQuantity(quantity)).commit())
-            throw new IllegalStateException("could not persist inventory quantity update");
+        /*
+         * A row action is a high-frequency, non-transactional UI mutation: a
+         * user can repeatedly tap +/− and the print-completion service can
+         * update another row at the same time. SharedPreferences.apply()
+         * updates its in-memory value synchronously (so currentQuantity() and
+         * another InventoryStore instance see this write immediately) while
+         * batching the disk work off the caller thread. Using commit() here
+         * serialised every tap behind a filesystem flush and could make two
+         * otherwise-correct writers time out on a slow emulator. Critical,
+         * idempotent completed-print accounting remains a checked commit in
+         * recordCompletedPrintLocked().
+         */
+        preferences.edit().putInt(quantityKey(item.id), clampQuantity(quantity)).apply();
     }
 
     private Item matchingFilament(String material) {
