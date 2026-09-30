@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Remove STEP/OpenCASCADE from a temporary SliceBeam Stage 1 checkout.
+"""Remove the unused SliceBeam STEP surface from a temporary Stage 1 checkout.
 
-Alloy Stage 1 accepts STL, OBJ and 3MF.  The pinned SliceBeam source still carries
-the optional STEP/OpenCASCADE path, which is expensive to build and is not
-needed for the phone-first import contract.  This script is deliberately
-limited to CI checkouts; it never edits the Alloy source tree or upstream.
+Alloy's phone-first Stage 1 import contract accepts STL, OBJ and 3MF.  The
+pinned SliceBeam source still carries an application-level STEP route that is
+not part of that contract.  We intentionally retain the OpenCASCADE runtime
+dependency in the bootstrap, however: the pinned native slicer graph and
+Alloy's JNI bridge link against its shared-library chain.  Skipping the OCCT
+bootstrap would make the later, real Alloy native build non-reproducible.
+
+This script is deliberately limited to CI checkouts; it never edits the Alloy
+source tree or upstream.
 """
 
 from pathlib import Path
@@ -45,7 +50,7 @@ def patch_cmake(path: Path) -> None:
     text = path.read_text()
     text = require_sub(
         r"^# OCCT\n.*?^list\(TRANSFORM OCCT_LIBS PREPEND \"occt_\"\)\n?",
-        "# OCCT/STEP intentionally excluded from Alloy Stage 1.\n",
+        "# SliceBeam OCCT/STEP target intentionally excluded from Alloy Stage 1.\n",
         text,
         "OCCT imported-library block",
     )
@@ -141,19 +146,6 @@ def patch_model(path: Path) -> None:
     path.write_text(text)
 
 
-def patch_dependencies(path: Path) -> None:
-    text = path.read_text()
-    text = require_sub(
-        r"^# 3\. Build OCCT\n.*?^echo \"--- OCCT built and copied! ---\"\n?",
-        "# 3. OCCT intentionally skipped: STEP is outside Alloy Stage 1.\n",
-        text,
-        "OCCT dependency build block",
-    )
-    if "github.com/Open-Cascade-SAS/OCCT.git" in text:
-        raise SystemExit("OCCT dependency clone remains after patch")
-    path.write_text(text)
-
-
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: patch_slicebeam_stage1_no_step.py <slicebeam-root>")
@@ -161,13 +153,12 @@ def main() -> None:
     root = Path(sys.argv[1]).resolve()
     patch_cmake(root / "app/CMakeLists.txt")
     patch_model(root / "app/src/main/jni/libslic3r/Model.cpp")
-    patch_dependencies(root / "build_all_deps_android.sh")
 
     print("Stage 1 native scope patched successfully:")
     print("- STEP sources removed from CMake")
     print("- STEP model dispatch removed")
-    print("- OCCT imported targets/wrapper/link removed")
-    print("- OCCT dependency build skipped")
+    print("- SliceBeam STEP target/import surface removed")
+    print("- OCCT dependency bootstrap retained for Alloy's native runtime")
 
 
 if __name__ == "__main__":

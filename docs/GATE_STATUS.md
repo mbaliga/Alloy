@@ -1385,7 +1385,7 @@ Pinned candidate: `CodeMasterCody3D/OrcaSlicer-Mobile@d996a9cadb65b354997f2d5d87
 
 ### G1 reproducible Android source build
 
-**Status: HOSTED FAIL / LOCAL CLEAN-REPLAY PASS; NO PROMOTION.**
+**Status: HOSTED REPAIR IN PROGRESS / LOCAL CLEAN-REPLAY PASS; NO PROMOTION.**
 
 Path B G1 lean run `32660939450` reached the dependency-bootstrap preparation
 step, patched the Android SDK/NDK paths successfully, then stopped because its
@@ -1395,9 +1395,14 @@ compilation or APK assembly. Alloy now carries a fail-closed replacement
 patcher in `ci/patch_slicebeam_stage1_no_step.py`. On 2026-09-06 it was replayed
 from a clean archive of the exact pinned SliceBeam checkout, after the pinned
 OrcaSlicer-Mobile bootstrap patch, and both patches completed successfully.
-The workflow and parity validators are green locally. This is not hosted-build
-evidence: the containing change must still be pushed and the hosted source
-build re-run before G1 can advance.
+The workflow and parity validators are green locally. A later hosted native
+run (`36665417688`) completed the dependency bootstrap but correctly stopped
+when the workflow tried to copy OCCT outputs after that same Stage 1 patch had
+skipped their build. The repair retains the OCCT bootstrap—Alloy's JNI graph
+still links its shared-library chain—while keeping the unsupported SliceBeam
+STEP application surface out of the Stage 1 contract. This is not
+hosted-build evidence: the repair must pass a fresh hosted source build before
+G1 can advance.
 
 ### G2 exact OrcaSlicer engine provenance
 
