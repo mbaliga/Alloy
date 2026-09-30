@@ -1602,6 +1602,7 @@ public final class MainActivity extends Activity {
 
     private void showPrinterStatus() {
         PrinterCredentialStore.Credentials credentials = savedCredentials();
+        String statusTitle = profile == null ? "Printer status" : profilePrinterLabel();
         String pairing = credentials == null ? "No printer is paired." : "Paired target: " + credentials.name + " · " + credentials.host
                 + "\nModel: " + (credentials.model.length() == 0 ? "not confirmed" : credentials.model)
                 + (credentials.certificateFingerprint.length() > 0 ? "\nCertificate pin: configured" : "\nCertificate pin: not configured");
@@ -1620,7 +1621,7 @@ public final class MainActivity extends Activity {
                     + "\nVerify the printer's physical/app state before dismissing this record.";
         }
         AlertDialog.Builder dialog = new AlertDialog.Builder(this)
-                .setTitle("A1 Mini")
+                .setTitle(statusTitle)
                 .setMessage("" + (profile == null ? "Conservative fallback profile" : profile.name)
                         + "\n\nProfile status: " + (profile != null && profile.verified ? "verified" : "unverified")
                         + "\nSource: " + (profile == null ? "built-in fallback" : profile.provenanceSource)
@@ -1689,10 +1690,11 @@ public final class MainActivity extends Activity {
         fields.setOrientation(LinearLayout.VERTICAL);
         fields.setPadding(28, 4, 28, 0);
         PrinterCredentialStore.Credentials current = savedCredentials();
-        EditText name = textField(current == null ? "A1 Mini" : current.name, "Printer name");
+        EditText name = textField(current == null ? profilePrinterLabel() : current.name, "Printer name");
         EditText host = textField(current == null ? "" : current.host, "LAN IP or hostname");
         EditText serial = textField(current == null ? "" : current.serial, "Printer serial");
-        EditText modelCode = textField(current == null ? "" : current.model, "Bambu model code (N1 = A1 Mini)");
+        EditText modelCode = textField(current == null ? "" : current.model,
+                "Bambu model code (N1 = A1 Mini; required for current pilot)");
         EditText accessCode = textField(current == null ? "" : current.accessCode, "Developer/LAN access code");
         accessCode.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
         EditText fingerprint = textField(current == null ? "" : current.certificateFingerprint, "Optional SHA-256 certificate fingerprint");
@@ -1735,7 +1737,7 @@ public final class MainActivity extends Activity {
             });
         });
         fields.addView(findPrinter);
-        TextView note = label("Discovery is read-only and fills the printer name, host, serial and model code; the access code is never broadcast. LAN status and physical sending require model N1 (A1 Mini) plus an explicitly saved certificate fingerprint. Certificate inspection is the only unauthenticated network step; Alloy never sends MQTT/FTP commands over an unpinned session. Pairing stores the secret only in Android Keystore-backed encrypted preferences.", 12, MUTED);
+        TextView note = label("Discovery is read-only and fills the printer name, host, serial and model code; the access code is never broadcast. A1 Mini, A1 and P1S planning profiles can be reviewed here, but the current physical pilot is deliberately restricted to model N1 (A1 Mini) plus an explicitly saved certificate fingerprint. Certificate inspection is the only unauthenticated network step; Alloy never sends MQTT/FTP commands over an unpinned session. Pairing stores the secret only in Android Keystore-backed encrypted preferences.", 12, MUTED);
         note.setPadding(0, 16, 0, 0); fields.addView(note);
         Button inspectCertificate = new Button(this);
         inspectCertificate.setText("Read printer certificate");
@@ -2584,7 +2586,18 @@ public final class MainActivity extends Activity {
 
     private boolean physicalPrintCredentialsReady() {
         PrinterCredentialStore.Credentials credentials = savedCredentials();
-        return credentials != null && credentials.isA1Mini() && credentials.hasCertificatePin();
+        return isA1MiniPhysicalScope() && credentials != null && credentials.isA1Mini()
+                && credentials.hasCertificatePin();
+    }
+
+    /**
+     * A1, A1 Mini and P1S all have shipped planning profiles. The only
+     * physical lane has intentionally been scoped to the A1 Mini pilot, so a
+     * future verified A1/P1S profile cannot accidentally inherit that pilot's
+     * transport permission merely because the paired printer is N1.
+     */
+    private boolean isA1MiniPhysicalScope() {
+        return profile != null && "bambu.a1-mini".equals(profile.printerId);
     }
 
     /**
@@ -2614,12 +2627,12 @@ public final class MainActivity extends Activity {
                 BuildConfig.NATIVE_ENGINE_ENABLED,
                 BuildConfig.NATIVE_ENGINE_VERIFIED,
                 profile != null,
-                profile != null && profile.verified,
+                profile != null && profile.verified && isA1MiniPhysicalScope(),
                 slice != null,
                 slice != null && slice.engineVerified,
                 artifactReady,
                 credentials != null,
-                credentials != null && credentials.isA1Mini(),
+                credentials != null && credentials.isA1Mini() && isA1MiniPhysicalScope(),
                 credentials != null && credentials.hasCertificatePin(),
                 !hasPrinterRecovery(),
                 SupportEngineStatus.physicalPrintReady(config, slice),
@@ -2637,7 +2650,7 @@ public final class MainActivity extends Activity {
         if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
             message.append("\nPILOT BUILD · This lane is only for collecting A1 Mini acceptance evidence with an immutable bundled fixture. It is excluded from production and does not qualify general direct printing.");
         } else {
-            message.append("\nThis checklist is local and fail-closed. A green checklist still requires the target A1 Mini's physical acceptance evidence before this build can be promoted.");
+            message.append("\nThis checklist is local and fail-closed. A1, A1 Mini and P1S are planning profiles; only the A1 Mini/N1 physical-pilot lane has an acceptance path. A green checklist still requires the target A1 Mini's physical acceptance evidence before this build can be promoted.");
         }
         AlertDialog.Builder dialog = new AlertDialog.Builder(this)
                 .setTitle("Print readiness")

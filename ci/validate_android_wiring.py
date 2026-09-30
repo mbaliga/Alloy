@@ -156,6 +156,8 @@ def main() -> None:
         "restoreOriginalGeometry()",
         "cancelGeometryRepair()",
         "geometryRepairEnabled",
+        "isA1MiniPhysicalScope()",
+        "physical pilot is deliberately restricted to model N1",
         "openArcContext()",
         "showMoreActions()",
         "showActiveArcOperation()",
