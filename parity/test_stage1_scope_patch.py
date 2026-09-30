@@ -21,28 +21,19 @@ class Stage1ScopePatchTests(unittest.TestCase):
             shutil.copy2(ROOT / "app/CMakeLists.native.txt", root / "app/CMakeLists.txt")
             shutil.copy2(ROOT / "app/src/main/jni/libslic3r/Model.cpp", root / "app/src/main/jni/libslic3r/Model.cpp")
             shutil.copy2(ROOT / "ci/patch_slicebeam_stage1_no_step.py", root / "patch.py")
-            quote = chr(34)
-            newline = chr(10)
-            (root / "build_all_deps_android.sh").write_text(
-                "# 3. Build OCCT" + newline
-                + "git clone https://github.com/Open-Cascade-SAS/OCCT.git" + newline
-                + "echo " + quote + "--- OCCT built and copied! ---" + quote + newline
-            )
 
             PATCHER.patch_cmake(root / "app/CMakeLists.txt")
             PATCHER.patch_model(root / "app/src/main/jni/libslic3r/Model.cpp")
-            PATCHER.patch_dependencies(root / "build_all_deps_android.sh")
 
             combined = "\n".join(path.read_text() for path in (
                 root / "app/CMakeLists.txt",
                 root / "app/src/main/jni/libslic3r/Model.cpp",
-                root / "build_all_deps_android.sh",
             ))
             self.assertNotIn("Format/STEP", combined)
             self.assertNotIn("load_step(", combined)
             self.assertNotIn("OCCT_LIBS", combined)
 
-    def test_removes_current_cmake_model_and_dependency_shapes(self):
+    def test_removes_current_cmake_and_model_shapes_but_retains_runtime_bootstrap(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "app/src/main/jni/libslic3r").mkdir(parents=True)
@@ -87,7 +78,6 @@ class Stage1ScopePatchTests(unittest.TestCase):
             for path, function in (
                 (root / "app/CMakeLists.txt", PATCHER.patch_cmake),
                 (root / "app/src/main/jni/libslic3r/Model.cpp", PATCHER.patch_model),
-                (root / "build_all_deps_android.sh", PATCHER.patch_dependencies),
             ):
                 function(path)
 
@@ -99,7 +89,10 @@ class Stage1ScopePatchTests(unittest.TestCase):
             self.assertNotIn("Format/STEP", combined)
             self.assertNotIn("load_step(", combined)
             self.assertNotIn("OCCT_LIBS", combined)
-            self.assertNotIn("Open-Cascade-SAS/OCCT.git", combined)
+            # OCCT must remain in the bootstrap: Alloy's own JNI target
+            # consumes its shared-library runtime even though the temporary
+            # SliceBeam application CMake no longer exposes STEP.
+            self.assertIn("Open-Cascade-SAS/OCCT.git", combined)
             self.assertNotIn("math_c99", combined)
             self.assertNotIn("boost_math_", combined)
             self.assertNotIn("test_exec_moinotr", combined)
