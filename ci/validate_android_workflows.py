@@ -34,6 +34,8 @@ def main() -> None:
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
         raise SystemExit(f"{ordinary}: ordinary CI must use its declared release test variant")
+    if "profile: pixel_6" not in ordinary_text or "profile: Pixel 6" in ordinary_text:
+        raise SystemExit(f"{ordinary}: emulator must use the stable avdmanager profile id pixel_6")
 
     native_text = native.read_text(encoding="utf-8")
     for token in (
@@ -51,6 +53,8 @@ def main() -> None:
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
+    if native_text.count("profile: pixel_6") != 2 or "profile: Pixel 6" in native_text:
+        raise SystemExit(f"{native}: arm64 emulator jobs must use the stable avdmanager profile id pixel_6")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
     native_scope = native_text.find("python3 ci/patch_slicebeam_stage1_no_step.py slicebeam")
     if native_bootstrap < 0 or native_scope < 0 or native_bootstrap > native_scope:
