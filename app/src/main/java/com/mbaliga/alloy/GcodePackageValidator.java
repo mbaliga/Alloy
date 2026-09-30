@@ -45,8 +45,24 @@ public final class GcodePackageValidator {
         validateInternal(file, safetyConfig, true);
     }
 
+    /**
+     * Validate the deliberately unverified, no-support A1 Mini acceptance
+     * pilot. This is not a production physical-print boundary: the caller
+     * must additionally be compiled with the explicit pilot build flag and
+     * keep the source model inside {@link A1MiniNoSupportPilot}'s fixture set.
+     */
+    public static void validateForA1MiniNoSupportPilot(File file, Slicer.Config safetyConfig) throws IOException {
+        validateInternal(file, safetyConfig, false, true);
+    }
+
     private static void validateInternal(File file, Slicer.Config safetyConfig,
                                          boolean physicalPrintBoundary) throws IOException {
+        validateInternal(file, safetyConfig, physicalPrintBoundary, false);
+    }
+
+    private static void validateInternal(File file, Slicer.Config safetyConfig,
+                                         boolean physicalPrintBoundary,
+                                         boolean a1MiniNoSupportPilot) throws IOException {
         if (file == null || !file.isFile() || file.length() <= 0) throw new IOException("Package is missing or empty");
         if (file.length() > MAX_PACKAGE_BYTES) throw new IOException("Package exceeds the 256 MB limit");
         Set<String> names = new HashSet<>();
@@ -123,7 +139,8 @@ public final class GcodePackageValidator {
                     if (text != null && "3D/_rels/3dmodel.model.rels".equals(name)) validateModelRelationships(text.toString());
                     if (text != null && "3D/3dmodel.model".equals(name)) validatePackageModel(text.toString());
                     if (text != null && "3D/Objects/object_1.model".equals(name)) validateObjectModel(text.toString());
-                    if (text != null && "Metadata/plate_1.json".equals(name)) validateMetadata(text.toString(), physicalPrintBoundary);
+                    if (text != null && "Metadata/plate_1.json".equals(name))
+                        validateMetadata(text.toString(), physicalPrintBoundary, a1MiniNoSupportPilot);
                     if (text != null && "Metadata/slice_info.config".equals(name)) validateConfig(text.toString());
                     if (text != null && "Metadata/model_settings.config".equals(name)) validateModelSettings(text.toString());
                     if (text != null && "Metadata/cut_information.xml".equals(name)) validateCutInformation(text.toString());
@@ -196,7 +213,8 @@ public final class GcodePackageValidator {
             throw new IOException("Package related object model is structurally incomplete");
     }
 
-    private static void validateMetadata(String metadata, boolean physicalPrintBoundary) throws IOException {
+    private static void validateMetadata(String metadata, boolean physicalPrintBoundary,
+                                         boolean a1MiniNoSupportPilot) throws IOException {
         String[] fields = {"\"engine_verified\":", "\"printer\":", "\"material\":",
                 "\"layer_height_mm\":", "\"first_layer_height_mm\":", "\"infill_percent\":",
                 "\"perimeters\":", "\"top_layers\":", "\"bottom_layers\":", "\"supports\":",
@@ -217,6 +235,16 @@ public final class GcodePackageValidator {
             if (metadata.contains("\"supports\":true")
                     && !metadata.contains("\"support_engine\":\"" + SupportEngineStatus.BAMBU_TREESUPPORT3D_ENGINE_ID + "\""))
                 throw new IOException("Support-enabled package is not produced by the approved Bambu TreeSupport3D engine");
+        }
+        if (a1MiniNoSupportPilot) {
+            if (!metadata.contains("\"engine_verified\":false"))
+                throw new IOException("Pilot packages must remain explicitly unverified");
+            if (!metadata.contains("\"source\":\"orca-mobile-native\""))
+                throw new IOException("Pilot packages must originate from the native engine");
+            if (!metadata.contains("\"printer\":\"Bambu Lab A1 Mini · 0.4 mm · PLA Basic\""))
+                throw new IOException("Pilot package is not pinned to the A1 Mini PLA Basic recipe");
+            if (!metadata.contains("\"material\":\"PLA\"") || !metadata.contains("\"supports\":false"))
+                throw new IOException("Pilot package must use PLA with supports disabled");
         }
     }
 

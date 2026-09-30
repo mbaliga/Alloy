@@ -77,7 +77,7 @@ def main() -> None:
         "FTPS data TLS session was not resumed",
     ):
         require(transport, token, transport_path)
-    for token in ("GcodePackageWriter.write", "thumbnailPng", "getFD().sync", "SHA-256", "MAX_STAGED_ARTIFACTS", "recover(File storageDir", "GcodePackageValidator.validate", "Artifact storage root must not be a symbolic link", "isSymbolicLink(target)"):
+    for token in ("GcodePackageWriter.write", "thumbnailPng", "getFD().sync", "SHA-256", "MAX_STAGED_ARTIFACTS", "recover(File storageDir", "GcodePackageValidator.validate", "recoverForA1MiniNoSupportPilot", "Artifact storage root must not be a symbolic link", "isSymbolicLink(target)"):
         require(artifact, token, artifact_path)
     package_writer = (ROOT / "app/src/main/java/com/mbaliga/alloy/GcodePackageWriter.java").read_text()
     for token in ("writePackageModelXml", "writeObjectModelXml", "OutputStreamWriter", "mesh_health", "nozzle_temperature_c", "first_layer_height_mm", "Metadata/plate_1.png", "Metadata/plate_1_small.png", "Metadata/bbl_thumbnail.png", "Metadata/plate_1.gcode.md5", "Metadata/cut_information.xml", "Metadata/filament_sequence.json", "printProfileConfig", "projectSettingsConfig", "modelSettingsConfig", "sliceInfoConfig", "rootRelationships", "modelRelationships", "image/png"):
@@ -87,7 +87,7 @@ def main() -> None:
                   "GcodeSafetyValidator.Stream", "gcodeScanner.finish()", "unsafe or duplicate", "validateContentTypes", "validateRootRelationships",
                   "validateModelRelationships", "validatePackageModel", "validateObjectModel", "validateMetadata", "validateConfig",
                   "validateModelSettings", "validateCutInformation", "validateFilamentSequence", "validateProjectSettings", "validatePrintProfile",
-                  "gcodeDigest", "actualGcodeMd5"):
+                  "gcodeDigest", "actualGcodeMd5", "validateForA1MiniNoSupportPilot", "Pilot packages must remain explicitly unverified"):
         require(package, token, package_path)
     for token in ("MAX_GCODE_CHARS", "M104", "hasStopTemperature", "hasPrintableMotion",
                   "removeCommentsAndChecksum", "StandardCharsets.UTF_8"):
@@ -109,7 +109,7 @@ def main() -> None:
     for token in ("cancelPrint()", "pausePrint()", "resumePrint()", "Cancel print", "Pause print", "Resume print", "activePrinterTarget", "printerBusy",
                   "PrinterJobService.startUpload", "PrinterJobService.startPrint", "PrinterJobService.pausePrint", "PrinterJobService.resumePrint", "PrinterJobService.cancelPrint",
                   "refreshPrinterStatus", "Refresh telemetry", "readStatus", "STATUS_UNCONFIRMED",
-                  "activePrinterTarget = null",
+                  "activePrinterTarget = null", "Upload controlled pilot package?", "A1MiniNoSupportPilot.evaluate",
                   "printerBusy = false"):
         require(activity, token, activity_path)
     for token in (

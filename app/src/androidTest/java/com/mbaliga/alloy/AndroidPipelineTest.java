@@ -34,6 +34,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocket;
@@ -1255,6 +1257,63 @@ public final class AndroidPipelineTest {
         Assert.assertNull(findInventoryItem(new InventoryStore(preferences), item.id));
     }
 
+    @Test(timeout = 15_000)
+    public void inventoryQuantityActionsAccumulateFromAStaleRowSnapshot() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences = context.getSharedPreferences("alloy-test-inventory-stale-row", Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        InventoryStore store = new InventoryStore(preferences);
+        InventoryStore.Item staleRow = store.addCustom("Spare nozzle", "Consumable", "each", 0, 1, 0, "");
+
+        // The UI can invoke more than one action from a row object created
+        // before the first write. Each mutation must use persisted quantity.
+        store.addQuantity(staleRow, 1);
+        store.addQuantity(staleRow, 1);
+        store.useQuantity(staleRow, 1);
+        store.useQuantity(staleRow, 1);
+
+        InventoryStore.Item current = findInventoryItem(new InventoryStore(preferences), staleRow.id);
+        Assert.assertNotNull(current);
+        Assert.assertEquals("sequential stock updates must not overwrite one another", 0, current.quantity);
+        store.addQuantity(staleRow, 2);
+        store.addQuantity(staleRow, 3);
+        current = findInventoryItem(new InventoryStore(preferences), staleRow.id);
+        Assert.assertNotNull(current);
+        Assert.assertEquals("repeated adds must accumulate", 5, current.quantity);
+
+        InventoryStore secondStore = new InventoryStore(preferences);
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(2);
+        ExecutorService writers = Executors.newFixedThreadPool(2);
+        try {
+            for (InventoryStore writer : new InventoryStore[]{store, secondStore}) {
+                writers.execute(() -> {
+                    try {
+                        start.await();
+                        for (int i = 0; i < 100; i++) writer.addQuantity(staleRow, 1);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        done.countDown();
+                    }
+                });
+            }
+            start.countDown();
+            try {
+                Assert.assertTrue("concurrent inventory writers did not finish", done.await(10, TimeUnit.SECONDS));
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                Assert.fail("concurrent inventory check was interrupted");
+            }
+        } finally {
+            writers.shutdownNow();
+        }
+        current = findInventoryItem(secondStore, staleRow.id);
+        Assert.assertNotNull(current);
+        Assert.assertEquals("Activity/service store instances must not lose concurrent stock edits",
+                205, current.quantity);
+    }
+
     @Test
     public void completedPrintConsumesFilamentOnceAndTriggersReorder() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -1318,6 +1377,30 @@ public final class AndroidPipelineTest {
                 false, "Clean", now - 60L * 24L * 60L * 60L * 1000L, now - 1L, 30, false);
         Assert.assertTrue(overdue.serviceOverdue());
         Assert.assertEquals("SERVICE OVERDUE", overdue.statusLabel());
+    }
+
+    @Test
+    public void inventoryShowsUrgentNeedsBeforeRoutineStock() {
+        long now = System.currentTimeMillis();
+        ArrayList<InventoryStore.Item> items = new ArrayList<>();
+        items.add(new InventoryStore.Item("ready", "Wrench", "Tool", "each", 1, 0,
+                false, "Wipe clean", 0, now + 30L * 24L * 60L * 60L * 1000L, 90, false));
+        items.add(new InventoryStore.Item("soon", "Nozzle", "Consumable", "each", 1, 0,
+                false, "Inspect", now, now + 7L * 24L * 60L * 60L * 1000L, 30, false));
+        items.add(new InventoryStore.Item("due", "Belt", "Maintenance", "each", 1, 0,
+                true, "Check tension", 0, 0, 30, false));
+        items.add(new InventoryStore.Item("overdue", "PEI plate", "Build surface", "each", 1, 0,
+                false, "Clean", now - 60L * 24L * 60L * 60L * 1000L, now - 1L, 30, false));
+        items.add(new InventoryStore.Item("reorder", "PLA", "Filament", "g", 0, 250,
+                false, "Keep dry", 0, 0, 0, false));
+
+        ArrayList<InventoryStore.Item> ordered = InventoryStore.orderedForAttention(items);
+        Assert.assertEquals("reorder", ordered.get(0).id);
+        Assert.assertEquals("overdue", ordered.get(1).id);
+        Assert.assertEquals("due", ordered.get(2).id);
+        Assert.assertEquals("soon", ordered.get(3).id);
+        Assert.assertEquals("ready", ordered.get(4).id);
+        Assert.assertEquals("ready", items.get(0).id);
     }
 
     @Test

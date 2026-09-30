@@ -46,6 +46,12 @@ public:
     bool empty() const { return contour.points.empty(); }
     bool is_valid() const;
     void douglas_peucker(double tolerance);
+    // Bambu TreeSupport calls this spelling on an ExPolygon. Preserve the
+    // contour and hole winding while delegating to the shared polygon helper.
+    void remove_colinear_points() {
+        remove_collinear(contour);
+        remove_collinear(holes);
+    }
 
     // Contains the line / polyline / polylines etc COMPLETELY.
     bool contains(const Line &line) const;

@@ -49,6 +49,11 @@
                 <data android:mimeType="application/x-zip-compressed" />
             </intent-filter>
         </activity>
+        <provider
+            android:name=".ArtifactShareProvider"
+            android:authorities="${applicationId}.artifactshare"
+            android:exported="false"
+            android:grantUriPermissions="true" />
         <service
             android:name=".PrinterJobService"
             android:exported="false"

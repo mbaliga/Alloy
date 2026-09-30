@@ -33,6 +33,16 @@ jobs:
         run: |
           python3 -m unittest -v test_compare_gcode.py
 
+      - name: Run desktop Orca workflow contract tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_desktop_orca_reference_workflow.py
+
+      - name: Run capability catalog gate tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_capability_catalog.py
+
       - name: Run G3 profile identity tests
         working-directory: parity
         run: |

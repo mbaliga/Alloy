@@ -7,19 +7,23 @@ import groovy.json.JsonSlurper
 def nativeEngineEnabled = project.findProperty('alloyNativeEngine')?.toString()?.toBoolean() ?: false
 def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.toString()?.toBoolean() ?: false
 def productionRelease = project.findProperty('alloyProductionRelease')?.toString()?.toBoolean() ?: false
+def ciDebugSign = project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean() ?: false
+// This is a deliberately narrow evidence-collection lane, not a release
+// qualification switch. It can only be compiled as a CI-debug-signed native
+// build and the Java layer restricts it to immutable bundled A1 Mini fixtures
+// with PLA and supports disabled.
+def physicalPilot = project.findProperty('alloyPhysicalPilot')?.toString()?.toBoolean() ?: false
 // Release packaging may consume a separately verified native bundle. This is
 // useful for offline/reproducible builds and keeps Java/profile changes from
 // forcing a full CMake rebuild when the native ABI has not changed.
 def nativeEnginePrebuiltDir = project.findProperty('alloyNativeEnginePrebuiltDir')?.toString()
 def nativeEngineBuild = nativeEngineEnabled && nativeEnginePrebuiltDir == null
-// The A1 study mesh is part of the owner-provided Alloy product handoff. Ship
-// it in the product release by default so the visible app uses the supplied
-// machine study rather than silently falling back to a simplified placeholder.
-// A distribution pipeline may still opt out explicitly when it has a separate
-// redistributable visual asset.
+// Supplied reference meshes do not carry complete public redistribution
+// rights. Keep them available in debug builds and private visual-review
+// releases, but require an explicit opt-in for any release variant.
 def includeSuppliedReferenceVisuals = project.hasProperty('alloyIncludeSuppliedReferenceVisuals')
         ? project.findProperty('alloyIncludeSuppliedReferenceVisuals').toString().toBoolean()
-        : true
+        : false
 
 // Verification is a promotion claim about the native slicer, never about the
 // fallback engine. Reject an inconsistent build at configuration time so a
@@ -30,8 +34,14 @@ if (nativeEngineVerified && !nativeEngineEnabled) {
 if (productionRelease && (!nativeEngineEnabled || !nativeEngineVerified)) {
     throw new GradleException('alloyProductionRelease=true requires the native engine and its explicit verification flag')
 }
-if (productionRelease && project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean()) {
+if (productionRelease && ciDebugSign) {
     throw new GradleException('alloyProductionRelease=true cannot use the CI debug signing key')
+}
+if (physicalPilot && (!nativeEngineEnabled || nativeEngineVerified || productionRelease || !ciDebugSign)) {
+    throw new GradleException('alloyPhysicalPilot=true requires a native, unverified, CI-debug-signed non-production build')
+}
+if (productionRelease && includeSuppliedReferenceVisuals) {
+    throw new GradleException('Production release cannot include private visual-review assets without documented redistribution rights')
 }
 if (productionRelease) {
     def readinessFile = file('../release/production-readiness.json')
@@ -73,6 +83,7 @@ android {
         // Enabling native code is not proof of print-safe output. Promotion
         // stays an explicit build-time decision after all acceptance gates.
         buildConfigField 'boolean', 'NATIVE_ENGINE_VERIFIED', nativeEngineVerified ? 'true' : 'false'
+        buildConfigField 'boolean', 'PHYSICAL_PILOT_ENABLED', physicalPilot ? 'true' : 'false'
     }
 
     // Exercise the same shrink/signing/resource variant that is distributed;
@@ -101,7 +112,7 @@ android {
             // connectedReleaseAndroidTest, but the release-candidate workflow
             // deliberately omits this property and remains unsigned until the
             // organization-owned signing service is configured.
-            if (project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean()) {
+            if (ciDebugSign) {
                 signingConfig signingConfigs.debug
             }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -198,8 +209,6 @@ if (productionRelease) {
         doLast {
             if (!nativeEngineEnabled || !nativeEngineVerified)
                 throw new GradleException('Production release requires a verified native engine')
-            if (includeSuppliedReferenceVisuals == false)
-                logger.lifecycle('Production release omits owner-provided visual-review assets')
         }
     }
     tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {

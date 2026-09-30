@@ -39,8 +39,13 @@ final class GlesViewportSurface extends GLSurfaceView {
     private volatile float bedY = 180f;
     private volatile float buildZ = 180f;
     private static final int MAX_TOOLPATH_SEGMENTS = 80_000;
-    /** A little more than one sheet of spacing keeps each study plate distinct. */
-    private static final float STUDY_PLATE_SPACING = 224f;
+    /** Station interval from the supplied study; visual conveyor only. */
+    private static final float STUDY_PLATE_SPACING = 450f;
+    /** Handoff camera uses Three.js polar angle; this renderer stores elevation. */
+    private static final float STUDY_CAMERA_ELEVATION = (float) (Math.PI / 2.0 - 1.02);
+    private static final float STUDY_PORTRAIT_YAW = 0.10f;
+    /** Match the supplied preview's focal point measured up from the PEI plane. */
+    private static final float STUDY_CAMERA_TARGET_Z = 88f;
 
     private final int maxDrawTriangles;
     private final ScaleGestureDetector scaleDetector;
@@ -141,11 +146,11 @@ final class GlesViewportSurface extends GLSurfaceView {
         presentationMode = value;
         // Match the supplied study's right-front camera when entering the
         // machine frame; Hero keeps the quieter object-first angle.
-        yaw = value ? (machineStudy ? 0.70f : 0.78f) : -0.55f;
-        // Match the supplied handoff's elevated product angle. The previous
-        // lower polar angle made the front upright dominate a portrait frame
-        // and hid the plate runway behind it.
-        pitch = value && machineStudy ? 1.02f : 0.55f;
+        yaw = value ? (machineStudy ? studyCameraYaw() : 0.78f) : -0.55f;
+        // Convert the handoff's Three.js polar angle to this camera's
+        // elevation convention; copying 1.02 directly made the Android view
+        // much more top-down than the supplied reference.
+        pitch = value && machineStudy ? STUDY_CAMERA_ELEVATION : 0.55f;
         zoom = 1f;
         panX = 0f;
         panY = 0f;
@@ -185,17 +190,25 @@ final class GlesViewportSurface extends GLSurfaceView {
             toolpathOnly = false;
             selectedLayer = -1;
             selectedPart = -1;
-            // The supplied preview uses a calm three-quarter product angle.
-            // The old phone study sat too low and let the front column fill
-            // the frame; this elevation keeps the machine readable while
-            // exposing the plate runway behind it.
-            yaw = 0.70f;
-            pitch = 1.02f;
+            // Preserve the supplied preview's three-quarter product angle.
+            // Translate its camera parameters into Alloy's Z-up coordinate
+            // system rather than copying Three.js values literally.
+            yaw = studyCameraYaw();
+            pitch = STUDY_CAMERA_ELEVATION;
             zoom = 1f;
             panX = 0f;
             panY = 0f;
         }
         requestRender();
+    }
+
+    /** Adapt the three-quarter study orbit so the plate runway stays in a
+     * portrait phone's frame while preserving the wider reference angle on
+     * landscape displays. */
+    private float studyCameraYaw() {
+        int width = getWidth();
+        int height = getHeight();
+        return height == 0 || width / (float) height < 0.85f ? STUDY_PORTRAIT_YAW : 0.70f;
     }
 
     /** Select a bounded material treatment for the visual presentation only. */
@@ -771,18 +784,18 @@ final class GlesViewportSurface extends GLSurfaceView {
             float eyeX = targetX + (float) Math.sin(yaw) * horizontal;
             float eyeY = targetY + (float) Math.cos(yaw) * horizontal;
             float eyeZ = targetZ + (float) Math.sin(pitch) * distance;
-            // The elevated printer focal point belongs only to the technical
-            // Machine view. Hero must look directly at the imported object's
+            // The reference-study focal point belongs only to the standalone
+            // machine view. Hero must look directly at the imported object's
             // own centre, especially for compact or small-unit OBJ sources.
             float lookAtZ = presentationMode && !cleanPresentation
-                    ? (machineStudy ? 25f : Math.max(targetZ, buildZ * 0.34f)) : targetZ;
+                    ? (machineStudy ? STUDY_CAMERA_TARGET_Z : Math.max(targetZ, buildZ * 0.34f)) : targetZ;
             Matrix.setLookAtM(view, 0, eyeX, eyeY, eyeZ, targetX, targetY, lookAtZ, 0f, 0f, 1f);
         }
         // A portrait phone has a much narrower horizontal field of view than
         // the supplied desktop composition. Give the standalone study a
         // modestly wider lens so the gantry does not become a crop artifact.
         float fieldOfView = machineStudy && aspect < 0.85f ? 49f : 42f;
-        Matrix.perspectiveM(projection, 0, fieldOfView, aspect, 0.2f, 2_000f);
+        Matrix.perspectiveM(projection, 0, fieldOfView, aspect, 0.2f, 6_000f);
         Matrix.multiplyMM(output, 0, projection, 0, view, 0);
     }
 
@@ -990,6 +1003,9 @@ final class GlesViewportSurface extends GLSurfaceView {
 
         @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 unused, int width, int height) {
             GLES20.glViewport(0, 0, Math.max(1, width), Math.max(1, height));
+            if (machineStudy && height > 0) {
+                yaw = width / (float) height < 0.85f ? STUDY_PORTRAIT_YAW : 0.70f;
+            }
         }
 
         @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 unused) {
@@ -1050,7 +1066,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                 // Keep the supplied machine visually grounded on the front
                 // plate. This is presentation geometry only and is never
                 // included in the printable scene or collision envelope.
-                drawMeshBuffer(studyShadowBuffer, studyShadowVertexCount, mvp, -1, 0, 2, 0.22f);
+                drawMeshBuffer(studyShadowBuffer, studyShadowVertexCount, mvp, -1, 0, 2, 1f);
             }
             drawLines(machineBuffer, machineVertexCount, mvp);
             if (current != uploadedModel || uploadedExplodedPresentation != explodedPresentation)
@@ -1229,12 +1245,11 @@ final class GlesViewportSurface extends GLSurfaceView {
 
         private void drawReferenceMachine(FloatBuffer buffer, int vertexCount, float[] mvp) {
             if (buffer == null || vertexCount <= 0) return;
-            // The supplied preview deliberately lets the printed object show
-            // through the machine shell when a print is present. A standalone
-            // study has no subject underneath, so render it opaque and let
-            // the depth buffer resolve the welded shell cleanly. This is a
-            // presentation-only change; it never alters the model, toolpath
-            // or collision decisions.
+            // Keep the standalone machine study opaque so its welded shell
+            // reads as a real object; the handoff's 0.50 / 0.42 transparency
+            // is useful when a print sits underneath the shell, but makes an
+            // empty standalone study visually fragment into interior layers.
+            // This affects presentation only, never printable geometry.
             GLES20.glDepthMask(machineStudy);
             drawMeshBuffer(buffer, vertexCount, mvp, -1, 0, 1, machineStudy ? 1.0f : 0.46f);
             GLES20.glDepthMask(true);
@@ -1591,20 +1606,24 @@ final class GlesViewportSurface extends GLSurfaceView {
             float front = centerY - depth / 2f, back = centerY + depth / 2f;
             float outsideX = Math.max(24f, width * 0.18f);
             float outsideY = Math.max(26f, depth * 0.18f);
-            float r = nightStage ? 0.27f : 0.17f;
-            float g = nightStage ? 0.32f : 0.20f;
-            float b = nightStage ? 0.41f : 0.23f;
-            for (int column = -3; column <= 3; column++) {
-                float x = centerX + column * width * 0.12f;
-                addLine(values, x, front - outsideY, z, x, front, z, r, g, b, 0.012f);
-                addLine(values, x, front, z, x, back, z, r, g, b, 0.095f);
-                addLine(values, x, back, z, x, back + outsideY, z, r, g, b, 0.012f);
+            float r = nightStage ? 0.36f : 0.32f;
+            float g = nightStage ? 0.40f : 0.34f;
+            float b = nightStage ? 0.48f : 0.38f;
+            float gridAlpha = nightStage ? 0.20f : 0.16f;
+            // The handoff uses a 10 mm local PEI grid. Keep it local to each
+            // 184 mm plate and split each line at the hard sheet edge so the
+            // overscan can dissolve into the studio floor independently.
+            for (int column = -9; column <= 9; column++) {
+                float x = centerX + column * 10f;
+                addLine(values, x, front - outsideY, z, x, front, z, r, g, b, 0.018f);
+                addLine(values, x, front, z, x, back, z, r, g, b, gridAlpha);
+                addLine(values, x, back, z, x, back + outsideY, z, r, g, b, 0.018f);
             }
-            for (int row = -2; row <= 2; row++) {
-                float y = centerY + row * depth * 0.14f;
-                addLine(values, left - outsideX, y, z, left, y, z, r, g, b, 0.012f);
-                addLine(values, left, y, z, right, y, z, r, g, b, 0.095f);
-                addLine(values, right, y, z, right + outsideX, y, z, r, g, b, 0.012f);
+            for (int row = -9; row <= 9; row++) {
+                float y = centerY + row * 10f;
+                addLine(values, left - outsideX, y, z, left, y, z, r, g, b, 0.018f);
+                addLine(values, left, y, z, right, y, z, r, g, b, gridAlpha);
+                addLine(values, right, y, z, right + outsideX, y, z, r, g, b, 0.018f);
             }
         }
         return toArray(values);
@@ -1656,7 +1675,9 @@ final class GlesViewportSurface extends GLSurfaceView {
     /** Soft contact ellipse for the standalone product-study composition. */
     private float[] studyShadow() {
         ArrayList<Float> values = new ArrayList<>();
-        addShadow(values, bedX / 2f, 92f, 76f, 56f, -1.62f, -20f);
+        // A presentation-only ellipse feeds a radial shader fade. It extends
+        // slightly past the PEI edge onto the pale stage for grounding.
+        addShadow(values, bedX / 2f, 92f, 110f, 96f, 2.64f, -9f);
         return toArray(values);
     }
 
@@ -1960,6 +1981,7 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // sheet catches the studio key light; the separate line
                     // pass remains responsible for the subtle grid cue.
                     + "if((uMachine==2 || uMachine==4) && vPart<-19.0){gl_FragColor=vec4(uNight==1?vec3(0.010,0.013,0.018):vec3(0.026,0.031,0.038),uAlpha*(uNight==1?0.96:0.90));return;}"
+                    + "if(uMachine==2 && vPart<-8.5 && vPart>-9.5){float d=length((vPosition.xy-vec2(90.0,92.0))/vec2(110.0,96.0)); float opacity=0.24*(1.0-smoothstep(0.18,1.0,d)); gl_FragColor=vec4(vec3(0.012,0.014,0.018),uAlpha*opacity);return;}"
                     + "float focus=(uMachine==1 || uSelectedPart<0 || abs(vPart-float(uSelectedPart))<0.5)?1.0:0.22;"
                     // A small three-point studio rig makes the supplied
                     // product-study mesh read as an object rather than a
@@ -1995,7 +2017,15 @@ final class GlesViewportSurface extends GLSurfaceView {
                     // highlight turn distant plates into beige UI cards.
                     + "if((uMachine==2 || uMachine==4) && vPart<-19.0){float grain=alloyNoise(vPosition.xy*0.31)*0.70+alloyNoise(vPosition.xy*1.7)*0.30; shaded=base*(0.58+0.22*keyDiffuse)+vec3(grain*0.018); }"
                     + "float shadowAlpha=((uMachine==2 || uMachine==4) && vPart<-19.0)?(uNight==1?0.48:0.25):1.0;"
-                    + "gl_FragColor=vec4(shaded*focus,uAlpha*shadowAlpha); }";
+                    // Android's default framebuffer is not sRGB-corrected.
+                    // The handoff's MeshStandardMaterial is displayed through
+                    // Three.js' sRGB output transform; without the matching
+                    // transfer, neutral printer plastics land too dark and
+                    // lose their molded form against the white stage. Restrict
+                    // the correction to the presentation machine so printable
+                    // meshes, PEI and technical previews retain their palette.
+                    + "vec3 outputColor=shaded*focus; if(uMachine==1){outputColor=pow(max(outputColor,vec3(0.0)),vec3(0.45454545));}"
+                    + "gl_FragColor=vec4(outputColor,uAlpha*shadowAlpha); }";
 
     private static final String LINE_VERTEX_SHADER =
             "uniform mat4 uMvp; attribute vec3 aPosition; attribute vec4 aColor; varying vec4 vColor;"

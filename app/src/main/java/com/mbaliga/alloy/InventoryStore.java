@@ -6,8 +6,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,6 +57,17 @@ public final class InventoryStore {
         }
         result.addAll(customItems());
         return result;
+    }
+
+    /** Return a display copy with actionable maintenance states before routine stock. */
+    public static ArrayList<Item> orderedForAttention(List<Item> source) {
+        ArrayList<Item> ordered = new ArrayList<>();
+        if (source != null) ordered.addAll(source);
+        Collections.sort(ordered, (left, right) -> {
+            int rank = Integer.compare(left.attentionRank(), right.attentionRank());
+            return rank != 0 ? rank : String.CASE_INSENSITIVE_ORDER.compare(left.name, right.name);
+        });
+        return ordered;
     }
 
     /** Export the mutable workshop state so a portable project can carry it. */
@@ -151,13 +164,22 @@ public final class InventoryStore {
 
     public synchronized void addQuantity(Item item, int amount) {
         if (item == null || amount < 0) throw new IllegalArgumentException("inventory quantity is invalid");
-        long next = Math.min((long) MAX_QUANTITY, (long) clampQuantity(item.quantity) + amount);
-        setQuantity(item, (int) next);
+        synchronized (preferences) {
+            long next = Math.min((long) MAX_QUANTITY, (long) currentQuantity(item) + amount);
+            setQuantity(item, (int) next);
+        }
     }
 
     public synchronized void useQuantity(Item item, int amount) {
         if (item == null || amount < 0) throw new IllegalArgumentException("inventory quantity is invalid");
-        setQuantity(item, Math.max(0, item.quantity - amount));
+        synchronized (preferences) {
+            setQuantity(item, Math.max(0, currentQuantity(item) - amount));
+        }
+    }
+
+    /** Item rows are immutable UI snapshots; never use their stale quantity as the write base. */
+    private int currentQuantity(Item item) {
+        return clampQuantity(preferences.getInt(quantityKey(item.id), item.quantity));
     }
 
     /**
@@ -168,6 +190,14 @@ public final class InventoryStore {
      */
     public synchronized Usage recordCompletedPrint(String jobId, String material,
                                                     float filamentMm, float filamentDiameterMm) {
+        synchronized (preferences) {
+            return recordCompletedPrintLocked(jobId, material, filamentMm, filamentDiameterMm);
+        }
+    }
+
+    /** Shared-preferences monitor serializes mutations from Activity and service store instances. */
+    private Usage recordCompletedPrintLocked(String jobId, String material,
+                                             float filamentMm, float filamentDiameterMm) {
         String id = boundedRequired(jobId, 128, "print job id");
         if (!finite(filamentMm) || filamentMm <= 0f || filamentMm > MAX_FILAMENT_USAGE_MM)
             throw new IllegalArgumentException("filament usage is invalid");
@@ -474,7 +504,12 @@ public final class InventoryStore {
                 new Item("pei-plate", "Textured PEI plate", "Build surface", "in rotation", 1, 1, true, "Clean and inspect adhesion surface", 30),
                 new Item("ptfe-tube", "PTFE tube", "Feed path", "spare", 0, 1, false, "Add one before the next service", 0),
                 new Item("lubricant", "Silicone lubricant", "Maintenance", "bottle", 1, 1, true, "Motion-system service due soon", 90),
-                new Item("pla-basic", "Bambu PLA Basic", "Filament", "g", 2_000, 250, false, "Two 1 kg spools · dry storage · external spool", 0)
+                new Item("pla-basic", "Bambu PLA Basic", "Filament", "g", 2_000, 250, false, "Two 1 kg spools · dry storage · external spool", 0),
+                new Item("petg-basic", "Bambu PETG", "Filament", "g", 0, 250, false, "Add measured stock · confirm plate, route and dry storage", 0),
+                new Item("tpu", "Bambu TPU", "Filament", "g", 0, 250, false, "Add measured stock · external/direct path only; do not assume AMS lite compatibility", 0),
+                new Item("pva", "Bambu PVA", "Filament", "g", 0, 250, false, "Add measured stock · external/direct path only; keep dry and confirm the exact recipe", 0),
+                new Item("support-pla", "Support material for PLA", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0),
+                new Item("support-petg", "Support material for PETG", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0)
         };
     }
 
@@ -550,6 +585,15 @@ public final class InventoryStore {
 
         public boolean needsServiceAttention() {
             return serviceDue || serviceSoon();
+        }
+
+        /** Lower ranks are more urgent; reorder wins when an item has multiple alerts. */
+        public int attentionRank() {
+            if (needsReorder()) return 0;
+            if (serviceOverdue()) return 1;
+            if (serviceDue) return 2;
+            if (serviceSoon()) return 3;
+            return 4;
         }
 
         public String statusLabel() {

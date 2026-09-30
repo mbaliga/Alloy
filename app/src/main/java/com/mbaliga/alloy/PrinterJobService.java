@@ -368,6 +368,10 @@ public final class PrinterJobService extends Service {
     }
 
     private PrinterTransport.Artifact artifact(PrinterJobStore.Job job) throws Exception {
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            return ArtifactStore.recoverForA1MiniNoSupportPilot(getFilesDir(), job.artifactName,
+                    job.artifactSize, job.artifactSha256);
+        }
         return ArtifactStore.recoverForPhysicalPrint(getFilesDir(), job.artifactName, job.artifactSize, job.artifactSha256);
     }
 

@@ -20,6 +20,7 @@ on:
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
+      - 'ci/validate_capability_catalog.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_native_jni_contract.py'
@@ -49,6 +50,7 @@ on:
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
+      - 'ci/validate_capability_catalog.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_native_jni_contract.py'
@@ -102,6 +104,7 @@ jobs:
           python3 ci/validate_native_jni_contract.py
           python3 ci/validate_native_prebuilts.py arm64-v8a
           python3 ci/validate_profile_assets.py
+          python3 ci/validate_capability_catalog.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

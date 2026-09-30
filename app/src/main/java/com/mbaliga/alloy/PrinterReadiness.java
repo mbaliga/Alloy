@@ -105,6 +105,44 @@ public final class PrinterReadiness {
                 certificatePinned, recoveryClear, supportParityReady, supportParityDetail, true);
     }
 
+    /**
+     * Evidence collection only. This report intentionally does not reuse the
+     * production verification or support-parity claims: it can pass solely in
+     * the separately compiled A1 Mini no-support pilot lane.
+     */
+    public static Report evaluateA1MiniNoSupportPilot(boolean pilotBuild,
+                                                       boolean nativeEngineIncluded,
+                                                       A1MiniNoSupportPilot.Verdict scope,
+                                                       boolean artifactReady,
+                                                       boolean printerPaired,
+                                                       boolean a1MiniModelConfirmed,
+                                                       boolean certificatePinned,
+                                                       boolean recoveryClear) {
+        ArrayList<Check> checks = new ArrayList<>();
+        add(checks, "Physical pilot build", pilotBuild,
+                pilotBuild ? "CI-debug acceptance build; never a production release"
+                        : "This APK is not compiled for the controlled pilot");
+        add(checks, "Native engine", nativeEngineIncluded,
+                nativeEngineIncluded ? "Included for controlled pilot evidence only" : "Not included in this APK");
+        boolean scoped = scope != null && scope.allowed;
+        add(checks, "Pilot scope", scoped,
+                scope == null ? "Reopen an eligible bundled fixture" : scope.detail);
+        add(checks, "Supports", scoped,
+                scoped ? "Disabled by the controlled pilot recipe" : "Pilot jobs cannot include supports");
+        add(checks, "Printer package", artifactReady, artifactReady
+                ? "Structurally validated pilot .gcode.3mf is staged"
+                : "Slice and stage the controlled pilot package first");
+        add(checks, "Printer pairing", printerPaired, printerPaired
+                ? "Target credentials are present" : "Pair an A1 Mini before sending");
+        add(checks, "Printer model", a1MiniModelConfirmed, a1MiniModelConfirmed
+                ? "A1 Mini confirmed" : "Confirm the discovered model is N1 (A1 Mini)");
+        add(checks, "Certificate pin", certificatePinned, certificatePinned
+                ? "Leaf SHA-256 pin configured" : "Read and save the printer's leaf SHA-256 fingerprint");
+        add(checks, "Recovery lock", recoveryClear, recoveryClear
+                ? "No unconfirmed printer transaction" : "Review the unconfirmed transaction before sending again");
+        return new Report(checks);
+    }
+
     private static Report evaluateInternal(boolean nativeEngineIncluded,
                                            boolean nativeEngineVerified,
                                            boolean profileLoaded,

@@ -51,6 +51,7 @@ jobs:
           set -euxo pipefail
           python3 ci/validate_android_wiring.py
           python3 ci/validate_profile_assets.py
+          python3 ci/validate_capability_catalog.py
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
           python3 ci/validate_model_assets.py
           python3 ci/validate_3mf_contract.py

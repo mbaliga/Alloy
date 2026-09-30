@@ -71,8 +71,12 @@ def main() -> None:
         "validateNativePrebuiltDirectory",
         "tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }",
         "includeSuppliedReferenceVisuals",
-        ": true",
+        ": false",
         "file('src/debug/assets')",
+        "Production release cannot include private visual-review assets without documented redistribution rights",
+        "def physicalPilot",
+        "PHYSICAL_PILOT_ENABLED",
+        "alloyPhysicalPilot=true requires a native, unverified, CI-debug-signed non-production build",
     )
     missing_build = [token for token in build_required if token not in build_text]
     if missing_build:
@@ -87,7 +91,7 @@ def main() -> None:
     for token in ("RECOVERY_REQUIRED", "must not automatically retry", "offline recovery"):
         if token not in release_doc:
             raise SystemExit(f"{RELEASE_DOC}: missing interruption recovery gate: {token}")
-    print("validated native source build is required for the Android release candidate")
+    print("validated native source build and isolated physical-pilot build guards")
 
 
 if __name__ == "__main__":

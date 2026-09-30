@@ -91,7 +91,7 @@ and publishes a SHA-256 manifest on `v*` tags or manual dispatch. Signing,
 hardware acceptance and native parity are still required before distribution;
 see `docs/RELEASE.md`.
 
-On a fresh install, the owner’s visual-review build opens the supplied Redmagic Keyboard Case v0.4 editable STEP assembly first when the native OCCT importer is present, and now opens that assembly directly into the immersive Hero view so the complete multi-part design is visible immediately; it falls back to the main chassis STL if that importer is omitted. Ordinary builds open the Alloy-authored box-and-lid assembly because owner assets and the unlicensed A1 reference are omitted. Tap **Import model** to choose an STL, OBJ, 3MF or STEP; native-enabled builds tessellate STEP through the bundled OCCT reader into the same live mesh workspace. A newly imported model now opens directly into the clean, object-first Hero view so the supplied box, parts or CAD conversion is visible before the preparation controls; close that view or tap **Machine view** to continue into printer context. Or tap **Model atlas** to browse the bundled box, box-and-lid assembly, mounting block, overhang/support calibration fixture, and thin-wall fixture in a live, presentation-style 3D surface. The private atlas also includes the exact owner-supplied A1 Mini v5 3MF as a checksum-verified model-library item; it remains excluded from ordinary/public APKs. Selecting **Use & open 3D** takes the chosen model straight into the clean Hero view; the header **3D** button returns there at any time. Alloy preserves 3MF build-item/component transforms, preserves OBJ object/group names, and infers disconnected solids in ordinary STL files for the Parts inspector. Tap **Parts** to focus the box or lid in the 3D view, then use **Transform** to scale, rotate, or move the selected part; the transform is saved with the plate and the result is leveled to the bed before slicing. Tap the **Plate** marker or choose **Print plates** from the project menu to keep separate model sets for a box, lid, bow components or other assemblies. Bundled examples and imported models are copied into the app-private content-addressed cache, so **Save project archive** can embed the current model directly; **Open project archive** restores embedded models, plates, transforms, recipe and bounded modeling history on the phone. Adjust **Recipe** if needed; the scrollable phone editor exposes the typed process/material/motion values that will be passed to the native engine. Tap **Slice**, review layers with **Layer − / Layer +**, and use **Export .3mf**. The model is centered automatically on the 180 × 180 × 180 mm A1 Mini volume.
+On a fresh install, the owner’s visual-review build opens the supplied Redmagic Keyboard Case v0.4 editable STEP assembly first when the native OCCT importer is present, and now opens that assembly directly into the immersive Hero view so the complete multi-part design is visible immediately; it falls back to the main chassis STL if that importer is omitted. Ordinary builds open the Alloy-authored box-and-lid assembly because owner assets and the unlicensed A1 reference are omitted. Tap **Import model** to choose an STL, OBJ, 3MF or STEP; native-enabled builds tessellate STEP through the bundled OCCT reader into the same live mesh workspace. A newly imported model now opens directly into the clean, object-first Hero view so the supplied box, parts or CAD conversion is visible before the preparation controls; close that view or tap **Machine view** to continue into printer context. Or tap **Library** to browse the bundled box, box-and-lid assembly, mounting block, overhang/support calibration fixture, and thin-wall fixture in a live, presentation-style 3D surface. The private library also includes the exact owner-supplied A1 Mini v5 3MF as a checksum-verified model-library item; it remains excluded from ordinary/public APKs. Selecting **Use & open 3D** takes the chosen model straight into the clean Hero view; the header **3D** button returns there at any time. Alloy preserves 3MF build-item/component transforms, preserves OBJ object/group names, and infers disconnected solids in ordinary STL files for the Parts inspector. Tap **Parts** to focus the box or lid in the 3D view, then use **Transform** to scale, rotate, or move the selected part; the transform is saved with the plate and the result is leveled to the bed before slicing. Tap the **Plate** marker or choose **Print plates** from the project menu to keep separate model sets for a box, lid, bow components or other assemblies. Bundled examples and imported models are copied into the app-private content-addressed cache, so **Save project archive** can embed the current model directly; **Open project archive** restores embedded models, plates, transforms, recipe and bounded modeling history on the phone. Adjust **Recipe** if needed; the scrollable phone editor exposes the typed process/material/motion values that will be passed to the native engine. Tap **Slice**, review layers with **Layer − / Layer +**, and use **Export .3mf**. The model is centered automatically on the 180 × 180 × 180 mm A1 Mini volume.
 
 The **3D study** action opens the full-screen Hero view and the Machine view. Hero is an object-first presentation with a quiet studio field, contact shadow, callouts, and in-stage material/theme controls; multi-part assemblies also expose an **Explode / Assemble** inspection toggle that never changes printable geometry. Machine shows the selected object in its printer context. The same controls are available in the standalone A1 Mini study. Visual-review builds can load the supplied 16,054-triangle A1 mini reference mesh by first running `python3 tools/import_a1_preview_reference.py <preview.zip> app/src/debug/assets/visuals/a1-mini-reference.mesh`. The Android path preserves that handoff's baked 42° crease normals, uses presentation-only region materials for the PEI, frame, carriage/nozzle and spool, adds bounded procedural PEI grain and Alloy-authored can/ball/key scale props, and applies a restrained key/fill/rim studio light pass so the machine study reads as a product view rather than a flat technical mesh. Saved project and BYOK reference thumbnails use the same perspective/depth ordering, per-part material palette and three-point lighting direction so the visual quality does not collapse when the live GLES surface is unavailable. Ordinary releases still omit the unlicensed reference; the owner can build a private visual-review release with `-PalloyIncludeSuppliedReferenceVisuals=true`, and the study labels whether the supplied mesh or Alloy-owned shell is active. The same private build includes the supplied Redmagic Keyboard Case v0.4 assets: the real main chassis opens first in Hero view, while the bezel, phone sled, service hatch, fit coupon, and editable STEP assembly appear in Model Atlas. These files are SHA-256 checked and remain excluded from ordinary/public APKs.
 
@@ -110,6 +110,54 @@ assets: download on the phone, then share/open the STL, OBJ, 3MF or STEP with Al
 License and mechanical-safety caveats are shown before opening each source;
 see [`docs/MODEL_LIBRARY.md`](docs/MODEL_LIBRARY.md).
 
+## Learn and initial printer scope
+
+**Learn** is an offline, versioned field guide available from the action rail
+and the Workshop status label. It contains a short start path, beginner cheat
+sheet, symptom-first troubleshooting search and source/scope labels. It uses
+the reviewed first-layer and material-feed illustrations only as teaching
+visuals; text remains the complete accessible equivalent. Learning is strictly
+read-only: no lesson can relax a readiness, profile, certificate or physical
+printer gate. The editorial contract is in
+[`docs/LEARNING_CONTENT_PLAN.md`](docs/LEARNING_CONTENT_PLAN.md) and the
+initial reviewed copy is in
+[`docs/LEARNING_CONTENT_FINAL.md`](docs/LEARNING_CONTENT_FINAL.md).
+
+On a normal first launch, Alloy presents a five-step, skippable onboarding
+route before asking for a printer permission or opening a pairing flow. It
+explains the current boundary plainly: import, arrangement, planning and
+inspection are available; physical sending remains fail-closed. The route can
+open Library directly, while Learn remains available later.
+
+The first capability catalog contains **exactly Bambu Lab A1 mini, A1 and
+P1S**. It visibly separates manufacturer capability from Alloy direct-send
+qualification. A1 mini records PLA, PETG, TPU and PVA as manufacturer-ideal,
+marks ABS/ASA/PC/PA/PET and CF/GF-filled classes as blocked for direct job
+preparation, and describes external/direct, AMS lite and regular-AMS feed
+routes without inferring compatibility. All three printer records currently
+say **Not qualified** for Alloy direct send until their independent physical
+acceptance evidence passes.
+
+The active **Profile** surface offers source-pinned 0.4 mm / PLA Basic
+planning profiles for these same three models. Selecting one changes the real
+build envelope and clears a prior slice so it must be reviewed again. These
+are unverified planning profiles—not a promise of native-slicer parity,
+printer pairing, Bambu Handy compatibility, or physical-print approval.
+
+After slicing, **Print plan** separates what Alloy has actually measured from
+what it cannot yet know: model filament length and an explicitly approximate
+mass, reported print time, the active nozzle/plate recipe, and the current
+orientation are shown together. Separate support mass, prime/purge/cleaning
+consumption, and live printer temperature/idle state remain *not reported*
+until an engine or qualified printer supplies those measurements. This avoids
+presenting a spool-consumption total or live status as fact when it is only an
+assumption.
+
+The ordered phone and A1 Mini verification route is kept in
+[`docs/ON_DEVICE_MVP_CHECKLIST.md`](docs/ON_DEVICE_MVP_CHECKLIST.md). It
+intentionally ends in evidence collection rather than treating export or a
+generic Android Share sheet as a verified Bambu Handy or direct-print route.
+
 ## Validation
 
 Existing parity tooling can be run from the project directory:
@@ -117,8 +165,10 @@ Existing parity tooling can be run from the project directory:
 ```bash
 PYTHONPYCACHEPREFIX=/tmp/alloy-pycache python3 -m py_compile ci/*.py parity/*.py tools/*.py
 python3 ci/validate_profile_assets.py
+python3 ci/validate_capability_catalog.py
 python3 ci/validate_android_workflows.py
 python3 ci/verify_profile_snapshot.py <orca-slicer-checkout> app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+python3 ci/verify_profile_provenance.py <bambu-studio-checkout> app/src/main/assets/profiles/a1-0.4-pla-basic.json app/src/main/assets/profiles/p1s-0.4-pla-basic.json
 python3 ci/validate_model_assets.py
 python3 ci/validate_3mf_contract.py
 python3 ci/validate_native_wiring.py

@@ -14,12 +14,16 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 /** Loads versioned printer/process/filament data without embedding presets in UI code. */
 public final class ProfileCatalog {
     private static final String DEFAULT_ASSET = "profiles/a1-mini-0.4-pla-basic.json";
+    private static final String[] INITIAL_ASSETS = {
+            DEFAULT_ASSET, "profiles/a1-0.4-pla-basic.json", "profiles/p1s-0.4-pla-basic.json"
+    };
     private static final int MAX_PROFILE_BYTES = 256 * 1024;
 
     private ProfileCatalog() { }
@@ -28,6 +32,31 @@ public final class ProfileCatalog {
         try (InputStream input = assets.open(DEFAULT_ASSET)) {
             return load(input);
         }
+    }
+
+    /**
+     * The initial planning scope is intentionally finite and source-labelled:
+     * A1 mini, A1 and P1S at their supplied 0.4 mm / PLA Basic starting
+     * recipes. These profiles support fitting, arrangement and inspection;
+     * their unverified state prevents them from qualifying a physical send.
+     */
+    public static List<Profile> loadInitial(AssetManager assets) throws IOException {
+        ArrayList<Profile> profiles = new ArrayList<>();
+        for (String asset : INITIAL_ASSETS) {
+            try (InputStream input = assets.open(asset)) { profiles.add(load(input)); }
+        }
+        if (profiles.size() != 3
+                || !"bambu.a1-mini".equals(profiles.get(0).printerId)
+                || !"bambu.a1".equals(profiles.get(1).printerId)
+                || !"bambu.p1s".equals(profiles.get(2).printerId))
+            throw new IOException("Initial planning profiles must contain A1 mini, A1 and P1S in order");
+        return Collections.unmodifiableList(profiles);
+    }
+
+    public static Profile loadInitialByPrinterId(AssetManager assets, String printerId) throws IOException {
+        String requested = printerId == null ? "" : printerId.trim();
+        for (Profile profile : loadInitial(assets)) if (profile.printerId.equals(requested)) return profile;
+        return loadDefault(assets);
     }
 
     /** Load an Alloy-normalized profile from the app's private profile store. */
