@@ -156,6 +156,11 @@ def main() -> None:
         "restoreOriginalGeometry()",
         "cancelGeometryRepair()",
         "geometryRepairEnabled",
+        "openArcContext()",
+        "showMoreActions()",
+        "showActiveArcOperation()",
+        "onContext() { openArcContext(); }",
+        "onMore() { showMoreActions(); }",
     ):
         require(activity, token, activity_path)
     for token in ("REQUEST_BATCH_EXPORT", "beginBatchSlice()", "BatchSliceJobController", "exportBatchArchive()",
