@@ -181,6 +181,19 @@ def main() -> None:
         "gap_fill_flow_ratio",
         "top_solid_infill_flow_ratio",
         "bottom_solid_infill_flow_ratio",
+        # These native fields are accepted only when an imported project
+        # supplies them. The pinned compact A1 Mini profile does not resolve
+        # them, so they must never be mistaken for source-backed defaults.
+        "infill_anchor",
+        "infill_anchor_max",
+        "outer_wall_jerk",
+        "inner_wall_jerk",
+        "infill_jerk",
+        "top_surface_jerk",
+        "initial_layer_jerk",
+        "travel_jerk",
+        "support_remove_small_overhang",
+        "internal_solid_infill_acceleration",
         "support_interface_spacing",
         "support_bottom_interface_spacing",
         "support_tree_branch_distance",
