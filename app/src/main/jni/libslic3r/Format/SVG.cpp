@@ -3,7 +3,7 @@
 #include "../Model.hpp"
 #include "../TriangleMesh.hpp"
 
-#include "svg.hpp"
+#include "SVG.hpp"
 #include "nanosvg/nanosvg.h"
 
 #include <string>

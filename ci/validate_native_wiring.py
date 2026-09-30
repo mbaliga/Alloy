@@ -38,6 +38,7 @@ def main() -> None:
     profile_asset_path = ROOT / "app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json"
     jni_contract_path = ROOT / "ci/validate_native_jni_contract.py"
     gcode_path = ROOT / "app/src/main/jni/libslic3r/GCode.cpp"
+    svg_path = ROOT / "app/src/main/jni/libslic3r/Format/SVG.cpp"
 
     adapter = adapter_path.read_text()
     native = native_path.read_text()
@@ -57,6 +58,7 @@ def main() -> None:
     profile_asset = profile_asset_path.read_text()
     jni_contract = jni_contract_path.read_text()
     gcode = gcode_path.read_text()
+    svg = svg_path.read_text()
 
     for token in (
         "implements SlicerEngine",
@@ -140,6 +142,9 @@ def main() -> None:
         raise SystemExit(f"{gcode_path}: missing native G-code pipeline")
     if "auto pipeline_to_string" not in gcode and not ("GCodeProcessor" in gcode and "process_layer" in gcode):
         raise SystemExit(f"{gcode_path}: missing native G-code serialization pipeline")
+    # GitHub's Linux runner is case-sensitive. Keep this source/header pairing
+    # explicit because macOS filesystems otherwise hide this build break.
+    require(svg, '#include "SVG.hpp"', svg_path)
     require(shader, "getCurrentShaderPointer", shader_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_ENABLED", activity_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_VERIFIED", activity_path)
