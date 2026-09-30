@@ -163,8 +163,22 @@ def main() -> None:
         "showActiveArcOperation()",
         "onContext() { openArcContext(); }",
         "onMore() { showMoreActions(); }",
+        "BambuHandyHandoff.genericShare(uri)",
+        "BambuHandyHandoff.targetedShare(uri)",
+        "Try Bambu Handy",
+        "recipient compatibility is not yet verified",
     ):
         require(activity, token, activity_path)
+    handy_handoff_path = ROOT / "app/src/main/java/com/mbaliga/alloy/BambuHandyHandoff.java"
+    handy_handoff_test_path = ROOT / "app/src/androidTest/java/com/mbaliga/alloy/BambuHandyHandoffTest.java"
+    handy_handoff = handy_handoff_path.read_text()
+    handy_handoff_test = handy_handoff_test_path.read_text()
+    for token in ("bbl.intl.bambulab.com", "Intent.ACTION_SEND", "FLAG_GRANT_READ_URI_PERMISSION",
+                  "setClipData", "canHandle", "resolveActivity"):
+        require(handy_handoff, token, handy_handoff_path)
+    for token in ("targetedHandoffKeepsTheOneTimeReadGrantAndCurrentPackageId",
+                  "fileOrNetworkUrisCannotBeSharedThroughTheHandoff"):
+        require(handy_handoff_test, token, handy_handoff_test_path)
     for token in ("REQUEST_BATCH_EXPORT", "beginBatchSlice()", "BatchSliceJobController", "exportBatchArchive()",
                   "writeBatchArchive", "batchSlicing", "batchTransferring", "Export all plates"):
         require(activity, token, activity_path)

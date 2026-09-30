@@ -2350,6 +2350,7 @@ public final class MainActivity extends Activity {
             }
             Button export = action("Export .3mf", v -> exportPackage()); export.setTextColor(GOLD);
             action("Share package", v -> sharePackage());
+            action("Try Bambu Handy", v -> shareToBambuHandy());
         }
         if (arcNavigation != null) arcNavigation.setContextLabel(arcContextLabel());
         updateLayerInspector();
@@ -5037,6 +5038,18 @@ public final class MainActivity extends Activity {
 
     /** Offer a bounded package to another Android app without implying recipient compatibility. */
     private void sharePackage() {
+        sharePackage(false);
+    }
+
+    /**
+     * Attempt Bambu Handy only when it advertises a suitable Android share
+     * target. An available activity is not treated as package/import proof.
+     */
+    private void shareToBambuHandy() {
+        sharePackage(true);
+    }
+
+    private void sharePackage(boolean preferBambuHandy) {
         if (importing || model == null || slice == null) {
             Toast.makeText(this, "Slice a model before sharing a package", Toast.LENGTH_SHORT).show();
             return;
@@ -5054,12 +5067,25 @@ public final class MainActivity extends Activity {
                         artifactDisplayName(), viewport.thumbnailPng(512));
             }
             Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
-            Intent send = new Intent(Intent.ACTION_SEND).setType("application/octet-stream")
-                    .putExtra(Intent.EXTRA_STREAM, uri)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            send.setClipData(ClipData.newRawUri("Alloy printer package", uri));
-            startActivity(Intent.createChooser(send,
-                    "Share validated package — confirm recipient compatibility"));
+            Intent generic = BambuHandyHandoff.genericShare(uri);
+            if (preferBambuHandy) {
+                Intent targeted = BambuHandyHandoff.targetedShare(uri);
+                if (BambuHandyHandoff.canHandle(getPackageManager(), targeted)) {
+                    startActivity(targeted);
+                    Toast.makeText(this,
+                            "Bambu Handy opened. Confirm its import result; recipient compatibility is not yet verified.",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this,
+                            "Bambu Handy is unavailable for this package type. Choose a recipient manually.",
+                            Toast.LENGTH_LONG).show();
+                    startActivity(Intent.createChooser(generic,
+                            "Share validated package — confirm recipient compatibility"));
+                }
+            } else {
+                startActivity(Intent.createChooser(generic,
+                        "Share validated package — confirm recipient compatibility"));
+            }
         } catch (Exception error) {
             Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
