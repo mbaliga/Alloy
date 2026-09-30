@@ -2,6 +2,17 @@
 
 Date: 2026-09-22
 
+2026-10-01 Bambu Handy handoff checkpoint: the validated `.gcode.3mf` share
+surface now offers **Try Bambu Handy**, targeting the current Google Play
+package identifier only if that app advertises an Android `ACTION_SEND`
+receiver. The intent exposes only Alloy's staged, read-only `content://`
+artifact with a one-time read grant; absent/non-receiving installations fall
+back to Android's normal chooser. A focused API-35 ARM64 emulator
+instrumentation run passed both handoff-contract tests: correct package/URI
+grant construction and rejection of file/network URIs. This proves the Android
+handoff boundary, not that Bambu Handy imports, uploads, or prints any Alloy
+package; those remain on-device acceptance gates.
+
 2026-09-29 TreeSupport audit reproducibility checkpoint: the source-pinned
 Bambu Studio `v02.08.02.61` TreeSupport3D audit was re-run from a fresh public
 checkout. It remains `PORT_REQUIRED` (seven required files differ; 30 of 36
