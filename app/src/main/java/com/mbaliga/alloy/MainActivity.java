@@ -1509,6 +1509,21 @@ public final class MainActivity extends Activity {
         return profile == null ? "180 × 180 × 180 mm" : profile.buildVolumeLabel();
     }
 
+    /** Active dimensions are profile-derived, bounded to the disclosed A1/P1S maximum. */
+    private float activeBedX() { return finite(config.bedX) ? clamp(config.bedX, 0.5f, 256f) : 180f; }
+    private float activeBedY() { return finite(config.bedY) ? clamp(config.bedY, 0.5f, 256f) : 180f; }
+    private float activeBedZ() { return finite(config.bedZ) ? clamp(config.bedZ, 0.5f, 256f) : 180f; }
+
+    private void requireActiveBuildVolume(MeshModel candidate) throws IOException {
+        if (candidate == null) throw new IOException("Generated model is empty");
+        float width = candidate.maxX - candidate.minX;
+        float depth = candidate.maxY - candidate.minY;
+        float height = candidate.maxZ - candidate.minZ;
+        if (width > activeBedX() + 0.001f || depth > activeBedY() + 0.001f || height > activeBedZ() + 0.001f)
+            throw new IOException("Generated model exceeds the " + profileBuildVolumeLabel() + " "
+                    + profilePrinterLabel() + " build volume");
+    }
+
     private String currentPlateLabel() {
         return "Plate " + (activePlateIndex + 1);
     }
@@ -4007,7 +4022,8 @@ public final class MainActivity extends Activity {
                 .setPositiveButton("Create array", (dialog, which) -> {
                     try {
                         int count = Math.round(clamp(Float.parseFloat(copies.getText().toString()), 2f, 32f));
-                        MeshModel generated = ModelWorkbench.createArray(model.displayName + " · array", model, count);
+                        MeshModel generated = ModelWorkbench.createArray(model.displayName + " · array", model, count,
+                                activeBedX(), activeBedY(), activeBedZ());
                         installGeneratedModel(generated, model.displayName + " · " + count + " copies");
                     } catch (Exception error) {
                         Toast.makeText(this, "Array could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
@@ -4159,13 +4175,14 @@ public final class MainActivity extends Activity {
                 .setPositiveButton("Create", (dialog, which) -> {
                     try {
                         float[][] points = parseSketchPoints(sketch.getText().toString());
-                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, 180f);
+                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
                         MeshModel generated = ModelWorkbench.createExtrudedPolygon("Sketch extrusion", points, h);
                         MeshModel result = generated; String name = "Sketch extrusion  ·  " + points.length + " points";
                         if (addToAssembly.isChecked() && model != null) {
                             ArrayList<MeshModel> sources = new ArrayList<>(); sources.add(model); sources.add(generated);
                             result = MeshModel.combine("Assembly", sources); name = "Assembly  ·  " + model.displayName;
                         }
+                        requireActiveBuildVolume(result);
                         installGeneratedModel(result, name);
                     } catch (Exception error) {
                         Toast.makeText(this, "Sketch could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
@@ -4233,9 +4250,9 @@ public final class MainActivity extends Activity {
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Create", (dialog, which) -> {
                     try {
-                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, 180f);
-                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, 180f);
-                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, 180f);
+                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, activeBedX());
+                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, activeBedY());
+                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
                         MeshModel generated;
                         if (primitive == ModelWorkbench.Primitive.CHAMFERED_BOX) {
                             float maxBevel = Math.min(w, d) * 0.24f;
@@ -4257,6 +4274,7 @@ public final class MainActivity extends Activity {
                             result = MeshModel.combine("Assembly", sources);
                             name = "Assembly  ·  " + model.displayName;
                         }
+                        requireActiveBuildVolume(result);
                         installGeneratedModel(result, name);
                     } catch (Exception error) {
                         Toast.makeText(this, "Primitive could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();

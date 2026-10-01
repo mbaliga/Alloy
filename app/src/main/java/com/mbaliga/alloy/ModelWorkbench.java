@@ -34,7 +34,14 @@ public final class ModelWorkbench {
     }
 
     private static final float MIN_MM = 0.5f;
-    private static final float MAX_MM = 180f;
+    /**
+     * The parametric kernel must be able to represent every currently
+     * disclosed planning profile.  The active printer envelope is enforced by
+     * the caller (and again by the slicer); the compatibility overload below
+     * deliberately retains the A1 Mini default.
+     */
+    private static final float MAX_SUPPORTED_MM = 256f;
+    private static final float DEFAULT_BED_MM = 180f;
     private static final int RING_SEGMENTS = 32;
     private static final int SPHERE_RINGS = 16;
     private static final int MAX_TRIANGLES = 10_000;
@@ -117,15 +124,27 @@ public final class ModelWorkbench {
     /**
      * Make a bounded shelf-packed duplicate array from the current model.
      * The source geometry is not mutated; each duplicate remains a named part
-     * in the resulting assembly and is checked against the A1 Mini envelope.
+     * in the resulting assembly and is checked against the selected build
+     * envelope. The compatibility overload retains the A1 Mini envelope.
      */
     public static MeshModel createArray(String name, MeshModel source, int copies) throws IOException {
+        return createArray(name, source, copies, DEFAULT_BED_MM, DEFAULT_BED_MM, DEFAULT_BED_MM);
+    }
+
+    /**
+     * Make a bounded shelf-packed duplicate array for an explicit printer
+     * envelope. Keeping this dimension-aware rather than widening the A1 Mini
+     * default prevents profile selection from being silently ignored.
+     */
+    public static MeshModel createArray(String name, MeshModel source, int copies,
+                                        float bedX, float bedY, float bedZ) throws IOException {
         if (source == null || source.vertices.length == 0 || source.triangles.length == 0)
             throw new IOException("Array source is empty");
         if (copies < 2 || copies > 32) throw new IOException("Array count must be between 2 and 32");
-        if (source.maxX - source.minX > 180.001f || source.maxY - source.minY > 180.001f
-                || source.maxZ - source.minZ > 180.001f)
-            throw new IOException("Array source must fit the A1 Mini build volume");
+        checkEnvelope(bedX, bedY, bedZ);
+        if (source.maxX - source.minX > bedX + 0.001f || source.maxY - source.minY > bedY + 0.001f
+                || source.maxZ - source.minZ > bedZ + 0.001f)
+            throw new IOException("Array source must fit the selected build volume");
         ArrayList<MeshModel> sources = new ArrayList<>();
         String[] labels = new String[copies];
         for (int index = 0; index < copies; index++) {
@@ -134,8 +153,8 @@ public final class ModelWorkbench {
         }
         MeshModel result = MeshModel.combine(safeName(name, "Array"), sources, labels);
         if (result.minX < -0.001f || result.minY < -0.001f || result.minZ < -0.001f
-                || result.maxX > 180.001f || result.maxY > 180.001f || result.maxZ > 180.001f)
-            throw new IOException("Array copies do not fit the A1 Mini build volume");
+                || result.maxX > bedX + 0.001f || result.maxY > bedY + 0.001f || result.maxZ > bedZ + 0.001f)
+            throw new IOException("Array copies do not fit the selected build volume");
         return result;
     }
 
@@ -230,7 +249,7 @@ public final class ModelWorkbench {
             if (point == null || point.length < 2 || Float.isNaN(point[0]) || Float.isInfinite(point[0])
                     || Float.isNaN(point[1]) || Float.isInfinite(point[1]))
                 throw new IOException("Sketch contains an invalid point");
-            if (Math.abs(point[0]) > MAX_MM / 2f || Math.abs(point[1]) > MAX_MM / 2f)
+            if (Math.abs(point[0]) > MAX_SUPPORTED_MM / 2f || Math.abs(point[1]) > MAX_SUPPORTED_MM / 2f)
                 throw new IOException("Sketch coordinates must stay within the build volume");
             float[] next = points[(i + 1) % points.length];
             if (next == null || next.length < 2 || Math.hypot(point[0] - next[0], point[1] - next[1]) < 0.001d)
@@ -322,8 +341,14 @@ public final class ModelWorkbench {
     }
 
     private static void checkDimension(float value, String label) throws IOException {
-        if (Float.isNaN(value) || Float.isInfinite(value) || value < MIN_MM || value > MAX_MM)
-            throw new IOException("Primitive " + label + " must be between " + MIN_MM + " and " + MAX_MM + " mm");
+        if (Float.isNaN(value) || Float.isInfinite(value) || value < MIN_MM || value > MAX_SUPPORTED_MM)
+            throw new IOException("Primitive " + label + " must be between " + MIN_MM + " and " + MAX_SUPPORTED_MM + " mm");
+    }
+
+    private static void checkEnvelope(float bedX, float bedY, float bedZ) throws IOException {
+        checkDimension(bedX, "build width");
+        checkDimension(bedY, "build depth");
+        checkDimension(bedZ, "build height");
     }
 
     private static float defaultBevel(float width, float depth) {
