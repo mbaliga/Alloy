@@ -8,6 +8,7 @@ on:
       - 'third_party/orca-official'
       - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
       - 'ci/validate_official_orca_snapshot.py'
+      - 'ci/audit_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
       - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
   pull_request:
@@ -16,6 +17,7 @@ on:
       - 'third_party/orca-official'
       - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
       - 'ci/validate_official_orca_snapshot.py'
+      - 'ci/audit_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
       - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
   workflow_dispatch:
@@ -33,3 +35,12 @@ jobs:
           submodules: recursive
       - name: Verify pinned official source snapshot
         run: python3 ci/validate_official_orca_snapshot.py --source-root third_party/orca-official
+      - name: Audit official-to-legacy Android port surface
+        run: >-
+          python3 ci/audit_official_orca_port_surface.py
+          third_party/orca-official app/src/main/jni/libslic3r official-orca-port-surface
+      - uses: actions/upload-artifact@v4
+        with:
+          name: official-orca-port-surface
+          path: official-orca-port-surface
+          if-no-files-found: error
