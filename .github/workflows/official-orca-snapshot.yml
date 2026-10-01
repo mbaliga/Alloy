@@ -1,0 +1,35 @@
+name: Official Orca source snapshot
+
+on:
+  push:
+    branches: [main, 'codex/**']
+    paths:
+      - '.gitmodules'
+      - 'third_party/orca-official'
+      - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
+      - 'ci/validate_official_orca_snapshot.py'
+      - '.github/workflows/official-orca-snapshot.yml'
+      - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
+  pull_request:
+    paths:
+      - '.gitmodules'
+      - 'third_party/orca-official'
+      - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
+      - 'ci/validate_official_orca_snapshot.py'
+      - '.github/workflows/official-orca-snapshot.yml'
+      - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Verify pinned official source snapshot
+        run: python3 ci/validate_official_orca_snapshot.py --source-root third_party/orca-official
