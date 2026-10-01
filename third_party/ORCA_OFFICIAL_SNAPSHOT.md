@@ -13,6 +13,10 @@ the original libnoise project describes the source distribution as LGPL. This
 snapshot is for source/build closure and must receive a complete distribution
 notice before it is placed in any shipping binary.
 
+The source-snapshot workflow builds this exact `libnoise_static` source target
+on a clean Linux host. That is intentionally a dependency smoke test only; it
+does not cross-compile Android, link it into Alloy, or prove a slicer result.
+
 It is an attribution-preserving source snapshot for the separate
 `official-orca` Android port described in
 [`docs/OFFICIAL_ORCA_G2_PORT_PLAN.md`](../docs/OFFICIAL_ORCA_G2_PORT_PLAN.md).
