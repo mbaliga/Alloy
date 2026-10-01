@@ -30,6 +30,8 @@ LIBNOISE_MODULE_NAME = "orca-deps-libnoise"
 LIBNOISE_MODULE_PATH = "third_party/orca-deps-libnoise"
 LIBNOISE_URL = "https://github.com/SoftFever/Orca-deps-libnoise.git"
 LIBNOISE_SHA = "f25d5331570ae109f0e645cb729ecab155612714"
+LIBNOISE_LICENSE_PATH = "third_party/licenses/LIBNOISE_LGPL-2.1.txt"
+LIBNOISE_LICENSE_SHA256 = "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95"
 
 
 def run_git(root: Path, *args: str) -> str:
@@ -178,6 +180,17 @@ def require_libnoise_checkout(source_root: Path) -> None:
         raise ValueError("libnoise checkout is missing its CMake/source/provenance surface")
     if "OrcaSlicer" not in (source_root / "README.md").read_text(errors="replace"):
         raise ValueError("libnoise checkout README does not retain OrcaSlicer provenance")
+    # The retained libnoise header explicitly offers LGPL-2.1-or-later but its
+    # source snapshot omits COPYING.txt. Keep an exact, checksummed GNU copy
+    # in Alloy before this dependency is eligible for a shipped native target.
+    license_path = ROOT / LIBNOISE_LICENSE_PATH
+    if not license_path.is_file():
+        raise ValueError(f"libnoise distribution notice is missing: {license_path}")
+    license_bytes = license_path.read_bytes()
+    if hashlib.sha256(license_bytes).hexdigest() != LIBNOISE_LICENSE_SHA256:
+        raise ValueError("libnoise LGPL-2.1 notice checksum does not match the retained GNU source")
+    if b"GNU LESSER GENERAL PUBLIC LICENSE" not in license_bytes or b"Version 2.1, February 1999" not in license_bytes:
+        raise ValueError("libnoise distribution notice is not the complete LGPL-2.1 text")
 
 
 def main() -> None:

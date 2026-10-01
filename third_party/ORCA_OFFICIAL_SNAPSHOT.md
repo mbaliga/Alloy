@@ -9,9 +9,14 @@ OrcaSlicer commit `ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6` from
 (the official Orca `1.0` dependency tag). Official Orca's dependency manifest
 pins the matching archive hash `96ffd6cc47898dd8147aab53d7d1b1911b507d9dbaecd5613ca2649468afd8b6`.
 The upstream README identifies the retained libnoise 1.0 source provenance;
-the original libnoise project describes the source distribution as LGPL. This
-snapshot is for source/build closure and must receive a complete distribution
-notice before it is placed in any shipping binary.
+its `src/noise.h` header licenses the source under LGPL-2.1-or-later. The
+complete, unmodified LGPL-2.1 text is retained at
+[`licenses/LIBNOISE_LGPL-2.1.txt`](licenses/LIBNOISE_LGPL-2.1.txt), copied from
+GNU's official historical-license endpoint on 2026-10-01 and checksummed by
+the source-snapshot validator as
+`20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95`.
+This records the dependency's source notice; a shipping build still needs its
+complete distribution-notice and license review.
 
 The source-snapshot workflow builds this exact `libnoise_static` source target
 on a clean Linux host. That is intentionally a dependency smoke test only; it
