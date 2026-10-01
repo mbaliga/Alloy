@@ -2,6 +2,18 @@
 
 Date: 2026-09-22
 
+2026-10-01 Android distribution-notice checkpoint: Android v1 Actions run
+[`36855211178`](https://github.com/mbaliga/Alloy/actions/runs/36855211178)
+passed at delivery commit `07a326ddbcdc536a477fb5f93f73c60d4789925f`.
+It built the CI-debug-signed release APK, ran the full Android pipeline
+acceptance suite, and exercised
+`AndroidPipelineTest.libnoiseLgplNoticeIsRetainedInPackagedAssets`. That test
+opens the installed APK asset and verifies the retained LGPL-2.1 header and
+version text. This is evidence that the pinned libnoise notice is packaged in
+the ordinary Android artifact; it is not native-runtime evidence, a complete
+license-distribution review, an official Orca port, slicer parity, physical
+printer evidence, Bambu Handy acceptance, or production signing.
+
 2026-10-01 native hosted-runtime KVM evidence: native Actions run
 [`36847078236`](https://github.com/mbaliga/Alloy/actions/runs/36847078236)
 completed the source dependency build, source-built GMP/MPFR closure, ARM64
