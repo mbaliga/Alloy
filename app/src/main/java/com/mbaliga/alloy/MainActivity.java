@@ -963,13 +963,10 @@ public final class MainActivity extends Activity {
         titleLp.setMargins(dp(14), dp(14), 0, 0);
         stage.addView(title, titleLp);
 
-        TextView wordmark = label("ALLOY", 19, TEXT);
-        wordmark.setTypeface(null, android.graphics.Typeface.BOLD);
-        wordmark.setLetterSpacing(0.18f);
-        wordmark.setGravity(Gravity.CENTER);
-        FrameLayout.LayoutParams wordmarkLp = new FrameLayout.LayoutParams(dp(150), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        wordmarkLp.topMargin = dp(14);
-        stage.addView(wordmark, wordmarkLp);
+        ImageView logo = alloyLogo();
+        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        logoLp.topMargin = dp(14);
+        stage.addView(logo, logoLp);
 
         TextView close = control("×", "Close immersive 3D view", v -> dialog.dismiss());
         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
@@ -1229,12 +1226,7 @@ public final class MainActivity extends Activity {
         // The real mark owns the visual centre of the header. It is clipped
         // to a circle, rather than being scaled down inside one, so the black
         // field and luminous lettering retain the intended icon treatment.
-        ImageView logo = new ImageView(this);
-        logo.setImageResource(R.drawable.alloy_logo);
-        logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        logo.setBackground(round(Color.BLACK, Color.rgb(99, 224, 211), 1, 21));
-        logo.setClipToOutline(true);
-        logo.setContentDescription("Alloy");
+        ImageView logo = alloyLogo();
         FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         logoLp.topMargin = 0;
         header.addView(logo, logoLp);
@@ -1302,13 +1294,10 @@ public final class MainActivity extends Activity {
         FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(215), -2, Gravity.TOP | Gravity.START);
         titleLp.setMargins(dp(20), dp(18), 0, 0);
         stage.addView(title, titleLp);
-        TextView wordmark = label("ALLOY", 18, TEXT);
-        wordmark.setTypeface(null, android.graphics.Typeface.BOLD);
-        wordmark.setLetterSpacing(0.18f);
-        wordmark.setGravity(Gravity.CENTER);
-        FrameLayout.LayoutParams wordmarkLp = new FrameLayout.LayoutParams(dp(150), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        wordmarkLp.topMargin = dp(12);
-        stage.addView(wordmark, wordmarkLp);
+        ImageView logo = alloyLogo();
+        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        logoLp.topMargin = dp(12);
+        stage.addView(logo, logoLp);
         TextView close = control("×", "Close A1 Mini 3D study", v -> dialog.dismiss());
         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
         closeLp.setMargins(0, dp(14), dp(14), 0);
@@ -1620,6 +1609,17 @@ public final class MainActivity extends Activity {
         drawable.setStroke(dp(strokeWidth), stroke);
         drawable.setCornerRadius(dp(radius));
         return drawable;
+    }
+
+    /** One true mark everywhere: centred, circle-clipped and never shrunk into a badge. */
+    private ImageView alloyLogo() {
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.alloy_logo);
+        logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        logo.setBackground(round(Color.BLACK, Color.rgb(99, 224, 211), 1, 21));
+        logo.setClipToOutline(true);
+        logo.setContentDescription("Alloy");
+        return logo;
     }
 
     private void showPrinterStatus() {
