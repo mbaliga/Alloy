@@ -47,6 +47,22 @@ import org.bouncycastle.jsse.BCSSLSocket;
 @RunWith(AndroidJUnit4.class)
 public final class AndroidPipelineTest {
     @Test
+    public void libnoiseLgplNoticeIsRetainedInPackagedAssets() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        try (InputStream input = context.getAssets().open("LIBNOISE_LGPL-2.1.txt")) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int count;
+            while ((count = input.read(buffer)) != -1) bytes.write(buffer, 0, count);
+            String notice = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+            Assert.assertTrue("packaged libnoise notice must retain LGPL identity",
+                    notice.contains("GNU LESSER GENERAL PUBLIC LICENSE"));
+            Assert.assertTrue("packaged libnoise notice must retain its declared version",
+                    notice.contains("Version 2.1, February 1999"));
+        }
+    }
+
+    @Test
     public void bundledModelSlicesAndStagesValidatedPackage() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ArrayList<ModelCatalog.Entry> catalog = ModelCatalog.load(context.getAssets());
