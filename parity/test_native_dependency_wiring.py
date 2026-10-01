@@ -99,8 +99,11 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertEqual(2, workflow.count("target: google_apis"))
         self.assertEqual(2, workflow.count("arch: x86_64"))
         self.assertEqual(2, workflow.count("disable-linux-hw-accel: false"))
-        self.assertEqual(2, workflow.count("pre-emulator-launch-script: |"))
-        self.assertEqual(2, workflow.count("sudo udevadm trigger --name-match=kvm"))
+        self.assertIn("Enable hosted KVM permissions for native instrumentation", workflow)
+        self.assertIn("99-kvm4all.rules", workflow)
+        self.assertIn('MODE="0666"', workflow)
+        self.assertIn("sudo udevadm control --reload-rules", workflow)
+        self.assertEqual(1, workflow.count("sudo udevadm trigger --name-match=kvm"))
         self.assertIn("arm64-v8a JNI library", workflow)
 
     def test_occt_headers_are_normalized_and_source_is_copied(self) -> None:

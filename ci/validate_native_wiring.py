@@ -359,6 +359,10 @@ def main() -> None:
         "target: google_apis",
         "arch: x86_64",
         "disable-linux-hw-accel: false",
+        "Enable hosted KVM permissions for native instrumentation",
+        "99-kvm4all.rules",
+        'MODE="0666"',
+        "sudo udevadm control --reload-rules",
         "sudo udevadm trigger --name-match=kvm",
     ):
         require(workflow, token, workflow_path)
