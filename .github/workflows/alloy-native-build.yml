@@ -194,6 +194,12 @@ jobs:
           # writes mask the native test result on slow hosted API-35 boots.
           disable-animations: false
           disable-linux-hw-accel: false
+          # GitHub's hosted Linux runners expose /dev/kvm but need this udev
+          # trigger before the emulator-runner process checks its permissions.
+          # Keep acceleration mandatory: software emulation is not a usable
+          # qualification environment for this native instrumentation gate.
+          pre-emulator-launch-script: |
+            sudo udevadm trigger --name-match=kvm
           script: gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
@@ -206,6 +212,10 @@ jobs:
           # mutations; the evidence harness is not animation-sensitive.
           disable-animations: false
           disable-linux-hw-accel: false
+          # Match the instrumentation job: grant the hosted runner process
+          # access to the existing KVM device before emulator startup.
+          pre-emulator-launch-script: |
+            sudo udevadm trigger --name-match=kvm
           script: |
             set -euxo pipefail
             adb install -r app/build/outputs/apk/release/app-release.apk
