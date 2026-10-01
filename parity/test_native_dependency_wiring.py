@@ -92,6 +92,15 @@ class NativeDependencyWiringTests(unittest.TestCase):
             self.assertIn("ci/validate_native_prebuilts.py arm64-v8a --source-built", text)
             self.assertNotIn("check-native-prebuilts.py arm64-v8a", text)
 
+    def test_native_workflow_uses_bootable_api35_arm_translation_host(self) -> None:
+        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        self.assertIn("Run native release instrumentation through API-35 ARM translation", workflow)
+        self.assertIn("Export native G3 evidence through API-35 ARM translation", workflow)
+        self.assertEqual(2, workflow.count("target: google_apis"))
+        self.assertEqual(2, workflow.count("arch: x86_64"))
+        self.assertEqual(2, workflow.count("disable-linux-hw-accel: false"))
+        self.assertIn("arm64-v8a JNI library", workflow)
+
     def test_occt_headers_are_normalized_and_source_is_copied(self) -> None:
         normalizer = (ROOT / "ci/normalize_occt_headers.py").read_text(encoding="utf-8")
         self.assertIn("/OCCT/src/", normalizer)
