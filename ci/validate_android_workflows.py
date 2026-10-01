@@ -82,6 +82,8 @@ def main() -> None:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must retain Linux hardware acceleration")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
         raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before both emulator boots")
+    if "group: alloy-native-${{ github.ref }}" not in native_text or "cancel-in-progress: false" not in native_text:
+        raise SystemExit(f"{native}: native source builds must queue instead of cancelling live diagnostic runs")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
     native_scope = native_text.find("python3 ci/patch_slicebeam_stage1_no_step.py slicebeam")
     if native_bootstrap < 0 or native_scope < 0 or native_bootstrap > native_scope:
