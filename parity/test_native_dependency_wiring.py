@@ -106,6 +106,21 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertEqual(1, workflow.count("sudo udevadm trigger --name-match=kvm"))
         self.assertIn("arm64-v8a JNI library", workflow)
 
+    def test_native_target_uses_pinned_libnoise_not_the_handwritten_stub(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        fuzzy = (ROOT / "app/src/main/jni/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp").read_text(encoding="utf-8")
+        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
+        self.assertIn("ORCA_LIBNOISE_SOURCE_DIR", cmake)
+        self.assertIn('add_subdirectory("${ORCA_LIBNOISE_SOURCE_DIR}"', cmake)
+        self.assertIn("noise::noise", cmake)
+        self.assertIn('#include "noise.h"', fuzzy)
+        self.assertNotIn('#include "libnoise/noise.h"', fuzzy)
+        self.assertFalse((ROOT / "app/src/main/jni/libnoise/noise.h").exists())
+        self.assertIn("Initialize pinned official libnoise source", workflow)
+        self.assertIn("git submodule update --init --depth 1 third_party/orca-deps-libnoise", workflow)
+        self.assertIn("assets.srcDirs += file('../third_party/licenses')", gradle)
+
     def test_occt_headers_are_normalized_and_source_is_copied(self) -> None:
         normalizer = (ROOT / "ci/normalize_occt_headers.py").read_text(encoding="utf-8")
         self.assertIn("/OCCT/src/", normalizer)

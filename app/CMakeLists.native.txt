@@ -498,6 +498,14 @@ target_include_directories(Clipper2 PUBLIC
         src/main/jni/clipper2/Clipper2Lib/include
 )
 
+# The legacy mobile candidate is not an official Orca port, but its fuzzy-skin
+# path must not silently use the old handwritten noise approximation. Build
+# the separately pinned, notice-retaining Orca libnoise source in-tree. The
+# later official-orca target remains a distinct G2–G4 migration.
+set(ORCA_LIBNOISE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/orca-deps-libnoise")
+require_native_input("${ORCA_LIBNOISE_SOURCE_DIR}/CMakeLists.txt" "pinned Orca libnoise source")
+add_subdirectory("${ORCA_LIBNOISE_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/orca-deps-libnoise")
+
 add_library(slic3r
         SHARED
         src/main/jni/semver/semver.c
@@ -1295,6 +1303,7 @@ target_link_libraries(slic3r PRIVATE
         BGCode_core
         BGCode_binarize
         BGCode_convert
+        noise::noise
         boost_atomic
         boost_charconv
         boost_chrono

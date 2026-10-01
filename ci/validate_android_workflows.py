@@ -59,6 +59,10 @@ def main() -> None:
         "com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested",
         "path-b-g3-evidence/overhang_support.gcode",
         "name: alloy-native-g3-evidence",
+        "Initialize pinned official libnoise source",
+        "git submodule update --init --depth 1 third_party/orca-deps-libnoise",
+        "ci/validate_official_orca_snapshot.py",
+        "--libnoise-source-root third_party/orca-deps-libnoise",
     ):
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:

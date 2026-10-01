@@ -51,6 +51,18 @@ source-build workflow. A native-enabled distribution must ship the applicable
 GMP/MPFR license texts and corresponding source offer alongside the complete
 SliceBeam and Orca/Prusa-derived source offers.
 
+## libnoise
+
+The optional native target builds the pinned
+`SoftFever/Orca-deps-libnoise@f25d5331570ae109f0e645cb729ecab155612714`
+source for fuzzy-skin noise. Its retained `src/noise.h` header licenses the
+source under GNU LGPL-2.1-or-later. The complete LGPL-2.1 text is included in
+the APK assets as `LIBNOISE_LGPL-2.1.txt` and retained in the repository at
+`third_party/licenses/LIBNOISE_LGPL-2.1.txt`. The source-snapshot validator
+checks its exact SHA-256 before native CI compiles the dependency. This only
+improves the legacy native candidate's dependency fidelity; it does not make
+that candidate an official Orca port or satisfy the separate G2–G4 gates.
+
 Alloy will not bundle Bambu's proprietary networking plugin or cloud client.
 
 ## Bouncy Castle
