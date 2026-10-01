@@ -49,6 +49,11 @@ official engine and must never be described as one.
    - Port the official CMake source list and direct dependency closure into a
      separate `official-orca` target; do not overwrite the currently compiling
      legacy target in place.
+   - The source-pinned port-surface audit currently records direct
+     `libslic3r` package drift: official source requires `libnoise` / its
+     `noise::noise` target while the legacy Android tree instead carries a
+     `draco` package requirement. Add and source-build the official closure
+     deliberately; do not delete either side merely to make the names match.
    - Reuse only pinned, source-built Android dependencies (Boost, oneTBB,
      OCCT, GMP and MPFR) and record every new dependency and license.
    - Produce an ARM64 shared library in clean hosted CI before exposing JNI.
