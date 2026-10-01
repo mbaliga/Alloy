@@ -2,6 +2,19 @@
 
 Date: 2026-09-22
 
+2026-10-01 official source-manifest checkpoint: the dedicated official-source
+workflow now emits a content-addressed inventory of all 466 regular files in
+the pinned `OrcaSlicer@ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6`
+`src/libslic3r` tree. Each artifact record carries its path, upstream Git blob,
+SHA-256, and byte length. GitHub Actions run
+[`36847402392`](https://github.com/mbaliga/Alloy/actions/runs/36847402392)
+validated the Gitlinks, built the separately pinned official `libnoise_static`
+closure on a clean Linux host, and published the manifest alongside the direct
+Android port-surface report. This is reproducible official-source and
+dependency-closure evidence only: the artifact is not an Android build, does
+not select an official engine, and does not satisfy G2/G3/G4, TreeSupport3D,
+printer, Bambu Handy, or release gates.
+
 2026-10-01 official Orca source-snapshot checkpoint: the separate
 `third_party/orca-official` Gitlink now pins official
 `OrcaSlicer@ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6`, including its
