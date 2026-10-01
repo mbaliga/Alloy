@@ -23,6 +23,11 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertIn('#include "SVG.hpp"', source)
         self.assertNotIn('#include "svg.hpp"', source)
 
+    def test_model_translation_unit_includes_case_matched_svg_header(self) -> None:
+        source = (ROOT / "app/src/main/jni/libslic3r/Model.cpp").read_text(encoding="utf-8")
+        self.assertIn('#include "Format/SVG.hpp"', source)
+        self.assertNotIn('#include "Format/svg.hpp"', source)
+
     def test_source_build_is_pinned_and_cross_compiled(self) -> None:
         script = (ROOT / "ci/build_gmp_mpfr_android.sh").read_text(encoding="utf-8")
         for token in (

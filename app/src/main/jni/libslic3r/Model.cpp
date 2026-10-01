@@ -13,7 +13,7 @@
 #include "MaterialType.hpp"
 
 #include "Format/AMF.hpp"
-#include "Format/svg.hpp"
+#include "Format/SVG.hpp"
 #include "Format/bbs_3mf.hpp"
 #include "Format/DRC.hpp"
 // BBS

@@ -145,6 +145,22 @@ def main() -> None:
     # GitHub's Linux runner is case-sensitive. Keep this source/header pairing
     # explicit because macOS filesystems otherwise hide this build break.
     require(svg, '#include "SVG.hpp"', svg_path)
+    # Check every direct libslic3r Format include against the checkout rather
+    # than relying on one translation unit. The Android compiler includes the
+    # libslic3r root directly, so a stale spelling can pass on macOS yet fail
+    # only after the expensive Linux source-dependency bootstrap.
+    libslic3r_root = ROOT / "app/src/main/jni/libslic3r"
+    format_include = re.compile(r'^\s*#\s*include\s+"(Format/[A-Za-z0-9_./-]+\.(?:h|hpp))"', re.MULTILINE)
+    missing_format_headers = []
+    for candidate in libslic3r_root.rglob("*"):
+        if not candidate.is_file() or candidate.suffix.lower() not in {".c", ".cc", ".cpp", ".cxx", ".h", ".hpp"}:
+            continue
+        for relative in format_include.findall(candidate.read_text(encoding="utf-8", errors="replace")):
+            if not (libslic3r_root / relative).is_file():
+                missing_format_headers.append(f"{candidate.relative_to(libslic3r_root)} -> {relative}")
+    if missing_format_headers:
+        raise SystemExit(f"{libslic3r_root}: missing case-exact Format include(s): "
+                         + "; ".join(sorted(missing_format_headers)))
     require(shader, "getCurrentShaderPointer", shader_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_ENABLED", activity_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_VERIFIED", activity_path)
