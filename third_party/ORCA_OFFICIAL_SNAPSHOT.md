@@ -4,6 +4,15 @@
 OrcaSlicer commit `ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6` from
 `https://github.com/OrcaSlicer/OrcaSlicer.git`.
 
+`third_party/orca-deps-libnoise` is separately pinned to
+`SoftFever/Orca-deps-libnoise@f25d5331570ae109f0e645cb729ecab155612714`
+(the official Orca `1.0` dependency tag). Official Orca's dependency manifest
+pins the matching archive hash `96ffd6cc47898dd8147aab53d7d1b1911b507d9dbaecd5613ca2649468afd8b6`.
+The upstream README identifies the retained libnoise 1.0 source provenance;
+the original libnoise project describes the source distribution as LGPL. This
+snapshot is for source/build closure and must receive a complete distribution
+notice before it is placed in any shipping binary.
+
 It is an attribution-preserving source snapshot for the separate
 `official-orca` Android port described in
 [`docs/OFFICIAL_ORCA_G2_PORT_PLAN.md`](../docs/OFFICIAL_ORCA_G2_PORT_PLAN.md).
@@ -21,5 +30,6 @@ To obtain the exact source locally:
 ```sh
 git submodule update --init --recursive third_party/orca-official
 python3 ci/validate_official_orca_snapshot.py \
-  --source-root third_party/orca-official
+  --source-root third_party/orca-official \
+  --libnoise-source-root third_party/orca-deps-libnoise
 ```
