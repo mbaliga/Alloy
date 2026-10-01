@@ -94,7 +94,8 @@ public final class MainActivity extends Activity {
     private SeekBar layerSeek;
     private TextView layerInspectorLabel;
     private TextView status, details, modelMeta, inventorySummary, inventoryStatusDot;
-    private TextView qualityMarkerValue, supportsMarkerValue, plateMarkerValue;
+    private TextView printerMarkerValue, materialMarkerValue, qualityMarkerValue, supportsMarkerValue, plateMarkerValue;
+    private View printerMarker, materialMarker;
     private ViewportView viewport;
     private MeshModel model, sourceModel, unmodifiedSourceModel;
     private final ArrayList<MeshModel.PartTransform> partTransforms = new ArrayList<>();
@@ -999,7 +1000,7 @@ public final class MainActivity extends Activity {
         // makes the study feel like an early debug overlay.
         stage.addView(sceneTag("M", "MATERIAL", profileMaterialLabel(), Gravity.TOP | Gravity.START, dp(16), dp(136)));
         stage.addView(sceneTag("⌁", "SUPPORTS", config.supports ? "AUTO" : "OFF", Gravity.BOTTOM | Gravity.END, dp(16), dp(154)));
-        stage.addView(sceneTag("▣", "PRINTER", "A1 MINI", Gravity.BOTTOM | Gravity.START, dp(22), dp(62)));
+        stage.addView(sceneTag("▣", "PRINTER", profilePrinterLabel().toUpperCase(Locale.US), Gravity.BOTTOM | Gravity.START, dp(22), dp(62)));
         page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout footer = new LinearLayout(this);
@@ -1587,6 +1588,8 @@ public final class MainActivity extends Activity {
         if ("Quality".equals(eyebrow)) qualityMarkerValue = main;
         if ("Supports".equals(eyebrow)) supportsMarkerValue = main;
         if ("Plate".equals(eyebrow)) plateMarkerValue = main;
+        if ("Printer".equals(eyebrow)) { printerMarkerValue = main; printerMarker = pill; }
+        if ("Material".equals(eyebrow)) { materialMarkerValue = main; materialMarker = pill; }
         copy.addView(small);
         copy.addView(main);
         pill.addView(copy);
@@ -1602,6 +1605,10 @@ public final class MainActivity extends Activity {
     }
 
     private void updateRecipeMarkers() {
+        if (printerMarkerValue != null) printerMarkerValue.setText(profilePrinterLabel());
+        if (printerMarker != null) printerMarker.setContentDescription("Printer: " + profilePrinterLabel());
+        if (materialMarkerValue != null) materialMarkerValue.setText(profileMaterialLabel());
+        if (materialMarker != null) materialMarker.setContentDescription("Material: " + profileMaterialLabel());
         if (qualityMarkerValue != null) qualityMarkerValue.setText(String.format(Locale.US, "%.2f mm", config.layerHeight));
         if (supportsMarkerValue != null) supportsMarkerValue.setText(config.supports ? "Auto supports" : "Off");
         if (viewport != null) viewport.setBuildVolume(config.bedX, config.bedY, config.bedZ);
