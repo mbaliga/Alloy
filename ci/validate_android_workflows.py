@@ -51,6 +51,7 @@ def main() -> None:
         "target: google_apis",
         "arch: x86_64",
         "disable-linux-hw-accel: false",
+        "sudo udevadm trigger --name-match=kvm",
         "com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested",
         "path-b-g3-evidence/overhang_support.gcode",
         "name: alloy-native-g3-evidence",
@@ -66,6 +67,8 @@ def main() -> None:
         raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
     if native_text.count("disable-linux-hw-accel: false") != 2:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must retain Linux hardware acceleration")
+    if native_text.count("pre-emulator-launch-script: |") != 2 or native_text.count("sudo udevadm trigger --name-match=kvm") != 2:
+        raise SystemExit(f"{native}: translated-ARM emulator jobs must restore hosted-runner KVM permissions before boot")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
     native_scope = native_text.find("python3 ci/patch_slicebeam_stage1_no_step.py slicebeam")
     if native_bootstrap < 0 or native_scope < 0 or native_bootstrap > native_scope:

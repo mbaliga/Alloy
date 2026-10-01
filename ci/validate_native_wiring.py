@@ -359,6 +359,7 @@ def main() -> None:
         "target: google_apis",
         "arch: x86_64",
         "disable-linux-hw-accel: false",
+        "sudo udevadm trigger --name-match=kvm",
     ):
         require(workflow, token, workflow_path)
     for token in (
