@@ -56,6 +56,8 @@ def main() -> None:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
     if native_text.count("profile: pixel_6") != 2 or "profile: Pixel 6" in native_text:
         raise SystemExit(f"{native}: arm64 emulator jobs must use the stable avdmanager profile id pixel_6")
+    if native_text.count("disable-animations: false") != 2:
+        raise SystemExit(f"{native}: both arm64 emulator jobs must avoid optional post-boot animation writes")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
     native_scope = native_text.find("python3 ci/patch_slicebeam_stage1_no_step.py slicebeam")
     if native_bootstrap < 0 or native_scope < 0 or native_bootstrap > native_scope:

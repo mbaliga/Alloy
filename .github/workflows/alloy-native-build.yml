@@ -184,6 +184,9 @@ jobs:
           api-level: 35
           arch: arm64-v8a
           profile: pixel_6
+          # Do not let the runner's optional post-boot animation settings
+          # writes mask the native test result on slow hosted API-35 boots.
+          disable-animations: false
           script: gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Export native G3 evidence from the arm64 emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -191,6 +194,9 @@ jobs:
           api-level: 35
           arch: arm64-v8a
           profile: pixel_6
+          # Keep this independent emulator boot free of optional ADB settings
+          # mutations; the evidence harness is not animation-sensitive.
+          disable-animations: false
           script: |
             set -euxo pipefail
             adb install -r app/build/outputs/apk/release/app-release.apk
