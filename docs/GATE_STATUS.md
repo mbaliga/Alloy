@@ -13,6 +13,17 @@ base for a separate `official-orca` port; it does **not** make the existing
 mobile candidate official, satisfy G2, or authorize native/direct-print/release
 promotion.
 
+2026-10-01 official dependency-snapshot checkpoint: the direct official
+`libslic3r` CMake audit identified `libnoise` / `noise::noise` as the first
+missing Android source closure, so Alloy now separately pins
+`Orca-deps-libnoise@f25d5331570ae109f0e645cb729ecab155612714`, matching
+Orca's pinned `1.0` archive hash. GitHub Actions run
+[`36826146441`](https://github.com/mbaliga/Alloy/actions/runs/36826146441)
+checked out both submodules and published the direct CMake port-surface report.
+The source snapshot and report pass; the dependency is still **not linked into
+an Android official-engine target**, so this is migration evidence rather than
+runtime, parity, licensing-distribution, or print authorization.
+
 2026-10-01 native hosted-runtime correction: native Actions run
 [`36819379509`](https://github.com/mbaliga/Alloy/actions/runs/36819379509)
 completed its source build and ARM64 APK/test compilation but could not start
