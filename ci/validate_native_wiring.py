@@ -220,13 +220,15 @@ def main() -> None:
     if missing_format_headers:
         raise SystemExit(f"{libslic3r_root}: missing case-exact Format include(s): "
                          + "; ".join(sorted(missing_format_headers)))
-    # The two earlier SVG failures were only symptoms of a broader
+    # The SVG failures were only symptoms of a broader
     # case-insensitive-development-volume risk. Audit all quoted headers that
-    # can be resolved inside libslic3r, but do not guess at external headers
-    # such as Boost, OCCT or generated dependency inputs.
-    case_mismatches = local_include_case_mismatches(libslic3r_root)
+    # can be resolved inside our complete JNI source checkout, including the
+    # retained legacy slicer tree. Do not guess at external headers such as
+    # Boost, OCCT or generated dependency inputs.
+    jni_root = ROOT / "app/src/main/jni"
+    case_mismatches = local_include_case_mismatches(jni_root)
     if case_mismatches:
-        raise SystemExit(f"{libslic3r_root}: case-mismatched local include(s): "
+        raise SystemExit(f"{jni_root}: case-mismatched local include(s): "
                          + "; ".join(case_mismatches))
     require(shader, "getCurrentShaderPointer", shader_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_ENABLED", activity_path)

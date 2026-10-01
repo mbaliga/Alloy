@@ -52,7 +52,7 @@
     #define DEBUG
     #define _DEBUG
     #undef NDEBUG
-    #include "../utils.hpp"
+    #include "../Utils.hpp"
     #include "../SVG.hpp"
 #endif
 

@@ -32,7 +32,7 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertNotIn('#include "Format/svg.hpp"', source)
 
     def test_local_quoted_headers_have_exact_case(self) -> None:
-        root = ROOT / "app/src/main/jni/libslic3r"
+        root = ROOT / "app/src/main/jni"
         self.assertEqual([], local_include_case_mismatches(root))
 
     def test_casefolded_path_finds_but_does_not_accept_a_wrong_spelling(self) -> None:
