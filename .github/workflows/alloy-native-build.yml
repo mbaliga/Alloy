@@ -178,6 +178,18 @@ jobs:
         run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Compile native instrumentation smoke test
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
+      # The hosted runner exposes /dev/kvm with an empty kvm group. Install
+      # the emulator action's documented udev rule before either API-35 test
+      # host starts, rather than silently falling back to software emulation.
+      - name: Enable hosted KVM permissions for native instrumentation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
       # GitHub's Linux hosts are x86_64, and QEMU refuses an arm64 system image
       # there. API 35's Google APIs image provides ARM binary translation, so
       # this is an x86_64 *test host* that still installs and executes Alloy's
@@ -194,12 +206,6 @@ jobs:
           # writes mask the native test result on slow hosted API-35 boots.
           disable-animations: false
           disable-linux-hw-accel: false
-          # GitHub's hosted Linux runners expose /dev/kvm but need this udev
-          # trigger before the emulator-runner process checks its permissions.
-          # Keep acceleration mandatory: software emulation is not a usable
-          # qualification environment for this native instrumentation gate.
-          pre-emulator-launch-script: |
-            sudo udevadm trigger --name-match=kvm
           script: gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
@@ -212,10 +218,6 @@ jobs:
           # mutations; the evidence harness is not animation-sensitive.
           disable-animations: false
           disable-linux-hw-accel: false
-          # Match the instrumentation job: grant the hosted runner process
-          # access to the existing KVM device before emulator startup.
-          pre-emulator-launch-script: |
-            sudo udevadm trigger --name-match=kvm
           script: |
             set -euxo pipefail
             adb install -r app/build/outputs/apk/release/app-release.apk
