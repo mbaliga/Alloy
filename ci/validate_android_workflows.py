@@ -30,6 +30,7 @@ def main() -> None:
         "gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace",
         "name: alloy-v1-release-ci-apk",
         "app/build/outputs/apk/release/app-release.apk",
+        "disable-animations: false",
     ):
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
