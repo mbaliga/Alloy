@@ -1,0 +1,4 @@
+[submodule "orca-official"]
+	path = third_party/orca-official
+	url = https://github.com/OrcaSlicer/OrcaSlicer.git
+	branch = main
