@@ -11,6 +11,9 @@ on:
       - 'app/src/main/jniImports/**'
       - 'app/src/main/jniLibs/**'
       - 'app/src/main/occt/**'
+      - '.gitmodules'
+      - 'third_party/orca-deps-libnoise'
+      - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
       - 'app/src/main/java/com/mbaliga/alloy/NativeEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
@@ -23,6 +26,7 @@ on:
       - 'ci/validate_capability_catalog.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
+      - 'ci/validate_official_orca_snapshot.py'
       - 'ci/validate_native_jni_contract.py'
       - 'ci/validate_native_dependency_inputs.py'
       - 'ci/normalize_occt_headers.py'
@@ -41,6 +45,9 @@ on:
       - 'app/src/main/jniImports/**'
       - 'app/src/main/jniLibs/**'
       - 'app/src/main/occt/**'
+      - '.gitmodules'
+      - 'third_party/orca-deps-libnoise'
+      - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
       - 'app/src/main/java/com/mbaliga/alloy/NativeEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
@@ -53,6 +60,7 @@ on:
       - 'ci/validate_capability_catalog.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
+      - 'ci/validate_official_orca_snapshot.py'
       - 'ci/validate_native_jni_contract.py'
       - 'ci/validate_native_dependency_inputs.py'
       - 'ci/normalize_occt_headers.py'
@@ -87,6 +95,13 @@ jobs:
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
+      - name: Initialize pinned official libnoise source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git submodule update --init --depth 1 third_party/orca-deps-libnoise
+          python3 ci/validate_official_orca_snapshot.py \
+            --libnoise-source-root third_party/orca-deps-libnoise
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
       - name: Verify pinned Orca profile snapshot

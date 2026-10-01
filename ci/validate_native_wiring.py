@@ -98,6 +98,8 @@ def main() -> None:
     jni_contract_path = ROOT / "ci/validate_native_jni_contract.py"
     gcode_path = ROOT / "app/src/main/jni/libslic3r/GCode.cpp"
     svg_path = ROOT / "app/src/main/jni/libslic3r/Format/SVG.cpp"
+    fuzzy_skin_path = ROOT / "app/src/main/jni/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp"
+    legacy_libnoise_stub = ROOT / "app/src/main/jni/libnoise/noise.h"
 
     adapter = adapter_path.read_text()
     native = native_path.read_text()
@@ -118,6 +120,7 @@ def main() -> None:
     jni_contract = jni_contract_path.read_text()
     gcode = gcode_path.read_text()
     svg = svg_path.read_text()
+    fuzzy_skin = fuzzy_skin_path.read_text()
 
     for token in (
         "implements SlicerEngine",
@@ -204,6 +207,9 @@ def main() -> None:
     # GitHub's Linux runner is case-sensitive. Keep this source/header pairing
     # explicit because macOS filesystems otherwise hide this build break.
     require(svg, '#include "SVG.hpp"', svg_path)
+    require(fuzzy_skin, '#include "noise.h"', fuzzy_skin_path)
+    if '#include "libnoise/noise.h"' in fuzzy_skin or legacy_libnoise_stub.exists():
+        raise SystemExit(f"{fuzzy_skin_path}: legacy handwritten libnoise stub must not be selectable")
     # Check every direct libslic3r Format include against the checkout rather
     # than relying on one translation unit. The Android compiler includes the
     # libslic3r root directly, so a stale spelling can pass on macOS yet fail
@@ -326,12 +332,13 @@ def main() -> None:
     require(gradle, "alloyNativeEngineVerified=true requires alloyNativeEngine=true", gradle_path)
     require(gradle, "abiFilters 'arm64-v8a'", gradle_path)
     require(gradle, "jniLibs.srcDirs = []", gradle_path)
+    require(gradle, "assets.srcDirs += file('../third_party/licenses')", gradle_path)
     require(gradle, "path file('CMakeLists.txt')", gradle_path)
     for token in ("cmake_minimum_required", "project(SliceBeam)", "CMakeLists.native.txt"):
         require(cmake_entry, token, cmake_entry_path)
     cmake_path = ROOT / "app/CMakeLists.native.txt"
     cmake = cmake_path.read_text()
-    for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"'):
+    for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise"):
         require(cmake, token, cmake_path)
     # CMake accepts paths on case-insensitive developer volumes that fail
     # later on Linux/Android builders. Validate every explicit JNI source and
@@ -351,6 +358,8 @@ def main() -> None:
     require(workflow, "ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26", workflow_path)
     require(workflow, "ci/validate_native_dependency_inputs.py arm64-v8a", workflow_path)
     require(workflow, "ci/validate_native_prebuilts.py arm64-v8a --source-built", workflow_path)
+    for token in ("Initialize pinned official libnoise source", "git submodule update --init --depth 1 third_party/orca-deps-libnoise", "ci/validate_official_orca_snapshot.py", "--libnoise-source-root third_party/orca-deps-libnoise"):
+        require(workflow, token, workflow_path)
     # GitHub's default Linux runner is x86_64 and cannot boot an arm64 Android
     # system image. API 35's Google APIs image supplies ARM binary translation;
     # retain an arm64-only APK while using that bootable host for instrumentation.

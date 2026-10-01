@@ -149,6 +149,10 @@ android {
 
     sourceSets {
         main {
+            // Keep the full libnoise LGPL-2.1 notice in every APK that can
+            // include the optional native engine. The source snapshot verifier
+            // pins this exact file before CMake is allowed to build libnoise.
+            assets.srcDirs += file('../third_party/licenses')
             if (nativeEnginePrebuiltDir != null) {
                 jniLibs.srcDirs = [file(nativeEnginePrebuiltDir)]
             } else if (nativeEngineEnabled) {
