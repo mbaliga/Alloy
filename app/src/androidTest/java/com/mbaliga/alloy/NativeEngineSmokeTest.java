@@ -107,9 +107,10 @@ public final class NativeEngineSmokeTest {
         config.nativeSettings.put("inner_wall_acceleration", "0");
         config.nativeSettings.put("outer_wall_acceleration", "5000");
         File configFile = new File(context.getCacheDir(), "native-config-contract.ini");
+        String serialized = null;
         try {
             NativeSlicerEngine.writeConfig(config, configFile);
-            String serialized = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.US_ASCII);
+            serialized = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.US_ASCII);
             Assert.assertTrue(serialized.contains("temperature = 220.00000"));
             Assert.assertTrue(serialized.contains("brim_type = outer_only"));
             Assert.assertTrue(serialized.contains("brim_width = 5"));
@@ -224,6 +225,16 @@ public final class NativeEngineSmokeTest {
             Assert.assertFalse(serialized.contains("machine_max_acceleration_travel = 9000,9000"));
             Assert.assertFalse(serialized.contains("temperature = 999"));
             Assert.assertFalse(serialized.contains("start_gcode = M109 S999"));
+        } catch (AssertionError error) {
+            // Native CI logs otherwise surface only Assert.fail() without the
+            // fragment that drifted. Keep the exact serialized contract in
+            // the failure so a profile/native-schema change is diagnosable
+            // without treating a failed runtime gate as a passing slice.
+            AssertionError diagnostic = new AssertionError(
+                    "Native recipe projection contract drifted. Serialized config:\n"
+                            + (serialized == null ? "<config was not written>" : serialized));
+            diagnostic.initCause(error);
+            throw diagnostic;
         } finally {
             if (configFile.exists()) Assert.assertTrue(configFile.delete());
         }
