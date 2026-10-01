@@ -17,6 +17,12 @@ The source-snapshot workflow builds this exact `libnoise_static` source target
 on a clean Linux host. That is intentionally a dependency smoke test only; it
 does not cross-compile Android, link it into Alloy, or prove a slicer result.
 
+When the workflow validates an initialized official checkout, it also publishes
+`official-orca-source-manifest.json`. That artifact inventories every regular
+`src/libslic3r` source file with its path, upstream Git blob, SHA-256, and byte
+length at the pinned revision. It is reviewable source-provenance evidence,
+not a build, runtime, parity, or physical-print claim.
+
 It is an attribution-preserving source snapshot for the separate
 `official-orca` Android port described in
 [`docs/OFFICIAL_ORCA_G2_PORT_PLAN.md`](../docs/OFFICIAL_ORCA_G2_PORT_PLAN.md).
