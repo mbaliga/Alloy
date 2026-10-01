@@ -351,6 +351,16 @@ def main() -> None:
     require(workflow, "ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26", workflow_path)
     require(workflow, "ci/validate_native_dependency_inputs.py arm64-v8a", workflow_path)
     require(workflow, "ci/validate_native_prebuilts.py arm64-v8a --source-built", workflow_path)
+    # GitHub's default Linux runner is x86_64 and cannot boot an arm64 Android
+    # system image. API 35's Google APIs image supplies ARM binary translation;
+    # retain an arm64-only APK while using that bootable host for instrumentation.
+    for token in (
+        "API-35 ARM translation",
+        "target: google_apis",
+        "arch: x86_64",
+        "disable-linux-hw-accel: false",
+    ):
+        require(workflow, token, workflow_path)
     for token in (
         "@RunWith(AndroidJUnit4.class)",
         "BuildConfig.NATIVE_ENGINE_ENABLED",

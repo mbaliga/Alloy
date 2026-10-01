@@ -178,25 +178,34 @@ jobs:
         run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Compile native instrumentation smoke test
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
-      - name: Run native release instrumentation on arm64 emulator
+      # GitHub's Linux hosts are x86_64, and QEMU refuses an arm64 system image
+      # there. API 35's Google APIs image provides ARM binary translation, so
+      # this is an x86_64 *test host* that still installs and executes Alloy's
+      # arm64-v8a JNI library. Do not add an x86 native ABI just to make CI
+      # green: physical qualification remains arm64-v8a only.
+      - name: Run native release instrumentation through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
-          arch: arm64-v8a
+          target: google_apis
+          arch: x86_64
           profile: pixel_6
           # Do not let the runner's optional post-boot animation settings
           # writes mask the native test result on slow hosted API-35 boots.
           disable-animations: false
+          disable-linux-hw-accel: false
           script: gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
-      - name: Export native G3 evidence from the arm64 emulator
+      - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
-          arch: arm64-v8a
+          target: google_apis
+          arch: x86_64
           profile: pixel_6
           # Keep this independent emulator boot free of optional ADB settings
           # mutations; the evidence harness is not animation-sensitive.
           disable-animations: false
+          disable-linux-hw-accel: false
           script: |
             set -euxo pipefail
             adb install -r app/build/outputs/apk/release/app-release.apk

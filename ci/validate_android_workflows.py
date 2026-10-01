@@ -46,7 +46,11 @@ def main() -> None:
         "app/build/outputs/apk/release/app-release.apk",
         "app/build/outputs/apk/androidTest/release/app-release-androidTest.apk",
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
-        "Export native G3 evidence from the arm64 emulator",
+        "Run native release instrumentation through API-35 ARM translation",
+        "Export native G3 evidence through API-35 ARM translation",
+        "target: google_apis",
+        "arch: x86_64",
+        "disable-linux-hw-accel: false",
         "com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested",
         "path-b-g3-evidence/overhang_support.gcode",
         "name: alloy-native-g3-evidence",
@@ -55,9 +59,13 @@ def main() -> None:
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
     if native_text.count("profile: pixel_6") != 2 or "profile: Pixel 6" in native_text:
-        raise SystemExit(f"{native}: arm64 emulator jobs must use the stable avdmanager profile id pixel_6")
+        raise SystemExit(f"{native}: translated-ARM emulator jobs must use the stable avdmanager profile id pixel_6")
     if native_text.count("disable-animations: false") != 2:
-        raise SystemExit(f"{native}: both arm64 emulator jobs must avoid optional post-boot animation writes")
+        raise SystemExit(f"{native}: both translated-ARM emulator jobs must avoid optional post-boot animation writes")
+    if native_text.count("target: google_apis") != 2 or native_text.count("arch: x86_64") != 2:
+        raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
+    if native_text.count("disable-linux-hw-accel: false") != 2:
+        raise SystemExit(f"{native}: translated-ARM emulator jobs must retain Linux hardware acceleration")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
     native_scope = native_text.find("python3 ci/patch_slicebeam_stage1_no_step.py slicebeam")
     if native_bootstrap < 0 or native_scope < 0 or native_bootstrap > native_scope:
