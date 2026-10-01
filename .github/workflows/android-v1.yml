@@ -63,6 +63,19 @@ jobs:
           gradle-version: 8.9
       - name: Build CI-signed release APK
         run: gradle :app:assembleRelease -PalloyCiDebugSign=true --no-daemon --stacktrace
+      # GitHub's hosted runners expose /dev/kvm through an empty kvm group.
+      # Make the documented emulator-action rule explicit before the device
+      # starts. Without it, QEMU can fall back to software emulation, spend
+      # most of this job booting, and fail before it ever runs Alloy's tests.
+      - name: Enable hosted KVM permissions for Android acceptance
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
       - name: Run Android pipeline acceptance tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -76,6 +89,7 @@ jobs:
           # animation scales, so leave the device default intact and exercise
           # the actual release acceptance suite instead.
           disable-animations: false
+          disable-linux-hw-accel: false
           script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
         with:
