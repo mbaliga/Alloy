@@ -7,8 +7,10 @@ compile job.
 """
 
 import json
+import os
 import re
 from pathlib import Path
+from typing import List, Optional
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +19,63 @@ ROOT = Path(__file__).resolve().parents[1]
 def require(text: str, token: str, path: Path) -> None:
     if token not in text:
         raise SystemExit(f"{path}: missing required native wiring: {token}")
+
+
+def casefolded_path(root: Path, relative: str) -> Optional[Path]:
+    """Return a case-insensitive in-tree match without accepting it as valid.
+
+    Linux and the Android toolchain require a byte-for-byte filename match,
+    while a developer's default macOS volume does not.  We use this only to
+    identify a stale spelling: includes that are genuinely supplied by an
+    external dependency are deliberately left to CMake rather than reported as
+    local source mistakes.
+    """
+    current = root
+    for segment in Path(relative).parts:
+        if segment in {".", ""}:
+            continue
+        if segment == "..":
+            current = current.parent
+            continue
+        if not current.is_dir():
+            return None
+        matches = [child for child in current.iterdir() if child.name.casefold() == segment.casefold()]
+        if len(matches) != 1:
+            return None
+        current = matches[0]
+    return current
+
+
+def local_include_case_mismatches(libslic3r_root: Path) -> List[str]:
+    """Find quoted includes which resolve in-tree only with different casing."""
+    quoted_include = re.compile(r'^\s*#\s*include\s+"([^"\\n]+)"', re.MULTILINE)
+    mismatches: List[str] = []
+    for candidate in libslic3r_root.rglob("*"):
+        if not candidate.is_file() or candidate.suffix.lower() not in {".c", ".cc", ".cpp", ".cxx", ".h", ".hpp"}:
+            continue
+        source = candidate.read_text(encoding="utf-8", errors="replace")
+        for relative in quoted_include.findall(source):
+            # The compiler first searches beside the including source and then
+            # the libslic3r include root.  Test both in that order.
+            for base in (candidate.parent, libslic3r_root):
+                # Collapse `..` lexically before comparing.  An include such
+                # as `../libslic3r.h` is perfectly valid and should not be
+                # mistaken for a spelling defect merely because the resolved
+                # path has a different textual form.
+                exact = Path(os.path.normpath(str(base / relative)))
+                insensitive = casefolded_path(base, relative)
+                if insensitive is None or str(insensitive) == str(exact):
+                    continue
+                # On a case-insensitive macOS volume exact.is_file() may be
+                # true even for the wrong spelling.  The lexical path mismatch
+                # is the evidence we need; Linux will not resolve it.
+                if insensitive.is_file():
+                    mismatches.append(
+                        f"{candidate.relative_to(libslic3r_root)} -> {relative} "
+                        f"(actual {os.path.relpath(insensitive, base)})"
+                    )
+                break
+    return sorted(set(mismatches))
 
 
 def main() -> None:
@@ -161,6 +220,14 @@ def main() -> None:
     if missing_format_headers:
         raise SystemExit(f"{libslic3r_root}: missing case-exact Format include(s): "
                          + "; ".join(sorted(missing_format_headers)))
+    # The two earlier SVG failures were only symptoms of a broader
+    # case-insensitive-development-volume risk. Audit all quoted headers that
+    # can be resolved inside libslic3r, but do not guess at external headers
+    # such as Boost, OCCT or generated dependency inputs.
+    case_mismatches = local_include_case_mismatches(libslic3r_root)
+    if case_mismatches:
+        raise SystemExit(f"{libslic3r_root}: case-mismatched local include(s): "
+                         + "; ".join(case_mismatches))
     require(shader, "getCurrentShaderPointer", shader_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_ENABLED", activity_path)
     require(activity, "BuildConfig.NATIVE_ENGINE_VERIFIED", activity_path)
