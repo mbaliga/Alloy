@@ -2448,6 +2448,24 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void profileSizedWorkbenchUsesA1AndP1sEnvelopeWithoutRelaxingMiniDefault() throws Exception {
+        MeshModel source = ModelWorkbench.create(ModelWorkbench.Primitive.BOX, "wide source", 110f, 110f, 10f);
+        try {
+            ModelWorkbench.createArray("mini", source, 4);
+            Assert.fail("the A1 Mini compatibility default must still reject this array");
+        } catch (IOException expected) { }
+        MeshModel a1Array = ModelWorkbench.createArray("a1", source, 4, 256f, 256f, 256f);
+        Assert.assertEquals(4, a1Array.parts.length);
+        Assert.assertTrue(a1Array.maxX <= 256.001f);
+        Assert.assertTrue(a1Array.maxY <= 256.001f);
+        MeshModel p1sSizedPrimitive = ModelWorkbench.create(ModelWorkbench.Primitive.BOX,
+                "p1s-sized", 220f, 220f, 220f);
+        Assert.assertEquals(220f, p1sSizedPrimitive.maxX - p1sSizedPrimitive.minX, 0.001f);
+        Assert.assertEquals(220f, p1sSizedPrimitive.maxY - p1sSizedPrimitive.minY, 0.001f);
+        Assert.assertEquals(220f, p1sSizedPrimitive.maxZ - p1sSizedPrimitive.minZ, 0.001f);
+    }
+
+    @Test
     public void mirrorPreservesFootprintPartsAndWatertightness() throws Exception {
         MeshModel source = ModelWorkbench.createShowcaseBoxAssembly();
         MeshModel mirroredX = ModelWorkbench.mirror("mirror-x", source, true);

@@ -147,8 +147,8 @@ public final class Slicer {
         float width = mesh.maxX - mesh.minX, depth = mesh.maxY - mesh.minY;
         if (width > config.bedX || depth > config.bedY || height > config.bedZ)
             throw new IllegalArgumentException(String.format(Locale.US,
-                    "Model is %.1f × %.1f × %.1f mm; A1 Mini volume is 180 × 180 × 180 mm",
-                    width, depth, height));
+                    "Model is %.1f × %.1f × %.1f mm; %s volume is %.0f × %.0f × %.0f mm",
+                    width, depth, height, config.printer, config.bedX, config.bedY, config.bedZ));
         float shiftX = config.bedX / 2f - (mesh.minX + mesh.maxX) / 2f;
         float shiftY = config.bedY / 2f - (mesh.minY + mesh.maxY) / 2f;
         ArrayList<Layer> layers = new ArrayList<>();
