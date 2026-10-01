@@ -31,12 +31,22 @@ def main() -> None:
         "name: alloy-v1-release-ci-apk",
         "app/build/outputs/apk/release/app-release.apk",
         "disable-animations: false",
+        "disable-linux-hw-accel: false",
+        "Enable hosted KVM permissions for Android acceptance",
+        "99-kvm4all.rules",
+        'MODE="0666"',
+        "sudo udevadm control --reload-rules",
+        "sudo udevadm trigger --name-match=kvm",
     ):
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
         raise SystemExit(f"{ordinary}: ordinary CI must use its declared release test variant")
     if "profile: pixel_6" not in ordinary_text or "profile: Pixel 6" in ordinary_text:
         raise SystemExit(f"{ordinary}: emulator must use the stable avdmanager profile id pixel_6")
+    if ordinary_text.count("disable-linux-hw-accel: false") != 1:
+        raise SystemExit(f"{ordinary}: Android acceptance must retain hosted KVM acceleration")
+    if ordinary_text.count("sudo udevadm trigger --name-match=kvm") != 1:
+        raise SystemExit(f"{ordinary}: Android acceptance must configure KVM before its emulator boot")
 
     native_text = native.read_text(encoding="utf-8")
     for token in (
