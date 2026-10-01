@@ -2,6 +2,28 @@
 
 Date: 2026-09-22
 
+2026-10-01 official Orca source-snapshot checkpoint: the separate
+`third_party/orca-official` Gitlink now pins official
+`OrcaSlicer@ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6`, including its
+upstream `LICENSE.txt` and `src/libslic3r` root. GitHub Actions run
+[`36825171574`](https://github.com/mbaliga/Alloy/actions/runs/36825171574)
+checked out that exact public source and passed the fail-closed snapshot
+verifier. The snapshot is deliberately outside Android CMake and is the source
+base for a separate `official-orca` port; it does **not** make the existing
+mobile candidate official, satisfy G2, or authorize native/direct-print/release
+promotion.
+
+2026-10-01 native hosted-runtime correction: native Actions run
+[`36819379509`](https://github.com/mbaliga/Alloy/actions/runs/36819379509)
+completed its source build and ARM64 APK/test compilation but could not start
+instrumentation because an x86_64 GitHub Linux host reported
+`Avd's CPU Architecture 'arm64' is not supported ... on x86_64 host`.
+The workflow now uses API-35's bootable x86_64 Google APIs emulator with ARM
+binary translation while retaining an ARM64-only Alloy JNI library. This is a
+host correction, not a test bypass: only a subsequent successful installation
+and native test execution can count as runtime evidence; physical-device and
+printer gates remain separate.
+
 2026-10-01 G2 provenance revalidation: the repository's official-Orca
 provenance workflow was manually rerun from the current delivery commit
 `b9717a35` as GitHub Actions run
