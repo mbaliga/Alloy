@@ -116,16 +116,29 @@ public final class MeshModel {
 
     /** Combine separately imported meshes into one lightly packed plate model while retaining part ranges. */
     public static MeshModel combine(String name, ArrayList<MeshModel> sources) throws IOException {
-        return combine(name, sources, null);
+        return combine(name, sources, null, 180f);
     }
 
     /** Combine meshes with optional per-source labels for inspectable arrays and assemblies. */
     public static MeshModel combine(String name, ArrayList<MeshModel> sources,
                                     String[] sourceLabels) throws IOException {
+        return combine(name, sources, sourceLabels, 180f);
+    }
+
+    /**
+     * Combine meshes with a profile-specific row width.  Geometry remains
+     * validated by the selected slicer envelope; this width only determines
+     * deterministic plate packing, so A1/P1S selections do not inherit the
+     * legacy 180 mm A1 Mini row break.
+     */
+    public static MeshModel combine(String name, ArrayList<MeshModel> sources,
+                                    String[] sourceLabels, float packingWidthMm) throws IOException {
         if (sources == null || sources.isEmpty()) throw new IOException("No models were selected");
         if (sources.size() > MAX_PROJECT_MODELS) throw new IOException("A project may contain at most " + MAX_PROJECT_MODELS + " models");
         if (sourceLabels != null && sourceLabels.length != sources.size())
             throw new IOException("Combined source labels do not match the model count");
+        if (!finite(packingWidthMm) || packingWidthMm < 1f || packingWidthMm > 5_000f)
+            throw new IOException("Combined build width is invalid");
         ArrayList<Float> vertices = new ArrayList<>();
         ArrayList<Integer> triangles = new ArrayList<>();
         ArrayList<Part> parts = new ArrayList<>();
@@ -142,7 +155,7 @@ public final class MeshModel {
             int triangleBase = triangles.size() / 3;
             float width = source.maxX - source.minX;
             float depth = source.maxY - source.minY;
-            if (cursorX > 0f && cursorX + width > 180f) {
+            if (cursorX > 0f && cursorX + width > packingWidthMm) {
                 cursorX = 0f;
                 cursorY += rowDepth + 5f;
                 rowDepth = 0f;
