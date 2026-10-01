@@ -1,6 +1,9 @@
 from pathlib import Path
 import re
+import tempfile
 import unittest
+
+from ci.validate_native_wiring import casefolded_path, local_include_case_mismatches
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +30,29 @@ class NativeDependencyWiringTests(unittest.TestCase):
         source = (ROOT / "app/src/main/jni/libslic3r/Model.cpp").read_text(encoding="utf-8")
         self.assertIn('#include "Format/SVG.hpp"', source)
         self.assertNotIn('#include "Format/svg.hpp"', source)
+
+    def test_local_quoted_headers_have_exact_case(self) -> None:
+        root = ROOT / "app/src/main/jni/libslic3r"
+        self.assertEqual([], local_include_case_mismatches(root))
+
+    def test_casefolded_path_finds_but_does_not_accept_a_wrong_spelling(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "Format").mkdir()
+            (root / "Format" / "SVG.hpp").write_text("// test\n", encoding="utf-8")
+            self.assertEqual(root / "Format" / "SVG.hpp", casefolded_path(root, "format/svg.hpp"))
+            self.assertNotEqual(root / "format" / "svg.hpp", casefolded_path(root, "format/svg.hpp"))
+
+    def test_case_audit_rejects_a_stale_local_include(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "Format").mkdir()
+            (root / "Format" / "SVG.hpp").write_text("// header\n", encoding="utf-8")
+            (root / "Model.cpp").write_text('#include "format/svg.hpp"\n', encoding="utf-8")
+            self.assertEqual(
+                ["Model.cpp -> format/svg.hpp (actual Format/SVG.hpp)"],
+                local_include_case_mismatches(root),
+            )
 
     def test_source_build_is_pinned_and_cross_compiled(self) -> None:
         script = (ROOT / "ci/build_gmp_mpfr_android.sh").read_text(encoding="utf-8")
