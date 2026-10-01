@@ -3244,9 +3244,10 @@ public final class MainActivity extends Activity {
                 }
             }
             String projectName = loaded.size() == 1 ? names.get(0) : "Project · " + loaded.size() + " models";
-            MeshModel combined = loaded.size() == 1 ? loaded.get(0) : MeshModel.combine(projectName, loaded);
+            MeshModel combined = loaded.size() == 1 ? loaded.get(0)
+                    : MeshModel.combine(projectName, loaded, null, activeBedX());
             MeshModel pristineCombined = pristineLoaded.size() == 1
-                    ? pristineLoaded.get(0) : MeshModel.combine(projectName, pristineLoaded);
+                    ? pristineLoaded.get(0) : MeshModel.combine(projectName, pristineLoaded, null, activeBedX());
             float scale = restoreTransform ? projectStore.savedScale() : 1f;
             float rotation = restoreTransform ? projectStore.savedRotation() : 0f;
             float tiltX = restoreTransform ? projectStore.savedTiltX() : 0f;
@@ -4084,9 +4085,9 @@ public final class MainActivity extends Activity {
                     try {
                         int operation = (Integer) operations.findViewById(operations.getCheckedRadioButtonId()).getTag();
                         int primitiveIndex = (Integer) primitives.findViewById(primitives.getCheckedRadioButtonId()).getTag();
-                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, 180f);
-                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, 180f);
-                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, 180f);
+                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, activeBedX());
+                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, activeBedY());
+                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
                         startNativeBoolean(operation, available[primitiveIndex], w, d, h);
                     } catch (Exception error) {
                         Toast.makeText(this, "Boolean edit could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
@@ -4125,6 +4126,7 @@ public final class MainActivity extends Activity {
                     try {
                         ArrayList<Uri> uris = new ArrayList<>(); uris.add(resultFile.uri);
                         ArrayList<String> names = new ArrayList<>(); names.add(resultName);
+                        requireActiveBuildVolume(resultModel);
                         applyLoadedModel(resultModel, resultModel, resultName, uris, names,
                                 1f, 0f, 0f, 0f, false, false, HISTORY_MUTATION);
                         finishModelMutation("Boolean  ·  " + NativeGeometry.label(operation));
@@ -4180,7 +4182,7 @@ public final class MainActivity extends Activity {
                         MeshModel result = generated; String name = "Sketch extrusion  ·  " + points.length + " points";
                         if (addToAssembly.isChecked() && model != null) {
                             ArrayList<MeshModel> sources = new ArrayList<>(); sources.add(model); sources.add(generated);
-                            result = MeshModel.combine("Assembly", sources); name = "Assembly  ·  " + model.displayName;
+                            result = MeshModel.combine("Assembly", sources, null, activeBedX()); name = "Assembly  ·  " + model.displayName;
                         }
                         requireActiveBuildVolume(result);
                         installGeneratedModel(result, name);
@@ -4271,7 +4273,7 @@ public final class MainActivity extends Activity {
                         if (addToAssembly.isChecked() && model != null) {
                             ArrayList<MeshModel> sources = new ArrayList<>();
                             sources.add(model); sources.add(generated);
-                            result = MeshModel.combine("Assembly", sources);
+                            result = MeshModel.combine("Assembly", sources, null, activeBedX());
                             name = "Assembly  ·  " + model.displayName;
                         }
                         requireActiveBuildVolume(result);

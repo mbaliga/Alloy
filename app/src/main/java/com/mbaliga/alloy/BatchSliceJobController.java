@@ -151,8 +151,8 @@ public final class BatchSliceJobController {
             PlateStore.Plate plate = nonEmpty.get(index);
             final int plateNumber = index;
             notify(listener, index * 100 / nonEmpty.size(), "Preparing " + plate.name);
-            MeshModel model = loadPlate(resolver, filesDir, plate);
             Slicer.Config plateConfig = config.copy();
+            MeshModel model = loadPlate(resolver, filesDir, plate, plateConfig);
             Slicer.validate(model, plateConfig);
             Slicer.Result slice = engine.slice(model, plateConfig,
                     (percent, phase) -> notify(listener,
@@ -171,6 +171,11 @@ public final class BatchSliceJobController {
 
     static MeshModel loadPlate(ContentResolver resolver, File filesDir,
                                PlateStore.Plate plate) throws Exception {
+        return loadPlate(resolver, filesDir, plate, null);
+    }
+
+    static MeshModel loadPlate(ContentResolver resolver, File filesDir,
+                               PlateStore.Plate plate, Slicer.Config config) throws Exception {
         ArrayList<MeshModel> loaded = new ArrayList<>();
         for (int index = 0; index < plate.uris.size(); index++) {
             if (Thread.currentThread().isInterrupted()) throw new CancellationException("Batch import cancelled");
@@ -183,7 +188,9 @@ public final class BatchSliceJobController {
             }
         }
         String name = plate.name == null ? "Plate " + (plate.index + 1) : plate.name;
-        MeshModel source = loaded.size() == 1 ? loaded.get(0) : MeshModel.combine(name, loaded);
+        float packingWidth = config == null ? 180f : config.bedX;
+        MeshModel source = loaded.size() == 1 ? loaded.get(0)
+                : MeshModel.combine(name, loaded, null, packingWidth);
         MeshModel transformed = source.transformed(name, plate.scale, plate.rotationDegrees,
                 plate.tiltXDegrees, plate.tiltYDegrees);
         int count = Math.min(plate.partTransforms.size(), transformed.parts.length);

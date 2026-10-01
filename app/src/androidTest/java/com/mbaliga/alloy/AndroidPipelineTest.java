@@ -2458,6 +2458,10 @@ public final class AndroidPipelineTest {
         Assert.assertEquals(4, a1Array.parts.length);
         Assert.assertTrue(a1Array.maxX <= 256.001f);
         Assert.assertTrue(a1Array.maxY <= 256.001f);
+        Assert.assertEquals("the wider profile should retain a two-by-two shelf pack", 225f,
+                a1Array.maxX, 0.001f);
+        Assert.assertEquals("the wider profile should retain a two-by-two shelf pack", 225f,
+                a1Array.maxY, 0.001f);
         MeshModel p1sSizedPrimitive = ModelWorkbench.create(ModelWorkbench.Primitive.BOX,
                 "p1s-sized", 220f, 220f, 220f);
         Assert.assertEquals(220f, p1sSizedPrimitive.maxX - p1sSizedPrimitive.minX, 0.001f);

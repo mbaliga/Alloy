@@ -151,7 +151,7 @@ public final class ModelWorkbench {
             sources.add(source);
             labels[index] = safeName(name, "Array") + " copy " + (index + 1);
         }
-        MeshModel result = MeshModel.combine(safeName(name, "Array"), sources, labels);
+        MeshModel result = MeshModel.combine(safeName(name, "Array"), sources, labels, bedX);
         if (result.minX < -0.001f || result.minY < -0.001f || result.minZ < -0.001f
                 || result.maxX > bedX + 0.001f || result.maxY > bedY + 0.001f || result.maxZ > bedZ + 0.001f)
             throw new IOException("Array copies do not fit the selected build volume");

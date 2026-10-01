@@ -75,7 +75,7 @@ public final class BatchSliceResultStore {
             String sha256 = encoded.getString("artifact_sha256");
             PrinterTransport.Artifact artifact = ArtifactStore.recover(filesDir, artifactName, size, sha256);
             verifyMetrics(encoded, slice);
-            MeshModel model = BatchSliceJobController.loadPlate(resolver, filesDir, plate);
+            MeshModel model = BatchSliceJobController.loadPlate(resolver, filesDir, plate, request.config);
             Slicer.validate(model, request.config);
             results.add(new BatchSliceJobController.PlateResult(plate, model, slice, artifact));
         }
