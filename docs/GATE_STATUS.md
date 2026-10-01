@@ -2,6 +2,20 @@
 
 Date: 2026-09-22
 
+2026-10-01 native hosted-runtime KVM evidence: native Actions run
+[`36847078236`](https://github.com/mbaliga/Alloy/actions/runs/36847078236)
+completed the source dependency build, source-built GMP/MPFR closure, ARM64
+release APK build, and ARM64 instrumentation APK compilation. It then failed
+*before* the instrumentation command ran because its hosted runner exposed
+`/dev/kvm` with an empty `kvm` group; the first trigger-only setup was
+insufficient and the x86_64 API-35 emulator correctly refused software
+emulation. Commit `8d692ab9` replaces that incomplete setup with the emulator
+action's documented `99-kvm4all.rules` mode-0666 rule, udev reload and trigger
+before both emulator phases. The follow-up run is required before any native
+runtime or G3 evidence can be claimed. This failure is not a build success,
+native-engine promotion, physical-print evidence, or a reason to lower the
+runtime gate.
+
 2026-10-01 official source-manifest checkpoint: the dedicated official-source
 workflow now emits a content-addressed inventory of all 466 regular files in
 the pinned `OrcaSlicer@ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6`
