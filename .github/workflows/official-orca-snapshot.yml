@@ -44,6 +44,15 @@ jobs:
         run: >-
           python3 ci/audit_official_orca_port_surface.py
           third_party/orca-official app/src/main/jni/libslic3r official-orca-port-surface
+      - name: Source-build the pinned official libnoise closure
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cmake -S third_party/orca-deps-libnoise -B official-orca-libnoise-build \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build official-orca-libnoise-build --parallel 2
+          find official-orca-libnoise-build -type f \
+            \( -name 'liblibnoise_static.a' -o -name 'libnoise_static.a' \) -print -quit | grep -q .
       - uses: actions/upload-artifact@v4
         with:
           name: official-orca-port-surface
