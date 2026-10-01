@@ -69,6 +69,13 @@ jobs:
           api-level: 35
           arch: x86_64
           profile: pixel_6
+          # Hosted API-35 emulators occasionally finish booting while the
+          # settings service is still restarting. The action's optional
+          # animation-disabling ADB writes can then fail the whole job before
+          # the instrumentation command starts. Alloy tests do not depend on
+          # animation scales, so leave the device default intact and exercise
+          # the actual release acceptance suite instead.
+          disable-animations: false
           script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
         with:
