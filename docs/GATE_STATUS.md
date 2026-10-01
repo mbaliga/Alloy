@@ -2,6 +2,20 @@
 
 Date: 2026-09-22
 
+2026-10-01 G2 provenance revalidation: the repository's official-Orca
+provenance workflow was manually rerun from the current delivery commit
+`b9717a35` as GitHub Actions run
+[`36819659942`](https://github.com/mbaliga/Alloy/actions/runs/36819659942).
+The audit successfully cloned the pinned mobile source and official Orca
+history, located the profile anchor, and produced its artifact before it
+intentionally failed the threshold. It again found 67/72 sampled files with
+an exact-history interval, but only 250/488 (51.23%) exact common-engine files
+at best candidate `ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6`; the mobile
+`BBL.ini` blob has no exact official-history interval. This reconfirms the
+existing **FAIL / NO-GO** decision for G2. It is evidence of a rejected
+candidate, not a transient CI failure, and does not permit native-engine,
+direct-print, Bambu Handy, or release promotion.
+
 2026-10-01 Bambu Handy handoff checkpoint: the validated `.gcode.3mf` share
 surface now offers **Try Bambu Handy**, targeting the current Google Play
 package identifier only if that app advertises an Android `ACTION_SEND`
