@@ -40,6 +40,7 @@ jobs:
           python3 ci/validate_official_orca_snapshot.py
           --source-root third_party/orca-official
           --libnoise-source-root third_party/orca-deps-libnoise
+          --manifest-output official-orca-source-manifest.json
       - name: Audit official-to-legacy Android port surface
         run: >-
           python3 ci/audit_official_orca_port_surface.py
@@ -56,5 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: official-orca-port-surface
-          path: official-orca-port-surface
+          path: |
+            official-orca-port-surface
+            official-orca-source-manifest.json
           if-no-files-found: error
