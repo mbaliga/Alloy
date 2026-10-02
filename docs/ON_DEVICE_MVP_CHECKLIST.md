@@ -107,12 +107,14 @@ part of the first physical pilot.
 
 ## 5. Estimate and export boundary
 
-- Open **Print plan** after a slice. It should show model filament in mm and
-  an *approximate* g value, time if reported, current nozzle/plate
-  temperatures and current orientation.
+- Open **Print plan** after a slice. It should show the engine-reported
+  filament in mm and an *approximate* g value, time if reported, current
+  nozzle/plate temperatures and current orientation. With supports off, the
+  figure is labelled **MODEL TOOLPATH FILAMENT**; with supports on, it is
+  labelled **ENGINE FILAMENT TOTAL** and must not be described as model-only.
 - Confirm separate support material is `0 g` only when supports are off.
-  When supports are on, it must say separately unreported rather than invent a
-  value.
+  When supports are on, the total may include support material, but the support
+  portion itself must say separately unreported rather than inventing a value.
 - Confirm prime/purge/cleaning and live printer temperature/idle state say
   unavailable/not reported unless a qualified engine or printer supplied them.
 - Export the `.gcode.3mf`; reopen it in a compatible desktop verifier if
