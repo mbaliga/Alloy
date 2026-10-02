@@ -175,7 +175,10 @@ public final class LearningAndCapabilityCatalogTest {
         Assert.assertEquals(256d, profiles.get(1).buildZ, 0d);
         Assert.assertEquals("bambu.p1s", profiles.get(2).printerId);
         Assert.assertEquals(256d, profiles.get(2).bedY, 0d);
-        Assert.assertEquals(256d, profiles.get(2).buildZ, 0d);
+        // The advertised P1S envelope is 256 mm cubed, but the exact
+        // source-pinned Bambu 0.4 mm planning profile intentionally keeps a
+        // 250 mm Z limit. Planning must prefer the bounded profile value.
+        Assert.assertEquals(250d, profiles.get(2).buildZ, 0d);
         for (ProfileCatalog.Profile profile : profiles) {
             Assert.assertFalse("planning profiles must not qualify a physical send", profile.verified);
             Assert.assertEquals("PLA", profile.material);

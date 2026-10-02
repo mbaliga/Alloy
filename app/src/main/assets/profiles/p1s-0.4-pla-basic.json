@@ -19,7 +19,7 @@
       {"path":"resources/profiles/BBL/filament/fdm_filament_pla.json","sha":"eb0ee310d12701483a701161476d9736ce6adb3b"},
       {"path":"resources/profiles/BBL/filament/fdm_filament_common.json","sha":"29f0d6a5297dca6f451dd98e4d406b61328c1670"}
     ],
-    "note": "Planning-only scalar projection from the pinned Bambu Studio P1S machine, 0.20 mm Standard and PLA Basic inheritance chains. It is not a direct-send or physical-print qualification."
+    "note": "Planning-only scalar projection from the pinned Bambu Studio P1S machine, 0.20 mm Standard and PLA Basic inheritance chains. Its source-backed 0.4 mm planning envelope is 256 × 256 × 250 mm, which is deliberately more conservative than the advertised product envelope. It is not a direct-send or physical-print qualification."
   },
   "printer": {"id":"bambu.p1s","bed_x_mm":256.0,"bed_y_mm":256.0,"build_z_mm":250.0,"nozzle_mm":0.4},
   "process": {"layer_height_mm":0.2,"first_layer_height_mm":0.2,"infill_percent":15.0,"perimeters":2,"top_layers":5,"bottom_layers":3,"support_enabled":false,"support_threshold_degrees":30.0,"travel_speed_mm_s":500.0,"outer_wall_speed_mm_s":200.0,"inner_wall_speed_mm_s":300.0,"infill_speed_mm_s":270.0,"initial_layer_speed_mm_s":50.0},
