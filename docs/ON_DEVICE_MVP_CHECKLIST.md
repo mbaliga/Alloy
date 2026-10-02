@@ -68,7 +68,9 @@ Expected: learning is readable offline and is never a gate-bypass path.
   favourited and reopened without a duplicate project.
 - Open **Profile** and switch each source-pinned planning profile: A1 mini,
   A1, then P1S. Confirm the build volume changes to 180 × 180 × 180 mm for
-  A1 mini and 256 × 256 × 256 mm for A1/P1S.
+  A1 mini, 256 × 256 × 256 mm for A1, and **256 × 256 × 250 mm** for the
+  source-backed P1S 0.4 mm planning profile. The P1S marketing envelope must
+  not override the more conservative profile limit.
 - Confirm switching profiles clears an existing slice and labels the profile
   `review required` rather than verified.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
