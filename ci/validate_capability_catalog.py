@@ -16,9 +16,18 @@ PRINTER_FIELDS = {
     "alloy_direct_send", "source", "source_url", "materials", "feed_routes",
     "spool_forms", "spool_guidance",
 }
-MATERIAL_FIELDS = {"name", "bambu_status", "alloy_direct_send", "note"}
+MATERIAL_FIELDS = {"id", "name", "bambu_status", "alloy_direct_send", "note", "source_url"}
 ROUTE_FIELDS = {"id", "title", "state", "note"}
-SPOOL_FIELDS = {"id", "title", "form", "compatible_routes", "geometry", "state", "note", "source"}
+SPOOL_FIELDS = {"id", "title", "form", "compatible_routes", "geometry", "state", "note", "source", "source_url"}
+
+# These are deliberately material records rather than one marketing string.  A
+# later picker must not silently turn a printer-level material family into a
+# recipe or direct-send approval, but it also must not lose one of the A1 mini
+# classes the user needs to review.
+A1_MINI_MATERIAL_IDS = {
+    "pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet",
+    "pla-cf", "petg-cf", "cf-gf-filled",
+}
 
 
 def require_fields(value, fields, label):
@@ -80,8 +89,14 @@ def validate_catalog(path):
             raise ValueError(f"{identifier}.reviewed cannot be in the future")
         if not printer["alloy_direct_send"].lower().startswith("not qualified"):
             raise ValueError(f"{identifier} must stay not qualified for Alloy direct send")
+        if not isinstance(printer["materials"], list) or not printer["materials"]:
+            raise ValueError(f"{identifier}.materials must be a non-empty list")
+        unique_ids(printer["materials"], f"{identifier}.materials")
         for material in printer["materials"]:
             require_fields(material, MATERIAL_FIELDS, f"{identifier}.material")
+            official_bambu_url(material["source_url"], f"{identifier}.material.source_url")
+            if not material["alloy_direct_send"].lower().startswith(("not qualified", "blocked")):
+                raise ValueError(f"{identifier}.material must stay unavailable for Alloy direct send")
         if not isinstance(printer["feed_routes"], list) or not printer["feed_routes"]:
             raise ValueError(f"{identifier}.feed_routes must be a non-empty list")
         unique_ids(printer["feed_routes"], f"{identifier}.feed_routes")
@@ -92,11 +107,14 @@ def validate_catalog(path):
         unique_ids(printer["spool_forms"], f"{identifier}.spool_forms")
         for form in printer["spool_forms"]:
             require_fields(form, SPOOL_FIELDS, f"{identifier}.spool_form")
+            official_bambu_url(form["source_url"], f"{identifier}.spool_form.source_url")
         if not isinstance(printer["spool_guidance"], list) or not all(isinstance(x, str) and x.strip() for x in printer["spool_guidance"]):
             raise ValueError(f"{identifier}.spool_guidance must be non-empty text entries")
     if ids != EXPECTED_PRINTERS:
         raise ValueError("initial catalog printer ids must be A1 mini, A1 and P1S")
     mini = next(printer for printer in printers if printer["id"] == "a1-mini")
+    if {material["id"] for material in mini["materials"]} != A1_MINI_MATERIAL_IDS:
+        raise ValueError("A1 mini must disclose each ideal and not-recommended material class separately")
     if {form["id"] for form in mini["spool_forms"]} != {
         "bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"
     }:

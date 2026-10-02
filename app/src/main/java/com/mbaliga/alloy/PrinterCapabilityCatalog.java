@@ -18,10 +18,11 @@ public final class PrinterCapabilityCatalog {
     private static final String ASSET = "capabilities/bambu-initial-v1.json";
 
     public static final class Material {
-        public final String name, bambuStatus, directSendState, note;
+        public final String id, name, bambuStatus, directSendState, note, sourceUrl;
         Material(JSONObject o) {
-            name = need(o, "name"); bambuStatus = need(o, "bambu_status");
+            id = need(o, "id"); name = need(o, "name"); bambuStatus = need(o, "bambu_status");
             directSendState = need(o, "alloy_direct_send"); note = need(o, "note");
+            sourceUrl = officialSourceUrl(o, "source_url");
         }
     }
     public static final class FeedRoute {
@@ -30,11 +31,12 @@ public final class PrinterCapabilityCatalog {
     }
     /** A physical spool/refill form; this is distinct from its material and feed route. */
     public static final class SpoolForm {
-        public final String id, title, form, compatibleRoutes, geometry, state, note, source;
+        public final String id, title, form, compatibleRoutes, geometry, state, note, source, sourceUrl;
         SpoolForm(JSONObject o) {
             id = need(o, "id"); title = need(o, "title"); form = need(o, "form");
             compatibleRoutes = need(o, "compatible_routes"); geometry = need(o, "geometry");
             state = need(o, "state"); note = need(o, "note"); source = need(o, "source");
+            sourceUrl = officialSourceUrl(o, "source_url");
         }
     }
     public static final class Printer {

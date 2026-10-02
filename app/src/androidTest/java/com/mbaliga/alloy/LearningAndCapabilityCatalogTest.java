@@ -138,6 +138,9 @@ public final class LearningAndCapabilityCatalogTest {
             pla |= material.name.equals("PLA"); petg |= material.name.equals("PETG");
             tpu |= material.name.equals("TPU"); pva |= material.name.equals("PVA");
             blocked |= material.directSendState.equals("Blocked");
+            Assert.assertFalse("every material needs its own stable id", material.id.isEmpty());
+            Assert.assertTrue("every material claim needs an official source URL",
+                    material.sourceUrl.startsWith("https://") && material.sourceUrl.contains("bambulab.com"));
         }
         for (PrinterCapabilityCatalog.FeedRoute route : mini.feedRoutes) {
             external |= route.id.equals("external-direct"); amsLite |= route.id.equals("ams-lite"); regularAms |= route.id.equals("regular-ams") && route.state.equals("Unsupported");
@@ -153,6 +156,8 @@ public final class LearningAndCapabilityCatalogTest {
             thirdParty |= form.id.equals("third-party-direct") && form.state.contains("Manual review");
             regularAmsSpool |= form.id.equals("regular-ams-spool") && form.state.equals("Unsupported route");
             Assert.assertFalse("every spool form needs a source/scope record", form.source.isEmpty());
+            Assert.assertTrue("every spool form needs an official source URL",
+                    form.sourceUrl.startsWith("https://") && form.sourceUrl.contains("bambulab.com"));
         }
         Assert.assertTrue("A1 mini needs explicit complete-spool, refill, third-party and regular-AMS states",
                 completeSpool && refill && thirdParty && regularAmsSpool);
