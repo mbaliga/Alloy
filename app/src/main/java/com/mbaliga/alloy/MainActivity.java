@@ -5031,7 +5031,7 @@ public final class MainActivity extends Activity {
                 modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
         String message = String.format(Locale.US,
                 "%s\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
-                estimate.filamentScope, estimate.modelFilamentMm, estimate.approximateModelFilamentGrams, config.filament,
+                estimate.filamentScope, estimate.reportedFilamentMm, estimate.approximateReportedFilamentGrams, config.filament,
                 estimate.supportMaterial, estimate.primePurgeCleaning, estimate.time,
                 config.nozzleTemperature, config.firstLayerNozzleTemperature,
                 config.bedTemperature, config.firstLayerBedTemperature,

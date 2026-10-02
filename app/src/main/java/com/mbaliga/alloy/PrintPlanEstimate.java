@@ -9,18 +9,23 @@ import java.util.Locale;
  * unavailable unless an engine reports them independently.
  */
 public final class PrintPlanEstimate {
-    public final float modelFilamentMm;
-    public final float approximateModelFilamentGrams;
+    /**
+     * The one filament figure emitted by the slicer. Its exact meaning is
+     * carried by {@link #filamentScope}; it must never be presented as a
+     * model-only figure when supports are enabled.
+     */
+    public final float reportedFilamentMm;
+    public final float approximateReportedFilamentGrams;
     /** Describes the scope of the engine's single reported filament figure. */
     public final String filamentScope;
     public final String supportMaterial;
     public final String primePurgeCleaning;
     public final String time;
 
-    private PrintPlanEstimate(float modelFilamentMm, float approximateModelFilamentGrams, String filamentScope,
+    private PrintPlanEstimate(float reportedFilamentMm, float approximateReportedFilamentGrams, String filamentScope,
                               String supportMaterial, String primePurgeCleaning, String time) {
-        this.modelFilamentMm = modelFilamentMm;
-        this.approximateModelFilamentGrams = approximateModelFilamentGrams;
+        this.reportedFilamentMm = reportedFilamentMm;
+        this.approximateReportedFilamentGrams = approximateReportedFilamentGrams;
         this.filamentScope = filamentScope;
         this.supportMaterial = supportMaterial;
         this.primePurgeCleaning = primePurgeCleaning;
