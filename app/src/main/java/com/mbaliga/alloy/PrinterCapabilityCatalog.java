@@ -11,7 +11,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /** Source-labelled printer/material capability data. "Compatible" never means Alloy may send a job. */
 public final class PrinterCapabilityCatalog {
@@ -57,20 +60,68 @@ public final class PrinterCapabilityCatalog {
     private PrinterCapabilityCatalog(int version, List<Printer> printers) { this.version = version; this.printers = Collections.unmodifiableList(printers); }
 
     public static PrinterCapabilityCatalog load(AssetManager assets) throws IOException {
-        try (InputStream input = assets.open(ASSET)) {
-            JSONObject root = new JSONObject(new String(read(input), StandardCharsets.UTF_8));
+        try (InputStream input = assets.open(ASSET)) { return parse(read(input));
+        }
+    }
+
+    /** Package-local for corruption-regression tests; callers should use {@link #load(AssetManager)}. */
+    static PrinterCapabilityCatalog parse(byte[] bytes) throws IOException {
+        try {
+            JSONObject root = new JSONObject(new String(bytes, StandardCharsets.UTF_8));
             int version = root.getInt("schema_version");
             if (version != 1) throw new IOException("Unsupported capability catalog version: " + version);
             JSONArray values = root.getJSONArray("printers"); ArrayList<Printer> printers = new ArrayList<>();
             for (int i = 0; i < values.length(); i++) printers.add(new Printer(values.getJSONObject(i)));
-            if (printers.size() != 3 || !has(printers, "a1-mini") || !has(printers, "a1") || !has(printers, "p1s"))
-                throw new IOException("Initial catalog must contain exactly A1 mini, A1 and P1S");
+            validateInitialContract(printers);
             return new PrinterCapabilityCatalog(version, printers);
         } catch (IOException error) { throw error;
         } catch (Exception error) { throw new IOException("Invalid capability catalog: " + error.getMessage(), error); }
     }
     public Printer byId(String id) { for (Printer printer : printers) if (printer.id.equals(id)) return printer; return null; }
     private static boolean has(List<Printer> printers, String id) { for (Printer p : printers) if (p.id.equals(id)) return true; return false; }
+    /**
+     * CI validates the source file too, but this check keeps a malformed or
+     * accidentally broadened packaged asset from changing user-visible safety
+     * state after the app has been built.
+     */
+    private static void validateInitialContract(List<Printer> printers) throws IOException {
+        if (printers.size() != 3 || !has(printers, "a1-mini") || !has(printers, "a1") || !has(printers, "p1s")
+                || !uniquePrinterIds(printers))
+            throw new IOException("Initial catalog must contain exactly A1 mini, A1 and P1S");
+        for (Printer printer : printers) {
+            if (!unavailable(printer.directSendState))
+                throw new IOException(printer.id + " must remain not qualified for Alloy direct send");
+            if (!uniqueIds(printer.materials, "material") || !uniqueIds(printer.feedRoutes, "feed route")
+                    || !uniqueIds(printer.spoolForms, "spool form"))
+                throw new IOException(printer.id + " has duplicate capability identifiers");
+            for (Material material : printer.materials) if (!unavailable(material.directSendState))
+                throw new IOException(printer.id + " material " + material.id + " cannot qualify direct send");
+        }
+        Printer mini = null;
+        for (Printer printer : printers) if ("a1-mini".equals(printer.id)) mini = printer;
+        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"))
+                || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool")))
+            throw new IOException("A1 mini capability coverage is incomplete");
+    }
+    private static boolean unavailable(String state) {
+        String normalized = state.toLowerCase(Locale.US);
+        return normalized.startsWith("not qualified") || normalized.startsWith("blocked");
+    }
+    private static boolean uniquePrinterIds(List<Printer> printers) { return ids(printers).size() == printers.size(); }
+    private static boolean uniqueIds(List<?> values, String ignored) { return ids(values).size() == values.size(); }
+    private static Set<String> ids(List<?> values) {
+        HashSet<String> result = new HashSet<>();
+        for (Object value : values) {
+            if (value instanceof Printer) result.add(((Printer) value).id);
+            else if (value instanceof Material) result.add(((Material) value).id);
+            else if (value instanceof FeedRoute) result.add(((FeedRoute) value).id);
+            else if (value instanceof SpoolForm) result.add(((SpoolForm) value).id);
+        }
+        return result;
+    }
+    private static Set<String> setOf(String... values) {
+        HashSet<String> result = new HashSet<>(); Collections.addAll(result, values); return result;
+    }
     private static String need(JSONObject o, String key) { String value = o.optString(key, "").trim(); if (value.length() == 0) throw new IllegalArgumentException("Missing " + key); return value; }
     /** Capability claims must carry a direct, HTTPS Bambu source—not a vague documentation pointer. */
     private static String officialSourceUrl(JSONObject o, String key) {
