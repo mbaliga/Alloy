@@ -18,6 +18,7 @@ on:
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
       - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
       - 'app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/**'
       - 'ci/patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
@@ -52,6 +53,7 @@ on:
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
       - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
       - 'app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/**'
       - 'ci/patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
@@ -265,3 +267,12 @@ jobs:
           name: alloy-native-instrumentation-apk
           path: app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
           if-no-files-found: error
+      # A native test failure is the moment its JUnit XML is most valuable.
+      # Keep it even when later success-only evidence artifacts are skipped.
+      - name: Upload native instrumentation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-instrumentation-report
+          path: app/build/reports/androidTests/connected/release
+          if-no-files-found: warn
