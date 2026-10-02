@@ -14,9 +14,20 @@ import build_path_b_prusa_config  # noqa: E402
 
 
 PROFILE = ROOT / "app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json"
+PROFILE_DIRECTORY = ROOT / "app/src/main/assets/profiles"
 
 
 class ProfileSnapshotTests(unittest.TestCase):
+    def test_every_packaged_planning_profile_has_a_declared_source_selection(self):
+        profile_ids = {
+            json.loads(path.read_text(encoding="utf-8"))["id"]
+            for path in PROFILE_DIRECTORY.glob("*.json")
+        }
+        self.assertEqual(
+            profile_ids,
+            set(verify_profile_snapshot.SELECTIONS),
+        )
+
     def test_auto_brim_is_explicitly_normalized_for_slicebeam(self):
         self.assertEqual(
             "no_brim",

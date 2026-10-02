@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Verify Alloy's compact A1 Mini profile against a pinned Orca checkout.
+"""Verify Alloy's packaged Bambu planning profiles against pinned source.
 
-The Android profile is intentionally a small, typed projection of the full
-Orca profile chain. This verifier proves two things before a release build:
-the listed source blobs still exist at the declared commit and every projected
-value still equals the resolved source value. It does not claim G-code parity.
+Each Android profile is intentionally a small, typed projection of a full
+upstream inheritance chain. This verifier proves two things before a release
+build: the listed source blobs still exist at the declared commit and every
+projected value still equals the resolved source value. It does not claim
+G-code parity.
 """
 
 from __future__ import annotations
@@ -16,11 +17,28 @@ import subprocess
 from pathlib import Path
 
 
-SELECTION = {
-    "machine": "Bambu Lab A1 mini 0.4 nozzle",
-    "process": "0.20mm Standard @BBL A1M",
-    "filament": "Bambu PLA Basic @BBL A1M",
+SELECTIONS = {
+    "bambu.a1-mini.0.4.pla-basic": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PLA Basic @BBL A1M",
+    },
+    # A1 and P1S remain planning-only profiles. They nevertheless need the
+    # same source/blob and scalar projection discipline as the A1 Mini rather
+    # than being trusted merely because their UI cards are present.
+    "bambu.a1.0.4.pla-basic": {
+        "machine": "Bambu Lab A1 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1",
+        "filament": "Bambu PLA Basic @BBL A1",
+    },
+    "bambu.p1s.0.4.pla-basic": {
+        "machine": "Bambu Lab P1S 0.4 nozzle",
+        "process": "0.20mm Standard @BBL X1C",
+        "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+    },
 }
+# Kept as a compatibility import for existing focused fixture tests.
+SELECTION = SELECTIONS["bambu.a1-mini.0.4.pla-basic"]
 KINDS = {"machine": "machine", "process": "process", "filament": "filament"}
 
 # Native scalar values intentionally kept outside the typed Android recipe.
@@ -192,7 +210,7 @@ def load_profiles(root: Path, kind: str) -> dict[str, dict]:
     directory = root / "resources/profiles/BBL" / KINDS[kind]
     profiles: dict[str, dict] = {}
     if not directory.is_dir():
-        raise ValueError(f"missing Orca profile directory: {directory}")
+        raise ValueError(f"missing Bambu-style profile directory: {directory}")
     for path in sorted(directory.rglob("*.json")):
         try:
             value = json.loads(path.read_text(encoding="utf-8", errors="strict"))
@@ -260,15 +278,22 @@ def normalize_native_projection(target: str, kind: str, source_key: str,
     return value
 
 
-def verify_native_projection(asset: dict, resolved: dict[str, dict]) -> list[dict[str, str]]:
+def verify_native_projection(asset: dict, resolved: dict[str, dict], require_complete: bool) -> list[dict[str, str]]:
     native = asset.get("native_settings")
     if not isinstance(native, dict):
         raise ValueError("native_settings must be an object")
     unknown = sorted(set(native) - set(NATIVE_PROJECTIONS))
     if unknown:
         raise ValueError("native_settings contains unverified fields: " + ", ".join(unknown))
+    if require_complete:
+        targets = NATIVE_PROJECTIONS
+    else:
+        # A1 and P1S have a deliberately narrow planning projection. Verify
+        # every emitted scalar without pretending their absent native fields
+        # were resolved or that they have passed the A1 Mini native gate.
+        targets = {target: NATIVE_PROJECTIONS[target] for target in native}
     checks: list[dict[str, str]] = []
-    for target, (kind, source_key) in NATIVE_PROJECTIONS.items():
+    for target, (kind, source_key) in targets.items():
         expected = native_string(resolved[kind], source_key)
         expected = normalize_native_projection(target, kind, source_key, expected, resolved)
         expected = NATIVE_VALUE_ALIASES.get((kind, source_key), {}).get(expected, expected)
@@ -330,6 +355,10 @@ def close(actual: object, expected: object, label: str) -> None:
 
 def verify(repo: Path, profile_path: Path) -> dict:
     asset = json.loads(profile_path.read_text(encoding="utf-8"))
+    profile_id = str(asset.get("id", ""))
+    selection = SELECTIONS.get(profile_id)
+    if selection is None:
+        raise ValueError(f"unsupported packaged profile id: {profile_id!r}")
     provenance = asset.get("provenance")
     if not isinstance(provenance, dict):
         raise ValueError("profile provenance is missing")
@@ -352,8 +381,8 @@ def verify(repo: Path, profile_path: Path) -> dict:
         blob_checks.append({"path": path, "sha": actual_sha})
 
     resolved = {
-        kind: resolve(SELECTION[kind], load_profiles(repo, kind))
-        for kind in SELECTION
+        kind: resolve(selection[kind], load_profiles(repo, kind))
+        for kind in selection
     }
     machine, process, filament = resolved["machine"], resolved["process"], resolved["filament"]
     bed_x, bed_y = bed_size(machine)
@@ -391,9 +420,11 @@ def verify(repo: Path, profile_path: Path) -> dict:
     }
     for label, (actual, expected) in comparisons.items():
         close(actual, expected, label)
-    native_checks = verify_native_projection(asset, resolved)
+    native_checks = verify_native_projection(
+        asset, resolved, require_complete=profile_id == "bambu.a1-mini.0.4.pla-basic")
     return {
         "revision": revision,
+        "profile_id": profile_id,
         "profile": str(profile_path),
         "blob_count": len(blob_checks),
         "projected_field_count": len(comparisons),
@@ -405,17 +436,17 @@ def verify(repo: Path, profile_path: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("orca_checkout", type=Path)
+    parser.add_argument("profile_checkout", type=Path)
     parser.add_argument("profile", type=Path)
     parser.add_argument("--json-out", type=Path)
     args = parser.parse_args()
-    report = verify(args.orca_checkout, args.profile)
+    report = verify(args.profile_checkout, args.profile)
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
         args.json_out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(
         f"verified {report['projected_field_count']} typed and "
-        f"{report['native_projected_field_count']} native projected A1 Mini fields and "
+        f"{report['native_projected_field_count']} native projected {report['profile_id']} fields and "
         f"{report['blob_count']} provenance blobs at {report['revision']}"
     )
 
