@@ -4741,7 +4741,11 @@ public final class MainActivity extends Activity {
             slice = null;
             stagedArtifact = null;
             lastBatch = null;
-            status.setText("Prepare  ·  parts auto-oriented and packed");
+            // Packing only chooses a reversible 0°/90° XY rotation. It must
+            // not be presented as an orientation recommendation: tilt and
+            // first-contact decisions can change supports, strength and
+            // surface quality and remain visible user choices.
+            status.setText("Prepare  ·  parts packed on plate");
             details.setText(modelDetails(model));
             finishModelMutation("Auto-pack parts");
             refreshActions();
