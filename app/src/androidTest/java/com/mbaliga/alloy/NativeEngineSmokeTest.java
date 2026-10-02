@@ -219,7 +219,11 @@ public final class NativeEngineSmokeTest {
             Assert.assertTrue(serialized.contains("inner_wall_acceleration = 0"));
             Assert.assertTrue(serialized.contains("top_surface_acceleration = 2000"));
             Assert.assertTrue(serialized.contains("sparse_infill_acceleration = 100%"));
-            Assert.assertTrue(serialized.contains("internal_solid_infill_acceleration = 2000"));
+            // The pinned official A1 Mini chain does not resolve this current
+            // Orca-only key. It stays an import-only bounded setting; the
+            // compact shipped recipe must not manufacture a value from a
+            // different desktop snapshot.
+            Assert.assertFalse(serialized.contains("internal_solid_infill_acceleration ="));
             Assert.assertTrue(serialized.contains("machine_max_acceleration_x = 1234,1234"));
             Assert.assertTrue(serialized.contains("machine_max_acceleration_y = 1234,1234"));
             Assert.assertTrue(serialized.contains("machine_max_acceleration_travel = 1234,1234"));
@@ -232,8 +236,19 @@ public final class NativeEngineSmokeTest {
             // fragment that drifted. Keep the exact serialized contract in
             // the failure so a profile/native-schema change is diagnosable
             // without treating a failed runtime gate as a passing slice.
-            String assertionSite = error.getStackTrace().length == 0
-                    ? "<unknown assertion site>" : error.getStackTrace()[0].toString();
+            // JUnit puts Assert.fail() first. Prefer the caller in this test
+            // class so hosted logs identify the failed contract rather than
+            // only the framework helper.
+            String assertionSite = "<unknown assertion site>";
+            for (StackTraceElement frame : error.getStackTrace()) {
+                if (NativeEngineSmokeTest.class.getName().equals(frame.getClassName())) {
+                    assertionSite = frame.toString();
+                    break;
+                }
+            }
+            if ("<unknown assertion site>".equals(assertionSite)
+                    && error.getStackTrace().length > 0)
+                assertionSite = error.getStackTrace()[0].toString();
             AssertionError diagnostic = new AssertionError(
                     "Native recipe projection contract drifted at " + assertionSite
                             + ". Serialized config:\n"
