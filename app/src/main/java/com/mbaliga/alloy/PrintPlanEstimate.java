@@ -11,14 +11,17 @@ import java.util.Locale;
 public final class PrintPlanEstimate {
     public final float modelFilamentMm;
     public final float approximateModelFilamentGrams;
+    /** Describes the scope of the engine's single reported filament figure. */
+    public final String filamentScope;
     public final String supportMaterial;
     public final String primePurgeCleaning;
     public final String time;
 
-    private PrintPlanEstimate(float modelFilamentMm, float approximateModelFilamentGrams,
+    private PrintPlanEstimate(float modelFilamentMm, float approximateModelFilamentGrams, String filamentScope,
                               String supportMaterial, String primePurgeCleaning, String time) {
         this.modelFilamentMm = modelFilamentMm;
         this.approximateModelFilamentGrams = approximateModelFilamentGrams;
+        this.filamentScope = filamentScope;
         this.supportMaterial = supportMaterial;
         this.primePurgeCleaning = primePurgeCleaning;
         this.time = time;
@@ -29,10 +32,14 @@ public final class PrintPlanEstimate {
         String support = config.supports
                 ? "Not reported separately; included, if present, in the engine's total filament figure."
                 : "0 g  ·  supports are off for this recipe.";
+        String scope = config.supports
+                ? "ENGINE FILAMENT TOTAL"
+                : "MODEL TOOLPATH FILAMENT";
         String time = slice.printTimeSeconds < 0f ? "Not reported by engine" : duration(slice.printTimeSeconds);
         return new PrintPlanEstimate(slice.filamentMm,
                 grams(slice.filamentMm, config.filamentDiameter, config.filament,
                         config.nativeSettings.get("filament_density")),
+                scope,
                 support,
                 "Not available. This is not a verified multi-material or printer-telemetry estimate.",
                 time);
