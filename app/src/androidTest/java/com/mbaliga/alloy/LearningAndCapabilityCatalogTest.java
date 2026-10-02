@@ -163,6 +163,22 @@ public final class LearningAndCapabilityCatalogTest {
                 completeSpool && refill && thirdParty && regularAmsSpool);
     }
 
+    @Test public void capabilityCatalogRejectsAccidentalDirectSendPromotionAtRuntime() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        byte[] source;
+        try (java.io.InputStream input = context.getAssets().open("capabilities/bambu-initial-v1.json")) {
+            source = readAll(input);
+        }
+        String promoted = new String(source, StandardCharsets.UTF_8).replaceFirst(
+                "Not qualified — physical acceptance gates remain incomplete", "Qualified for send");
+        try {
+            PrinterCapabilityCatalog.parse(promoted.getBytes(StandardCharsets.UTF_8));
+            Assert.fail("A packaged catalog must not be able to promote direct send");
+        } catch (java.io.IOException expected) {
+            Assert.assertTrue(expected.getMessage().contains("not qualified"));
+        }
+    }
+
     @Test public void initialPlanningProfilesMatchTheThreeDisclosedPrinterEnvelopes() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         java.util.List<ProfileCatalog.Profile> profiles = ProfileCatalog.loadInitial(context.getAssets());
@@ -184,5 +200,12 @@ public final class LearningAndCapabilityCatalogTest {
             Assert.assertEquals("PLA", profile.material);
             Assert.assertEquals(0.4d, profile.nozzle, 0.0001d);
         }
+    }
+
+    private static byte[] readAll(java.io.InputStream input) throws java.io.IOException {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        for (int count; (count = input.read(buffer)) >= 0;) out.write(buffer, 0, count);
+        return out.toByteArray();
     }
 }
