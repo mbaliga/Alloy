@@ -230,8 +230,11 @@ public final class NativeEngineSmokeTest {
             // fragment that drifted. Keep the exact serialized contract in
             // the failure so a profile/native-schema change is diagnosable
             // without treating a failed runtime gate as a passing slice.
+            String assertionSite = error.getStackTrace().length == 0
+                    ? "<unknown assertion site>" : error.getStackTrace()[0].toString();
             AssertionError diagnostic = new AssertionError(
-                    "Native recipe projection contract drifted. Serialized config:\n"
+                    "Native recipe projection contract drifted at " + assertionSite
+                            + ". Serialized config:\n"
                             + (serialized == null ? "<config was not written>" : serialized));
             diagnostic.initCause(error);
             throw diagnostic;
