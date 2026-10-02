@@ -18,6 +18,10 @@ on:
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
       - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      # The native job executes the complete instrumentation suite. Any test
+      # change can therefore invalidate its result, not only the native smoke
+      # class itself.
+      - 'app/src/androidTest/**'
       - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
       - 'app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/**'
       - 'ci/patch_orca_mobile_bootstrap.py'
@@ -53,6 +57,8 @@ on:
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
       - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      # Keep pull-request evidence aligned with the entire suite as well.
+      - 'app/src/androidTest/**'
       - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
       - 'app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/**'
       - 'ci/patch_orca_mobile_bootstrap.py'
