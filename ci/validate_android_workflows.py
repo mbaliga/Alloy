@@ -67,6 +67,7 @@ def main() -> None:
         "sudo udevadm control --reload-rules",
         "sudo udevadm trigger --name-match=kvm",
         "com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested",
+        "bash -lc '",
         "path-b-g3-evidence/overhang_support.gcode",
         "name: alloy-native-g3-evidence",
         "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java",
