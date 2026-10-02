@@ -5268,9 +5268,14 @@ public final class MainActivity extends Activity {
         // packaged profile, so edits remain portable and auditable.
         String supportStyleValue = nativeSetting(config, "support_material_style", "organic");
         RadioGroup supportStyles = new RadioGroup(this);
-        String[][] supportStyleOptions = {
-                {"Organic tree", "organic"}, {"Slim tree", "tree"}, {"Grid", "grid"}
-        };
+        // The ordinary on-device fallback emits only conservative grid
+        // supports. Do not expose native tree labels there: selecting one
+        // would create a user expectation the fallback cannot meet. The
+        // native build keeps the source-backed choices visible, while its
+        // Bambu TreeSupport3D parity remains separately gated.
+        String[][] supportStyleOptions = BuildConfig.NATIVE_ENGINE_ENABLED
+                ? new String[][]{{"Organic tree", "organic"}, {"Slim tree", "tree"}, {"Grid", "grid"}}
+                : new String[][]{{"Grid (offline fallback)", "grid"}};
         int selectedSupportStyle = 0;
         for (int index = 0; index < supportStyleOptions.length; index++) {
             RadioButton option = new RadioButton(this);
