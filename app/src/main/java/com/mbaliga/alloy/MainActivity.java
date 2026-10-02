@@ -5030,9 +5030,9 @@ public final class MainActivity extends Activity {
         String orientation = String.format(Locale.US, "Z rotation %.0f°  ·  X tilt %.0f°  ·  Y tilt %.0f°  ·  scale %.0f%%",
                 modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
         String message = String.format(Locale.US,
-                "MODEL TOOLPATH\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\nNot available. This is not a verified multi-material or printer-telemetry estimate.\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
-                estimate.modelFilamentMm, estimate.approximateModelFilamentGrams, config.filament,
-                estimate.supportMaterial, estimate.time,
+                "%s\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
+                estimate.filamentScope, estimate.modelFilamentMm, estimate.approximateModelFilamentGrams, config.filament,
+                estimate.supportMaterial, estimate.primePurgeCleaning, estimate.time,
                 config.nozzleTemperature, config.firstLayerNozzleTemperature,
                 config.bedTemperature, config.firstLayerBedTemperature,
                 config.layerHeight, config.infill * 100f, config.perimeters, orientation);

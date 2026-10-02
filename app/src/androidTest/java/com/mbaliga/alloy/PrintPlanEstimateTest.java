@@ -16,6 +16,7 @@ public final class PrintPlanEstimateTest {
                 "native", false, 120f, 0f);
         PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
         Assert.assertEquals(3.03f, estimate.approximateModelFilamentGrams, 0.02f);
+        Assert.assertEquals("MODEL TOOLPATH FILAMENT", estimate.filamentScope);
         Assert.assertEquals("0 g  ·  supports are off for this recipe.", estimate.supportMaterial);
         Assert.assertEquals("2m 00s", estimate.time);
     }
@@ -29,6 +30,7 @@ public final class PrintPlanEstimateTest {
         PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
         Assert.assertEquals(0f, estimate.approximateModelFilamentGrams, 0f);
         Assert.assertTrue(estimate.supportMaterial.contains("Not reported separately"));
+        Assert.assertEquals("ENGINE FILAMENT TOTAL", estimate.filamentScope);
         Assert.assertTrue(estimate.primePurgeCleaning.startsWith("Not available"));
         Assert.assertEquals("Not reported by engine", estimate.time);
     }
