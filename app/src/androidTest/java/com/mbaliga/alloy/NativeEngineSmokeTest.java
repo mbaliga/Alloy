@@ -56,7 +56,9 @@ public final class NativeEngineSmokeTest {
 
     @Test
     public void typedRecipeOwnsOverlappingNativeSettings() throws Exception {
-        Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
+        // Config projection is pure Java and must be covered by the ordinary
+        // release pipeline too. Only the final end-to-end native slice below
+        // needs the optional arm64 engine to be packaged.
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
         Slicer.Config config = new Slicer.Config();
@@ -241,6 +243,8 @@ public final class NativeEngineSmokeTest {
         } finally {
             if (configFile.exists()) Assert.assertTrue(configFile.delete());
         }
+        Assume.assumeTrue("Run native slice assertion with -PalloyNativeEngine=true",
+                BuildConfig.NATIVE_ENGINE_ENABLED);
         MeshModel mesh;
         try (InputStream input = context.getAssets().open("models/box-20mm.stl")) {
             mesh = MeshModel.read("box-20mm.stl", input);
