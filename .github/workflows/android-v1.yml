@@ -14,6 +14,8 @@ permissions:
 env:
   ORCA_PROFILE_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
+  BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
+  BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
 
 jobs:
   verify:
@@ -34,6 +36,16 @@ jobs:
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+      - name: Verify pinned Bambu planning profiles
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --sparse --no-checkout "$BAMBU_PROFILE_REPO" bambu-profile-source
+          git -C bambu-profile-source sparse-checkout set resources/profiles/BBL
+          git -C bambu-profile-source checkout --detach "$BAMBU_PROFILE_SHA"
+          test "$(git -C bambu-profile-source rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
+          python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json
+          python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

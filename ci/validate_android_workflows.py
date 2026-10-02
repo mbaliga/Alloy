@@ -32,6 +32,11 @@ def main() -> None:
         "app/build/outputs/apk/release/app-release.apk",
         "disable-animations: false",
         "runs-on: macos-15-intel",
+        "BAMBU_PROFILE_REPO:",
+        "BAMBU_PROFILE_SHA:",
+        "Verify pinned Bambu planning profiles",
+        "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
+        "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
     ):
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
@@ -71,6 +76,11 @@ def main() -> None:
         "git submodule update --init --depth 1 third_party/orca-deps-libnoise",
         "ci/validate_official_orca_snapshot.py",
         "--libnoise-source-root third_party/orca-deps-libnoise",
+        "BAMBU_PROFILE_REPO:",
+        "BAMBU_PROFILE_SHA:",
+        "Verify pinned Bambu planning profiles",
+        "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
+        "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
     ):
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
@@ -103,6 +113,11 @@ def main() -> None:
         "app/build/outputs/apk/release/*.apk",
         "app/build/outputs/apk/androidTest/release",
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
+        "BAMBU_PROFILE_REPO:",
+        "BAMBU_PROFILE_SHA:",
+        "Verify pinned Bambu planning profiles",
+        "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
+        "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
     ):
         require(release_text, token, release)
     release_bootstrap = release_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
