@@ -2,6 +2,17 @@
 
 Date: 2026-09-22
 
+2026-10-02 local material/profile regression checkpoint: commits
+`e627b8d044c77ec80fbaab448c54f983298df845` and
+`93975a27c893eeb18dff68e67be17ccfeb95e5b9` were assembled with the CI-debug
+signing switch, installed on the local API-35 ARM64 emulator, and ran the
+complete ordinary release instrumentation suite: **176 tests, 0 failures**.
+This covers the individually source-linked A1 Mini material/spool catalog and
+the conservative P1S source-backed 256 × 256 × 250 mm planning envelope. The
+ordinary package intentionally skips native-only cases; this is local Android
+regression evidence, not native-runtime, G2/G3/G4, physical-printer, Bambu
+Handy, signing, or production-release evidence.
+
 2026-10-02 local ARM64 release-instrumentation checkpoint: commit
 `cb59cc803da7c34b0d2eae20715d93f4474facf4` was assembled with the
 CI-debug signing switch, installed on the local API-35 ARM64 emulator, and
