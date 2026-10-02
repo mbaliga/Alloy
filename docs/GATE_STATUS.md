@@ -2,6 +2,20 @@
 
 Date: 2026-09-22
 
+2026-10-02 local ARM64 release-instrumentation checkpoint: commit
+`cb59cc803da7c34b0d2eae20715d93f4474facf4` was assembled with the
+CI-debug signing switch, installed on the local API-35 ARM64 emulator, and
+ran **176 instrumentation tests with 0 failures**. This includes the
+source-bounded native recipe projection contract: Alloy does not manufacture
+`internal_solid_infill_acceleration` when the pinned official A1 Mini profile
+revision `07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4` does not resolve it. The
+same revision was independently checked by `ci/verify_profile_snapshot.py`
+(26 typed fields, 131 native scalar projections, and 11 provenance blobs).
+The native-enabled slice segment remains intentionally skipped in this
+Java-only package. This is local Android and profile-projection evidence only;
+it does not pass the hosted native runtime, G2/G3/G4, TreeSupport3D, Bambu
+Handy, physical-printer, signing, or production-release gates.
+
 2026-10-01 Android distribution-notice checkpoint: Android v1 Actions run
 [`36855211178`](https://github.com/mbaliga/Alloy/actions/runs/36855211178)
 passed at delivery commit `07a326ddbcdc536a477fb5f93f73c60d4789925f`.
