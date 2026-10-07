@@ -2657,3 +2657,29 @@ artifact ZIP SHA-256
 `0fca66c78d9478b46b5d2a3457a21b988aabc1e1ed7524b0412c89b656b50cd6`.
 This confirms the learning catalog and all referenced artwork load in the
 Android acceptance suite; it is not a visual sign-off on a physical phone.
+
+
+### 2026-10-07 native and A1 Mini pilot CI completion
+
+Commit `2dd169bf747aa3bebd121fa9de51adfde220fb39` passed the hosted native
+workflow [run 37639120483](https://github.com/mbaliga/Alloy/actions/runs/37639120483)
+and the Android v1 workflow
+[run 37639120626](https://github.com/mbaliga/Alloy/actions/runs/37639120626).
+The ordinary QA APK artifact ZIP SHA-256 is
+`21dcbee5f12e89609fccca1cbc73b9252189b3b0d2cf1d826646349a126aff81`.
+The native lane built the ARM64 native APK, passed 182 API-35 emulator
+instrumentation tests (2 skipped, 0 failed), and structurally validated the
+G3 evidence bundle. G3 is still not a parity pass: the earlier cross-check
+retains transition-count and acceleration-command warnings.
+
+The workflow also built an isolated `alloyPhysicalPilot` APK pair and passed
+the five-fixture, software-only emulator preflight. The pilot artifact ZIP
+SHA-256 is
+`00a7d3da15f836c24028f59e22fe9fc146d9ab55825db62e40342694585f3e70`.
+This enables a bounded on-device A1 Mini pilot attempt for the five bundled
+unchanged no-support PLA fixtures; it does not claim that any physical print,
+upload/start transport, or Bambu Handy handoff has passed. Physical
+qualification, TreeSupport3D parity, production signing, release approval, and
+A1/P1S physical qualification remain open. See
+[`ON_DEVICE_MVP_CHECKLIST.md`](ON_DEVICE_MVP_CHECKLIST.md) and
+[`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) for the next checks.
