@@ -14,13 +14,14 @@ release promotion.
 ## 1. Install the matching artifacts
 
 1. For the current UI/software smoke pass, download
-   [`alloy-v1-release-ci-apk` from Android v1 run 37613376092](https://github.com/mbaliga/Alloy/actions/runs/37613376092).
-   Confirm the run targets commit `4e6723c25e26a058fdc07ba01d335a74bea6ed65`
+   [`alloy-v1-release-ci-apk` from Android v1 run 37620435593](https://github.com/mbaliga/Alloy/actions/runs/37620435593).
+   Confirm the run targets commit `2c88a069e9e67b343d3b82bdf9506d46626a131f`
    and completed successfully before installing. Its artifact ZIP digest is
-   `sha256:8a200c561073e49907012ae3fbb647da8001bc081cf64cbe28b507b55acc344b`
+   `sha256:0fca66c78d9478b46b5d2a3457a21b988aabc1e1ed7524b0412c89b656b50cd6`
    (expires **2027-01-05**). After extracting, install `app-release.apk` on an
    ARM64 Android phone; compute and record the APK's own SHA-256 separately.
-   The CI artifact includes the app APK, not the instrumentation APK.
+   This build contains the Library sort correction and the new offline
+   build-plate learning illustration.
 2. For native-runtime checks, download the matching native release and
    instrumentation pair from
    [`alloy-native-build` run 37610818807](https://github.com/mbaliga/Alloy/actions/runs/37610818807),
