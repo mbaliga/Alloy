@@ -107,6 +107,14 @@ public final class ModelStore {
                 extensionHint(displayName));
     }
 
+    /** Stream a bounded ZIP member directly into the content-addressed cache; caller owns source. */
+    static Materialized materializeGenerated(File appFilesDir, InputStream source,
+                                              String displayName) throws IOException {
+        if (appFilesDir == null || source == null)
+            throw new IOException("Generated model inputs are required");
+        return materializeStream(cacheRoot(appFilesDir), source, extensionHint(displayName));
+    }
+
     private static File cacheRoot(File appFilesDir) throws IOException {
         if (PrinterTransport.isSymbolicLink(appFilesDir))
             throw new IOException("Model storage root must not be a symbolic link");

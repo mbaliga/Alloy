@@ -1,6 +1,5 @@
 package com.mbaliga.alloy;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -56,48 +55,103 @@ public final class ModelBundleExtractor {
     }
 
     public static ArrayList<Extracted> extract(java.io.File appFilesDir, InputStream input) throws IOException {
+        return extract(appFilesDir, input, MAX_ENTRIES, MAX_ENTRY_BYTES, MAX_TOTAL_BYTES);
+    }
+
+    /** Limits are injectable only within this package so edge cases can be tested without huge fixtures. */
+    static ArrayList<Extracted> extract(java.io.File appFilesDir, InputStream input,
+                                        int maxEntries, long maxEntryBytes, long maxTotalBytes) throws IOException {
         if (appFilesDir == null || input == null) throw new IllegalArgumentException("model bundle inputs are required");
+        if (maxEntries < 1 || maxEntryBytes < 1 || maxTotalBytes < 1)
+            throw new IllegalArgumentException("model bundle limits must be positive");
+
         ArrayList<Extracted> result = new ArrayList<>();
-        long totalBytes = 0L;
+        long[] totalBytes = {0L};
         int entries = 0;
         boolean projectArchive = false;
         try (ZipInputStream zip = new ZipInputStream(input)) {
             ZipEntry entry;
             byte[] buffer = new byte[32 * 1024];
             while ((entry = zip.getNextEntry()) != null) {
-                if (++entries > MAX_ENTRIES) throw new IOException("Model bundle has too many entries");
+                if (++entries > maxEntries) throw new IOException("Model bundle has too many entries");
                 String path = validateEntryPath(entry.getName());
-                if (path.equalsIgnoreCase("alloy-project.json") || path.endsWith("/alloy-project.json"))
+                String lowerPath = path.toLowerCase(Locale.US);
+                if (lowerPath.equals("alloy-project.json") || lowerPath.endsWith("/alloy-project.json"))
                     projectArchive = true;
-                if (entry.isDirectory() || !isSupportedMesh(path)) {
-                    zip.closeEntry();
-                    continue;
+
+                boolean modelEntry = !entry.isDirectory() && isSupportedMesh(path);
+                BoundedEntryInputStream bounded =
+                        new BoundedEntryInputStream(zip, maxEntryBytes, maxTotalBytes, totalBytes);
+                if (modelEntry) {
+                    String name = displayName(path);
+                    ModelStore.Materialized materialized =
+                            ModelStore.materializeGenerated(appFilesDir, bounded, name);
+                    result.add(new Extracted(name, materialized));
+                } else {
+                    while (bounded.read(buffer, 0, buffer.length) != -1) {
+                        if (Thread.currentThread().isInterrupted())
+                            throw new java.util.concurrent.CancellationException("Model bundle import cancelled");
+                    }
                 }
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                long entryBytes = 0L;
-                int read;
-                while ((read = zip.read(buffer)) != -1) {
-                    if (read == 0) continue;
-                    entryBytes += read;
-                    totalBytes += read;
-                    if (entryBytes > MAX_ENTRY_BYTES || totalBytes > MAX_TOTAL_BYTES)
-                        throw new IOException("Model bundle exceeds its size limit");
-                    if (Thread.currentThread().isInterrupted())
-                        throw new java.util.concurrent.CancellationException("Model bundle import cancelled");
-                    bytes.write(buffer, 0, read);
-                }
-                if (entryBytes == 0L) throw new IOException("Model bundle contains an empty model");
-                String name = displayName(path);
-                result.add(new Extracted(name, ModelStore.materializeGenerated(appFilesDir, bytes.toByteArray(), name)));
                 zip.closeEntry();
             }
+            if (projectArchive)
+                throw new IOException("This is an Alloy project archive; use Open project archive");
+        } catch (IOException | RuntimeException failure) {
+            deleteMaterialized(result);
+            throw failure;
         }
-        if (projectArchive) {
-            for (Extracted extracted : result) if (extracted.materialized.file.exists()) extracted.materialized.file.delete();
-            throw new IOException("This is an Alloy project archive; use Open project archive");
-        }
+
         if (result.isEmpty()) throw new IOException("ZIP contains no STL, OBJ, 3MF or STEP model");
         return result;
+    }
+
+    private static void deleteMaterialized(ArrayList<Extracted> extracted) {
+        for (Extracted item : extracted) {
+            if (item.materialized != null && item.materialized.file != null
+                    && item.materialized.file.exists())
+                item.materialized.file.delete();
+        }
+        extracted.clear();
+    }
+
+    /** Counts decompressed bytes from every ZIP entry without owning the ZIP stream. */
+    private static final class BoundedEntryInputStream extends InputStream {
+        private final ZipInputStream input;
+        private final long maxEntryBytes;
+        private final long maxTotalBytes;
+        private final long[] totalBytes;
+        private long entryBytes;
+
+        BoundedEntryInputStream(ZipInputStream input, long maxEntryBytes,
+                                long maxTotalBytes, long[] totalBytes) {
+            this.input = input;
+            this.maxEntryBytes = maxEntryBytes;
+            this.maxTotalBytes = maxTotalBytes;
+            this.totalBytes = totalBytes;
+        }
+
+        @Override public int read() throws IOException {
+            int value = input.read();
+            if (value >= 0) account(1);
+            return value;
+        }
+
+        @Override public int read(byte[] buffer, int offset, int length) throws IOException {
+            int count = input.read(buffer, offset, length);
+            if (count > 0) account(count);
+            return count;
+        }
+
+        private void account(int count) throws IOException {
+            if (count > maxEntryBytes - entryBytes || count > maxTotalBytes - totalBytes[0])
+                throw new IOException("Model bundle exceeds its decompressed size limit");
+            entryBytes += count;
+            totalBytes[0] += count;
+        }
+
+        /** ZipInputStream is owned by the extractor and must remain open for following entries. */
+        @Override public void close() { }
     }
 
     private static String validateEntryPath(String raw) throws IOException {
