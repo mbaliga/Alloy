@@ -2642,3 +2642,18 @@ tolerances. Therefore general G3 parity, support parity, physical A1 Mini
 pilot, A1/P1S qualification, Bambu Handy acceptance, production signing and
 visual sign-off all remain open. No direct-send claim is promoted by these CI
 runs.
+
+
+### 2026-10-07 Library and learning-artwork acceptance
+
+The Library sorting correction passed Android v1 acceptance on commit
+`a6c5781cae4175d6a4829800f01a9474a0b2f9a5` (run
+[`37617745445`](https://github.com/mbaliga/Alloy/actions/runs/37617745445)).
+The following commit adds a 512 px offline build-plate learning illustration
+and references it from the placement/model articles. Android v1 run
+[`37620435593`](https://github.com/mbaliga/Alloy/actions/runs/37620435593)
+completed successfully on `2c88a069e9e67b343d3b82bdf9506d46626a131f`, with
+artifact ZIP SHA-256
+`0fca66c78d9478b46b5d2a3457a21b988aabc1e1ed7524b0412c89b656b50cd6`.
+This confirms the learning catalog and all referenced artwork load in the
+Android acceptance suite; it is not a visual sign-off on a physical phone.
