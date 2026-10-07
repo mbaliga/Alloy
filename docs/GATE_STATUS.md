@@ -8,12 +8,13 @@ progress-driven filament sweep that uses the supplied Alloy hothead artwork.
 The head position follows durable `SliceJobStore` progress, retains its
 position while cancellation is acknowledged, announces percent and phase to
 accessibility services, and never animates to a fabricated completion. Its
-focused contract is `FilamentSweepLoaderTest` (2 tests). A follow-up geometry
+focused contract is `FilamentSweepLoaderTest` (3 tests). A follow-up geometry
 correction makes the nozzle position coincide with both rail endpoints at 0%
 and 100%, keeps the full hothead inside the
-horizontal screen padding, starts with an empty rail, and refreshes the
-waiting copy during prolonged zero-progress phases. The updated release and
-instrumentation APKs built, and the two focused tests passed on the local
+horizontal screen padding, starts with an empty rail, refreshes the waiting
+copy during prolonged zero-progress phases, and wraps long center messages to
+fit narrow phones. The updated release and instrumentation APKs built, and the
+three focused tests passed on the local
 API-35 ARM64 emulator. A final screenshot smoke check was inconclusive because
 Android System UI stopped responding on the local emulator.
 
