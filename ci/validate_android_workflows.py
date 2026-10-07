@@ -24,6 +24,20 @@ def main() -> None:
     native = ROOT / ".github/workflows/alloy-native-build.yml"
     release = ROOT / ".github/workflows/android-release-candidate.yml"
 
+    setup_java_workflows = (
+        ordinary,
+        native,
+        release,
+        ROOT / ".github/workflows/g1-orca-mobile-source-build.yml",
+        ROOT / ".github/workflows/path-b-g1-slicebeam-source-build.yml",
+    )
+    for workflow in setup_java_workflows:
+        workflow_text = workflow.read_text(encoding="utf-8")
+        if "uses: actions/setup-java@v6" not in workflow_text:
+            raise SystemExit(f"{workflow}: use supported actions/setup-java@v6")
+        if "actions/setup-java@v4" in workflow_text:
+            raise SystemExit(f"{workflow}: deprecated actions/setup-java@v4 is not allowed")
+
     ordinary_text = ordinary.read_text(encoding="utf-8")
     for token in (
         "gradle :app:assembleRelease -PalloyCiDebugSign=true --no-daemon --stacktrace",
