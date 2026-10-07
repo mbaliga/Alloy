@@ -46,7 +46,7 @@ jobs:
           test "$(git -C bambu-profile-source rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
