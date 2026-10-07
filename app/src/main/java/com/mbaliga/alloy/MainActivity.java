@@ -3950,10 +3950,13 @@ public final class MainActivity extends Activity {
                 @Override public void afterTextChanged(android.text.Editable s) {}
             });
             sort.setOnClickListener(v -> {
-                boolean reverse = !Boolean.TRUE.equals(sort.getTag());
-                sort.setTag(reverse);
-                sort.setText(reverse ? "☷  A–Z" : "☷  Recent");
-                java.util.Collections.reverse(libraryCatalog);
+                boolean ascending = !Boolean.TRUE.equals(sort.getTag());
+                sort.setTag(ascending);
+                sort.setText(ascending ? "☷  A–Z" : "☷  Z–A");
+                java.util.Collections.sort(libraryCatalog, (left, right) -> {
+                    int order = left.name.compareToIgnoreCase(right.name);
+                    return ascending ? order : -order;
+                });
                 for (int i = 0; i < chooser.getChildCount(); i++) {
                     Button item = (Button) chooser.getChildAt(i);
                     ModelCatalog.Entry entry = libraryCatalog.get(i);
