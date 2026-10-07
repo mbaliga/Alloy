@@ -264,10 +264,7 @@ jobs:
             set -eu
             adb install -r app/build/outputs/apk/release/app-release.apk
             adb install -r app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
-            adb shell am instrument -w \
-              -e class com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested \
-              -e export-g3 true \
-              com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+            adb shell am instrument -w -e class com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested -e export-g3 true com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
             mkdir -p path-b-g3-evidence
             adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-g3-evidence/. path-b-g3-evidence/
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
