@@ -1,18 +1,33 @@
 # Alloy on-device MVP verification
 
-Use this checklist with the native-enabled CI-debug build. The ordinary build
-verifies the MVP but keeps physical send blocked. The separately compiled
-`alloyPhysicalPilot` build can collect a narrow A1 Mini upload/start record
-only for its five bundled, unchanged no-support PLA fixtures. Neither build
-authorizes a Bambu Handy handoff claim or production release promotion.
+Use the exact build lane named in each section. The currently available Android
+v1 artifact is the ordinary CI-signed QA build; it is suitable for phone
+workflow and non-native slicer smoke checks, but it does not qualify the native
+slicer, printer transport or production release. A native-enabled CI-debug APK
+is a separate artifact and must be used for native-runtime checks when its
+source-build workflow completes. The separately compiled `alloyPhysicalPilot`
+build can collect a narrow A1 Mini upload/start record only for its five
+bundled, unchanged no-support PLA fixtures. None of these builds by itself
+authorizes general direct printing, Bambu Handy compatibility, or production
+release promotion.
 
 ## 1. Install the matching artifacts
 
-1. On an ARM64 Android phone with USB debugging enabled, install the matching
-   release APK and instrumentation APK.
-2. Confirm a cold launch succeeds without asking for notification, LAN, or
+1. For the current UI/software smoke pass, download
+   [`alloy-v1-release-ci-apk` from Android v1 run 37554000114](https://github.com/mbaliga/Alloy/actions/runs/37554000114).
+   Confirm the run targets commit `bddeeeac76eee895a9d3cc3a2f9c81cdce57a5a1`
+   and completed successfully before installing. Its artifact ZIP digest is
+   `sha256:98b6de3074b574a0393f04713d8b78ef6b1ec14aa20f6f4fba5915a3ef30e53b`
+   (expires **2027-01-05**). After extracting, install `app-release.apk` on an
+   ARM64 Android phone; compute and record the APK's own SHA-256 separately.
+   The CI artifact includes the app APK, not the instrumentation APK.
+2. Do not treat the ordinary build's slice results as native-engine or
+   printer-ready evidence. For native runtime and native G3 checks, wait for
+   the separately named native-enabled release/instrumentation artifacts from
+   a successful `alloy-native-build` run and install the matching pair.
+3. Confirm a cold launch succeeds without asking for notification, LAN, or
    pairing permission.
-3. Capture the APK SHA-256 values, Android version, phone model, and Alloy
+4. Capture the APK SHA-256 values, Android version, phone model, and Alloy
    build/version. Do not add printer access codes, serial numbers, LAN hosts,
    or certificate fingerprints to a public record.
 
