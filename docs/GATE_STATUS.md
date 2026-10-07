@@ -2592,12 +2592,14 @@ recovery, profile/catalog validation, and printer lifecycle safety checks.
 `ci/validate_android_workflows.py` and `git diff --check` also pass.
 
 This is software instrumentation evidence, not printer hardware or Bambu Handy
-acceptance. The hosted Android v1 run for commit `bddeeeac76eee895a9d3cc3a2f9c81cdce57a5a1`
-built its CI-signed release APK and was still executing its own Android
-pipeline acceptance tests at the time of this record. The exact Orca provenance
-and G-code parity gates, Bambu TreeSupport3D parity, A1 Mini physical pilot,
-A1/P1S physical qualification, Bambu Handy import, visual signoff and
-production-signing gates remain open.
+acceptance. Hosted Android v1 Actions run
+[`37554000114`](https://github.com/mbaliga/Alloy/actions/runs/37554000114)
+completed successfully for commit `bddeeeac76eee895a9d3cc3a2f9c81cdce57a5a1`:
+it built the CI-signed release APK, passed the Android pipeline acceptance
+tests and uploaded the artifact. The exact Orca provenance and G-code parity
+gates, Bambu TreeSupport3D parity, A1 Mini physical pilot, A1/P1S physical
+qualification, Bambu Handy import, visual signoff and production-signing gates
+remain open.
 
 The Android v1 static validation set was also rerun locally: workflow/profile,
 capability catalog, Android and model wiring, bundled model assets, multi-object
