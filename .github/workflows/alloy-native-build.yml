@@ -299,3 +299,40 @@ jobs:
           name: alloy-native-instrumentation-report
           path: app/build/reports/androidTests/connected/release
           if-no-files-found: warn
+      # Produce the narrowly scoped physical-pilot variant only after the
+      # ordinary native runtime/G3 gates have exercised their unmodified APKs.
+      # This artifact remains explicitly unverified and may submit only the
+      # five immutable A1 Mini / PLA Basic / no-support fixtures.
+      - name: Build isolated A1 Mini physical-pilot APK pair
+        run: |
+          set -euxo pipefail
+          gradle :app:assembleRelease :app:assembleReleaseAndroidTest \
+            -PalloyNativeEngine=true \
+            -PalloyPhysicalPilot=true \
+            -PalloyCiDebugSign=true \
+            --no-daemon --stacktrace
+          mkdir -p path-a1-mini-pilot
+          cp app/build/outputs/apk/release/app-release.apk path-a1-mini-pilot/app-release.apk
+          cp app/build/outputs/apk/androidTest/release/app-release-androidTest.apk path-a1-mini-pilot/app-release-androidTest.apk
+      - name: Run five-fixture pilot evidence on API-35 ARM translation
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: false
+          disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
+          script: |
+            set -eu
+            adb install -r path-a1-mini-pilot/app-release.apk
+            adb install -r path-a1-mini-pilot/app-release-androidTest.apk
+            adb shell am instrument -w -e class com.mbaliga.alloy.NoSupportPlaPilotTest#nativeNoSupportPilotFixturesRemainInspectableAndPackageable -e export-no-support-pilot true com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+            mkdir -p path-a1-mini-pilot/evidence
+            adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-no-support-pilot/. path-a1-mini-pilot/evidence/
+            python3 -c 'import json,pathlib,re; files=list(pathlib.Path("path-a1-mini-pilot/evidence").glob("run-*/software-pilot-manifest.json")); assert len(files)==1, "expected one software pilot manifest"; data=json.loads(files[0].read_text()); expected={"box-20mm.stl","mounting-block.stl","thin-wall-frame-fixture.stl","travel_obstacle.stl","box-and-lid.stl"}; fixtures=data.get("fixtures",[]); assert data.get("software_only") is True and data.get("physical_qualification")=="PENDING" and data.get("direct_send_qualification")=="PENDING"; assert {f.get("fixture") for f in fixtures}==expected; assert all(f.get("supports") is False and f.get("package_preflight")=="PASS" and re.fullmatch(r"[0-9a-f]{64}",f.get("package_sha256","")) for f in fixtures); print("validated five-fixture software-only A1 Mini pilot evidence")'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alloy-a1-mini-physical-pilot-ci
+          path: path-a1-mini-pilot
+          if-no-files-found: error

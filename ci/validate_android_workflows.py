@@ -75,6 +75,14 @@ def main() -> None:
         "name: alloy-native-g3-evidence",
         "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java",
         "app/src/androidTest/**",
+        "Build isolated A1 Mini physical-pilot APK pair",
+        "-PalloyPhysicalPilot=true",
+        "Run five-fixture pilot evidence on API-35 ARM translation",
+        "com.mbaliga.alloy.NoSupportPlaPilotTest#nativeNoSupportPilotFixturesRemainInspectableAndPackageable",
+        "export-no-support-pilot true",
+        "physical_qualification",
+        "package_preflight",
+        "name: alloy-a1-mini-physical-pilot-ci",
         "name: alloy-native-instrumentation-report",
         "if: always()",
         "Initialize pinned official libnoise source",
@@ -90,16 +98,16 @@ def main() -> None:
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
-    if native_text.count("profile: pixel_6") != 2 or "profile: Pixel 6" in native_text:
+    if native_text.count("profile: pixel_6") != 3 or "profile: Pixel 6" in native_text:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must use the stable avdmanager profile id pixel_6")
-    if native_text.count("disable-animations: false") != 2:
+    if native_text.count("disable-animations: false") != 3:
         raise SystemExit(f"{native}: both translated-ARM emulator jobs must avoid optional post-boot animation writes")
-    if native_text.count("target: google_apis") != 2 or native_text.count("arch: x86_64") != 2:
+    if native_text.count("target: google_apis") != 3 or native_text.count("arch: x86_64") != 3:
         raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
-    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 2:
+    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 3:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must select KVM when available and allow software fallback")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
-        raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before both emulator boots")
+        raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before emulator boots")
     if "group: alloy-native-${{ github.ref }}" not in native_text or "cancel-in-progress: false" not in native_text:
         raise SystemExit(f"{native}: native source builds must queue instead of cancelling live diagnostic runs")
     if native_text.count("app/src/androidTest/**") != 2:
@@ -132,7 +140,7 @@ def main() -> None:
     if release_bootstrap < 0 or release_scope < 0 or release_bootstrap > release_scope:
         raise SystemExit(f"{release}: bootstrap pinning must run before Stage 1 scope patch")
 
-    print("validated matching Android CI-signed release, native release, and unsigned release-candidate variants")
+    print("validated Android QA, native runtime, isolated A1 Mini pilot, and unsigned release-candidate variants")
 
 
 if __name__ == "__main__":
