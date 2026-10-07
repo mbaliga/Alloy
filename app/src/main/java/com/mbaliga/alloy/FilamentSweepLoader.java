@@ -65,10 +65,15 @@ public final class FilamentSweepLoader extends View {
         float height = getHeight();
         if (width <= 0f || height <= 0f) return;
 
-        // The rail stays close to the bottom edge with room for gesture areas;
-        // its lower edge is the physical alignment line for the hothead tip.
+        float hotheadSize = Math.min(132f * density, width * 0.34f);
+        // Keep the entire hothead inside the viewport while placing the rail
+        // endpoints directly below its nozzle at 0% and 100% progress.
+        float side = Math.max(32f * density, hotheadSize * 0.5f + 12f * density);
+        side = Math.min(side, width * 0.5f);
+
+        // The rail stays near the bottom with room for gesture areas; its
+        // lower edge is the physical alignment line for the hothead tip.
         float railHeight = 13f * density;
-        float side = Math.max(32f * density, width * 0.12f);
         float railTop = height - 86f * density;
         rail.set(side, railTop, width - side, railTop + railHeight);
         paint.setStyle(Paint.Style.FILL);
@@ -79,17 +84,17 @@ public final class FilamentSweepLoader extends View {
         paint.setColor(Color.rgb(132, 138, 134));
         canvas.drawRoundRect(rail, railHeight / 2f, railHeight / 2f, paint);
 
-        float hotheadSize = Math.min(132f * density, width * 0.34f);
-        float usable = Math.max(0f, rail.width() - hotheadSize);
-        float headLeft = rail.left + usable * (progress / 100f);
-        float nozzleX = headLeft + hotheadSize * 0.5f;
-        filament.set(rail.left, rail.top, Math.max(rail.left, Math.min(rail.right, nozzleX)), rail.bottom);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setShader(new LinearGradient(filament.left, filament.top, filament.right, filament.top,
-                new int[]{Color.rgb(154, 81, 20), Color.rgb(255, 150, 42), Color.rgb(255, 104, 20)},
-                null, Shader.TileMode.CLAMP));
-        canvas.drawRoundRect(filament, railHeight / 2f, railHeight / 2f, paint);
-        paint.setShader(null);
+        float nozzleX = sweepCenter(rail.left, rail.right, progress);
+        float headLeft = headLeftForCenter(nozzleX, hotheadSize);
+        if (progress > 0) {
+            filament.set(rail.left, rail.top, nozzleX, rail.bottom);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setShader(new LinearGradient(filament.left, filament.top, filament.right, filament.top,
+                    new int[]{Color.rgb(154, 81, 20), Color.rgb(255, 150, 42), Color.rgb(255, 104, 20)},
+                    null, Shader.TileMode.CLAMP));
+            canvas.drawRoundRect(filament, railHeight / 2f, railHeight / 2f, paint);
+            paint.setShader(null);
+        }
 
         if (hothead != null) {
             // The supplied PNG already includes the nozzle/extruded-filament
@@ -107,6 +112,19 @@ public final class FilamentSweepLoader extends View {
         paint.setTextSize(13f * density);
         paint.setColor(MUTED);
         canvas.drawText(phase + "  ·  " + progress + "%", width / 2f, height * 0.47f + 31f * density, paint);
+        if (progress == 0) {
+            long cycleMs = 6_000L;
+            postInvalidateDelayed(cycleMs - (SystemClock.uptimeMillis() % cycleMs));
+        }
+    }
+
+    static float sweepCenter(float railLeft, float railRight, int percent) {
+        int clamped = Math.max(0, Math.min(100, percent));
+        return railLeft + (railRight - railLeft) * (clamped / 100f);
+    }
+
+    static float headLeftForCenter(float centerX, float headSize) {
+        return centerX - headSize * 0.5f;
     }
 
     private String waitingCopy() {

@@ -21,6 +21,24 @@ import org.junit.runner.RunWith;
  */
 @RunWith(AndroidJUnit4.class)
 public final class FilamentSweepLoaderTest {
+    @Test public void nozzleTracksBothRailEndsWithScreenPadding() {
+        float railLeft = 84f;
+        float railRight = 636f;
+        float hotheadSize = 122f;
+        float viewportWidth = 720f;
+        float leftNozzle = FilamentSweepLoader.sweepCenter(railLeft, railRight, 0);
+        float rightNozzle = FilamentSweepLoader.sweepCenter(railLeft, railRight, 100);
+        Assert.assertEquals("empty progress begins at the left rail endpoint", railLeft, leftNozzle, 0.01f);
+        Assert.assertEquals("full progress ends at the right rail endpoint", railRight, rightNozzle, 0.01f);
+        float leftHead = FilamentSweepLoader.headLeftForCenter(leftNozzle, hotheadSize);
+        float rightHead = FilamentSweepLoader.headLeftForCenter(rightNozzle, hotheadSize);
+        Assert.assertEquals(railLeft - hotheadSize * 0.5f, leftHead, 0.01f);
+        Assert.assertEquals(railRight - hotheadSize * 0.5f, rightHead, 0.01f);
+        Assert.assertTrue("leftmost hothead must retain screen padding", leftHead >= 0f);
+        Assert.assertTrue("rightmost hothead must retain screen padding",
+                rightHead + hotheadSize <= viewportWidth);
+    }
+
     @Test public void progressIsClampedAnnouncedAndDrawn() {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
         int[] visiblePixels = new int[1];
