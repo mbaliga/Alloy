@@ -163,7 +163,7 @@ public final class ModelStore {
                 if (!target.isFile() || target.length() != bytes || !digest.equals(sha256(target)))
                     throw new IOException("Model cache contains a corrupted content-addressed file");
                 temporary.delete();
-                return new Materialized(target, bytes, digest);
+                return new Materialized(target, bytes, digest, extension, false);
             }
             try {
                 Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);
@@ -172,7 +172,7 @@ public final class ModelStore {
             }
             if (PrinterTransport.isSymbolicLink(target) || !target.isFile() || target.length() != bytes)
                 throw new IOException("Model cache write could not be verified");
-            return new Materialized(target, bytes, digest);
+            return new Materialized(target, bytes, digest, extension, true);
         } finally {
             if (temporary.exists()) temporary.delete();
         }
@@ -383,20 +383,27 @@ public final class ModelStore {
         public final String sha256;
         /** The content-detected parser suffix, independent of provider metadata. */
         public final String extension;
+        /** True only when this operation created a new content-addressed cache entry. */
+        final boolean cacheEntryCreated;
 
         private Materialized(File file, long sizeBytes, String sha256) {
-            this(file, sizeBytes, sha256, null);
+            this(file, sizeBytes, sha256, null, false);
         }
 
         private Materialized(File file, long sizeBytes, String sha256, String detectedExtension) {
+            this(file, sizeBytes, sha256, detectedExtension, false);
+        }
+
+        private Materialized(File file, long sizeBytes, String sha256,
+                             String detectedExtension, boolean cacheEntryCreated) {
             this.file = file.getAbsoluteFile();
             this.uri = Uri.fromFile(this.file);
             this.sizeBytes = sizeBytes;
             this.sha256 = sha256;
+            this.cacheEntryCreated = cacheEntryCreated;
             String name = detectedExtension == null ? this.file.getName().toLowerCase(Locale.US) : detectedExtension;
             this.extension = name.endsWith(".3mf") ? ".3mf"
                     : name.endsWith(".obj") ? ".obj"
                     : name.endsWith(".step") || name.endsWith(".stp") ? ".step" : ".stl";
         }
-    }
-}
+    }}

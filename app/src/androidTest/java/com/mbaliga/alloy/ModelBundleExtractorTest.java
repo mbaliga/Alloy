@@ -103,6 +103,32 @@ public final class ModelBundleExtractorTest {
         }
     }
 
+    @Test public void failedBundleImportPreservesPreexistingCachedModel() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File appFilesDir = new File(context.getCacheDir(), "bundle-existing-" + java.util.UUID.randomUUID());
+        Assert.assertTrue(appFilesDir.mkdirs());
+        String model = "solid cube\\nendsolid cube\\n";
+        ModelStore.Materialized existing = ModelStore.materializeGenerated(
+                appFilesDir, model.getBytes(StandardCharsets.UTF_8), "part.stl");
+        ByteArrayOutputStream archive = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(archive)) {
+            put(zip, "part.stl", model);
+            put(zip, "preview.png", "preview-bytes");
+        }
+        try {
+            ModelBundleExtractor.extract(appFilesDir, new ByteArrayInputStream(archive.toByteArray()),
+                    4, 32, 30);
+            Assert.fail("auxiliary data must count toward the total decompressed size");
+        } catch (java.io.IOException expected) {
+            Assert.assertTrue(expected.getMessage().contains("decompressed size limit"));
+            Assert.assertTrue("a pre-existing content-addressed model must remain available",
+                    existing.file.isFile());
+            Assert.assertEquals(1, countFiles(appFilesDir));
+        } finally {
+            deleteTree(appFilesDir);
+        }
+    }
+
     private static int countFiles(File root) {
         File[] children = root.listFiles();
         if (children == null) return 0;
