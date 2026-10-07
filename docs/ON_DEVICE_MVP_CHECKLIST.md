@@ -4,12 +4,12 @@ Use the exact build lane named in each section. The currently available Android
 v1 artifact is the ordinary CI-signed QA build; it is suitable for phone
 workflow and non-native slicer smoke checks, but it does not qualify the native
 slicer, printer transport or production release. A native-enabled CI-debug APK
-is a separate artifact and must be used for native-runtime checks when its
-source-build workflow completes. The separately compiled `alloyPhysicalPilot`
+is a separate artifact and must be used for native-runtime checks; its
+source-build workflow has now completed. The separately compiled `alloyPhysicalPilot`
 build can collect a narrow A1 Mini upload/start record only for its five
 bundled, unchanged no-support PLA fixtures. The current run now produces both
-native and isolated pilot APK pairs, plus software-only five-fixture evidence. None of these builds by itself
-authorizes general direct printing, Bambu Handy compatibility, or production
+native and isolated pilot APK pairs, plus software-only five-fixture evidence.
+None of these builds by itself authorizes general direct printing, Bambu Handy compatibility, or production
 release promotion.
 
 ## 1. Install the matching artifacts
@@ -49,12 +49,6 @@ release promotion.
 5. Capture the APK SHA-256 values, Android version, phone model, and Alloy
    build/version. Do not add printer access codes, serial numbers, LAN hosts,
    or certificate fingerprints to a public record.
-3. Confirm a cold launch succeeds without asking for notification, LAN, or
-   pairing permission.
-4. Capture the APK SHA-256 values, Android version, phone model, and Alloy
-   build/version. Do not add printer access codes, serial numbers, LAN hosts,
-   or certificate fingerprints to a public record.
-
 Expected: the first-run, five-step orientation route is skippable and has a
 safe path to Library. No screen says the printer is qualified for direct send.
 
