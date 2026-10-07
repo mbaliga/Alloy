@@ -108,8 +108,8 @@ public final class ModelBundleExtractor {
 
     private static void deleteMaterialized(ArrayList<Extracted> extracted) {
         for (Extracted item : extracted) {
-            if (item.materialized != null && item.materialized.file != null
-                    && item.materialized.file.exists())
+            if (item.materialized != null && item.materialized.cacheEntryCreated
+                    && item.materialized.file != null && item.materialized.file.exists())
                 item.materialized.file.delete();
         }
         extracted.clear();
