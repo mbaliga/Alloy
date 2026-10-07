@@ -100,6 +100,16 @@ Use a non-sensitive STL or 3MF with at least two independently movable parts.
    the active A1 Mini profile says 0.4 mm nozzle and PLA Basic.
 5. Slice. Review bottom, middle, and top layers; inspect thin walls, bridges,
    travel lines, model bounds and warnings.
+6. While slicing, confirm the dark progress surface appears with the supplied
+   hothead artwork near the bottom edge. Confirm its orange rail fills only as
+   the durable slice job reports progress, and the nozzle touches the rail's
+   lower alignment edge. Confirm the center copy is readable and changes while
+   waiting; the smaller line reports the current phase and percentage.
+7. Tap **Cancel slice** during a sufficiently long job. The head should hold
+   its last reported position until cancellation is acknowledged, then the
+   loader should close and the project should remain available for review.
+   Repeat with Android font scaling and TalkBack: progress percentage and phase
+   must be announced without relying on the animation alone.
 
 Expected: import, layout, bounded orientation, slicing and layer inspection
 work without a desktop. Supports remain a review-required feature and are not
