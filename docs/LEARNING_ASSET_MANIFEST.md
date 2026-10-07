@@ -1,5 +1,38 @@
 # Alloy learning-asset manifest
 
+## `learn/build-plate-boundary-v1.png`
+
+- **Asset ID:** `scene-build-plate-boundary-v1`
+- **Used by:** `start-place` and `concept-model`
+- **Type:** original generated explanatory illustration, offline PNG
+- **Source/master:** built-in Image Generation output, generated 2026-10-07;
+  original retained in the Codex generated-image store
+- **SHA-256:** `44f3692ba4079d82f36aa12161648fafbfa815d59e52ee4709df8df48e389e2b`
+- **Size:** 512 × 512 px, RGB PNG, 311,743 bytes
+- **Alt text:** “An orange sample model centered within the printable boundary
+  on a dark build plate.”
+- **Review status:** conceptual artwork; it does not prove physical fit,
+  clearance, adhesion, printer identity, or print success
+- **Rights/provenance:** Alloy-owned generated artwork; no third-party brand,
+  logo, UI, or reference image was used
+
+### Generation brief
+
+> Square offline learning illustration of a small generic desktop 3D-printer
+> build plate in three-quarter view, with a simple orange cube centered within
+> the printable outline. Premium precise friendly 3D product rendering, warm
+> ivory background, matte charcoal plate, restrained bright orange accent,
+> subtle contact shadow and no text, labels, logos, or watermark. Conceptual
+> only; staying inside the outline does not prove print safety.
+
+### Acceptance constraints
+
+- Native article copy retains the caveat that visual fit does not prove
+  physical clearance, adhesion, or print success.
+- The image must never be used as evidence that an object fits a selected
+  printer profile; the app's measured bounds and profile remain authoritative.
+
+
 This manifest records project-bound learning artwork. It is deliberately kept
 separate from printer qualification evidence: an illustration may clarify a
 boundary, but it never proves a printer state, material condition, or print.
