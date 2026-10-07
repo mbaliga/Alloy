@@ -7,32 +7,48 @@ slicer, printer transport or production release. A native-enabled CI-debug APK
 is a separate artifact and must be used for native-runtime checks when its
 source-build workflow completes. The separately compiled `alloyPhysicalPilot`
 build can collect a narrow A1 Mini upload/start record only for its five
-bundled, unchanged no-support PLA fixtures. None of these builds by itself
+bundled, unchanged no-support PLA fixtures. The current run now produces both
+native and isolated pilot APK pairs, plus software-only five-fixture evidence. None of these builds by itself
 authorizes general direct printing, Bambu Handy compatibility, or production
 release promotion.
 
 ## 1. Install the matching artifacts
 
 1. For the current UI/software smoke pass, download
-   [`alloy-v1-release-ci-apk` from Android v1 run 37620435593](https://github.com/mbaliga/Alloy/actions/runs/37620435593).
-   Confirm the run targets commit `2c88a069e9e67b343d3b82bdf9506d46626a131f`
+   [`alloy-v1-release-ci-apk` from Android v1 run 37639120626](https://github.com/mbaliga/Alloy/actions/runs/37639120626).
+   Confirm the run targets commit `2dd169bf747aa3bebd121fa9de51adfde220fb39`
    and completed successfully before installing. Its artifact ZIP digest is
-   `sha256:0fca66c78d9478b46b5d2a3457a21b988aabc1e1ed7524b0412c89b656b50cd6`
+   `sha256:21dcbee5f12e89609fccca1cbc73b9252189b3b0d2cf1d826646349a126aff81`
    (expires **2027-01-05**). After extracting, install `app-release.apk` on an
    ARM64 Android phone; compute and record the APK's own SHA-256 separately.
    This build contains the Library sort correction and the new offline
    build-plate learning illustration.
 2. For native-runtime checks, download the matching native release and
    instrumentation pair from
-   [`alloy-native-build` run 37610818807](https://github.com/mbaliga/Alloy/actions/runs/37610818807),
-   commit `30ae0f7360bb8abcdbe9aceee9cf9a7405d4477b`. Artifact ZIP digests:
-   native release `4ec646b366ee4b35411e1122c2a45bd9f77b1f1e04bbf3d17c126452e306a661`,
-   instrumentation APK `63f85c59f02587e87e556df282546fdd2e15fc35a0207e13935568eb845a1daa`,
-   instrumentation report `e3418252cd711a4ed8e49268fc169973423c15ecd6c07cbb87c7481c521d0820`,
-   G3 evidence `5549ca287f317305988966e29d95a2db6fc8540efd2f96ac0c6f3bca14b24a67`.
-   These are CI QA artifacts, not production-signed. The native run validates
-   the exported G3 evidence bundle, but does not close desktop parity warnings
-   or qualify a physical printer route.
+   [native-build run 37639120483](https://github.com/mbaliga/Alloy/actions/runs/37639120483),
+   commit `2dd169bf747aa3bebd121fa9de51adfde220fb39`. Artifact ZIP digests:
+   native release `d87f5c0ad52beadb4c46b4840373a29de9f65cece8db1b09fa966470ca5d740f`,
+   instrumentation APK `ec0a1397eda7b28431483999235f3469dcd4bcaf7265b19edb80b4511d19440e`,
+   instrumentation report `b8e4c324b17b3c050da810897d34d2b05fa5074cd47877a238a23d29a9240f67`,
+   G3 evidence `5c5f90bbea5f78675fddd02e4ede8748d3d05e995ecc6cca1ed86ca0c708ccca`.
+   The run passed native instrumentation (182 emulator tests; 2 skipped) and
+   structurally validated G3 evidence. These CI QA artifacts are not
+   production-signed; desktop parity warnings remain and no physical printer
+   route has been qualified.
+3. Before any physical pilot, download the isolated pilot APK pair and its
+   software-only evidence from
+   [`alloy-a1-mini-physical-pilot-ci` on run 37639120483](https://github.com/mbaliga/Alloy/actions/runs/37639120483).
+   Artifact ZIP digest:
+   `sha256:00a7d3da15f836c24028f59e22fe9fc146d9ab55825db62e40342694585f3e70`.
+   CI validated the five unchanged no-support PLA fixtures on an emulator.
+   This is not a printer test: physical qualification and direct-send
+   qualification remain pending. Install the pilot pair only for the narrow
+   procedure in section 6.
+4. Confirm a cold launch succeeds without asking for notification, LAN, or
+   pairing permission.
+5. Capture the APK SHA-256 values, Android version, phone model, and Alloy
+   build/version. Do not add printer access codes, serial numbers, LAN hosts,
+   or certificate fingerprints to a public record.
 3. Confirm a cold launch succeeds without asking for notification, LAN, or
    pairing permission.
 4. Capture the APK SHA-256 values, Android version, phone model, and Alloy
