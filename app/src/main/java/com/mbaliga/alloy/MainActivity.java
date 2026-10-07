@@ -3971,12 +3971,24 @@ public final class MainActivity extends Activity {
                     int order = left.name.compareToIgnoreCase(right.name);
                     return ascending ? order : -order;
                 });
-                for (int i = 0; i < chooser.getChildCount(); i++) {
-                    Button item = (Button) chooser.getChildAt(i);
-                    ModelCatalog.Entry entry = libraryCatalog.get(i);
-                    item.setText(galleryShortName(entry.name));
-                    item.setTag("asset:" + entry.assetPath);
-                    item.setContentDescription(entry.name);
+                // Reorder existing views instead of relabeling them. Each click
+                // listener captures its verified catalog entry; relabeling alone
+                // would make a sorted chip open a different model than it names.
+                ArrayList<View> sortedItems = new ArrayList<>();
+                for (ModelCatalog.Entry entry : libraryCatalog) {
+                    String expectedTag = "asset:" + entry.assetPath;
+                    for (View item : libraryItems) {
+                        if (expectedTag.equals(String.valueOf(item.getTag()))) {
+                            sortedItems.add(item);
+                            break;
+                        }
+                    }
+                }
+                chooser.removeAllViews();
+                for (View item : sortedItems) {
+                    LinearLayout.LayoutParams itemLp = new LinearLayout.LayoutParams(-2, dp(46));
+                    if (chooser.getChildCount() > 0) itemLp.leftMargin = dp(6);
+                    chooser.addView(item, itemLp);
                 }
             });
             page.removeView(filterScroll);
