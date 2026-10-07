@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.View;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -14,6 +15,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.List;
+
 /**
  * Regression contract for the durable slicing progress surface.  This checks
  * that service values are safely bounded, announced to assistive technology,
@@ -21,6 +24,20 @@ import org.junit.runner.RunWith;
  */
 @RunWith(AndroidJUnit4.class)
 public final class FilamentSweepLoaderTest {
+    @Test public void longCenterCopyWrapsWithinPhoneWidth() {
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setTypeface(android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.NORMAL));
+        textPaint.setTextSize(22f);
+        float availableWidth = 296f;
+        List<String> lines = FilamentSweepLoader.wrapCopy(
+                "Putting the finishing touches on the toolpath", textPaint, availableWidth);
+        Assert.assertTrue("long progress copy should wrap rather than clip", lines.size() > 1);
+        for (String line : lines) {
+            Assert.assertTrue("each centered line must fit the phone width",
+                    textPaint.measureText(line) <= availableWidth);
+        }
+    }
+
     @Test public void nozzleTracksBothRailEndsWithScreenPadding() {
         float railLeft = 84f;
         float railRight = 636f;

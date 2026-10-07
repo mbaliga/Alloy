@@ -13,6 +13,9 @@ import android.graphics.Shader;
 import android.os.SystemClock;
 import android.view.View;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A bounded slicing progress surface built around the supplied Alloy hothead
  * artwork. The head only advances when the durable slice job reports progress;
@@ -108,10 +111,21 @@ public final class FilamentSweepLoader extends View {
         paint.setTypeface(android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.NORMAL));
         paint.setTextSize(22f * density);
         paint.setColor(COPY);
-        canvas.drawText(waitingCopy(), width / 2f, height * 0.47f, paint);
+        float centerX = width / 2f;
+        float copyCenterY = height * 0.47f;
+        List<String> copyLines = wrapCopy(waitingCopy(), paint, Math.max(1f, width - 32f * density));
+        Paint.FontMetrics metrics = paint.getFontMetrics();
+        float lineHeight = (metrics.descent - metrics.ascent) * 1.08f;
+        float firstBaseline = copyCenterY - (copyLines.size() - 1) * lineHeight * 0.5f
+                - (metrics.ascent + metrics.descent) * 0.5f;
+        for (int i = 0; i < copyLines.size(); i++) {
+            canvas.drawText(copyLines.get(i), centerX, firstBaseline + i * lineHeight, paint);
+        }
         paint.setTextSize(13f * density);
         paint.setColor(MUTED);
-        canvas.drawText(phase + "  ·  " + progress + "%", width / 2f, height * 0.47f + 31f * density, paint);
+        String statusCopy = fitCopy(phase + "  ·  " + progress + "%", paint, width - 32f * density);
+        float statusBaseline = copyCenterY + copyLines.size() * lineHeight * 0.5f + 20f * density;
+        canvas.drawText(statusCopy, centerX, statusBaseline, paint);
         if (progress == 0) {
             long cycleMs = 6_000L;
             postInvalidateDelayed(cycleMs - (SystemClock.uptimeMillis() % cycleMs));
@@ -125,6 +139,33 @@ public final class FilamentSweepLoader extends View {
 
     static float headLeftForCenter(float centerX, float headSize) {
         return centerX - headSize * 0.5f;
+    }
+
+    static List<String> wrapCopy(String value, Paint textPaint, float maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (value == null || value.trim().isEmpty()) return lines;
+        String current = "";
+        for (String word : value.trim().split("\\s+")) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            if (textPaint.measureText(candidate) <= maxWidth) {
+                current = candidate;
+            } else {
+                if (!current.isEmpty()) lines.add(current);
+                current = fitCopy(word, textPaint, maxWidth);
+            }
+        }
+        if (!current.isEmpty()) lines.add(current);
+        return lines;
+    }
+
+    private static String fitCopy(String value, Paint textPaint, float maxWidth) {
+        if (value == null || maxWidth <= 0f) return "";
+        String fitted = value;
+        while (fitted.length() > 1 && textPaint.measureText(fitted) > maxWidth) {
+            fitted = fitted.substring(0, fitted.length() - 1);
+        }
+        if (!fitted.equals(value) && fitted.length() > 1) fitted = fitted.substring(0, fitted.length() - 1) + "…";
+        return fitted;
     }
 
     private String waitingCopy() {
