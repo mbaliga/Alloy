@@ -62,6 +62,67 @@ public final class ModelBundleExtractorTest {
         }
     }
 
+    @Test public void boundsInflatedAuxiliaryEntries() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File appFilesDir = new File(context.getCacheDir(), "bundle-limit-" + java.util.UUID.randomUUID());
+        Assert.assertTrue(appFilesDir.mkdirs());
+        ByteArrayOutputStream archive = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(archive)) {
+            put(zip, "preview/large.png", "123456789");
+        }
+        try {
+            ModelBundleExtractor.extract(appFilesDir, new ByteArrayInputStream(archive.toByteArray()),
+                    4, 8, 16);
+            Assert.fail("oversized ignored ZIP entries must be bounded");
+        } catch (java.io.IOException expected) {
+            Assert.assertTrue(expected.getMessage().contains("decompressed size limit"));
+        } finally {
+            deleteTree(appFilesDir);
+        }
+    }
+
+    @Test public void countsAuxiliaryBytesTowardTotalAndCleansPartialImport() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File appFilesDir = new File(context.getCacheDir(), "bundle-cleanup-" + java.util.UUID.randomUUID());
+        Assert.assertTrue(appFilesDir.mkdirs());
+        ByteArrayOutputStream archive = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(archive)) {
+            put(zip, "part.stl", "solid cube\\nendsolid cube\\n");
+            put(zip, "preview.png", "preview-bytes");
+        }
+        try {
+            ModelBundleExtractor.extract(appFilesDir, new ByteArrayInputStream(archive.toByteArray()),
+                    4, 32, 30);
+            Assert.fail("auxiliary data must count toward the total decompressed size");
+        } catch (java.io.IOException expected) {
+            Assert.assertTrue(expected.getMessage().contains("decompressed size limit"));
+            Assert.assertEquals("earlier materialized models must be removed on failure", 0,
+                    countFiles(appFilesDir));
+        } finally {
+            deleteTree(appFilesDir);
+        }
+    }
+
+    private static int countFiles(File root) {
+        File[] children = root.listFiles();
+        if (children == null) return 0;
+        int count = 0;
+        for (File child : children) {
+            if (child.isDirectory()) count += countFiles(child);
+            else count++;
+        }
+        return count;
+    }
+
+    private static void deleteTree(File root) {
+        File[] children = root.listFiles();
+        if (children != null) for (File child : children) {
+            if (child.isDirectory()) deleteTree(child);
+            else child.delete();
+        }
+        root.delete();
+    }
+
     @Test public void distinguishesAlloyProjectArchive() throws Exception {
         ByteArrayOutputStream archive = new ByteArrayOutputStream();
         try (ZipOutputStream zip = new ZipOutputStream(archive)) {
