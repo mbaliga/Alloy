@@ -3796,6 +3796,8 @@ public final class MainActivity extends Activity {
             android.content.SharedPreferences favourites = getSharedPreferences("alloy_model_favourites", MODE_PRIVATE);
             ArrayList<View> libraryItems = new ArrayList<>();
             ArrayList<ModelCatalog.Entry> libraryCatalog = new ArrayList<>();
+            final String[] activeFilter = {"All"};
+            final String[] searchQuery = {""};
             if (recentEntries.isEmpty()) {
                 TextView emptyRecent = label("Import a box, bow part, STEP or 3MF and it will stay here for offline reopen.", 11, MUTED);
                 emptyRecent.setGravity(Gravity.CENTER_VERTICAL);
@@ -3873,6 +3875,7 @@ public final class MainActivity extends Activity {
                 String key = "asset:" + selected[0].assetPath;
                 favourites.edit().putBoolean(key, !favourites.getBoolean(key, false)).apply();
                 refreshFavourite.run();
+                filterLibraryItems(libraryItems, searchQuery[0], activeFilter[0], favourites);
             });
             for (int index = 0; index < entries.size(); index++) {
                 ModelCatalog.Entry entry = entries.get(index);
@@ -3928,7 +3931,6 @@ public final class MainActivity extends Activity {
             filterRow.setGravity(Gravity.CENTER_VERTICAL);
             filterScroll.addView(filterRow, new HorizontalScrollView.LayoutParams(-2, dp(40)));
             page.addView(filterScroll, new LinearLayout.LayoutParams(-1, dp(42)));
-            final String[] activeFilter = {"All"};
             String[] filterLabels = {"All " + libraryItems.size(), "Favourites " + favCount, "Recent " + recentEntries.size()};
             for (String filterLabel : filterLabels) {
                 Button filter = dialogButton(filterLabel, null);
@@ -3945,6 +3947,7 @@ public final class MainActivity extends Activity {
             modelSearch.addTextChangedListener(new android.text.TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    searchQuery[0] = s.toString();
                     filterLibraryItems(libraryItems, s.toString(), activeFilter[0], favourites);
                 }
                 @Override public void afterTextChanged(android.text.Editable s) {}
