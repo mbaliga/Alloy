@@ -2683,3 +2683,19 @@ qualification, TreeSupport3D parity, production signing, release approval, and
 A1/P1S physical qualification remain open. See
 [`ON_DEVICE_MVP_CHECKLIST.md`](ON_DEVICE_MVP_CHECKLIST.md) and
 [`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) for the next checks.
+
+
+### 2026-10-07 Java action deprecation cleanup
+
+The deprecated `actions/setup-java@v4` references were upgraded to v6 across
+the five affected workflows, and `ci/validate_android_workflows.py` now
+rejects a regression to v4. The official
+[setup-java documentation](https://github.com/actions/setup-java) recommends
+v6 and marks v1–v4 deprecated. Android v1 run
+[37647245782](https://github.com/mbaliga/Alloy/actions/runs/37647245782)
+passed on commit `6e5d56a28b82383d44e14b760d68d6763a38c2e7`; the log confirms
+v6 executed and the old-action deprecation warning is absent. Its QA APK ZIP
+SHA-256 is `48eb0cc38ad8a37e36f3c0fa1c414c7ce42cda71091f33914b51eab7f4291648`.
+The matching native workflow is still in progress at the time of this note.
+This maintenance result does not alter any printer qualification or release
+gate.
