@@ -3798,6 +3798,8 @@ public final class MainActivity extends Activity {
             ArrayList<ModelCatalog.Entry> libraryCatalog = new ArrayList<>();
             final String[] activeFilter = {"All"};
             final String[] searchQuery = {""};
+            final ArrayList<Button> filterButtons = new ArrayList<>();
+            final Runnable[] refreshFilterCounts = {() -> {}};
             if (recentEntries.isEmpty()) {
                 TextView emptyRecent = label("Import a box, bow part, STEP or 3MF and it will stay here for offline reopen.", 11, MUTED);
                 emptyRecent.setGravity(Gravity.CENTER_VERTICAL);
@@ -3876,6 +3878,7 @@ public final class MainActivity extends Activity {
                 favourites.edit().putBoolean(key, !favourites.getBoolean(key, false)).apply();
                 refreshFavourite.run();
                 filterLibraryItems(libraryItems, searchQuery[0], activeFilter[0], favourites);
+                refreshFilterCounts[0].run();
             });
             for (int index = 0; index < entries.size(); index++) {
                 ModelCatalog.Entry entry = entries.get(index);
@@ -3907,21 +3910,16 @@ public final class MainActivity extends Activity {
                 });
             }
 
-            LinearLayout browseRow = new LinearLayout(this);
-            browseRow.setGravity(Gravity.CENTER_VERTICAL);
             EditText modelSearch = new EditText(this);
             modelSearch.setSingleLine(true);
             modelSearch.setTextSize(12);
-            modelSearch.setHint("⌕  Search");
+            modelSearch.setHint("⌕ Search");
             modelSearch.setPadding(dp(10), 0, dp(8), 0);
             modelSearch.setBackground(round(SURFACE, Color.rgb(222, 216, 206), 1, 18));
-            browseRow.addView(modelSearch, new LinearLayout.LayoutParams(0, dp(42), 1f));
             Button sort = dialogButton("☷  Sort", null);
             sort.setTextSize(11);
-            LinearLayout.LayoutParams sortLp = new LinearLayout.LayoutParams(-2, dp(42));
+            LinearLayout.LayoutParams sortLp = new LinearLayout.LayoutParams(-2, dp(34));
             sortLp.leftMargin = dp(6);
-            browseRow.addView(sort, sortLp);
-            page.addView(browseRow, new LinearLayout.LayoutParams(-1, dp(48)));
 
             int favCount = 0;
             for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) favCount++;
@@ -3929,6 +3927,7 @@ public final class MainActivity extends Activity {
             filterScroll.setHorizontalScrollBarEnabled(false);
             LinearLayout filterRow = new LinearLayout(this);
             filterRow.setGravity(Gravity.CENTER_VERTICAL);
+            filterRow.addView(modelSearch, new LinearLayout.LayoutParams(dp(98), dp(38)));
             filterScroll.addView(filterRow, new HorizontalScrollView.LayoutParams(-2, dp(40)));
             page.addView(filterScroll, new LinearLayout.LayoutParams(-1, dp(42)));
             String[] filterLabels = {"All " + libraryItems.size(), "Favourites " + favCount, "Recent " + recentEntries.size()};
@@ -3938,12 +3937,24 @@ public final class MainActivity extends Activity {
                 LinearLayout.LayoutParams filterLp = new LinearLayout.LayoutParams(-2, dp(34));
                 if (filterRow.getChildCount() > 0) filterLp.leftMargin = dp(6);
                 filterRow.addView(filter, filterLp);
+                filterButtons.add(filter);
                 filter.setOnClickListener(v -> {
                     activeFilter[0] = filterLabel.startsWith("Favourites") ? "Favourites" : filterLabel.startsWith("Recent") ? "Recent" : "All";
                     filterLibraryItems(libraryItems, modelSearch.getText().toString(), activeFilter[0], favourites);
                     for (int i = 0; i < filterRow.getChildCount(); i++) filterRow.getChildAt(i).setAlpha(filterRow.getChildAt(i) == filter ? 1f : .7f);
                 });
             }
+            filterRow.addView(sort, sortLp);
+            refreshFilterCounts[0] = () -> {
+                int count = 0;
+                for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) count++;
+                if (filterButtons.size() == 3) {
+                    filterButtons.get(0).setText("All " + libraryItems.size());
+                    filterButtons.get(1).setText("Favourites " + count);
+                    filterButtons.get(2).setText("Recent " + recentEntries.size());
+                }
+            };
+            refreshFilterCounts[0].run();
             modelSearch.addTextChangedListener(new android.text.TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -3968,10 +3979,8 @@ public final class MainActivity extends Activity {
                     item.setContentDescription(entry.name);
                 }
             });
-            page.removeView(browseRow);
             page.removeView(filterScroll);
-            page.addView(browseRow, 3);
-            page.addView(filterScroll, 4);
+            page.addView(filterScroll, 3);
 
             LinearLayout footer = new LinearLayout(this);
             footer.setGravity(Gravity.CENTER_VERTICAL);
