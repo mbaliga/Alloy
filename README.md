@@ -19,3 +19,5 @@ Engineering work that can proceed before that gate includes:
 ## Licensing
 
 Any engine-derived code incorporated from SliceBeam, OrcaSlicer-Mobile, OrcaSlicer, or PrusaSlicer will retain its required notices and comply with the applicable GNU AGPL-3.0 obligations.
+
+Multi-platform porting disposition (nothing to port today): see [`PORTING_NOTE.md`](PORTING_NOTE.md).
