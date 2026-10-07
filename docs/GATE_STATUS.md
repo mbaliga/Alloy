@@ -2598,3 +2598,11 @@ pipeline acceptance tests at the time of this record. The exact Orca provenance
 and G-code parity gates, Bambu TreeSupport3D parity, A1 Mini physical pilot,
 A1/P1S physical qualification, Bambu Handy import, visual signoff and
 production-signing gates remain open.
+
+The Android v1 static validation set was also rerun locally: workflow/profile,
+capability catalog, Android and model wiring, bundled model assets, multi-object
+3MF, native/JNI contract, Bambu transport and release-wiring validators all
+passed. The production readiness template correctly fails validation while it
+contains placeholder evidence, and the physical-pilot build guard passes.
+There is still no completed production-readiness or physical-acceptance record;
+these checks confirm that software success does not promote the release gates.
