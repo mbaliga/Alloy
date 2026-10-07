@@ -13,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Build;
@@ -141,6 +142,8 @@ public final class MainActivity extends Activity {
     private BroadcastReceiver batchSliceEventReceiver;
     private SliceJobStore sliceJobStore;
     private String activeSliceJobId;
+    private Dialog sliceProgressDialog;
+    private FilamentSweepLoader sliceProgressLoader;
     private BatchSliceJobStore batchSliceJobStore;
     private String activeBatchSliceJobId;
     private boolean batchRestoring;
@@ -574,9 +577,11 @@ public final class MainActivity extends Activity {
             slicing = true;
             status.setText("Slice  ·  " + (progress < 0 ? "working" : progress + "%")
                     + "  ·  " + (phase == null || phase.length() == 0 ? "processing" : phase));
+            showSliceProgressLoader(progress, phase);
         } else if (state == SliceJobStore.State.COMPLETED) {
             activeSliceJobId = null;
             slicing = false;
+            dismissSliceProgressLoader();
             if (!restoreForegroundSliceIfMatching()) {
                 status.setText(model == null ? "Import a model to begin" : "Prepare  ·  slice result needs review");
                 Toast.makeText(this, "Slice completed but its local result could not be revalidated", Toast.LENGTH_LONG).show();
@@ -584,14 +589,17 @@ public final class MainActivity extends Activity {
         } else if (state == SliceJobStore.State.CANCELLED) {
             activeSliceJobId = null;
             slicing = false;
+            dismissSliceProgressLoader();
             status.setText(model == null ? "Import a model to begin" : "Prepare  ·  slice cancelled");
         } else if (state == SliceJobStore.State.RECOVERY_REQUIRED) {
             activeSliceJobId = null;
             slicing = false;
+            dismissSliceProgressLoader();
             status.setText(model == null ? "Import a model to begin" : "Prepare  ·  previous slice needs review");
         } else if (state == SliceJobStore.State.FAILED) {
             activeSliceJobId = null;
             slicing = false;
+            dismissSliceProgressLoader();
             status.setText(model == null ? "Import a model to begin" : "Prepare  ·  slice failed");
             if (detail != null && detail.length() > 0)
                 Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
@@ -608,7 +616,9 @@ public final class MainActivity extends Activity {
             activeSliceJobId = job.jobId;
             slicing = true;
             status.setText("Slice  ·  " + (job.progress > 0 ? job.progress + "%  ·  " : "") + job.phase);
+            showSliceProgressLoader(job.progress, job.phase);
         } else if (job.state == SliceJobStore.State.COMPLETED && model != null) {
+            dismissSliceProgressLoader();
             if (restoreForegroundSliceIfMatching()) {
                 status.setText("Inspect  ·  " + slice.layers.size() + " layers");
                 details.setText(String.format(Locale.US, "%.0f mm filament  ·  %s  ·  %d warning(s)", slice.filamentMm,
@@ -616,6 +626,51 @@ public final class MainActivity extends Activity {
             }
         }
         refreshActions();
+    }
+
+    /**
+     * Slicing happens in a durable foreground service. This surface mirrors
+     * its actual progress and offers a visible cancellation route; it never
+     * manufactures completion just to make the animation look polished.
+     */
+    private void showSliceProgressLoader(int progress, String phase) {
+        if (isFinishing()) return;
+        if (sliceProgressDialog == null) {
+            sliceProgressDialog = new Dialog(this);
+            sliceProgressDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            sliceProgressDialog.setCancelable(false);
+            FrameLayout page = new FrameLayout(this);
+            page.setBackgroundColor(Color.rgb(5, 8, 8));
+            sliceProgressLoader = new FilamentSweepLoader(this);
+            page.addView(sliceProgressLoader, new FrameLayout.LayoutParams(-1, -1));
+            TextView cancel = label("Cancel slice", 14, Color.rgb(184, 188, 184));
+            cancel.setGravity(Gravity.CENTER);
+            cancel.setPadding(dp(18), dp(12), dp(18), dp(12));
+            cancel.setContentDescription("Cancel slicing");
+            cancel.setOnClickListener(v -> cancelSlice());
+            FrameLayout.LayoutParams cancelLp = new FrameLayout.LayoutParams(-2, -2,
+                    Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            cancelLp.topMargin = dp(24);
+            page.addView(cancel, cancelLp);
+            sliceProgressDialog.setContentView(page);
+            Window dialogWindow = sliceProgressDialog.getWindow();
+            if (dialogWindow != null) {
+                dialogWindow.setBackgroundDrawable(new ColorDrawable(Color.rgb(5, 8, 8)));
+                dialogWindow.setDimAmount(0f);
+            }
+        }
+        sliceProgressLoader.setProgress(progress, phase);
+        if (!sliceProgressDialog.isShowing()) {
+            sliceProgressDialog.show();
+            Window dialogWindow = sliceProgressDialog.getWindow();
+            if (dialogWindow != null) dialogWindow.setLayout(-1, -1);
+        }
+    }
+
+    private void dismissSliceProgressLoader() {
+        if (sliceProgressDialog != null && sliceProgressDialog.isShowing()) sliceProgressDialog.dismiss();
+        sliceProgressDialog = null;
+        sliceProgressLoader = null;
     }
 
     /** Reattach a completed service result only to the exact model and recipe that created it. */
@@ -4956,10 +5011,12 @@ public final class MainActivity extends Activity {
             slicing = true;
             refreshActions();
             status.setText("Slice  ·  preparing foreground job…");
+            showSliceProgressLoader(0, "Preparing the slice");
             SliceJobService.start(this, jobId);
         } catch (Exception error) {
             activeSliceJobId = null;
             slicing = false;
+            dismissSliceProgressLoader();
             sliceJobStore.fail(jobId, "Could not start slice: " + error.getMessage());
             status.setText("Prepare  ·  slice could not start");
             refreshActions();
@@ -4974,6 +5031,12 @@ public final class MainActivity extends Activity {
         try {
             SliceJobService.cancel(this, jobId);
             status.setText("Slice  ·  cancelling…");
+            // Preserve the head position while cancellation is acknowledged.
+            // Snapping it back to zero would falsely suggest the durable job
+            // restarted, even though SliceJobStore retains its last progress.
+            SliceJobStore.Job current = sliceJobStore == null ? null : sliceJobStore.load();
+            int visibleProgress = current == null ? 0 : current.progress;
+            showSliceProgressLoader(visibleProgress, "Cancelling slice");
             refreshActions();
         } catch (Exception error) {
             Toast.makeText(this, "Slice cancellation failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
@@ -6421,6 +6484,7 @@ public final class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        dismissSliceProgressLoader();
         if (printerEventReceiver != null) {
             try { unregisterReceiver(printerEventReceiver); } catch (Exception ignored) { }
             printerEventReceiver = null;
