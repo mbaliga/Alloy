@@ -2581,3 +2581,20 @@ profile remain. A negative production-configuration check emitted the intended
 redistribution-rights failure when private visuals were explicitly enabled.
 Debug builds are unchanged so the owner can continue reviewing the supplied
 scene locally.
+
+## 2026-10-07 release instrumentation verification
+
+The matching release and Android instrumentation APKs built from the current
+checkout were installed on an API-35 ARM64 emulator. The complete
+`AndroidJUnitRunner` suite completed successfully: **180 tests passed**. This
+includes model import and multi-object 3MF handling, slicing and slice-job
+recovery, profile/catalog validation, and printer lifecycle safety checks.
+`ci/validate_android_workflows.py` and `git diff --check` also pass.
+
+This is software instrumentation evidence, not printer hardware or Bambu Handy
+acceptance. The hosted Android v1 run for commit `bddeeeac76eee895a9d3cc3a2f9c81cdce57a5a1`
+built its CI-signed release APK and was still executing its own Android
+pipeline acceptance tests at the time of this record. The exact Orca provenance
+and G-code parity gates, Bambu TreeSupport3D parity, A1 Mini physical pilot,
+A1/P1S physical qualification, Bambu Handy import, visual signoff and
+production-signing gates remain open.
