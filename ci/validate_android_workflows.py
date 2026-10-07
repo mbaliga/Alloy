@@ -60,8 +60,10 @@ def main() -> None:
         "Export native G3 evidence through API-35 ARM translation",
         "target: google_apis",
         "arch: x86_64",
-        "disable-linux-hw-accel: false",
-        "Enable hosted KVM permissions for native instrumentation",
+        "disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}",
+        "Configure Android emulator acceleration",
+        'echo "disable-hw-accel=true" >> "$GITHUB_OUTPUT"',
+        'echo "disable-hw-accel=false" >> "$GITHUB_OUTPUT"',
         "99-kvm4all.rules",
         'MODE="0666"',
         "sudo udevadm control --reload-rules",
@@ -94,8 +96,8 @@ def main() -> None:
         raise SystemExit(f"{native}: both translated-ARM emulator jobs must avoid optional post-boot animation writes")
     if native_text.count("target: google_apis") != 2 or native_text.count("arch: x86_64") != 2:
         raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
-    if native_text.count("disable-linux-hw-accel: false") != 2:
-        raise SystemExit(f"{native}: translated-ARM emulator jobs must retain Linux hardware acceleration")
+    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 2:
+        raise SystemExit(f"{native}: translated-ARM emulator jobs must select KVM when available and allow software fallback")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
         raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before both emulator boots")
     if "group: alloy-native-${{ github.ref }}" not in native_text or "cancel-in-progress: false" not in native_text:
