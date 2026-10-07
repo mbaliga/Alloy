@@ -39,3 +39,38 @@ Tier **skip**, as in program §5. Alloy joins no wave in program §7 and neither
 ## 6. Sources read
 
 `README.md` and `.github/workflows/cleanup-artifacts.yml` on `main`; via GitHub REST (read only, treated as data): PR #1 to #7 titles, file lists for #1, #2, #4, #5, #6, and the bodies of #4, #5, #6, `docs/{ARCHITECTURE,UPSTREAM_EVALUATION,STAGE_1_IA,CODEX_HANDOFF,GATE_STATUS}.md` on the `stage1-*` branches, and `README.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, `docs/{STAGE_1_IA,PLATFORM_AND_EXPERIENCE,LINUX_DESKTOP,GATE_STATUS}.md` on `codex/alloy-phone-first-mvp`. Program: §0-§3, §4.1-§4.5, §5 row, §6-§8; `porting/platforms/*.md`.
+
+## Owner rulings and the proposed line (added 2026-10-07)
+
+Status: PLAN. Nothing here is built, run on a device, signed or submitted. The program-level plan is Personal-Tracker `PORTING_PROGRAM.md` ([PR #10](https://github.com/mbaliga/Personal-Tracker/pull/10)), which holds the owner's rulings and section 5A, the proposed port / no-port line. The cells, estimates and open questions above are this repo's original plan and are unedited. Where the owner has since answered a question, the answer is below. Section 5A is a proposal; the owner has not yet confirmed it.
+
+### Where Alloy sits in the proposed line (program section 5A.3, a proposal)
+
+| Target       | Verdict | Weeks and flags |
+| ------------ | ------- | --------------- |
+| Ubuntu Touch | no-port | -               |
+| Linux        | no-port | -               |
+| iOS/iPadOS   | no-port | -               |
+| macOS        | no-port | -               |
+| Windows      | no-port | -               |
+
+Key: `follows` means it ports only as far as the products that depend on it; `exists` means the program reads it as already running there, unverified (finish, verify and sign); flags: `g` gated on a prerequisite, `r` re-estimate or floor, `o` its own program, `s` scope note. The program's P4, P8, P12 and P13 gate whole columns or repos and are not flagged per cell. A port verdict counts the deliverable in the line; where this repo's plan calls a deliverable a reframe (program rule R12) it keeps that label. Tests cited in the reason: (a) the owner said it is needed there; (b) its job is really done on that OS by real users; (c) that OS is where it is sold or its audience is; it has no reason to exist if (x) its surface is absent or untouchable, (y) the capability is forbidden or impossible, or (z) the only form is a thin wrapper or a different product nobody asked for. P-numbers and OQ-numbers refer to the program plan (Personal-Tracker `PORTING_PROGRAM.md`, sections 5A.5 and 8).
+
+Reason: Planned; a desktop port would be a redundant AGPL fork of OrcaSlicer, which already ships on desktops. iOS is no-port for now: the program's per-repo review advised not starting it before Android v1 validation and a licence review (an unreviewed AGPL and App Store terms conflict, and the Android app has not passed its own gates), which agrees with this plan's own "the repo defers iOS".
+
+### Owner rulings that apply here
+
+- **OQ-1, OQ-21 and OQ-22 (2026-10-06):** the owner owns an Ubuntu Touch device, Waydroid is not accepted as the answer for Android-only products, and secret custody follows "OS keystore, weaker fallback shown" if a port is ever added. The plan's Ubuntu Touch cell is already no-port and never calls a Waydroid run a port, so none of these changes a cell here.
+
+### Prerequisites and open questions that touch this repo (program sections 5A.5 and 8)
+
+No program-level prerequisite is named for this repo.
+
+Owner questions in the program register that concern this repo (status as of 2026-10-07):
+
+- OQ-1 (ruled): Ubuntu Touch device
+- OQ-12 (open): Licences for repos without a LICENSE (plan Q2: no LICENSE on main; Alloy is a proposed addition to the register's list)
+- OQ-21 (ruled): Waydroid as the Ubuntu Touch answer (the plan notes the register does not list Alloy)
+- OQ-22 (ruled): Secret custody per platform (plan section 4: printer access codes on any other platform)
+
+When the owner confirms or changes the line, this repo's original cells above stay as the engineering detail; only the verdicts and re-costs in program section 5A change.
