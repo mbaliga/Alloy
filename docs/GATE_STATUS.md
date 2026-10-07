@@ -2,6 +2,28 @@
 
 Date: 2026-09-22
 
+2026-10-07 slicing progress surface and native evidence harness checkpoint:
+commit `02f9cd64b8b41ccdf3f06e921922e04bd65eae84` adds a full-screen,
+progress-driven filament sweep that uses the supplied Alloy hothead artwork.
+The head position follows durable `SliceJobStore` progress, retains its
+position while cancellation is acknowledged, announces percent and phase to
+accessibility services, and never animates to a fabricated completion. Its
+focused API-35 ARM64 instrumentation test passed (`FilamentSweepLoaderTest`,
+1 test). A final screenshot smoke check was inconclusive because Android
+System UI stopped responding on the local emulator.
+
+The first hosted run exposed a real shell-quoting error after the native
+emulator booted, before G3 instrumentation. Commit `fb3cc300` removes the
+nested quoted Bash command and uses the runner's POSIX shell with `set -eu`;
+the workflow contract validator passes. Hosted verification for
+`fb3cc3000eba55be386734c15a2fd41dda1b41bd` is in progress in Android Actions
+run [37553047222](https://github.com/mbaliga/Alloy/actions/runs/37553047222)
+and queued for native run
+[37553047277](https://github.com/mbaliga/Alloy/actions/runs/37553047277).
+Neither this UI test nor a successful workflow syntax check changes the G2
+official-port result, G3 semantic parity, G4 A1 Mini runtime, TreeSupport3D,
+physical-printer, Bambu Handy, or production-signing gates.
+
 2026-10-02 local material/profile regression checkpoint: commits
 `e627b8d044c77ec80fbaab448c54f983298df845` and
 `93975a27c893eeb18dff68e67be17ccfeb95e5b9` were assembled with the CI-debug
