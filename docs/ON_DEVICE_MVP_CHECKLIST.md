@@ -14,17 +14,24 @@ release promotion.
 ## 1. Install the matching artifacts
 
 1. For the current UI/software smoke pass, download
-   [`alloy-v1-release-ci-apk` from Android v1 run 37554000114](https://github.com/mbaliga/Alloy/actions/runs/37554000114).
-   Confirm the run targets commit `bddeeeac76eee895a9d3cc3a2f9c81cdce57a5a1`
+   [`alloy-v1-release-ci-apk` from Android v1 run 37613376092](https://github.com/mbaliga/Alloy/actions/runs/37613376092).
+   Confirm the run targets commit `4e6723c25e26a058fdc07ba01d335a74bea6ed65`
    and completed successfully before installing. Its artifact ZIP digest is
-   `sha256:98b6de3074b574a0393f04713d8b78ef6b1ec14aa20f6f4fba5915a3ef30e53b`
+   `sha256:8a200c561073e49907012ae3fbb647da8001bc081cf64cbe28b507b55acc344b`
    (expires **2027-01-05**). After extracting, install `app-release.apk` on an
    ARM64 Android phone; compute and record the APK's own SHA-256 separately.
    The CI artifact includes the app APK, not the instrumentation APK.
-2. Do not treat the ordinary build's slice results as native-engine or
-   printer-ready evidence. For native runtime and native G3 checks, wait for
-   the separately named native-enabled release/instrumentation artifacts from
-   a successful `alloy-native-build` run and install the matching pair.
+2. For native-runtime checks, download the matching native release and
+   instrumentation pair from
+   [`alloy-native-build` run 37610818807](https://github.com/mbaliga/Alloy/actions/runs/37610818807),
+   commit `30ae0f7360bb8abcdbe9aceee9cf9a7405d4477b`. Artifact ZIP digests:
+   native release `4ec646b366ee4b35411e1122c2a45bd9f77b1f1e04bbf3d17c126452e306a661`,
+   instrumentation APK `63f85c59f02587e87e556df282546fdd2e15fc35a0207e13935568eb845a1daa`,
+   instrumentation report `e3418252cd711a4ed8e49268fc169973423c15ecd6c07cbb87c7481c521d0820`,
+   G3 evidence `5549ca287f317305988966e29d95a2db6fc8540efd2f96ac0c6f3bca14b24a67`.
+   These are CI QA artifacts, not production-signed. The native run validates
+   the exported G3 evidence bundle, but does not close desktop parity warnings
+   or qualify a physical printer route.
 3. Confirm a cold launch succeeds without asking for notification, LAN, or
    pairing permission.
 4. Capture the APK SHA-256 values, Android version, phone model, and Alloy
