@@ -15,31 +15,31 @@ release promotion.
 ## 1. Install the matching artifacts
 
 1. For the current UI/software smoke pass, download
-   [`alloy-v1-release-ci-apk` from Android v1 run 37647245782](https://github.com/mbaliga/Alloy/actions/runs/37647245782).
-   Confirm the run targets commit `6e5d56a28b82383d44e14b760d68d6763a38c2e7`
+   [`alloy-v1-release-ci-apk` from Android v1 run 37650975522](https://github.com/mbaliga/Alloy/actions/runs/37650975522).
+   Confirm the run targets commit `49288f95300f9a6967103352e1f54cfd57403084`
    and completed successfully before installing. Its artifact ZIP digest is
-   `sha256:48eb0cc38ad8a37e36f3c0fa1c414c7ce42cda71091f33914b51eab7f4291648`
+   `sha256:d11d3b6065ef6b0b2f3f2063402a89ce9afb14df6f637fdf76f76535052b53f5`
    (expires **2027-01-05**). After extracting, install `app-release.apk` on an
    ARM64 Android phone; compute and record the APK's own SHA-256 separately.
-   This build contains the Library sort correction and the new offline
-   build-plate learning illustration.
+   This build contains the Library sort correction, offline build-plate learning
+   illustration, and bounded model-bundle import checks.
 2. For native-runtime checks, download the matching native release and
    instrumentation pair from
-   [native-build run 37639120483](https://github.com/mbaliga/Alloy/actions/runs/37639120483),
-   commit `6e5d56a28b82383d44e14b760d68d6763a38c2e7`. Artifact ZIP digests:
-   native release `d87f5c0ad52beadb4c46b4840373a29de9f65cece8db1b09fa966470ca5d740f`,
-   instrumentation APK `ec0a1397eda7b28431483999235f3469dcd4bcaf7265b19edb80b4511d19440e`,
-   instrumentation report `b8e4c324b17b3c050da810897d34d2b05fa5074cd47877a238a23d29a9240f67`,
-   G3 evidence `5c5f90bbea5f78675fddd02e4ede8748d3d05e995ecc6cca1ed86ca0c708ccca`.
+   [native-build run 37650975574](https://github.com/mbaliga/Alloy/actions/runs/37650975574),
+   commit `49288f95300f9a6967103352e1f54cfd57403084`. Artifact ZIP digests:
+   native release `99b8dd8480cec51db743c400654f7baf1cb04a4b35c12f7a4b77dea4d50f832e`,
+   instrumentation APK `117b16363ebb86664a6e853fe2a4f4f9f45e8dd30795e007a5491a2ceb32d7d9`,
+   instrumentation report `08a859fb5775fd654c15b337f5107d03bf79e34c1424b4934ee1c07c9bd59ce8`,
+   G3 evidence `9422907b6f27ff168f4470d545c9892c0cd79b4a8dd3caceac51ae285e245e1c`.
    The run passed native instrumentation (182 emulator tests; 2 skipped) and
    structurally validated G3 evidence. These CI QA artifacts are not
    production-signed; desktop parity warnings remain and no physical printer
    route has been qualified.
 3. Before any physical pilot, download the isolated pilot APK pair and its
    software-only evidence from
-   [`alloy-a1-mini-physical-pilot-ci` on run 37639120483](https://github.com/mbaliga/Alloy/actions/runs/37639120483).
+   [`alloy-a1-mini-physical-pilot-ci` on run 37650975574](https://github.com/mbaliga/Alloy/actions/runs/37650975574).
    Artifact ZIP digest:
-   `sha256:00a7d3da15f836c24028f59e22fe9fc146d9ab55825db62e40342694585f3e70`.
+   `sha256:d1426770017197fb690c20fcd9084eb36eedf584cdfb63b98bf16eef5ea61a12`.
    CI validated the five unchanged no-support PLA fixtures on an emulator.
    This is not a printer test: physical qualification and direct-send
    qualification remain pending. Install the pilot pair only for the narrow
