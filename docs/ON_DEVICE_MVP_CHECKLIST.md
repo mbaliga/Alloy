@@ -5,8 +5,10 @@ is run 37749868229 from app-source commit
 `5dc45a091d97b5c5a447889843a578f76891a7d3`; its engine build,
 API-35 ARM-translation instrumentation, G3 software evidence export, and
 five-fixture software pilot all passed. It produced the CI-signed native QA
-APK, instrumentation APK/report, G3 evidence, and isolated A1 Mini pilot APK
-pair. Native pilot artifact ZIP digest:
+APK, instrumentation APK/report, G3 evidence, and a historical A1 Mini pilot
+APK pair. That pilot pair predates the separate pilot application ID and is
+not install-eligible beside a regular Alloy installation. Historical software
+pilot artifact ZIP digest:
 `sha256:47c9795fafe8205ae6cf3198d2634eb7fa5492cd9feee015ec3d38f75b82129f`
 (expires **2027-01-06**). These are software/QA artifacts only: they do not
 prove a physical print, Bambu Handy acceptance, or production signing. The
@@ -199,13 +201,16 @@ Only after sections 1–5 pass, follow
 
 - Scope: A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
   external/direct feed, no AMS and no supports.
-- Download the successful isolated pilot artifact from
-  [native run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229),
-  extract it on the Android phone, and install only `app-release.apk`.
-  The matching instrumentation APK is optional for ADB diagnostics; it is not
-  required for the app's guarded physical-pilot flow. Keep the included
-  `evidence/run-*/software-pilot-manifest.json` as CI software evidence. It is
-  explicitly software-only and does not authorize upload or start.
+- **Do not install the historical pilot APK from run 37749868229.** The
+  replacement build in
+  [native run 37768795482](https://github.com/mbaliga/Alloy/actions/runs/37768795482)
+  is still being verified. Do not start section 6 until that run succeeds,
+  publishes `alloy-a1-mini-physical-pilot-ci`, and its app/test package-ID
+  assertions pass. Then install only the replacement `app-release.apk`;
+  its `.pilot` ID should coexist with regular Alloy. The matching
+  instrumentation APK is optional for ADB diagnostics. Keep the included
+  `evidence/run-*/software-pilot-manifest.json` as software evidence; it must
+  remain software-only and does not itself authorize upload or start.
 - In Alloy, open each of the five untouched bundled fixtures from Library,
   verify the pinned A1 Mini / PLA Basic / 0.4 mm recipe and supports off, then
   slice and inspect the toolpath and preflight. Pair the actual printer, verify
