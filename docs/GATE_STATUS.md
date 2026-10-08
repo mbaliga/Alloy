@@ -2,6 +2,20 @@
 
 Date: 2026-09-22
 
+2026-10-08 shared model-cache race checkpoint:
+commit `462ad6ca49c049444960e36f83845a15093a740c` serializes ZIP bundle
+materialization and rollback with model-cache writes and pruning. A regression
+confirms bundle extraction cannot run while another cache mutation owns the
+shared lock. Android v1 run
+[`37728381340`](https://github.com/mbaliga/Alloy/actions/runs/37728381340)
+passed **193 instrumentation tests (9 skipped, 0 failures)**. Native run
+[`37728381335`](https://github.com/mbaliga/Alloy/actions/runs/37728381335)
+passed **186 native instrumentation tests (2 skipped, 0 failures)** and the
+isolated five-fixture no-support PLA pilot export. Artifact ZIP digests are
+recorded in `ON_DEVICE_MVP_CHECKLIST.md`. These are software/emulator results;
+the pilot remains physically unqualified, and G2/G3 parity, TreeSupport3D,
+Bambu Handy, printer dispatch, and production signing remain open.
+
 2026-10-07 slicing progress surface and native evidence harness checkpoint:
 commit `02f9cd64b8b41ccdf3f06e921922e04bd65eae84` adds a full-screen,
 progress-driven filament sweep that uses the supplied Alloy hothead artwork.
