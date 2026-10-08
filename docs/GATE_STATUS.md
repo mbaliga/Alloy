@@ -2,6 +2,21 @@
 
 Date: 2026-09-22
 
+2026-10-08 reproducible dual-upstream provenance report:
+The audit now records the upstream name/head and reports both the best
+history-constrained match and a separate current-ref tree snapshot. This avoids
+mistaking a current tree resemblance for source ancestry. The regenerated
+Orca run [`37741025557`](https://github.com/mbaliga/Alloy/actions/runs/37741025557)
+still fails G2 at 66/72 sample intervals and 314/479 (65.55%) best-history
+matches; the current Orca ref is 42/479 (8.77%). The separate Bambu diagnostic
+[`37741025606`](https://github.com/mbaliga/Alloy/actions/runs/37741025606)
+completed as a diagnostic, with 14/72 intervals, 101/445 (22.70%) best-history
+matches, and 124/445 (27.87%) current-ref snapshot matches. Neither changes
+the G2 outcome. Artifact ZIP digests: Orca
+`21599b5abbc762c45f48cd3f8fcc4fad9676a447e36e6a00fd0f067787f82a31`;
+Bambu Studio
+`2c13bbf5c5ba6a7a29f056604f0cfd4a6ad5cf009abe024afc96dea27ba38777`.
+
 2026-10-08 Bambu Studio alternative-lineage diagnostic:
 A separate diagnostic workflow compares the pinned mobile engine against
 Bambu Studio's official `master` history without replacing or relaxing G2.
