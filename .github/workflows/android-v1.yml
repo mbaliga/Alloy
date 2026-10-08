@@ -72,8 +72,21 @@ jobs:
         run: python3 ci/validate_native_jni_contract.py
       - name: Validate printer transport wiring
         run: python3 ci/validate_transport_wiring.py
-      - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK and preinstall Emulator with retries
+        run: |
+          set -euo pipefail
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          for attempt in 1 2 3; do
+            if sdkmanager --install "emulator" --channel=0; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Android Emulator install failed after three attempts" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+          test -x "${ANDROID_SDK_ROOT}/emulator/emulator"
       - uses: gradle/gradle-build-action@v3
         with:
           gradle-version: 8.9
