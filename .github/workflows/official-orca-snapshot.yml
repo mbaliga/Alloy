@@ -9,6 +9,9 @@ on:
       - 'third_party/orca-deps-libnoise'
       - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
       - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
+      - 'app/cmake/official-orca/**'
+      - 'ci/test_official_orca_libnoise_adapter.py'
+      - 'ci/fixtures/official-orca-libnoise-adapter/**'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/audit_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
@@ -20,6 +23,9 @@ on:
       - 'third_party/orca-deps-libnoise'
       - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
       - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
+      - 'app/cmake/official-orca/**'
+      - 'ci/test_official_orca_libnoise_adapter.py'
+      - 'ci/fixtures/official-orca-libnoise-adapter/**'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/audit_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
@@ -43,6 +49,8 @@ jobs:
           --source-root third_party/orca-official
           --libnoise-source-root third_party/orca-deps-libnoise
           --manifest-output official-orca-source-manifest.json
+      - name: Test source-target adapter for official libnoise lookup
+        run: python3 -m unittest -v ci/test_official_orca_libnoise_adapter.py
       - name: Audit official-to-legacy Android port surface
         run: >-
           python3 ci/audit_official_orca_port_surface.py
