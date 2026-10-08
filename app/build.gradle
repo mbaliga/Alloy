@@ -108,6 +108,13 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            // Keep the explicitly gated, CI-debug physical-pilot app beside
+            // the ordinary Alloy install. Its signing key can differ across
+            // runner images, and a separate ID avoids prompting users to
+            // uninstall an app that may contain local projects or inventory.
+            if (physicalPilot) {
+                applicationIdSuffix '.pilot'
+            }
             // Ordinary CI needs an installable release variant for
             // connectedReleaseAndroidTest, but the release-candidate workflow
             // deliberately omits this property and remains unsigned until the
