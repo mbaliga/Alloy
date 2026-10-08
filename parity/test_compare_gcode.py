@@ -116,6 +116,26 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertEqual(acceleration["status"], "warn")
             self.assertIn("desktop=P500, Android=P700", acceleration["detail"])
 
+    def test_feature_transition_warning_identifies_first_divergence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_A), None)
+            android_text = GCODE_B.replace(
+                "; FEATURE: External perimeter\nG1 X20",
+                "; FEATURE: Top surface\nG1 X20",
+            )
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+
+            result = compare(desktop, android, tolerance=0.02)
+            transition = next(
+                c for c in result["checks"]
+                if c["name"] == "feature_transition_sequence"
+            )
+            self.assertEqual(transition["status"], "warn")
+            self.assertIn("index=2", transition["detail"])
+            self.assertIn("desktop=outer_wall", transition["detail"])
+            self.assertIn("Android=top_surface", transition["detail"])
+
     def test_internal_bridge_is_reported_as_bridge_alias(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
