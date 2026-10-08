@@ -31,7 +31,7 @@ release promotion.
    instrumentation APK `117b16363ebb86664a6e853fe2a4f4f9f45e8dd30795e007a5491a2ceb32d7d9`,
    instrumentation report `08a859fb5775fd654c15b337f5107d03bf79e34c1424b4934ee1c07c9bd59ce8`,
    G3 evidence `9422907b6f27ff168f4470d545c9892c0cd79b4a8dd3caceac51ae285e245e1c`.
-   The run passed native instrumentation (182 emulator tests; 2 skipped) and
+   The run passed native instrumentation (185 emulator tests; 2 skipped) and
    structurally validated G3 evidence. These CI QA artifacts are not
    production-signed; desktop parity warnings remain and no physical printer
    route has been qualified.
