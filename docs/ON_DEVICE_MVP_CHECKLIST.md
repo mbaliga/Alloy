@@ -35,9 +35,9 @@ release promotion.
    structurally validated G3 evidence. These CI QA artifacts are not
    production-signed; fresh G2 provenance is still **INSUFFICIENT / FAIL**
    (66/72 exact-history samples; 314/479 exact common files, 65.55%; latest
-   [run 37740670338](https://github.com/mbaliga/Alloy/actions/runs/37740670338)).
+   [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
    A separate Bambu Studio diagnostic also failed to establish a baseline
-   (101/445 historical best; [run 37740670272](https://github.com/mbaliga/Alloy/actions/runs/37740670272)).
+   (101/445 historical best; [latest run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
    Desktop semantic-parity warnings remain, and no physical printer route has
    been qualified.
 3. Before any physical pilot, download the isolated pilot APK pair and its
