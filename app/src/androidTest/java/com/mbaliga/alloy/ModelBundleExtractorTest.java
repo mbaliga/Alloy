@@ -12,6 +12,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -147,6 +150,52 @@ public final class ModelBundleExtractorTest {
             else child.delete();
         }
         root.delete();
+    }
+
+
+    @Test public void bundleExtractionWaitsForSharedModelCacheMutationLock() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File appFilesDir = new File(context.getCacheDir(), "bundle-lock-" + java.util.UUID.randomUUID());
+        Assert.assertTrue(appFilesDir.mkdirs());
+        ByteArrayOutputStream archive = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(archive)) {
+            put(zip, "part.stl", "solid cube\nendsolid cube\n");
+        }
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch finished = new CountDownLatch(1);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        AtomicReference<ArrayList<ModelBundleExtractor.Extracted>> result = new AtomicReference<>();
+        Thread worker = new Thread(() -> {
+            started.countDown();
+            try {
+                result.set(ModelBundleExtractor.extract(appFilesDir,
+                        new ByteArrayInputStream(archive.toByteArray())));
+            } catch (Throwable error) {
+                failure.set(error);
+            } finally {
+                finished.countDown();
+            }
+        }, "bundle-cache-lock-test");
+
+        try {
+            synchronized (ModelStore.class) {
+                worker.start();
+                Assert.assertTrue("bundle import worker did not start",
+                        started.await(5, TimeUnit.SECONDS));
+                Assert.assertFalse("bundle extraction must hold the same lock as cache mutation",
+                        finished.await(100, TimeUnit.MILLISECONDS));
+            }
+            Assert.assertTrue("bundle extraction did not finish after cache lock was released",
+                    finished.await(5, TimeUnit.SECONDS));
+            if (failure.get() != null) throw new AssertionError("bundle extraction failed", failure.get());
+            Assert.assertNotNull(result.get());
+            Assert.assertEquals(1, result.get().size());
+            Assert.assertTrue(result.get().get(0).materialized.file.isFile());
+            Assert.assertTrue(result.get().get(0).materialized.file.delete());
+        } finally {
+            worker.join(5000);
+            deleteTree(appFilesDir);
+        }
     }
 
     @Test public void distinguishesAlloyProjectArchive() throws Exception {

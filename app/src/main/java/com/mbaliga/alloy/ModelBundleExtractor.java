@@ -61,6 +61,9 @@ public final class ModelBundleExtractor {
     /** Limits are injectable only within this package so edge cases can be tested without huge fixtures. */
     static ArrayList<Extracted> extract(java.io.File appFilesDir, InputStream input,
                                         int maxEntries, long maxEntryBytes, long maxTotalBytes) throws IOException {
+        // Serialize bundle rollback with cache writers so failed imports cannot
+        // remove a content-addressed model another operation has just reused.
+        synchronized (ModelStore.class) {
         if (appFilesDir == null || input == null) throw new IllegalArgumentException("model bundle inputs are required");
         if (maxEntries < 1 || maxEntryBytes < 1 || maxTotalBytes < 1)
             throw new IllegalArgumentException("model bundle limits must be positive");
@@ -104,6 +107,8 @@ public final class ModelBundleExtractor {
 
         if (result.isEmpty()) throw new IOException("ZIP contains no STL, OBJ, 3MF or STEP model");
         return result;
+    
+        }
     }
 
     private static void deleteMaterialized(ArrayList<Extracted> extracted) {

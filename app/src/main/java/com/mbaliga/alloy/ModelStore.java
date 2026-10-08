@@ -126,7 +126,7 @@ public final class ModelStore {
         return root;
     }
 
-    private static Materialized materializeStream(File root, InputStream input,
+    private static synchronized Materialized materializeStream(File root, InputStream input,
                                                   String extensionHint) throws IOException {
         if (root == null || input == null) throw new IOException("Model source could not be opened");
         File temporary = new File(root, "." + UUID.randomUUID() + ".part");
@@ -190,7 +190,7 @@ public final class ModelStore {
     }
 
     /** Keep validated recent-shelf entries alive as well as project/history sources. */
-    public static void prune(File appFilesDir, ArrayList<PlateStore.Plate> protectedPlates,
+    public static synchronized void prune(File appFilesDir, ArrayList<PlateStore.Plate> protectedPlates,
                              ArrayList<PlateStore.Plate> historicalPlates,
                              ArrayList<Uri> recentModelUris) {
         if (appFilesDir == null || PrinterTransport.isSymbolicLink(appFilesDir)) return;
