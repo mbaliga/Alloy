@@ -2685,17 +2685,42 @@ A1/P1S physical qualification remain open. See
 [`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) for the next checks.
 
 
-### 2026-10-07 Java action deprecation cleanup
+### 2026-10-07 Java action deprecation cleanup and ZIP intake hardening
 
 The deprecated `actions/setup-java@v4` references were upgraded to v6 across
-the five affected workflows, and `ci/validate_android_workflows.py` now
-rejects a regression to v4. The official
+five workflows; the validator rejects a regression to v4. The official
 [setup-java documentation](https://github.com/actions/setup-java) recommends
 v6 and marks v1–v4 deprecated. Android v1 run
 [37647245782](https://github.com/mbaliga/Alloy/actions/runs/37647245782)
-passed on commit `6e5d56a28b82383d44e14b760d68d6763a38c2e7`; the log confirms
-v6 executed and the old-action deprecation warning is absent. Its QA APK ZIP
-SHA-256 is `48eb0cc38ad8a37e36f3c0fa1c414c7ce42cda71091f33914b51eab7f4291648`.
-The matching native workflow is still in progress at the time of this note.
-This maintenance result does not alter any printer qualification or release
-gate.
+passed on commit `6e5d56a28b82383d44e14b760d68d6763a38c2e7`; logs confirm v6
+executed and the former deprecation warning is absent. Its QA APK ZIP SHA-256
+is `48eb0cc38ad8a37e36f3c0fa1c414c7ce42cda71091f33914b51eab7f4291648`.
+
+A further import-hardening change on commit
+`49288f95300f9a6967103352e1f54cfd57403084` bounds decompressed data across
+all ZIP entries (including ignored previews/docs), streams model members to the
+cache rather than buffering them wholesale, and removes newly-created partial
+cache files if a later entry rejects the archive while preserving existing
+content-addressed models. Android v1 run
+[37650975522](https://github.com/mbaliga/Alloy/actions/runs/37650975522)
+passed with 192 tests finished, 9 skipped and no failures. Native run
+[37650975574](https://github.com/mbaliga/Alloy/actions/runs/37650975574)
+passed with 185 instrumentation tests finished, 2 skipped and no failures;
+the opt-in pilot test passed and the workflow validated the five-fixture
+software-only manifest. Artifacts:
+- Android QA APK ZIP SHA-256:
+  `d11d3b6065ef6b0b2f3f2063402a89ce9afb14df6f637fdf76f76535052b53f5`
+- Native APK ZIP SHA-256:
+  `99b8dd8480cec51db743c400654f7baf1cb04a4b35c12f7a4b77dea4d50f832e`
+- Native test APK ZIP SHA-256:
+  `117b16363ebb86664a6e853fe2a4f4f9f45e8dd30795e007a5491a2ceb32d7d9`
+- G3 evidence ZIP SHA-256:
+  `9422907b6f27ff168f4470d545c9892c0cd79b4a8dd3caceac51ae285e245e1c`
+- Isolated A1 Mini pilot APK pair and software evidence ZIP SHA-256:
+  `d1426770017197fb690c20fcd9084eb36eedf584cdfb63b98bf16eef5ea61a12`
+
+These results establish software/packaging evidence only. They do not establish
+physical print quality, direct-send transport reliability, Bambu Handy
+acceptance, support parity, desktop G3 parity, production signing, or A1/P1S
+physical qualification. See the consolidated on-device checklist and narrow
+pilot runbook for outstanding checks.
