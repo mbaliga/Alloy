@@ -48,8 +48,12 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          # Exit 2 means the audit ran correctly but could not establish a
+          # high-confidence baseline; preserve that result as an artifact.
+          set +e
           python3 ci/identify_orca_engine.py mobile bambu bambu-evidence "Bambu Studio" master 2>&1 | tee bambu-lineage.log
           status=${PIPESTATUS[0]}
+          set -e
           cp bambu-lineage.log bambu-evidence/run.log || true
           if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then exit "$status"; fi
           if [ "$status" -eq 2 ]; then
