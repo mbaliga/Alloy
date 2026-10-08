@@ -63,6 +63,15 @@ official engine and must never be described as one.
    - Reuse only pinned, source-built Android dependencies (Boost, oneTBB,
      OCCT, GMP and MPFR) and record every new dependency and license.
    - Produce an ARM64 shared library in clean hosted CI before exposing JNI.
+   - Current checkpoint: `app/cmake/official-orca/Findlibnoise.cmake` adapts
+     Orca's `find_package(libnoise)` to the already-created pinned source
+     target, and configure-level tests verify both target-present and
+     target-missing behavior. Official-source run
+     [`37818441635`](https://github.com/mbaliga/Alloy/actions/runs/37818441635)
+     passed those tests, the pinned source manifest, the direct port-surface
+     audit, and a host build of libnoise. This adapter is not yet wired to a
+     separate `libslic3r` target; there is still no official-Orca Android
+     binary or runtime evidence.
 
 3. **Narrow JNI adapter**
    - Preserve Alloy's bounded model staging, typed recipe serializer,
