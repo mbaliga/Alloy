@@ -89,6 +89,7 @@ brand/spool/nozzle/plate/ambient condition will print successfully.
 | --- | --- | --- | --- |
 | **Qualified** | `PLA` variants first, after exact recipe evidence exists | allowed only for qualified printer/nozzle/plate/profile scope | “Qualified in Alloy: A1 mini / 0.4 mm / <plate> / <profile revision>.” |
 | **Compatible but not Alloy-qualified** | `PETG`, `TPU`, `PVA` | inspection/export only until each has print evidence | “Supported by Bambu as an ideal A1 mini material; not yet validated by Alloy for direct send.” |
+| **Support/interface filament** | Support for PLA/PETG; PVA is also listed above as an ideal A1 mini material | inspection/export only until exact product, profile, feed route, and purge behavior are verified | The A1 mini FAQ mentions support filament generally; do not infer that every support SKU or AMS lite route is compatible. |
 | **Not recommended** | `ABS`, `ASA`, `PC`, `PA`, `PET`, `PLA-CF`, `PETG-CF`, and all other CF/GF classes | blocked from direct send | “Not recommended for the A1 mini. Alloy will not prepare a direct job.” |
 | **Unknown/custom** | material name and manufacturer entered by user | blocked from direct send | “No validated Alloy recipe. Export only; verify with the filament manufacturer and your printer documentation.” |
 
