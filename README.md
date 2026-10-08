@@ -16,6 +16,8 @@ Engineering work that can proceed before that gate includes:
 - LAN Developer Mode transport isolation and test tooling
 - CI/build scaffolding
 
-## Licensing
+## Licence
+
+Source-available, free for noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE). If you make money with it, you need a commercial licence: see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md).
 
 Any engine-derived code incorporated from SliceBeam, OrcaSlicer-Mobile, OrcaSlicer, or PrusaSlicer will retain its required notices and comply with the applicable GNU AGPL-3.0 obligations.
