@@ -1,18 +1,19 @@
 # Alloy on-device MVP verification
 
-Use the exact build lane named in each section. The latest Android v1
-artifact is the ordinary CI-signed QA build from run 37744453665, app-source
-commit 8bc416109d2b73c1a7ea737bffe88d841ae9853d. It is suitable for phone
-workflow and non-native slicer smoke checks, but it does not qualify the native
-slicer, printer transport or production release. Native verification for the
-current capability-parser change is running in run 37745898443; a repeat of
-that build is queued in run 37749104995 after documentation changes. The
-previous native run built from pre-parser-fix commit
-849df7eac15ad07d4ef31bfdde39c6b6d0b08b93 but failed instrumentation because
-the runtime catalog contract rejected the new A1 mini support-filament entries.
-No current-source isolated `alloyPhysicalPilot` artifact is available yet.
-None of these builds by itself authorizes general direct printing, Bambu Handy
-compatibility, or production release promotion.
+Use the exact build lane named in each section. The latest native verification
+is run 37745898443 from app-source commit
+`066ab57ebf77c7287f734dbbf7f82c4e14011d24`; its engine build,
+API-35 ARM-translation instrumentation, G3 software evidence export, and
+five-fixture software pilot all passed. It produced the CI-signed QA APK,
+native instrumentation report/APK, G3 evidence, and isolated A1 Mini pilot APK
+pair. These are software/QA artifacts only: they do not prove a physical print,
+Bambu Handy acceptance, or production signing. The current Android v1 run
+37749868263 includes the narrow Bambu Handy package-visibility fix; its first
+attempt hit runner network errors downloading test dependencies, and its retry
+(attempt 2) is still running Android pipeline acceptance tests. Do not treat
+that run as passed until GitHub reports success and publishes its artifact.
+Fresh G2 provenance remains **INSUFFICIENT / FAIL**. None of these builds
+authorizes general direct printing or production release promotion.
 
 ## 1. Install the matching artifacts
 
@@ -24,25 +25,30 @@ compatibility, or production release promotion.
    (expires **2027-01-06**). After extracting, install `app-release.apk` on
    an ARM64 Android phone; compute and record the APK's own SHA-256 separately.
    This QA build does not qualify native slicing, printer transport, or release.
-2. Do not use an older native APK as verification for the current source. Native
-   verification for the A1 mini capability-parser update is running in
-   [run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443);
-   the repeat for the same app source is queued in
-   [run 37749104995](https://github.com/mbaliga/Alloy/actions/runs/37749104995).
-   Wait for a matching run to pass and use only its artifacts. The earlier
-   run 37742656049 built the engine but failed native instrumentation against
-   pre-parser-fix commit `849df7eac15ad07d4ef31bfdde39c6b6d0b08b93`.
-   Native CI artifacts are not production-signed. Fresh G2 provenance remains
-   **INSUFFICIENT / FAIL** (66/72 exact-history samples; 314/479 exact common
-   files, 65.55%; [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
+2. Install the native-capable QA/pilot artifacts only from successful
+   [native run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443).
+   The run produced the native QA APK, native instrumentation report, G3
+   software evidence and isolated A1 Mini pilot APK pair. Use the isolated
+   pilot pair only for the bounded software/hardware procedure in section 6;
+   it is not production-signed and does not establish successful printing.
+   The native run uses the same slicer/runtime source as the later manifest-only
+   package-visibility change, but does not include that manifest declaration.
+   For Bambu Handy receiver resolution, wait for the current Android v1 retry,
+   [run 37749868263](https://github.com/mbaliga/Alloy/actions/runs/37749868263),
+   to pass and install its artifact if published.
+   Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
+   samples; 314/479 exact common files, 65.55%;
+   [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
    The separate Bambu Studio lineage diagnostic did not establish a baseline
-   (101/445 historical best; [run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
+   (101/445 historical best;
+   [run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
    No physical printer route has been qualified.
-3. No current-source isolated pilot APK pair is available yet. Do not use the
-   older pilot build from run 37728381335 for physical acceptance; it targets
-   commit `462ad6ca49c049444960e36f83845a15093a740c`. Wait for the current
-   native build lane to complete and confirm a matching pilot artifact before
-   beginning the five-fixture, no-support PLA procedure.
+3. A five-fixture software pilot evidence artifact exists in native run
+   37745898443; that is not the same as the physical evidence run. The older
+   pilot build from run 37728381335 is stale and must not be used. For any
+   physical A1 Mini trial, use only the isolated pair from run 37745898443 and
+   follow section 6 exactly. Alloy direct-print qualification and production
+   release remain blocked pending human-reviewed evidence and provenance.
 
 ## 1a. Phone navigation and visual system
 
