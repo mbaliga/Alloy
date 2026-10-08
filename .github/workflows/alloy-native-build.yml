@@ -163,6 +163,17 @@ jobs:
             "build-tools;35.0.0" \
             "ndk;${NDK_VERSION}" \
             "cmake;3.22.1"
+          for attempt in 1 2 3; do
+            if sdkmanager --install "emulator" --channel=0; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Android Emulator install failed after three attempts" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+          test -x "${ANDROID_SDK_ROOT}/emulator/emulator"
           echo "ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
       - name: Install native build prerequisites
         shell: bash
