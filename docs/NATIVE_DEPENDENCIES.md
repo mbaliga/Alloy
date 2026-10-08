@@ -42,6 +42,21 @@ check used by the native and release workflows; the upstream checker is not a
 release gate because it requires optional Boost.Math archives that this pinned
 source build does not produce.
 
+Pinned source revisions used by the Android bootstrap are maintained in
+`ci/patch_orca_mobile_bootstrap.py` and rechecked in the native workflow:
+
+- SliceBeam bootstrap: `12b370ce305acc2caa59b7e4e78e04069db2f7e3`
+- OrcaSlicer-Mobile dependency script: `d996a9cadb65b354997f2d5d8734b46bb9ea4efd`
+- OpenVDB-Android / oneTBB bootstrap: `4d4a057d0a26d9cff88d6d7cc7bea80d27ffa7ec`
+- Boost-for-Android: `7943955c4d11a5bd61381a8b200c28619323eb0f`
+- OCCT: `7d2efad9c8a9a57ea96c4c8587134b34dd503cd8`
+- Android NDK: `23.1.7779620`; native workflow Android API: `35`
+
+OpenVDB-Android's nested dependencies are fixed by that source revision's
+submodule gitlinks. A build is reproducible only when the script pins and
+validates these inputs; a passing hosted build remains distinct from G2 engine
+lineage and device qualification.
+
 Pinned source archives:
 
 - GMP 6.2.1 — `https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.bz2` — SHA-256
