@@ -97,7 +97,7 @@ public final class ArcNavigationBarTest {
                     more.getTop() + more.getHeight() / 2f, now + 80);
             Assert.assertEquals("Saved Model", bar.displayedContextLabel());
             Assert.assertTrue("Release must select the destination under the finger", more.isSelected());
-            Assert.assertTrue(more.getContentDescription().contains("selected"));
+            Assert.assertTrue(more.getContentDescription().toString().contains("selected"));
         });
     }
 
