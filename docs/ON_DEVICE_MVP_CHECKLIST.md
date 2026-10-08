@@ -20,8 +20,19 @@ authorizes general direct printing or production release promotion.
 
 ## 1. Install the matching artifacts
 
-1. For the current UI/software smoke pass and Handy receiver-resolution
-   check, download
+**Pilot-install status:** the previously successful native run 37749868229
+contains valid historical software evidence, but its pilot APK predates the
+separate `.pilot` application ID. Do not install that APK alongside an
+existing Alloy app or use it for a new physical pilot. The replacement is
+being verified in [native run 37768795482](https://github.com/mbaliga/Alloy/actions/runs/37768795482)
+at source commit
+[4c41928](https://github.com/mbaliga/Alloy/commit/4c41928faa645af59185f97966e2a3c6cbc7f76e).
+Wait for a successful run and its `alloy-a1-mini-physical-pilot-ci` artifact;
+the build must assert the app/test package IDs before it is install-eligible.
+Do not uninstall a working Alloy installation to use a stale or unverified
+pilot APK.
+
+1. For the UI/software smoke pass and Handy receiver-resolution check, download
    [`alloy-v1-release-ci-apk` from Android v1 run 37749868263](https://github.com/mbaliga/Alloy/actions/runs/37749868263).
    App-source commit `5dc45a091d97b5c5a447889843a578f76891a7d3`; the Android
    pipeline acceptance tests passed on retry attempt 2. Artifact ZIP digest:
@@ -35,14 +46,15 @@ authorizes general direct printing or production release promotion.
    or stop if you cannot back up safely.
    This QA build verifies the app workflow/Handy package-visibility wiring, not
    native slicing, printer transport, Handy's actual import acceptance, or release.
-2. Install the native-capable QA/pilot artifacts only from successful
-   [native run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229).
-   The run produced the native QA APK, native instrumentation report, G3
-   software evidence and isolated A1 Mini pilot APK pair. Use the isolated
-   pilot pair only for the bounded software/hardware procedure in section 6;
-   it includes the Handy package-visibility manifest fix, but is not
-   production-signed and does not establish successful printing or Handy import
-   acceptance.
+2. The successful [native run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229)
+   produced native QA, instrumentation and G3 evidence, plus five-fixture
+   software-pilot evidence. Its pilot APK pair is historical and is not
+   eligible for a new install because it predates the `.pilot` package suffix.
+   Do not use that APK pair for the physical procedure in section 6. That
+   procedure becomes actionable only after replacement run 37768795482
+   succeeds, publishes its pilot artifact, and the package-ID assertions pass.
+   CI-debug signing remains non-production; no software artifact establishes
+   successful physical printing or Handy import acceptance.
    Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
    samples; 314/479 exact common files, 65.55%;
    [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
@@ -50,12 +62,11 @@ authorizes general direct printing or production release promotion.
    (101/445 historical best;
    [run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
    No physical printer route has been qualified.
-3. A five-fixture software pilot evidence artifact exists in native run
-   37749868229; that is not the same as the physical evidence run. The older
-   pilot build from run 37728381335 is stale and must not be used. For any
-   physical A1 Mini trial, use only the isolated pair from run 37749868229 and
-   follow section 6 exactly. Alloy direct-print qualification and production
-   release remain blocked pending human-reviewed evidence and provenance.
+3. The five-fixture software evidence in run 37749868229 is not physical
+   qualification. The replacement pilot build in run 37768795482 must finish
+   successfully before section 6 can be used. Keep all printer, firmware,
+   transport and production-release claims unqualified until the human-reviewed
+   on-device evidence and provenance gates pass.
 
 ## 1a. Phone navigation and visual system
 
