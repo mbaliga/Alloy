@@ -14,9 +14,9 @@ fixture in this pilot, and do not mark this evidence as support evidence.
 ## Required build and on-phone checks
 
 1. Download the matching pilot app and instrumentation APK pair from
-   [native-build run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443),
+   [native-build run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229),
    artifact `alloy-a1-mini-physical-pilot-ci` (ZIP SHA-256
-   `6c0821a9fd4135523b189d6424ce13b37c64910fbcf5694af2956b35a95d935b`;
+   `47c9795fafe8205ae6cf3198d2634eb7fa5492cd9feee015ec3d38f75b82129f`;
    expires **2027-01-06**). This is the latest successful isolated pilot pair
    available; CI passed its five-fixture emulator software checks. That does
    not qualify a physical printer. Do not use the older pilot artifact from run
