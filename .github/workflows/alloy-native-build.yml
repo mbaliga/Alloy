@@ -18,6 +18,7 @@ on:
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
       - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'app/src/main/java/com/mbaliga/alloy/PrinterCapabilityCatalog.java'
       # The native job executes the complete instrumentation suite. Any test
       # change can therefore invalidate its result, not only the native smoke
       # class itself.
@@ -57,6 +58,7 @@ on:
       - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
       - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
       - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'app/src/main/java/com/mbaliga/alloy/PrinterCapabilityCatalog.java'
       # Keep pull-request evidence aligned with the entire suite as well.
       - 'app/src/androidTest/**'
       - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
