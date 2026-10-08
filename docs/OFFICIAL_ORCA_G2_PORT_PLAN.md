@@ -1,18 +1,19 @@
 # Official Orca G2 remediation plan
 
-Status: **planned migration; no engine promotion.**
+Status: **source snapshot complete; separate Android target not implemented; no engine promotion.**
 
 ## Why a port is required
 
 The current Android-native candidate is
 `CodeMasterCody3D/OrcaSlicer-Mobile@d996a9cadb65b354997f2d5d8734b46bb9ea4efd`.
-The fresh official-history audit in Alloy Actions run
-[`36819659942`](https://github.com/mbaliga/Alloy/actions/runs/36819659942)
-found the nearest official baseline to be
-`OrcaSlicer@ff9ce434a24873c18fd3c996b48d7f4fc0ee06e6`, with only 250 of 488
-common native source files identical (51.23%). G2 requires at least 85% exact
-coverage plus an attributable profile baseline, so the current candidate is
-not eligible for a production engine claim.
+The latest fresh official-history checkpoint recorded in
+[`GATE_STATUS.md`](GATE_STATUS.md) is run
+[`37739472063`](https://github.com/mbaliga/Alloy/actions/runs/37739472063):
+314 of 479 common native source files match the best history-constrained
+candidate (65.55%), below G2's unchanged 85% threshold, and the profile anchor
+has no exact introduction in official Orca history. A later current-ref tree
+snapshot is a separate diagnostic and does not replace the history result.
+The current candidate is not eligible for a production engine claim.
 
 The authoritative G2 status remains **FAIL / NO-GO** in
 [`GATE_STATUS.md`](GATE_STATUS.md). This plan does not promote the current
@@ -38,22 +39,27 @@ official engine and must never be described as one.
 
 ## Port stages
 
-1. **Hermetic source snapshot**
+1. **Hermetic source snapshot — complete as a source-only checkpoint**
    - Import the exact official source with its license notices and a manifest
      of source paths, Git blobs and SHA-256s.
    - Add a validator that fails if the imported source drifts from the pinned
      official commit, except for an explicit Android adaptation patch series.
    - Keep the existing Android engine selectable only as `legacy-unverified`.
+   - Evidence: the pinned snapshot and manifest workflow validate official
+     source identity and license notices. This does not compile that source
+     for Android or satisfy G2.
 
 2. **Android build closure**
    - Port the official CMake source list and direct dependency closure into a
      separate `official-orca` target; do not overwrite the currently compiling
      legacy target in place.
-   - The source-pinned port-surface audit currently records direct
-     `libslic3r` package drift: official source requires `libnoise` / its
-     `noise::noise` target while the legacy Android tree instead carries a
-     `draco` package requirement. Add and source-build the official closure
-     deliberately; do not delete either side merely to make the names match.
+   - The port-surface audit records direct `libslic3r` package differences,
+     but it is an inventory rather than a build. The pinned `libnoise` source
+     has since been built in CI and linked by the existing legacy Android
+     target; that closes only this dependency for that target. It does not
+     create the distinct official-Orca Android target or establish the full
+     official dependency closure. Preserve both the legacy and official
+     package requirements when building that separate target.
    - Reuse only pinned, source-built Android dependencies (Boost, oneTBB,
      OCCT, GMP and MPFR) and record every new dependency and license.
    - Produce an ARM64 shared library in clean hosted CI before exposing JNI.
