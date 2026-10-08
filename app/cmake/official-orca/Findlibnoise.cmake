@@ -9,7 +9,10 @@ if (TARGET noise::noise)
     set(libnoise_FOUND TRUE)
     set(LIBNOISE_LIBRARY noise::noise)
 else ()
-    set(libnoise_FOUND FALSE)
+    set(LIBNOISE_LIBRARY "")
     set(libnoise_NOT_FOUND_MESSAGE
         "The pinned source-built noise::noise target must be added before official libslic3r")
 endif ()
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(libnoise REQUIRED_VARS LIBNOISE_LIBRARY)
