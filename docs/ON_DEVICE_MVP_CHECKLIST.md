@@ -16,47 +16,30 @@ release promotion.
 ## 1. Install the matching artifacts
 
 1. For the current UI/software smoke pass, download
-   [`alloy-v1-release-ci-apk` from Android v1 run 37728381340](https://github.com/mbaliga/Alloy/actions/runs/37728381340).
-   Confirm the run targets commit `462ad6ca49c049444960e36f83845a15093a740c`
-   and completed successfully before installing. Android v1 passed **193 instrumentation tests (9 skipped, 0 failures)**, including the new shared-cache-lock regression. Its artifact ZIP digest is
-   `sha256:ed4234c78aedf68beb7b9e831da0ba125936d3c24361cb771e03969b9f20f8d8`
-   (expires **2027-01-06**). After extracting, install `app-release.apk` on an
-   ARM64 Android phone; compute and record the APK's own SHA-256 separately.
-   This build contains the bounded model-bundle import and shared-cache-lock
-   regression checks, plus the already-shipped Library and learning surfaces.
-2. For native-runtime checks, download the matching native release and
-   instrumentation pair from
-   [native-build run 37728381335](https://github.com/mbaliga/Alloy/actions/runs/37728381335),
-   commit `462ad6ca49c049444960e36f83845a15093a740c`. Artifact ZIP digests:
-   native release `0b47e16c2f219d57dd141584cd0de73f27a494e9aa28642888e63dadc45627aa`,
-   instrumentation APK `64022cd614341c9ff469166e7999f5b144ef37c27b43fcd86236e3aa79ba60da`,
-   instrumentation report `56a666c6a3a69a53552495a4a98d0d9e5f5a066c3697d2f44ab265884a124fdb`,
-   G3 evidence `d8b98666a48daa2be073f911f6426eb760c531e3212684836c0145b769fc5719`.
-   The run passed native instrumentation (186 emulator tests; 2 skipped) and
-   structurally validated G3 evidence. These CI QA artifacts are not
-   production-signed; fresh G2 provenance is still **INSUFFICIENT / FAIL**
-   (66/72 exact-history samples; 314/479 exact common files, 65.55%; latest
-   [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
-   A separate Bambu Studio diagnostic also failed to establish a baseline
-   (101/445 historical best; [latest run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
-   Desktop semantic-parity warnings remain, and no physical printer route has
-   been qualified.
-3. Before any physical pilot, download the isolated pilot APK pair and its
-   software-only evidence from
-   [`alloy-a1-mini-physical-pilot-ci` on run 37728381335](https://github.com/mbaliga/Alloy/actions/runs/37728381335).
-   Artifact ZIP digest:
-   `sha256:c627c687f5f327d437fd29aa2d4a41b01d524bc290a5b1005a9e00a0f4f8dfd0`.
-   CI validated the five unchanged no-support PLA fixtures on an emulator.
-   This is not a printer test: physical qualification and direct-send
-   qualification remain pending. Install the pilot pair only for the narrow
-   procedure in section 6.
-4. Confirm a cold launch succeeds without asking for notification, LAN, or
-   pairing permission.
-5. Capture the APK SHA-256 values, Android version, phone model, and Alloy
-   build/version. Do not add printer access codes, serial numbers, LAN hosts,
-   or certificate fingerprints to a public record.
-Expected: the first-run, five-step orientation route is skippable and has a
-safe path to Library. No screen says the printer is qualified for direct send.
-
+   [`alloy-v1-release-ci-apk` from Android v1 run 37744453665](https://github.com/mbaliga/Alloy/actions/runs/37744453665).
+   The app-source commit is `8bc416109d2b73c1a7ea737bffe88d841ae9853d`;
+   the Android pipeline acceptance tests passed. Artifact ZIP digest:
+   `sha256:5bcb064b7bb21e438df6985c951504bcec73b98e29d80629f3f80102043aeb99`
+   (expires **2027-01-06**). After extracting, install `app-release.apk` on
+   an ARM64 Android phone; compute and record the APK's own SHA-256 separately.
+   This QA build does not qualify native slicing, printer transport, or release.
+2. Do not use an older native APK as verification for the current source. Native
+   verification for the A1 mini capability-parser update is running in
+   [run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443),
+   triggered from workflow commit `066ab57ebf77c7287f734dbbf7f82c4e14011d24`.
+   Wait for that run to pass and use only its matching artifacts. The earlier
+   run 37742656049 built the engine but failed native instrumentation against
+   pre-parser-fix commit `849df7eac15ad07d4ef31bfdde39c6b6d0b08b93`.
+   Native CI artifacts are not production-signed. Fresh G2 provenance remains
+   **INSUFFICIENT / FAIL** (66/72 exact-history samples; 314/479 exact common
+   files, 65.55%; [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
+   The separate Bambu Studio lineage diagnostic did not establish a baseline
+   (101/445 historical best; [run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
+   No physical printer route has been qualified.
+3. No current-source isolated pilot APK pair is available yet. Do not use the
+   older pilot build from run 37728381335 for physical acceptance; it targets
+   commit `462ad6ca49c049444960e36f83845a15093a740c`. Wait for the current
+   native build lane to complete and confirm a matching pilot artifact before
+   beginning the five-fixture, no-support PLA procedure.
 
 ## 1a. Phone navigation and visual system
