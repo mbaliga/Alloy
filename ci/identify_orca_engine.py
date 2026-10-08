@@ -188,6 +188,7 @@ def main() -> None:
 
     intervals: list[tuple[int, int | None, str]] = []
     interval_rows = []
+    unmatched_samples = []
     for rel in sample:
         hit = exact_blob_interval(orca, rel, mobile_blobs[rel])
         if hit:
@@ -198,6 +199,8 @@ def main() -> None:
                 "valid_until": hit[1],
                 "introducing_commit": hit[2],
             })
+        else:
+            unmatched_samples.append(rel)
 
     history = rev_list_with_times(orca)
     candidates = candidate_commits(history, intervals) if intervals else []
@@ -249,6 +252,7 @@ def main() -> None:
         "common_engine_files": len(paths),
         "sample_size": len(sample),
         "sample_files_with_exact_history_interval": len(intervals),
+        "sample_files_without_exact_history_interval": unmatched_samples,
         "candidate_commits_scored": len(candidates),
         "best_orca_commit": best_commit,
         "best_orca_commit_time": best_time,
@@ -282,6 +286,11 @@ def main() -> None:
     ]
     for e, t, c, _ in scored[:10]:
         md.append(f"| `{c}` | {e}/{t} | {(e/t if t else 0):.2%} |")
+    md += ["", "## Sample files without exact official-history intervals", ""]
+    if unmatched_samples:
+        md.extend(f"- `{rel}`" for rel in unmatched_samples)
+    else:
+        md.append("- None")
     md += ["", "## Closest-tree diff stat", "", "```text", diff_stat.rstrip(), "```", ""]
     (out / "G2_PROVENANCE.md").write_text("\n".join(md))
 
