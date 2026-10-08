@@ -96,10 +96,17 @@ class NativeDependencyWiringTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn("Run native release instrumentation through API-35 ARM translation", workflow)
         self.assertIn("Export native G3 evidence through API-35 ARM translation", workflow)
-        self.assertEqual(2, workflow.count("target: google_apis"))
-        self.assertEqual(2, workflow.count("arch: x86_64"))
-        self.assertEqual(2, workflow.count("disable-linux-hw-accel: false"))
-        self.assertIn("Enable hosted KVM permissions for native instrumentation", workflow)
+        # Instrumentation, G3 export, and the isolated five-fixture pilot each
+        # boot a fresh API-35 ARM-translation emulator.
+        self.assertEqual(3, workflow.count("target: google_apis"))
+        self.assertEqual(3, workflow.count("arch: x86_64"))
+        self.assertEqual(
+            3,
+            workflow.count(
+                "disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}"
+            ),
+        )
+        self.assertIn("Use hosted KVM where available", workflow)
         self.assertIn("99-kvm4all.rules", workflow)
         self.assertIn('MODE="0666"', workflow)
         self.assertIn("sudo udevadm control --reload-rules", workflow)
