@@ -2,6 +2,26 @@
 
 Date: 2026-09-22
 
+2026-10-08 Bambu Studio alternative-lineage diagnostic:
+A separate diagnostic workflow compares the pinned mobile engine against
+Bambu Studio's official `master` history without replacing or relaxing G2.
+Run [`37740670272`](https://github.com/mbaliga/Alloy/actions/runs/37740670272)
+completed successfully as a diagnostic, but found no high-confidence baseline:
+14/72 sample files had exact history intervals; the best constrained candidate
+`fdba5967faaa6417a440840f6d491a93a61c9e05` matches 101/445 common files
+(22.70%). The examined Bambu ref `da8b44ee34dd349f2ae0df3f1cbae366df482354`
+matches 124/445 (27.87%) as a tree snapshot only, outside the sample-derived
+historical candidate result. Artifact ZIP SHA-256:
+`f3a3c4954cea9938fefa9f16910939e2a247121fb321343cc914f4316fd566f1`.
+
+The same revision's Orca gate
+[`37740670338`](https://github.com/mbaliga/Alloy/actions/runs/37740670338)
+remains **INSUFFICIENT / FAIL**: 66/72 samples, 314/479 (65.55%) at its best
+history candidate; current Orca HEAD snapshot is 42/479 (8.77%). Artifact ZIP
+SHA-256: `6e2728de060239c2f2158fe9a3a35446e25f3cc4e90390bde703311c99ef8ac6`.
+Neither upstream comparison establishes production slicer provenance or
+semantic parity. The Bambu result is diagnostic only, not a replacement pass.
+
 2026-10-08 fresh G2 provenance checkpoint:
 The G2 audit is now wired to run on milestone-branch changes to the native
 engine source and its audit scripts. Run
