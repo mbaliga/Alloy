@@ -9,9 +9,37 @@ confuses a CI key with a production signing key.
 """
 
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
+ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
+HANDY_PACKAGE = "bbl.intl.bambulab.com"
+
+
+def validate_handy_visibility() -> None:
+    manifest_path = ROOT / "app/src/main/AndroidManifest.xml"
+    manifest = ET.parse(manifest_path).getroot()
+    queries = manifest.find("queries")
+    visible_packages = set()
+    if queries is not None:
+        visible_packages = {
+            node.get(ANDROID_NS + "name")
+            for node in queries.findall("package")
+        }
+    if HANDY_PACKAGE not in visible_packages:
+        raise SystemExit(f"{manifest_path}: missing narrow Bambu Handy package visibility query")
+    broad_visibility = any(
+        node.get(ANDROID_NS + "name") == "android.permission.QUERY_ALL_PACKAGES"
+        for node in manifest.findall("uses-permission")
+    )
+    if broad_visibility:
+        raise SystemExit(f"{manifest_path}: broad package visibility is not allowed")
+    handoff_path = ROOT / "app/src/main/java/com/mbaliga/alloy/BambuHandyHandoff.java"
+    if f'PACKAGE_NAME = "{HANDY_PACKAGE}"' not in handoff_path.read_text(encoding="utf-8"):
+        raise SystemExit(f"{handoff_path}: package visibility query and handoff target must match")
+
+
 
 
 def require(text: str, token: str, path: Path) -> None:
@@ -20,6 +48,7 @@ def require(text: str, token: str, path: Path) -> None:
 
 
 def main() -> None:
+    validate_handy_visibility()
     ordinary = ROOT / ".github/workflows/android-v1.yml"
     native = ROOT / ".github/workflows/alloy-native-build.yml"
     release = ROOT / ".github/workflows/android-release-candidate.yml"
