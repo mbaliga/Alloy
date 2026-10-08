@@ -183,22 +183,30 @@ Only after sections 1–5 pass, follow
 
 - Scope: A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
   external/direct feed, no AMS and no supports.
-- Run the opt-in on-device `NoSupportPlaPilotTest` evidence export exactly as
-  documented in [`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md). Retain
-  the five staged packages and `software-pilot-manifest.json`; the manifest is
-  deliberately marked software-only and does not authorize an upload or start.
-- Build and install the isolated `alloyPhysicalPilot` APK as documented in
-  [`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md). Confirm it labels the
-  route **PILOT BUILD**. Only then may an untouched bundled fixture proceed to
-  the two explicit upload/start confirmations after N1 discovery and leaf-pin
-  pairing; every other source or recipe must remain blocked.
-- For each fixture retain first-layer and completed-part photos, dimensional
-  measurement where relevant, redacted printer telemetry, the artifact hash,
-  and the result of each check in `release/no-support-pla-pilot.json`.
-- If motion, temperature, material routing, or printer state is unexpected,
-  stop. Do not retry commands automatically; mark the fixture failed and
-  investigate.
+- Download the successful isolated pilot artifact from
+  [native run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229),
+  extract it on the Android phone, and install only `app-release.apk`.
+  The matching instrumentation APK is optional for ADB diagnostics; it is not
+  required for the app's guarded physical-pilot flow. Keep the included
+  `evidence/run-*/software-pilot-manifest.json` as CI software evidence. It is
+  explicitly software-only and does not authorize upload or start.
+- In Alloy, open each of the five untouched bundled fixtures from Library,
+  verify the pinned A1 Mini / PLA Basic / 0.4 mm recipe and supports off, then
+  slice and inspect the toolpath and preflight. Pair the actual printer, verify
+  model N1, save its leaf-certificate pin, and use the two separate upload and
+  start confirmations for each fixture. No arbitrary imported model, changed
+  recipe, support setting, AMS route, or ordinary build may reach this pilot
+  transport path.
+- For every physical fixture retain the artifact hash, first-layer and
+  completed-part photos, measurements where relevant, redacted printer
+  telemetry, and each check result in `release/no-support-pla-pilot.json`.
+  The in-app route and physical prints can be performed from the phone; ADB is
+  optional for rerunning the software-only instrumentation export. Do not
+  automatically retry a printer command. Stop and investigate any unexpected
+  motion, temperature, routing, adhesion or printer state.
 
-Run `ci/validate_no_support_pla_pilot.py` only after a human has reviewed all
-evidence. A passing pilot is narrow evidence, not support parity, A1/P1S
-qualification, Bambu Handy validation, or production release approval.
+Review all physical evidence before running
+`ci/validate_no_support_pla_pilot.py`; that validator is a release-evidence
+review step and need not run on the phone. A passing narrow pilot is not
+support parity, A1/P1S qualification, Bambu Handy validation, or production
+release approval.
