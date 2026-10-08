@@ -2,7 +2,7 @@ name: Parity tooling checks
 
 on:
   push:
-    branches: [stage1-gates-prep]
+    branches: [stage1-gates-prep, 'codex/alloy-phone-first-mvp']
     paths:
       - 'parity/**'
       - '.github/workflows/parity-tools.yml'
