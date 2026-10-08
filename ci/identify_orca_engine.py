@@ -109,9 +109,9 @@ def exact_blob_interval(
     return None
 
 
-def rev_list_with_times(orca: Path) -> list[tuple[int, str]]:
+def rev_list_with_times(orca: Path, ref: str) -> list[tuple[int, str]]:
     out: list[tuple[int, str]] = []
-    for line in git(orca, "rev-list", "--timestamp", "main").splitlines():
+    for line in git(orca, "rev-list", "--timestamp", ref).splitlines():
         if not line:
             continue
         ts_s, sha = line.split(maxsplit=1)
@@ -174,12 +174,17 @@ def spread_limit(candidates: list[tuple[int, str]], limit: int) -> list[tuple[in
 
 
 def main() -> None:
-    if len(sys.argv) != 4:
-        raise SystemExit("usage: identify_orca_engine.py <mobile-repo> <orca-repo> <out-dir>")
+    if len(sys.argv) not in (4, 6):
+        raise SystemExit(
+            "usage: identify_orca_engine.py <mobile-repo> <upstream-repo> <out-dir> "
+            "[upstream-name history-ref]"
+        )
 
     mobile = Path(sys.argv[1]).resolve()
     orca = Path(sys.argv[2]).resolve()
     out = Path(sys.argv[3]).resolve()
+    upstream_name = sys.argv[4] if len(sys.argv) == 6 else "OrcaSlicer"
+    history_ref = sys.argv[5] if len(sys.argv) == 6 else "main"
     out.mkdir(parents=True, exist_ok=True)
 
     mobile_blobs = mobile_blob_map(mobile, orca)
@@ -202,7 +207,7 @@ def main() -> None:
         else:
             unmatched_samples.append(rel)
 
-    history = rev_list_with_times(orca)
+    history = rev_list_with_times(orca, history_ref)
     candidates = candidate_commits(history, intervals) if intervals else []
     candidates = spread_limit(candidates, MAX_CANDIDATES_TO_SCORE)
 
@@ -248,7 +253,9 @@ def main() -> None:
 
     data = {
         "mobile_commit": git(mobile, "rev-parse", "HEAD"),
-        "orca_head": git(orca, "rev-parse", "main"),
+        "upstream_name": upstream_name,
+        "upstream_ref": history_ref,
+        "orca_head": git(orca, "rev-parse", history_ref),
         "common_engine_files": len(paths),
         "sample_size": len(sample),
         "sample_files_with_exact_history_interval": len(intervals),
@@ -271,7 +278,7 @@ def main() -> None:
         "# G2 Orca engine provenance evidence",
         "",
         f"- OrcaSlicer-Mobile commit: `{data['mobile_commit']}`",
-        f"- official OrcaSlicer HEAD examined: `{data['orca_head']}`",
+        f"- {upstream_name} ref examined (`{history_ref}`): `{data['orca_head']}`",
         f"- common mapped engine files: {len(paths)}",
         f"- sampled files with exact-history intervals: {len(intervals)} / {len(sample)}",
         f"- candidate commits scored: {len(candidates)}",
