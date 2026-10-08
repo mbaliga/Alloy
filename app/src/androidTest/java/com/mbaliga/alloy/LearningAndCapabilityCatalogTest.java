@@ -74,6 +74,25 @@ public final class LearningAndCapabilityCatalogTest {
         assertParseFails(reducedSafetyBundle, "a catalogue below the v1 safety coverage floor");
     }
 
+    @Test public void troubleshootingSearchStartsWithHardStopsAndPrioritizesThemLive() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        LearningCatalog catalog = LearningCatalog.load(context.getAssets());
+        java.util.List<LearningCatalog.Article> initial = catalog.searchTroubleshooting("");
+        Assert.assertTrue("empty search should show safety guidance, not all 26 cards", initial.size() >= 5);
+        for (LearningCatalog.Article article : initial) {
+            Assert.assertEquals("initial results are restricted to stop-now guidance", "Hard stop", article.safety);
+        }
+
+        java.util.List<LearningCatalog.Article> matches = catalog.searchTroubleshooting("smoke");
+        Assert.assertFalse("common urgent symptom should return offline guidance", matches.isEmpty());
+        boolean routineAdviceSeen = false;
+        for (LearningCatalog.Article article : matches) {
+            Assert.assertTrue("all visible results must match the typed query", article.matches("smoke"));
+            if (!"Hard stop".equals(article.safety)) routineAdviceSeen = true;
+            else Assert.assertFalse("hard-stop guidance must appear before routine advice", routineAdviceSeen);
+        }
+    }
+
     private static String article(String id, String kind, String artwork) {
         return "{\"id\":\"" + id + "\",\"kind\":\"" + kind + "\",\"title\":\"Safe title\","
                 + "\"summary\":\"Safe summary.\",\"safety\":\"Review\",\"scope\":\"Offline only.\","
