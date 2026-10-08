@@ -12,15 +12,17 @@ This is still software/QA evidence only: it does not prove a physical print,
 Bambu Handy acceptance, or production signing. The previous baseline at
 `4c41928faa645af59185f97966e2a3c6cbc7f76e` predates the latest inventory and
 emulator-retry changes. The latest
-current-source ordinary Android run is
-[37798978187](https://github.com/mbaliga/Alloy/actions/runs/37798978187)
-at commit `2e90a483cef89c2d34dc91af44773b7bcf7fed2b`; its full acceptance
-suite passed and its `alloy-v1-release-ci-apk` artifact is available. It is a
-CI-debug-signed QA build, not a production release. The matching current-source
-native run [37798978170](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
-also succeeded and published the current-source pilot artifact above. Neither
-QA artifact proves physical printing, Bambu Handy acceptance, or production
-signing.
+ordinary Android acceptance run is
+[37810227273](https://github.com/mbaliga/Alloy/actions/runs/37810227273)
+at app-source commit `5c0af0931e0f4b1f4e0196c559b6afa8e26d3e65`; it passed
+with zero failures and published `alloy-v1-release-ci-apk` (SHA-256
+`ecc048d08170cb902d6e83ea6dccf78535f978aa8c41a41bd061002dade81102`). It
+includes the live symptom-search update described below. The native pilot lane
+[37798978170](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
+passed at native-source commit `2e90a483`; no native-engine files changed in
+the later learning UI update. Both artifacts remain CI-debug QA builds, not
+production releases, and do not prove physical printing or Bambu Handy
+acceptance.
 Fresh G2 provenance remains **INSUFFICIENT / FAIL**. None of these builds
 authorizes general direct printing or production release promotion.
 
@@ -36,8 +38,8 @@ merely to replace it with a CI-debug-signed QA build.
 
 1. For the UI/software smoke pass and Handy receiver-resolution check, use the
    current-source `alloy-v1-release-ci-apk` from successful Android v1 run
-   [37798978187](https://github.com/mbaliga/Alloy/actions/runs/37798978187)
-   (source commit `2e90a483`). After extracting, install `app-release.apk` on
+   [37810227273](https://github.com/mbaliga/Alloy/actions/runs/37810227273)
+   (source commit `5c0af093`). After extracting, install `app-release.apk` on
    an ARM64 Android phone; compute and record the APK's own SHA-256 separately.
    CI-debug signatures can differ between runs, so Android may refuse to update
    an existing Alloy install. Before uninstalling, export projects you need as
