@@ -1,10 +1,19 @@
 name: G2 Orca engine provenance
 
 on:
+  push:
+    branches: [codex/alloy-phone-first-mvp]
+    paths:
+      - '.github/workflows/g2-orca-engine-provenance.yml'
+      - 'app/src/main/jni/**'
+      - 'ci/identify_orca_engine.py'
+      - 'ci/find_orca_profile_anchor.py'
+      - 'docs/UPSTREAM_EVALUATION.md'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/g2-orca-engine-provenance.yml'
+      - 'app/src/main/jni/**'
       - 'ci/identify_orca_engine.py'
       - 'ci/find_orca_profile_anchor.py'
       - 'docs/UPSTREAM_EVALUATION.md'
