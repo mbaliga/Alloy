@@ -8,23 +8,26 @@ five-fixture software pilot all passed. It produced the CI-signed QA APK,
 native instrumentation report/APK, G3 evidence, and isolated A1 Mini pilot APK
 pair. These are software/QA artifacts only: they do not prove a physical print,
 Bambu Handy acceptance, or production signing. The current Android v1 run
-37749868263 includes the narrow Bambu Handy package-visibility fix; its first
-attempt hit runner network errors downloading test dependencies, and its retry
-(attempt 2) is still running Android pipeline acceptance tests. Do not treat
-that run as passed until GitHub reports success and publishes its artifact.
+37749868263 includes the narrow Bambu Handy package-visibility fix; retry
+attempt 2 passed Android pipeline acceptance tests and published a fresh QA
+APK. Artifact ZIP digest:
+`sha256:99f4544b9c593ba5bb110287b9723926664e38f8401dd4cc43109199db184901`
+(expires **2027-01-06**).
 Fresh G2 provenance remains **INSUFFICIENT / FAIL**. None of these builds
 authorizes general direct printing or production release promotion.
 
 ## 1. Install the matching artifacts
 
-1. For the current UI/software smoke pass, download
-   [`alloy-v1-release-ci-apk` from Android v1 run 37744453665](https://github.com/mbaliga/Alloy/actions/runs/37744453665).
-   The app-source commit is `8bc416109d2b73c1a7ea737bffe88d841ae9853d`;
-   the Android pipeline acceptance tests passed. Artifact ZIP digest:
-   `sha256:5bcb064b7bb21e438df6985c951504bcec73b98e29d80629f3f80102043aeb99`
+1. For the current UI/software smoke pass and Handy receiver-resolution
+   check, download
+   [`alloy-v1-release-ci-apk` from Android v1 run 37749868263](https://github.com/mbaliga/Alloy/actions/runs/37749868263).
+   App-source commit `5dc45a091d97b5c5a447889843a578f76891a7d3`; the Android
+   pipeline acceptance tests passed on retry attempt 2. Artifact ZIP digest:
+   `sha256:99f4544b9c593ba5bb110287b9723926664e38f8401dd4cc43109199db184901`
    (expires **2027-01-06**). After extracting, install `app-release.apk` on
    an ARM64 Android phone; compute and record the APK's own SHA-256 separately.
-   This QA build does not qualify native slicing, printer transport, or release.
+   This QA build verifies the app workflow/Handy package-visibility wiring, not
+   native slicing, printer transport, Handy's actual import acceptance, or release.
 2. Install the native-capable QA/pilot artifacts only from successful
    [native run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443).
    The run produced the native QA APK, native instrumentation report, G3
@@ -33,9 +36,9 @@ authorizes general direct printing or production release promotion.
    it is not production-signed and does not establish successful printing.
    The native run uses the same slicer/runtime source as the later manifest-only
    package-visibility change, but does not include that manifest declaration.
-   For Bambu Handy receiver resolution, wait for the current Android v1 retry,
-   [run 37749868263](https://github.com/mbaliga/Alloy/actions/runs/37749868263),
-   to pass and install its artifact if published.
+   The Handy package-visibility manifest fix is in the passing Android QA
+   artifact from run 37749868263; verify installed Handy launches and still
+   confirm Handy's own import response separately.
    Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
    samples; 314/479 exact common files, 65.55%;
    [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
