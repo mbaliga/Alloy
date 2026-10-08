@@ -17,12 +17,12 @@ release promotion.
 1. For the current UI/software smoke pass, download
    [`alloy-v1-release-ci-apk` from Android v1 run 37728381340](https://github.com/mbaliga/Alloy/actions/runs/37728381340).
    Confirm the run targets commit `462ad6ca49c049444960e36f83845a15093a740c`
-   and completed successfully before installing. Its artifact ZIP digest is
+   and completed successfully before installing. Android v1 passed **193 instrumentation tests (9 skipped, 0 failures)**, including the new shared-cache-lock regression. Its artifact ZIP digest is
    `sha256:ed4234c78aedf68beb7b9e831da0ba125936d3c24361cb771e03969b9f20f8d8`
-   (expires **2027-01-05**). After extracting, install `app-release.apk` on an
+   (expires **2027-01-06**). After extracting, install `app-release.apk` on an
    ARM64 Android phone; compute and record the APK's own SHA-256 separately.
-   This build contains the Library sort correction, offline build-plate learning
-   illustration, and bounded model-bundle import checks.
+   This build contains the bounded model-bundle import and shared-cache-lock
+   regression checks, plus the already-shipped Library and learning surfaces.
 2. For native-runtime checks, download the matching native release and
    instrumentation pair from
    [native-build run 37728381335](https://github.com/mbaliga/Alloy/actions/runs/37728381335),
