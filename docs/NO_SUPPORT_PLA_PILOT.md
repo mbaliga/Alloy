@@ -14,13 +14,15 @@ fixture in this pilot, and do not mark this evidence as support evidence.
 ## Required build and on-phone checks
 
 1. Download the matching pilot app and instrumentation APK pair from
-   [native-build run 37728381335](https://github.com/mbaliga/Alloy/actions/runs/37728381335),
+   [native-build run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443),
    artifact `alloy-a1-mini-physical-pilot-ci` (ZIP SHA-256
-   `c627c687f5f327d437fd29aa2d4a41b01d524bc290a5b1005a9e00a0f4f8dfd0`).
-   CI built this isolated variant and passed its five-fixture emulator
-   software checks. This does not qualify a physical printer. If building
-   locally instead, use the exact isolated command below; the build is rejected
-   if a production flag or native verification claim is supplied:
+   `6c0821a9fd4135523b189d6424ce13b37c64910fbcf5694af2956b35a95d935b`;
+   expires **2027-01-06**). This is the latest successful isolated pilot pair
+   available; CI passed its five-fixture emulator software checks. That does
+   not qualify a physical printer. Do not use the older pilot artifact from run
+   37728381335. If building locally instead, use the exact isolated command
+   below; the build is rejected if a production flag or native verification
+   claim is supplied:
 
    ```sh
    gradle :app:assembleRelease :app:assembleReleaseAndroidTest \
