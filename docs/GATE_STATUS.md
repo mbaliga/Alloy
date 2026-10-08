@@ -2,6 +2,26 @@
 
 Date: 2026-09-22
 
+2026-10-08 offline troubleshooting usability checkpoint: symptom search now
+updates as the user types, begins with stop-now cards rather than expanding all
+26 troubleshooting entries at once, and ranks matching hard-stop guidance
+ahead of routine remedies. `LearningCatalog.searchTroubleshooting` owns that
+ordering contract, with instrumentation coverage for empty-query safety and
+live-query priority. Current Android v1 run
+[`37810227273`](https://github.com/mbaliga/Alloy/actions/runs/37810227273)
+passed its build and acceptance suite (zero failures; nine skipped cases) and
+published `alloy-v1-release-ci-apk`. The current native pilot artifact remains
+from successful run [`37798978170`](https://github.com/mbaliga/Alloy/actions/runs/37798978170);
+no native-engine source changed in this UI-only update. Both artifacts are
+software QA only and do not qualify physical print, Bambu Handy acceptance,
+or production release.
+
+The first attempted source update at commit `75caec9` failed the static Android
+wiring check because a large `MainActivity.java` transfer was truncated. The
+full file was restored from the last successful source commit and the corrected
+commit `5c0af09` passed. The failed intermediate commit is not a release
+candidate.
+
 2026-10-08 reproducible dual-upstream provenance report:
 The audit now records the upstream name/head and reports both the best
 history-constrained match and a separate current-ref tree snapshot. This avoids
