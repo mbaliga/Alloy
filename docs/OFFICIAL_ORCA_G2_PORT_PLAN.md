@@ -79,6 +79,17 @@ official engine and must never be described as one.
      `libslic3r` target; there is still no official-Orca Android binary or
      runtime evidence.
 
+   - Newly confirmed build blocker: the pinned official CMake requires
+     `find_package(OpenCV REQUIRED core)` and unconditionally links
+     `opencv_world`. Its `ObjColorUtils.hpp` uses OpenCV APIs for OBJ color
+     quantization. The Android app tree currently contains no OpenCV package
+     configuration, headers, or ABI library artifact, so the separate target
+     cannot configure/link by adding the six missing C++ files alone. The next
+     build-closure step must provide a version-pinned Android OpenCV dependency
+     with the APIs used by the official source and prove package discovery and
+     ARM64 linking in hosted CI; do not stub color quantization or silently
+     omit the dependency.
+
 3. **Narrow JNI adapter**
    - Preserve Alloy's bounded model staging, typed recipe serializer,
      cancellation, output-size limits and G-code safety scanner.
