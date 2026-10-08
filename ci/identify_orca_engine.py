@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Identify the official OrcaSlicer revision closest to OrcaSlicer-Mobile's engine tree.
+"""Identify the official slicer revision closest to the mobile engine tree.
 
 The script uses exact Git blob identities, not timestamps or version strings. It:
-1. maps mobile app/src/main/jni/libslic3r/* to Orca src/libslic3r/*;
+1. maps mobile app/src/main/jni/libslic3r/* to upstream src/libslic3r/*;
 2. finds the official-history interval in which sampled files had the exact mobile blob;
 3. scores official commits in that interval against the complete common tree;
 4. writes machine-readable and Markdown evidence.
@@ -258,7 +258,8 @@ def main() -> None:
         "mobile_commit": git(mobile, "rev-parse", "HEAD"),
         "upstream_name": upstream_name,
         "upstream_ref": history_ref,
-        "orca_head": upstream_head,
+        "upstream_head": upstream_head,
+        "orca_head": upstream_head,  # Backward-compatible field name for the original G2 report.
         "upstream_head_exact_files": head_exact,
         "upstream_head_ratio": head_ratio,
         "common_engine_files": len(paths),
@@ -280,7 +281,7 @@ def main() -> None:
     (out / "g2-provenance.json").write_text(json.dumps(data, indent=2) + "\n")
 
     md = [
-        "# G2 Orca engine provenance evidence",
+        f"# {upstream_name} engine provenance evidence",
         "",
         f"- OrcaSlicer-Mobile commit: `{data['mobile_commit']}`",
         f"- {upstream_name} ref examined (`{history_ref}`): `{data['orca_head']}`",
