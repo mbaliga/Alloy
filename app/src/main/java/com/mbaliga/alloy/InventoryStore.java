@@ -520,7 +520,15 @@ public final class InventoryStore {
                 new Item("tpu", "Bambu TPU", "Filament", "g", 0, 250, false, "Add measured stock · external/direct path only; do not assume AMS lite compatibility", 0),
                 new Item("pva", "Bambu PVA", "Filament", "g", 0, 250, false, "Add measured stock · external/direct path only; keep dry and confirm the exact recipe", 0),
                 new Item("support-pla", "Support material for PLA", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0),
-                new Item("support-petg", "Support material for PETG", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0)
+                new Item("support-petg", "Support material for PETG", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0),
+                new Item("abs", "ABS · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
+                new Item("asa", "ASA · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
+                new Item("pc", "PC · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
+                new Item("pa", "PA / Nylon · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
+                new Item("pet", "PET · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
+                new Item("pla-cf", "PLA-CF · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check nozzle and active printer before use", 0),
+                new Item("petg-cf", "PETG-CF · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check nozzle and active printer before use", 0),
+                new Item("cf-gf-filled", "Other CF/GF-filled polymer · review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; abrasive materials need printer/nozzle review", 0)
         };
     }
 
