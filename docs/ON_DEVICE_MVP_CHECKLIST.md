@@ -127,9 +127,13 @@ Expected: learning is readable offline and is never a gate-bypass path.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.
-- Open Inventory. Verify separate zero-stock rows exist for PLA Basic, PETG,
-  TPU, PVA, Support PLA and Support PETG. Zero stock must not look like a
-  detected loaded spool.
+- Open Inventory. Verify ledger rows cover all 14 A1 Mini catalog material
+  classes: PLA Basic, PETG, TPU, PVA, Support PLA, Support PETG, ABS, ASA, PC,
+  PA/Nylon, PET, PLA-CF, PETG-CF and other CF/GF-filled polymers. The eight
+  A1 Mini not-recommended rows must be zero-stock, say “Track only” and
+  “not recommended on A1 Mini,” and must not create default reorder alerts.
+  Zero stock must not look like a detected loaded spool; the ledger is not a
+  printer sensor or material-compatibility approval.
 
 Expected: the three-printer catalog is available for planning only; all three
 remain **Not qualified** for Alloy direct send.
