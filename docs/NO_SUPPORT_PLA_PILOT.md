@@ -13,25 +13,26 @@ fixture in this pilot, and do not mark this evidence as support evidence.
 
 ## Required build and on-phone checks
 
-1. Download and extract the latest successful
-   [native-build artifact from run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229),
-   `alloy-a1-mini-physical-pilot-ci` (ZIP SHA-256
-   `47c9795fafe8205ae6cf3198d2634eb7fa5492cd9feee015ec3d38f75b82129f`;
-   expires **2027-01-06**). On the Android phone, install only
-   `app-release.apk` from the extracted folder. The matching
-   `app-release-androidTest.apk` is for optional instrumentation runs and is
-   not required for the in-app physical-pilot flow. The pilot uses a separate Android application ID, so it installs alongside
-   the regular Alloy app and avoids overwriting its projects, inventory, and
-   printer credentials. Keep the regular app installed. The pilot remains
-   CI-debug-signed and is not a production release. The artifact
-   also includes
-   `evidence/run-*/software-pilot-manifest.json`; keep it as the CI software
-   record. It includes package/profile/build hashes and explicitly says
-   `software_only: true`, `physical_qualification: PENDING`, and
-   `direct_send_qualification: PENDING`. It never authorizes a printer job.
-   CI passed the five-fixture software checks for this exact source. That does
-   not prove this phone's runtime or a physical print. Do not use the older
-   pilot artifact from run 37728381335.
+1. **Do not install an older pilot APK.** The previously published pilot
+   artifact from [run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229)
+   predates the separate pilot application ID and is not safe to describe as
+   side-by-side with an existing Alloy install. Do not use it for a new trial,
+   and do not uninstall an existing app to make it fit. The replacement build
+   is being verified in [native run 37768795482](https://github.com/mbaliga/Alloy/actions/runs/37768795482)
+   for source commit
+   [4c41928](https://github.com/mbaliga/Alloy/commit/4c41928faa645af59185f97966e2a3c6cbc7f76e).
+   Wait for that run to finish successfully and confirm its
+   `alloy-a1-mini-physical-pilot-ci` artifact is present before downloading
+   or installing it. CI now asserts the app/test package IDs are
+   `com.mbaliga.alloy.pilot` and `com.mbaliga.alloy.pilot.test`. Only that
+   verified replacement build is intended to install alongside regular Alloy.
+   It remains CI-debug-signed, is not a production release, and is not a
+   physical-print qualification. The matching `app-release-androidTest.apk`
+   is optional for the phone-only flow. The artifact's
+   `evidence/run-*/software-pilot-manifest.json` is software evidence only;
+   it must say `software_only: true` and leave
+   `physical_qualification: PENDING` and
+   `direct_send_qualification: PENDING`.
 2. Confirm the app visibly labels itself **PILOT BUILD**. On the phone, open
    Library and select an untouched bundled fixture. Use only the pinned
    A1 Mini / N1 profile, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
