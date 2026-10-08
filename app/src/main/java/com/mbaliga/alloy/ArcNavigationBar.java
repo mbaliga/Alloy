@@ -253,7 +253,11 @@ public final class ArcNavigationBar extends FrameLayout {
             }
             case MotionEvent.ACTION_UP: {
                 int target = nearestDestination(event.getRawX(), event.getRawY());
-                if (target >= 0) select(target);
+                // The touch listener consumes the gesture, so Android will not
+                // synthesize the usual click. Route the release through the
+                // target view to preserve its click event and accessibility
+                // semantics (and select the item under a scrub-release).
+                if (target >= 0) destinations[target].performClick();
                 clearPreview();
                 return true;
             }
@@ -268,6 +272,7 @@ public final class ArcNavigationBar extends FrameLayout {
     private void previewDestination(int index) {
         if (previewIndex == index) return;
         previewIndex = index;
+        context.announceForAccessibility(DESTINATION_LABELS[index]);
         invalidate();
     }
 
