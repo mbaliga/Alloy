@@ -91,9 +91,11 @@ all destinations remain reachable without horizontal scrolling.
   preflight. Verify that “Learn” is available later and that a skipped route
   can be replayed from Learn.
 - Open Start, Quick cheat sheet, Materials and Troubleshoot. Search for
-  `sticking`, `stringing`, `smoke`, and `tangle`.
-- In **Fix a symptom**, confirm the symptom-first list contains at least 24
-  cards and opens the hard-stop guidance before speculative remedies. Open
+  `sticking`, `stringing`, `smoke`, and `tangle`; symptom results should update
+  as text is entered, without a separate Find button.
+- In **Fix a symptom**, confirm the catalog contains at least 24 cards. With an
+  empty query, show the hard-stop cards only; for a search, put matching
+  hard-stop guidance before routine remedies. Open
   `Printer state is not confirmed` and confirm the unbranded phone/printer
   illustration is accompanied by native text saying state is unconfirmed.
 - Verify every displayed article retains readable safety and source/scope

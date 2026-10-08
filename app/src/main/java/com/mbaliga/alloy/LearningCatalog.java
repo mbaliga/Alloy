@@ -126,6 +126,29 @@ public final class LearningCatalog {
         return results;
     }
 
+    /**
+     * Search the symptom guide with stop-now advice ahead of routine recovery.
+     * An empty query intentionally returns only hard-stop cards, not the entire
+     * troubleshooting library; this keeps urgent safety guidance visible while
+     * the reader decides what to search for.
+     */
+    public List<Article> searchTroubleshooting(String query) {
+        String needle = query == null ? "" : query.trim();
+        boolean empty = needle.isEmpty();
+        ArrayList<Article> results = new ArrayList<>();
+        for (Article article : articles) {
+            if (!"troubleshoot".equals(article.kind) || !"Hard stop".equals(article.safety)) continue;
+            if ((empty || article.matches(needle)) && !results.contains(article)) results.add(article);
+        }
+        if (!empty) {
+            for (Article article : articles) {
+                if (!"troubleshoot".equals(article.kind) || "Hard stop".equals(article.safety)) continue;
+                if (article.matches(needle)) results.add(article);
+            }
+        }
+        return Collections.unmodifiableList(results);
+    }
+
     private static String required(JSONObject object, String key) {
         String value = object.optString(key, "").trim();
         if (value.length() == 0) throw new IllegalArgumentException("Missing " + key);
