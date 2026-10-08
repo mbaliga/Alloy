@@ -20,7 +20,14 @@ fixture in this pilot, and do not mark this evidence as support evidence.
    expires **2027-01-06**). On the Android phone, install only
    `app-release.apk` from the extracted folder. The matching
    `app-release-androidTest.apk` is for optional instrumentation runs and is
-   not required for the in-app physical-pilot flow. The artifact also includes
+   not required for the in-app physical-pilot flow. Both the pilot and ordinary
+   CI builds use the same Android application ID but may have different debug
+   signing keys, so Android can refuse an in-place update. Before replacing or
+   uninstalling an existing Alloy build, export any project you need as
+   `.alloy.zip` and back up other data; uninstalling clears app-private data
+   and printer credentials. If you cannot safely back up, use a separate
+   Android user/work profile or stop rather than uninstalling. The artifact
+   also includes
    `evidence/run-*/software-pilot-manifest.json`; keep it as the CI software
    record. It includes package/profile/build hashes and explicitly says
    `software_only: true`, `physical_qualification: PENDING`, and
