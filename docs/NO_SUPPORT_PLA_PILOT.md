@@ -13,32 +13,47 @@ fixture in this pilot, and do not mark this evidence as support evidence.
 
 ## Required build and on-phone checks
 
-1. Download the matching pilot app and instrumentation APK pair from
-   [native-build run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229),
-   artifact `alloy-a1-mini-physical-pilot-ci` (ZIP SHA-256
+1. Download and extract the latest successful
+   [native-build artifact from run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229),
+   `alloy-a1-mini-physical-pilot-ci` (ZIP SHA-256
    `47c9795fafe8205ae6cf3198d2634eb7fa5492cd9feee015ec3d38f75b82129f`;
-   expires **2027-01-06**). This is the latest successful isolated pilot pair
-   available; CI passed its five-fixture emulator software checks. That does
-   not qualify a physical printer. Do not use the older pilot artifact from run
-   37728381335. If building locally instead, use the exact isolated command
-   below; the build is rejected if a production flag or native verification
-   claim is supplied:
-
-   ```sh
-   gradle :app:assembleRelease :app:assembleReleaseAndroidTest \
-     -PalloyNativeEngine=true \
-     -PalloyPhysicalPilot=true \
-     -PalloyCiDebugSign=true
-   ```
-
-   The app must visibly describe the path as a **PILOT BUILD**. A normal APK
-   never exposes this route.
-2. Install both APKs on the physical Android phone. Run the deliberately
-   opt-in evidence export below. It slices the five fixtures with the native
-   engine, rejects any support toolpath, validates the A1 template, and keeps
-   each `.gcode.3mf` plus a software-only hash manifest in Alloy's app-external
-   storage. The normal regression test deletes its temporary artifacts; only
-   this explicit command retains them.
+   expires **2027-01-06**). On the Android phone, install only
+   `app-release.apk` from the extracted folder. The matching
+   `app-release-androidTest.apk` is for optional instrumentation runs and is
+   not required for the in-app physical-pilot flow. The artifact also includes
+   `evidence/run-*/software-pilot-manifest.json`; keep it as the CI software
+   record. It includes package/profile/build hashes and explicitly says
+   `software_only: true`, `physical_qualification: PENDING`, and
+   `direct_send_qualification: PENDING`. It never authorizes a printer job.
+   CI passed the five-fixture software checks for this exact source. That does
+   not prove this phone's runtime or a physical print. Do not use the older
+   pilot artifact from run 37728381335.
+2. Confirm the app visibly labels itself **PILOT BUILD**. On the phone, open
+   Library and select an untouched bundled fixture. Use only the pinned
+   A1 Mini / N1 profile, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
+   external/direct feed, no AMS, and supports off. Do not transform the fixture
+   or change its recipe. Slice and inspect the toolpath and preflight result.
+   Repeat the in-app slice/preflight for each of the five fixtures listed below.
+   Export the `.gcode.3mf` to Files if you need a phone-accessible copy.
+3. Pair the printer from Alloy, confirm the discovered model code is N1, and
+   save the printer's leaf-certificate SHA-256 pin. For each fixture, use
+   **Send to printer** only after its unchanged pilot checks pass. Confirm the
+   separate “Upload controlled pilot package?” prompt, then the separate Start
+   prompt. Confirm fresh authenticated upload and PREPARE/RUNNING telemetry.
+   Print each fixture in turn; a successful in-app slice or upload is not a
+   completed physical acceptance check.
+4. For every physical fixture, retain its artifact hash, first-layer and
+   completed-part photos, caliper measurements where applicable, and redacted
+   printer telemetry. Record each check in
+   `release/no-support-pla-pilot.json`. Keep evidence outside Git if it
+   includes printer identifiers or local-network data. If motion, temperature,
+   material routing, adhesion or printer state is unexpected, stop; do not
+   retry commands automatically.
+5. A desktop with ADB is optional for rerunning the Android instrumentation
+   export below; it is not required to install the pilot app, slice, or run its
+   guarded physical flow from the phone. The export remains software-only and
+   does not replace the five physical checks. If you do rerun it, install the
+   matching instrumentation APK and use:
 
    ```sh
    adb shell am instrument -w -r \
@@ -49,28 +64,6 @@ fixture in this pilot, and do not mark this evidence as support evidence.
    adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-no-support-pilot \
      ./alloy-no-support-pilot-evidence
    ```
-
-   Open `software-pilot-manifest.json` in the pulled run directory and retain
-   its five package hashes. It explicitly says `software_only: true` and
-   `physical_qualification: PENDING`; it is evidence for package inspection,
-   not permission to upload or start a printer job.
-3. Record the release APK, instrumentation APK, signer and profile hashes.
-4. For every fixture, retain the artifact hash, a photograph of the first
-   layer and completed part, caliper measurements where applicable, and
-   redacted printer telemetry. Keep source evidence outside Git if it includes
-   printer identifiers or local-network data.
-5. In that pilot build only, open exactly one of the five bundled fixtures
-   from Library, make no geometry or recipe changes, slice it, pair the N1
-   printer with its leaf SHA-256 certificate pin, and use **Send to printer**.
-   Alloy shows a second explicit “Upload controlled pilot package?” consent
-   before it uploads; it shows a separate explicit Start consent afterward.
-   Record the resulting authenticated upload and fresh PREPARE/RUNNING
-   telemetry. Any other model, profile, material, support setting or ordinary
-   build stays blocked.
-6. Complete the physical transport acceptance runbook separately. This pilot
-   collects its evidence but does not authorize a general direct-print claim,
-   native-engine promotion, support parity, A1/P1S qualification or a
-   production release.
 
 Run the record validator only after human review:
 
