@@ -67,11 +67,17 @@ official engine and must never be described as one.
      Orca's `find_package(libnoise)` to the already-created pinned source
      target, and configure-level tests verify both target-present and
      target-missing behavior. Official-source run
-     [`37818441635`](https://github.com/mbaliga/Alloy/actions/runs/37818441635)
+     [`37819859908`](https://github.com/mbaliga/Alloy/actions/runs/37819859908)
      passed those tests, the pinned source manifest, the direct port-surface
-     audit, and a host build of libnoise. This adapter is not yet wired to a
-     separate `libslic3r` target; there is still no official-Orca Android
-     binary or runtime evidence.
+     audit, and a host build of libnoise. The CMake source-selection inventory
+     lists 190 official C++ sources and 204 legacy target sources: 184 paths
+     overlap, while six official paths are not selected by the current target
+     (`CurveAnalyzer.cpp`, `Format/svg.cpp`,
+     `Interlocking/InterlockingGenerator.cpp`, `Interlocking/VoxelUtils.cpp`,
+     `Orient.cpp`, and `Shape/TextShape.cpp`). This compares source selection,
+     not file contents or semantics. The adapter is not yet wired to a separate
+     `libslic3r` target; there is still no official-Orca Android binary or
+     runtime evidence.
 
 3. **Narrow JNI adapter**
    - Preserve Alloy's bounded model staging, typed recipe serializer,
