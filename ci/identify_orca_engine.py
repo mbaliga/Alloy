@@ -220,6 +220,9 @@ def main() -> None:
     best = scored[0] if scored else (0, len(paths), "", 0)
     exact, total, best_commit, best_time = best
     ratio = (exact / total) if total else 0.0
+    upstream_head = git(orca, "rev-parse", history_ref)
+    head_exact, head_total = score_commit(orca, upstream_head, mobile_blobs)
+    head_ratio = (head_exact / head_total) if head_total else 0.0
 
     diff_stat = ""
     if best_commit:
@@ -255,7 +258,9 @@ def main() -> None:
         "mobile_commit": git(mobile, "rev-parse", "HEAD"),
         "upstream_name": upstream_name,
         "upstream_ref": history_ref,
-        "orca_head": git(orca, "rev-parse", history_ref),
+        "orca_head": upstream_head,
+        "upstream_head_exact_files": head_exact,
+        "upstream_head_ratio": head_ratio,
         "common_engine_files": len(paths),
         "sample_size": len(sample),
         "sample_files_with_exact_history_interval": len(intervals),
@@ -283,7 +288,8 @@ def main() -> None:
         f"- sampled files with exact-history intervals: {len(intervals)} / {len(sample)}",
         f"- candidate commits scored: {len(candidates)}",
         f"- best matching official commit: `{best_commit or 'NONE'}`",
-        f"- exact full common-tree matches: {exact} / {total} ({ratio:.2%})",
+        f"- best-history candidate exact matches: {exact} / {total} ({ratio:.2%})",
+        f"- upstream ref exact matches (snapshot only): {head_exact} / {head_total} ({head_ratio:.2%})",
         f"- G2 high-confidence result: **{'PASS CANDIDATE' if high_confidence else 'INSUFFICIENT / FAIL'}**",
         "",
         "## Top candidates",
