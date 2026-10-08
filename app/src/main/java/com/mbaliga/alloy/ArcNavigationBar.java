@@ -9,6 +9,7 @@ import android.graphics.PathMeasure;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -25,9 +26,18 @@ public final class ArcNavigationBar extends FrameLayout {
     private static final float STAGE_WIDTH = 400f;
     private static final float STAGE_HEIGHT = 150f;
     private static final float SAFE_SIDE_INSET = 22f;
+    private static final float ARC_START_X = 22f;
+    private static final float ARC_CONTROL_X = 200f;
+    private static final float ARC_END_X = 378f;
+    private static final float LOWER_ARC_END_Y = 118f;
+    private static final float LOWER_ARC_CONTROL_Y = 83f;
+    private static final float UPPER_ARC_OFFSET = 60f;
     private static final float[][] DESTINATIONS = {
-            {46.8f, 107.4f, -9.6f}, {123.6f, 97.7f, -4.83f},
-            {200f, 94.5f, 0f}, {276.4f, 97.7f, 4.83f}, {353.2f, 107.4f, 9.6f}
+            {46.8f, 113.4f, -9.6f}, {123.6f, 103.7f, -4.83f},
+            {200f, 100.5f, 0f}, {276.4f, 103.7f, 4.83f}, {353.2f, 113.4f, 9.6f}
+    };
+    private static final String[] DESTINATION_LABELS = {
+            "Workshop", "Library", "Prepare", "History", "More"
     };
     public interface Listener {
         void onContext();
@@ -48,6 +58,7 @@ public final class ArcNavigationBar extends FrameLayout {
     private final TextView[] destinations = new TextView[5];
     private Listener listener;
     private String contextLabel = "Prepare";
+    private int previewIndex = -1;
 
     public ArcNavigationBar(Context context) {
         super(context);
@@ -71,12 +82,12 @@ public final class ArcNavigationBar extends FrameLayout {
         addView(alerts);
 
         String[] glyphs = {"⌂", "▤", "◈", "◷", "⋯"};
-        String[] descriptions = {"Workshop home", "Model Library", "Prepare model", "Model history", "More actions"};
         for (int i = 0; i < destinations.length; i++) {
             final int index = i;
-            TextView destination = text(glyphs[i], 20, Color.rgb(211, 214, 211), descriptions[i]);
+            TextView destination = text(glyphs[i], 20, Color.rgb(211, 214, 211), DESTINATION_LABELS[i]);
             destination.setGravity(Gravity.CENTER);
             destination.setOnClickListener(v -> select(index));
+            destination.setOnTouchListener((view, event) -> onDestinationTouch(index, event));
             destinations[i] = destination;
             addView(destination);
         }
@@ -99,6 +110,8 @@ public final class ArcNavigationBar extends FrameLayout {
             // font), while the TextViews remain the touch/accessibility layer.
             item.setTextColor(Color.TRANSPARENT);
             item.setBackground(null);
+            item.setSelected(i == selectedIndex);
+            item.setContentDescription(DESTINATION_LABELS[i] + (i == selectedIndex ? ", selected" : ""));
         }
         invalidate();
     }
@@ -135,8 +148,10 @@ public final class ArcNavigationBar extends FrameLayout {
         float scale = stageScale(getWidth());
         float stageLeft = stageLeft();
         float stageTop = stageTop(scale);
-        layoutTarget(search, x(18f, stageLeft, scale), y(50.79f, stageTop, scale));
-        layoutTarget(alerts, x(382f, stageLeft, scale), y(50.79f, stageTop, scale));
+        layoutTarget(search, x(ARC_START_X, stageLeft, scale),
+                y(LOWER_ARC_END_Y - UPPER_ARC_OFFSET, stageTop, scale));
+        layoutTarget(alerts, x(ARC_END_X, stageLeft, scale),
+                y(LOWER_ARC_END_Y - UPPER_ARC_OFFSET, stageTop, scale));
         context.layout(Math.round(x(82.52f, stageLeft, scale)), 0,
                 Math.round(x(317.48f, stageLeft, scale)), Math.round(y(74f, stageTop, scale)));
         for (int i = 0; i < destinations.length; i++) {
@@ -171,30 +186,33 @@ public final class ArcNavigationBar extends FrameLayout {
      * Android focus, semantics and hit targets.
      */
     private void drawNavigationChrome(Canvas canvas, float stageLeft, float stageTop, float scale) {
-        float leftCx = x(18f, stageLeft, scale);
-        float rightCx = x(382f, stageLeft, scale);
-        float sideCy = y(50.79f, stageTop, scale);
+        float leftCx = x(ARC_START_X, stageLeft, scale);
+        float rightCx = x(ARC_END_X, stageLeft, scale);
+        float sideCy = y(LOWER_ARC_END_Y - UPPER_ARC_OFFSET, stageTop, scale);
         float radius = 22f * scale;
         fill(upper);
         canvas.drawCircle(leftCx, sideCy, radius, upper);
         canvas.drawCircle(rightCx, sideCy, radius, upper);
         stroke(ink, dp(1.6f));
-        canvas.save(); canvas.rotate(-11.37f, leftCx, sideCy);
+        canvas.save(); canvas.rotate(arcTangentDegrees(0f), leftCx, sideCy);
         canvas.drawCircle(leftCx - dp(2), sideCy - dp(2), dp(5), ink);
         canvas.drawLine(leftCx + dp(2), sideCy + dp(2), leftCx + dp(7), sideCy + dp(7), ink);
         canvas.restore();
         fill(ink);
         ink.setTextAlign(Paint.Align.CENTER); ink.setTextSize(dp(17)); ink.setTypeface(Typeface.DEFAULT_BOLD);
-        canvas.save(); canvas.rotate(11.37f, rightCx, sideCy);
+        canvas.save(); canvas.rotate(arcTangentDegrees(1f), rightCx, sideCy);
         canvas.drawText("!", rightCx, sideCy + dp(6), ink); canvas.restore();
 
         Path upperPath = upperPath(stageLeft, stageTop, scale);
         Paint labelPaint = new Paint(ink); fill(labelPaint); labelPaint.setTextSize(dp(13));
         labelPaint.setTypeface(Typeface.DEFAULT_BOLD); labelPaint.setTextAlign(Paint.Align.LEFT);
         PathMeasure measure = new PathMeasure(upperPath, false);
-        canvas.drawTextOnPath(contextLabel, upperPath,
-                Math.max(0f, (measure.getLength() - labelPaint.measureText(contextLabel)) / 2f), dp(5), labelPaint);
-        drawEndActionIcon(canvas, x(317.48f, stageLeft, scale), y(40.12f, stageTop, scale));
+        String shownLabel = displayedContextLabel();
+        canvas.drawTextOnPath(shownLabel, upperPath,
+                Math.max(0f, (measure.getLength() - labelPaint.measureText(shownLabel)) / 2f), dp(5), labelPaint);
+        float actionX = 344f;
+        drawEndActionIcon(canvas, x(actionX, stageLeft, scale),
+                y(upperArcY((actionX - ARC_START_X) / (ARC_END_X - ARC_START_X)), stageTop, scale));
 
         int control = dp(32);
         for (int i = 0; i < DESTINATIONS.length; i++) {
@@ -202,7 +220,7 @@ public final class ArcNavigationBar extends FrameLayout {
             float cy = y(DESTINATIONS[i][1], stageTop, scale);
             canvas.save();
             canvas.rotate(DESTINATIONS[i][2], cx, cy);
-            if (i == selectedIndex) {
+            if (i == (previewIndex >= 0 ? previewIndex : selectedIndex)) {
                 canvas.drawRoundRect(new RectF(cx - control / 2f, cy - control / 2f,
                         cx + control / 2f, cy + control / 2f), dp(18), dp(18), selected);
             }
@@ -213,7 +231,8 @@ public final class ArcNavigationBar extends FrameLayout {
 
     private void drawEndActionIcon(Canvas canvas, float cx, float cy) {
         Paint mark = new Paint(ink); stroke(mark, dp(1.4f));
-        canvas.save(); canvas.rotate(7.39f, cx, cy);
+        float t = (344f - ARC_START_X) / (ARC_END_X - ARC_START_X);
+        canvas.save(); canvas.rotate(arcTangentDegrees(t), cx, cy);
         canvas.drawLine(cx - dp(4), cy + dp(4), cx + dp(4), cy - dp(4), mark);
         canvas.drawLine(cx, cy - dp(4), cx + dp(4), cy - dp(4), mark);
         canvas.drawLine(cx + dp(4), cy - dp(4), cx + dp(4), cy, mark);
@@ -221,6 +240,83 @@ public final class ArcNavigationBar extends FrameLayout {
     }
 
     private int selectedIndex;
+
+    private boolean onDestinationTouch(int index, MotionEvent event) {
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                previewDestination(index);
+                return true;
+            case MotionEvent.ACTION_MOVE: {
+                int target = nearestDestination(event.getRawX(), event.getRawY());
+                if (target >= 0) previewDestination(target);
+                return true;
+            }
+            case MotionEvent.ACTION_UP: {
+                int target = nearestDestination(event.getRawX(), event.getRawY());
+                if (target >= 0) select(target);
+                clearPreview();
+                return true;
+            }
+            case MotionEvent.ACTION_CANCEL:
+                clearPreview();
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    private void previewDestination(int index) {
+        if (previewIndex == index) return;
+        previewIndex = index;
+        invalidate();
+    }
+
+    private void clearPreview() {
+        if (previewIndex < 0) return;
+        previewIndex = -1;
+        invalidate();
+    }
+
+    String displayedContextLabel() {
+        return previewIndex >= 0 ? DESTINATION_LABELS[previewIndex] : contextLabel;
+    }
+
+    private int nearestDestination(float rawX, float rawY) {
+        int[] location = new int[2];
+        getLocationOnScreen(location);
+        float localX = rawX - location[0];
+        float localY = rawY - location[1];
+        float scale = stageScale(getWidth());
+        float left = stageLeft();
+        float top = stageTop(scale);
+        int nearest = -1;
+        float bestDistance = Float.MAX_VALUE;
+        for (int i = 0; i < DESTINATIONS.length; i++) {
+            float dx = localX - x(DESTINATIONS[i][0], left, scale);
+            float dy = localY - y(DESTINATIONS[i][1], top, scale);
+            float distance = dx * dx + dy * dy;
+            if (distance < bestDistance) { bestDistance = distance; nearest = i; }
+        }
+        float maximum = dp(46);
+        return bestDistance <= maximum * maximum ? nearest : -1;
+    }
+
+    static float lowerArcY(float t) {
+        float inverse = 1f - t;
+        return inverse * inverse * LOWER_ARC_END_Y
+                + 2f * inverse * t * LOWER_ARC_CONTROL_Y
+                + t * t * LOWER_ARC_END_Y;
+    }
+
+    static float upperArcY(float t) { return lowerArcY(t) - UPPER_ARC_OFFSET; }
+
+    static float arcTangentDegrees(float t) {
+        float dx = 2f * (1f - t) * (ARC_CONTROL_X - ARC_START_X)
+                + 2f * t * (ARC_END_X - ARC_CONTROL_X);
+        float dy = 2f * (1f - t) * (LOWER_ARC_CONTROL_Y - LOWER_ARC_END_Y)
+                + 2f * t * (LOWER_ARC_END_Y - LOWER_ARC_CONTROL_Y);
+        return (float) Math.toDegrees(Math.atan2(dy, dx));
+    }
 
     private void drawDestinationSymbol(Canvas canvas, int index, float cx, float cy, int color) {
         Paint symbol = paint(color); stroke(symbol, dp(1.5f));
@@ -255,20 +351,25 @@ public final class ArcNavigationBar extends FrameLayout {
     private void fill(Paint paint) { paint.setStyle(Paint.Style.FILL); }
 
     private float stageScale(int width) {
-        return Math.max(0.1f, (width - dp(SAFE_SIDE_INSET * 2f)) / STAGE_WIDTH);
+        float widthScale = (width - dp(SAFE_SIDE_INSET * 2f)) / STAGE_WIDTH;
+        float heightScale = getHeight() / STAGE_HEIGHT;
+        return Math.max(0.1f, Math.min(widthScale, heightScale));
     }
-    private float stageLeft() { return dp(SAFE_SIDE_INSET); }
+    private float stageLeft() { return (getWidth() - STAGE_WIDTH * stageScale(getWidth())) / 2f; }
     private float stageTop(float scale) { return Math.max(0f, (getHeight() - STAGE_HEIGHT * scale) / 2f); }
     private float x(float token, float left, float scale) { return left + token * scale; }
     private float y(float token, float top, float scale) { return top + token * scale; }
     private Path lowerPath(float left, float top, float scale) {
-        Path path = new Path(); path.moveTo(x(22f, left, scale), y(112f, top, scale));
-        path.quadTo(x(200f, left, scale), y(77f, top, scale), x(378f, left, scale), y(112f, top, scale));
-        return path;
+        return arcPath(left, top, scale, 0f);
     }
     private Path upperPath(float left, float top, float scale) {
-        Path path = new Path(); path.moveTo(x(82.52f, left, scale), y(40.12f, top, scale));
-        path.quadTo(x(200f, left, scale), y(24.88f, top, scale), x(317.48f, left, scale), y(40.12f, top, scale));
+        return arcPath(left, top, scale, UPPER_ARC_OFFSET);
+    }
+    private Path arcPath(float left, float top, float scale, float verticalOffset) {
+        Path path = new Path();
+        path.moveTo(x(ARC_START_X, left, scale), y(LOWER_ARC_END_Y - verticalOffset, top, scale));
+        path.quadTo(x(ARC_CONTROL_X, left, scale), y(LOWER_ARC_CONTROL_Y - verticalOffset, top, scale),
+                x(ARC_END_X, left, scale), y(LOWER_ARC_END_Y - verticalOffset, top, scale));
         return path;
     }
     private void layoutTarget(View target, float cx, float cy) {
