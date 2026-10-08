@@ -92,6 +92,10 @@ def main() -> None:
         raise SystemExit(f"{ordinary}: macOS Android acceptance must not carry Linux-only KVM configuration")
 
     native_text = native.read_text(encoding="utf-8")
+    app_build = ROOT / "app/build.gradle"
+    app_build_text = app_build.read_text(encoding="utf-8")
+    require(app_build_text, "if (physicalPilot)", app_build)
+    require(app_build_text, "applicationIdSuffix '.pilot'", app_build)
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyCiDebugSign=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true",
@@ -122,6 +126,8 @@ def main() -> None:
         "-PalloyPhysicalPilot=true",
         "Run five-fixture pilot evidence on API-35 ARM translation",
         "com.mbaliga.alloy.NoSupportPlaPilotTest#nativeNoSupportPilotFixturesRemainInspectableAndPackageable",
+        "com.mbaliga.alloy.pilot.test/androidx.test.runner.AndroidJUnitRunner",
+        "/sdcard/Android/data/com.mbaliga.alloy.pilot/files/alloy-no-support-pilot/.",
         "export-no-support-pilot true",
         "physical_qualification",
         "package_preflight",
