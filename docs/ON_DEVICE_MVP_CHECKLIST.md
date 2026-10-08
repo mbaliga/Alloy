@@ -28,6 +28,11 @@ authorizes general direct printing or production release promotion.
    `sha256:99f4544b9c593ba5bb110287b9723926664e38f8401dd4cc43109199db184901`
    (expires **2027-01-06**). After extracting, install `app-release.apk` on
    an ARM64 Android phone; compute and record the APK's own SHA-256 separately.
+   CI-debug signatures can differ between runs, so Android may refuse to update
+   an existing Alloy install. Before uninstalling, export projects you need as
+   `.alloy.zip` and back up other app data; uninstalling clears app-private
+   data and saved printer credentials. Use a separate Android user/work profile
+   or stop if you cannot back up safely.
    This QA build verifies the app workflow/Handy package-visibility wiring, not
    native slicing, printer transport, Handy's actual import acceptance, or release.
 2. Install the native-capable QA/pilot artifacts only from successful
