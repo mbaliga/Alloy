@@ -2,6 +2,23 @@
 
 Date: 2026-09-22
 
+2026-10-08 fresh G2 provenance checkpoint:
+The G2 audit is now wired to run on milestone-branch changes to the native
+engine source and its audit scripts. Run
+[`37739472063`](https://github.com/mbaliga/Alloy/actions/runs/37739472063)
+against pinned mobile commit `d996a9cadb65b354997f2d5d8734b46bb9ea4efd`
+and official Orca HEAD `18b70844d1dfaeede60a834f5fec41dd81dfe0e2` remains
+**INSUFFICIENT / FAIL**: only 66/72 sampled files have exact-history intervals
+and the best candidate `83738cacd84c616b62fc3cc15be8b65665569be8` matches
+314/479 common files (65.55%), below the unchanged 85% threshold. The profile
+anchor still has no exact introduction in official Orca history. The audit
+report now names the six unmatched samples: `Config.cpp`,
+`Feature/FuzzySkin/FuzzySkin.cpp`, `PrintConfig.cpp`,
+`SLA/IndexedMesh.cpp`, `SVG.hpp`, and `Utils.hpp`. Evidence artifact ZIP
+SHA-256: `f84c7a373febf2dbed1cac0a4f3bc2badbccc08dd69cfebcb715931866cbe02e`.
+This improves diagnosis only; it does not pass G2 or justify promoting the
+engine baseline.
+
 2026-10-08 shared model-cache race checkpoint:
 commit `462ad6ca49c049444960e36f83845a15093a740c` serializes ZIP bundle
 materialization and rollback with model-cache writes and pruning. A regression

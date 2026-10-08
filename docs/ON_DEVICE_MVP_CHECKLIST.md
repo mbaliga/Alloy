@@ -33,8 +33,11 @@ release promotion.
    G3 evidence `d8b98666a48daa2be073f911f6426eb760c531e3212684836c0145b769fc5719`.
    The run passed native instrumentation (186 emulator tests; 2 skipped) and
    structurally validated G3 evidence. These CI QA artifacts are not
-   production-signed; desktop parity warnings remain and no physical printer
-   route has been qualified.
+   production-signed; fresh G2 provenance is still **INSUFFICIENT / FAIL**
+   (66/72 exact-history samples; 314/479 exact common files, 65.55%; report
+   [run 37739472063](https://github.com/mbaliga/Alloy/actions/runs/37739472063)).
+   Desktop semantic-parity warnings remain, and no physical printer route has
+   been qualified.
 3. Before any physical pilot, download the isolated pilot APK pair and its
    software-only evidence from
    [`alloy-a1-mini-physical-pilot-ci` on run 37728381335](https://github.com/mbaliga/Alloy/actions/runs/37728381335).
