@@ -104,7 +104,7 @@ jobs:
           cmake --build opencv-build-arm64 --target opencv_world --parallel 2
           cmake --install opencv-build-arm64
           find opencv-install-arm64 -type f -name 'libopencv_world.a' -print -quit | grep -q .
-          test -f opencv-install-arm64/include/opencv4/opencv2/opencv.hpp
+          test -f opencv-install-arm64/sdk/native/jni/include/opencv2/opencv.hpp
 
       - name: Compile smoke fixture against official Orca color utility
         shell: bash
@@ -113,7 +113,7 @@ jobs:
           "${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${ANDROID_API}-clang++" \
             -std=c++17 -fsyntax-only \
             -Ithird_party/orca-official/src/libslic3r \
-            -Iopencv-install-arm64/include/opencv4 \
+            -Iopencv-install-arm64/sdk/native/jni/include \
             ci/fixtures/official-orca-opencv-smoke.cpp
 
       - uses: actions/upload-artifact@v4
