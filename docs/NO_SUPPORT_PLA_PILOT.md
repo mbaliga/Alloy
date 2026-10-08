@@ -20,13 +20,10 @@ fixture in this pilot, and do not mark this evidence as support evidence.
    expires **2027-01-06**). On the Android phone, install only
    `app-release.apk` from the extracted folder. The matching
    `app-release-androidTest.apk` is for optional instrumentation runs and is
-   not required for the in-app physical-pilot flow. Both the pilot and ordinary
-   CI builds use the same Android application ID but may have different debug
-   signing keys, so Android can refuse an in-place update. Before replacing or
-   uninstalling an existing Alloy build, export any project you need as
-   `.alloy.zip` and back up other data; uninstalling clears app-private data
-   and printer credentials. If you cannot safely back up, use a separate
-   Android user/work profile or stop rather than uninstalling. The artifact
+   not required for the in-app physical-pilot flow. The pilot uses a separate Android application ID, so it installs alongside
+   the regular Alloy app and avoids overwriting its projects, inventory, and
+   printer credentials. Keep the regular app installed. The pilot remains
+   CI-debug-signed and is not a production release. The artifact
    also includes
    `evidence/run-*/software-pilot-manifest.json`; keep it as the CI software
    record. It includes package/profile/build hashes and explicitly says
@@ -66,9 +63,9 @@ fixture in this pilot, and do not mark this evidence as support evidence.
    adb shell am instrument -w -r \
      -e class com.mbaliga.alloy.NoSupportPlaPilotTest \
      -e export-no-support-pilot true \
-     com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+     com.mbaliga.alloy.pilot.test/androidx.test.runner.AndroidJUnitRunner
 
-   adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-no-support-pilot \
+   adb pull /sdcard/Android/data/com.mbaliga.alloy.pilot/files/alloy-no-support-pilot \
      ./alloy-no-support-pilot-evidence
    ```
 
