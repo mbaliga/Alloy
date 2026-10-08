@@ -25,8 +25,8 @@ SPOOL_FIELDS = {"id", "title", "form", "compatible_routes", "geometry", "state",
 # recipe or direct-send approval, but it also must not lose one of the A1 mini
 # classes the user needs to review.
 A1_MINI_MATERIAL_IDS = {
-    "pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet",
-    "pla-cf", "petg-cf", "cf-gf-filled",
+    "pla", "petg", "tpu", "pva", "support-pla", "support-petg",
+    "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled",
 }
 
 
@@ -115,6 +115,13 @@ def validate_catalog(path):
     mini = next(printer for printer in printers if printer["id"] == "a1-mini")
     if {material["id"] for material in mini["materials"]} != A1_MINI_MATERIAL_IDS:
         raise ValueError("A1 mini must disclose each ideal and not-recommended material class separately")
+    support_materials = {material["id"]: material for material in mini["materials"]
+                         if material["id"] in {"support-pla", "support-petg"}}
+    if set(support_materials) != {"support-pla", "support-petg"}:
+        raise ValueError("A1 mini must disclose PLA and PETG support-filament families separately")
+    for material in support_materials.values():
+        if material["alloy_direct_send"] != "Not qualified" or "does not imply AMS lite compatibility" not in material["note"]:
+            raise ValueError("A1 mini support-filament families must stay unqualified and route-caveated")
     if {form["id"] for form in mini["spool_forms"]} != {
         "bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"
     }:
