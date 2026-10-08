@@ -124,6 +124,8 @@ def main() -> None:
         "app/src/androidTest/**",
         "Build isolated A1 Mini physical-pilot APK pair",
         "-PalloyPhysicalPilot=true",
+        'test "$pilot_app_id" = "com.mbaliga.alloy.pilot"',
+        'test "$pilot_test_id" = "com.mbaliga.alloy.pilot.test"',
         "Run five-fixture pilot evidence on API-35 ARM translation",
         "com.mbaliga.alloy.NoSupportPlaPilotTest#nativeNoSupportPilotFixturesRemainInspectableAndPackageable",
         "com.mbaliga.alloy.pilot.test/androidx.test.runner.AndroidJUnitRunner",
