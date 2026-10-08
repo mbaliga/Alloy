@@ -316,6 +316,11 @@ jobs:
           mkdir -p path-a1-mini-pilot
           cp app/build/outputs/apk/release/app-release.apk path-a1-mini-pilot/app-release.apk
           cp app/build/outputs/apk/androidTest/release/app-release-androidTest.apk path-a1-mini-pilot/app-release-androidTest.apk
+          aapt="${ANDROID_SDK_ROOT}/build-tools/35.0.0/aapt"
+          pilot_app_id=$("$aapt" dump badging path-a1-mini-pilot/app-release.apk | sed -n "1s/^package: name='\\([^']*\\)'.*/\\1/p")
+          pilot_test_id=$("$aapt" dump badging path-a1-mini-pilot/app-release-androidTest.apk | sed -n "1s/^package: name='\\([^']*\\)'.*/\\1/p")
+          test "$pilot_app_id" = "com.mbaliga.alloy.pilot"
+          test "$pilot_test_id" = "com.mbaliga.alloy.pilot.test"
       - name: Run five-fixture pilot evidence on API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
         with:
