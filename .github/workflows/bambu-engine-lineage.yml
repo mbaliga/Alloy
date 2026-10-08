@@ -1,0 +1,64 @@
+name: Bambu Studio engine lineage diagnostic
+
+on:
+  push:
+    branches: [codex/alloy-phone-first-mvp]
+    paths:
+      - '.github/workflows/bambu-engine-lineage.yml'
+      - 'app/src/main/jni/**'
+      - 'ci/identify_orca_engine.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/bambu-engine-lineage.yml'
+      - 'app/src/main/jni/**'
+      - 'ci/identify_orca_engine.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ORCA_MOBILE_REPO: https://github.com/CodeMasterCody3D/OrcaSlicer-Mobile.git
+  ORCA_MOBILE_SHA: d996a9cadb65b354997f2d5d8734b46bb9ea4efd
+  BAMBU_STUDIO_REPO: https://github.com/bambulab/BambuStudio.git
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out Alloy audit scripts
+        uses: actions/checkout@v4
+      - name: Clone pinned OrcaSlicer-Mobile source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$ORCA_MOBILE_REPO" mobile
+          git -C mobile checkout --detach "$ORCA_MOBILE_SHA"
+          test "$(git -C mobile rev-parse HEAD)" = "$ORCA_MOBILE_SHA"
+      - name: Clone official Bambu Studio history
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --single-branch --branch master "$BAMBU_STUDIO_REPO" bambu
+          git -C bambu rev-parse HEAD
+      - name: Compare mobile engine against official Bambu Studio history
+        id: lineage
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 ci/identify_orca_engine.py mobile bambu bambu-evidence "Bambu Studio" master 2>&1 | tee bambu-lineage.log
+          status=${PIPESTATUS[0]}
+          cp bambu-lineage.log bambu-evidence/run.log || true
+          if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then exit "$status"; fi
+          if [ "$status" -eq 2 ]; then
+            echo "Diagnostic completed: no high-confidence Bambu Studio baseline; this is not a G2 pass."
+          fi
+      - name: Upload Bambu Studio lineage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bambu-studio-engine-lineage-diagnostic
+          path: bambu-evidence
+          if-no-files-found: error
