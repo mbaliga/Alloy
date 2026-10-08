@@ -99,7 +99,7 @@ public final class PrinterCapabilityCatalog {
         }
         Printer mini = null;
         for (Printer printer : printers) if ("a1-mini".equals(printer.id)) mini = printer;
-        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"))
+        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"))
                 || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool")))
             throw new IOException("A1 mini capability coverage is incomplete");
     }
