@@ -133,10 +133,16 @@ public final class LearningAndCapabilityCatalogTest {
             }
         }
         Assert.assertTrue(mini.directSendState.toLowerCase().contains("not qualified"));
-        boolean pla = false, petg = false, tpu = false, pva = false, blocked = false, external = false, amsLite = false, regularAms = false;
+        boolean pla = false, petg = false, tpu = false, pva = false, supportPla = false, supportPetg = false, blocked = false, external = false, amsLite = false, regularAms = false;
         for (PrinterCapabilityCatalog.Material material : mini.materials) {
             pla |= material.name.equals("PLA"); petg |= material.name.equals("PETG");
             tpu |= material.name.equals("TPU"); pva |= material.name.equals("PVA");
+            supportPla |= material.id.equals("support-pla") && material.name.equals("Support for PLA")
+                    && material.directSendState.equals("Not qualified")
+                    && material.note.contains("does not imply AMS lite compatibility");
+            supportPetg |= material.id.equals("support-petg") && material.name.equals("Support for PETG")
+                    && material.directSendState.equals("Not qualified")
+                    && material.note.contains("does not imply AMS lite compatibility");
             blocked |= material.directSendState.equals("Blocked");
             Assert.assertFalse("every material needs its own stable id", material.id.isEmpty());
             Assert.assertTrue("every material claim needs an official source URL",
@@ -146,6 +152,8 @@ public final class LearningAndCapabilityCatalogTest {
             external |= route.id.equals("external-direct"); amsLite |= route.id.equals("ams-lite"); regularAms |= route.id.equals("regular-ams") && route.state.equals("Unsupported");
         }
         Assert.assertTrue(pla && petg && tpu && pva && blocked);
+        Assert.assertTrue("A1 mini support-filament families need explicit non-qualification and AMS lite caveats",
+                supportPla && supportPetg);
         Assert.assertTrue(external && amsLite && regularAms);
         Assert.assertTrue("A1 mini must disclose physical AMS lite spool dimensions", mini.spoolGuidance.toString().contains("40–68 mm"));
         Assert.assertTrue("A1 mini must disclose TPU/PVA AMS lite exclusions", mini.spoolGuidance.toString().contains("PVA"));
