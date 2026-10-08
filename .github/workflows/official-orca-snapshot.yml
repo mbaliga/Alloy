@@ -14,6 +14,7 @@ on:
       - 'ci/fixtures/official-orca-libnoise-adapter/**'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/audit_official_orca_port_surface.py'
+      - 'ci/test_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
       - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
   pull_request:
@@ -28,6 +29,7 @@ on:
       - 'ci/fixtures/official-orca-libnoise-adapter/**'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/audit_official_orca_port_surface.py'
+      - 'ci/test_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
       - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
   workflow_dispatch:
@@ -51,6 +53,8 @@ jobs:
           --manifest-output official-orca-source-manifest.json
       - name: Test source-target adapter for official libnoise lookup
         run: python3 -m unittest -v ci/test_official_orca_libnoise_adapter.py
+      - name: Test official and legacy source-list inventory
+        run: python3 -m unittest -v ci/test_official_orca_port_surface.py
       - name: Audit official-to-legacy Android port surface
         run: >-
           python3 ci/audit_official_orca_port_surface.py
