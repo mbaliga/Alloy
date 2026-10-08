@@ -1,16 +1,18 @@
 # Alloy on-device MVP verification
 
 Use the exact build lane named in each section. The latest native verification
-is run 37745898443 from app-source commit
-`066ab57ebf77c7287f734dbbf7f82c4e14011d24`; its engine build,
+is run 37749868229 from app-source commit
+`5dc45a091d97b5c5a447889843a578f76891a7d3`; its engine build,
 API-35 ARM-translation instrumentation, G3 software evidence export, and
-five-fixture software pilot all passed. It produced the CI-signed QA APK,
-native instrumentation report/APK, G3 evidence, and isolated A1 Mini pilot APK
-pair. These are software/QA artifacts only: they do not prove a physical print,
-Bambu Handy acceptance, or production signing. The current Android v1 run
-37749868263 includes the narrow Bambu Handy package-visibility fix; retry
-attempt 2 passed Android pipeline acceptance tests and published a fresh QA
-APK. Artifact ZIP digest:
+five-fixture software pilot all passed. It produced the CI-signed native QA
+APK, instrumentation APK/report, G3 evidence, and isolated A1 Mini pilot APK
+pair. Native pilot artifact ZIP digest:
+`sha256:47c9795fafe8205ae6cf3198d2634eb7fa5492cd9feee015ec3d38f75b82129f`
+(expires **2027-01-06**). These are software/QA artifacts only: they do not
+prove a physical print, Bambu Handy acceptance, or production signing. The
+Android v1 run 37749868263 on the same source commit includes the narrow Bambu
+Handy package-visibility fix; retry attempt 2 passed Android pipeline
+acceptance tests and published a fresh QA APK. Artifact ZIP digest:
 `sha256:99f4544b9c593ba5bb110287b9723926664e38f8401dd4cc43109199db184901`
 (expires **2027-01-06**).
 Fresh G2 provenance remains **INSUFFICIENT / FAIL**. None of these builds
@@ -29,16 +31,13 @@ authorizes general direct printing or production release promotion.
    This QA build verifies the app workflow/Handy package-visibility wiring, not
    native slicing, printer transport, Handy's actual import acceptance, or release.
 2. Install the native-capable QA/pilot artifacts only from successful
-   [native run 37745898443](https://github.com/mbaliga/Alloy/actions/runs/37745898443).
+   [native run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229).
    The run produced the native QA APK, native instrumentation report, G3
    software evidence and isolated A1 Mini pilot APK pair. Use the isolated
    pilot pair only for the bounded software/hardware procedure in section 6;
-   it is not production-signed and does not establish successful printing.
-   The native run uses the same slicer/runtime source as the later manifest-only
-   package-visibility change, but does not include that manifest declaration.
-   The Handy package-visibility manifest fix is in the passing Android QA
-   artifact from run 37749868263; verify installed Handy launches and still
-   confirm Handy's own import response separately.
+   it includes the Handy package-visibility manifest fix, but is not
+   production-signed and does not establish successful printing or Handy import
+   acceptance.
    Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
    samples; 314/479 exact common files, 65.55%;
    [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
@@ -47,9 +46,9 @@ authorizes general direct printing or production release promotion.
    [run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
    No physical printer route has been qualified.
 3. A five-fixture software pilot evidence artifact exists in native run
-   37745898443; that is not the same as the physical evidence run. The older
+   37749868229; that is not the same as the physical evidence run. The older
    pilot build from run 37728381335 is stale and must not be used. For any
-   physical A1 Mini trial, use only the isolated pair from run 37745898443 and
+   physical A1 Mini trial, use only the isolated pair from run 37749868229 and
    follow section 6 exactly. Alloy direct-print qualification and production
    release remain blocked pending human-reviewed evidence and provenance.
 
