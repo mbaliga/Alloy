@@ -34,8 +34,10 @@ release promotion.
    The run passed native instrumentation (186 emulator tests; 2 skipped) and
    structurally validated G3 evidence. These CI QA artifacts are not
    production-signed; fresh G2 provenance is still **INSUFFICIENT / FAIL**
-   (66/72 exact-history samples; 314/479 exact common files, 65.55%; report
-   [run 37739472063](https://github.com/mbaliga/Alloy/actions/runs/37739472063)).
+   (66/72 exact-history samples; 314/479 exact common files, 65.55%; latest
+   [run 37740670338](https://github.com/mbaliga/Alloy/actions/runs/37740670338)).
+   A separate Bambu Studio diagnostic also failed to establish a baseline
+   (101/445 historical best; [run 37740670272](https://github.com/mbaliga/Alloy/actions/runs/37740670272)).
    Desktop semantic-parity warnings remain, and no physical printer route has
    been qualified.
 3. Before any physical pilot, download the isolated pilot APK pair and its
