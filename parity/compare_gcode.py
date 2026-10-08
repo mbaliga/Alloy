@@ -382,6 +382,19 @@ def first_acceleration_mismatch(desktop: list[tuple[str, float]],
     return "none"
 
 
+def first_feature_mismatch(desktop: list[str], android: list[str]) -> str:
+    """Locate the first canonical toolpath-feature transition divergence."""
+    limit = min(len(desktop), len(android))
+    for index in range(limit):
+        if desktop[index] != android[index]:
+            return (
+                f"index={index}, desktop={desktop[index]}, Android={android[index]}"
+            )
+    if len(desktop) != len(android):
+        return f"sequence length desktop={len(desktop)}, Android={len(android)}"
+    return "none"
+
+
 def relative_diff(a: float, b: float) -> float:
     denom = max(abs(a), abs(b), 1e-12)
     return abs(a - b) / denom
@@ -440,7 +453,8 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
         add(
             "feature_transition_sequence",
             "warn",
-            f"desktop transitions={len(desktop.feature_transitions)}, Android={len(android.feature_transitions)}; inspect visual diff",
+            f"desktop transitions={len(desktop.feature_transitions)}, Android={len(android.feature_transitions)}; "
+            + first_feature_mismatch(desktop.feature_transitions, android.feature_transitions),
         )
 
     layer_diff = abs(desktop.layer_count - android.layer_count)
