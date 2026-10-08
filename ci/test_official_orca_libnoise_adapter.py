@@ -39,7 +39,8 @@ class OfficialOrcaLibnoiseAdapterTests(unittest.TestCase):
     def test_missing_source_target_fails_closed(self) -> None:
         result = self.configure(supplies_target=False)
         self.assertNotEqual(0, result.returncode, result.stdout)
-        self.assertIn("pinned source-built noise::noise target", result.stdout)
+        self.assertIn("Could NOT find libnoise", result.stdout)
+        self.assertIn("missing: LIBNOISE_LIBRARY", result.stdout)
 
 
 if __name__ == "__main__":
