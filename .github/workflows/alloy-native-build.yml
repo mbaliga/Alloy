@@ -88,11 +88,10 @@ permissions:
 
 concurrency:
   group: alloy-native-${{ github.ref }}
-  # A source-built Android native stack is deliberately expensive. Keep its
-  # evidence-producing run alive when a follow-up fix arrives; GitHub queues
-  # the newest run for this branch instead of discarding the only diagnostic
-  # result we have paid to produce.
-  cancel-in-progress: false
+  # Prefer current-source evidence over stale native builds. A newer commit may
+  # add a required native dependency (such as the pinned OpenCV package), so
+  # let the newest branch revision replace older in-progress or queued runs.
+  cancel-in-progress: true
 
 env:
   SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
