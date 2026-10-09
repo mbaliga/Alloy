@@ -13,9 +13,9 @@ if(EXISTS "${_opencv_include}/opencv2/opencv.hpp"
     file(STRINGS "${_opencv_version_header}" _opencv_version_lines
         REGEX "^#define CV_VERSION_(MAJOR|MINOR|REVISION)")
     string(JOIN ";" _opencv_version_text ${_opencv_version_lines})
-    if(_opencv_version_text MATCHES "CV_VERSION_MAJOR 4"
-            AND _opencv_version_text MATCHES "CV_VERSION_MINOR 6"
-            AND _opencv_version_text MATCHES "CV_VERSION_REVISION 0")
+    if(_opencv_version_text MATCHES "CV_VERSION_MAJOR[ \\t]+4"
+            AND _opencv_version_text MATCHES "CV_VERSION_MINOR[ \\t]+6"
+            AND _opencv_version_text MATCHES "CV_VERSION_REVISION[ \\t]+0")
         set(OpenCV_core_FOUND TRUE)
         set(OpenCV_INCLUDE_DIRS "${_opencv_include}")
         set(OpenCV_LIBS opencv_world)
@@ -31,5 +31,5 @@ endif()
 
 find_package_handle_standard_args(OpenCV
     REQUIRED_VARS _opencv_include _opencv_world _opencv_version_header
-    VERSION_VAR OpenCV_VERSION
-    HANDLE_COMPONENTS)
+    REQUIRED_VARS _opencv_include _opencv_world _opencv_version_header OpenCV_core_FOUND
+    VERSION_VAR OpenCV_VERSION)
