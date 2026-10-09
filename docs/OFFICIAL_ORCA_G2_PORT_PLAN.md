@@ -79,16 +79,21 @@ official engine and must never be described as one.
      `libslic3r` target; there is still no official-Orca Android binary or
      runtime evidence.
 
-   - Newly confirmed build blocker: the pinned official CMake requires
-     `find_package(OpenCV REQUIRED core)` and unconditionally links
-     `opencv_world`. Its `ObjColorUtils.hpp` uses OpenCV APIs for OBJ color
-     quantization. The Android app tree currently contains no OpenCV package
-     configuration, headers, or ABI library artifact, so the separate target
-     cannot configure/link by adding the six missing C++ files alone. The next
-     build-closure step must provide a version-pinned Android OpenCV dependency
-     with the APIs used by the official source and prove package discovery and
-     ARM64 linking in hosted CI; do not stub color quantization or silently
-     omit the dependency.
+   - OpenCV dependency sub-gate: **PASS for the isolated dependency consumer**.
+     Android ARM64 OpenCV 4.6.0 was built from the verified source archive and
+     pinned SHA-256. CI compiled the official Orca OBJ color-utility smoke
+     fixture, configured the Alloy `FindOpenCV.cmake` adapter, and linked an
+     Orca-style Android consumer against `opencv_world`, `opencv_tegra_hal`,
+     and `opencv_ittnotify` in run
+     [`37880324658`](https://github.com/mbaliga/Alloy/actions/runs/37880324658).
+     The complete native integration run
+     [`37883851621`](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
+     also rebuilt OpenCV and passed. This proves the pinned dependency and
+     adapter work in isolation; it does **not** prove that the separate
+     `official-orca` `libslic3r` target configures, compiles, or links. The
+     next build-closure work is to wire the official source list into that
+     distinct target and resolve the remaining dependency/build errors without
+     stubbing official behavior or replacing the legacy target.
 
 3. **Narrow JNI adapter**
    - Preserve Alloy's bounded model staging, typed recipe serializer,
