@@ -8,6 +8,9 @@ on:
       - 'third_party/orca-official/deps/OpenCV/**'
       - 'third_party/orca-official/src/libslic3r/ObjColorUtils.hpp'
       - 'app/cmake/official-orca/FindOpenCV.cmake'
+      - 'app/src/main/jni/libslic3r/ObjColorUtils.cpp'
+      - 'app/src/main/jni/libslic3r/ObjColorUtils.hpp'
+      - 'app/src/main/jni/libslic3r/Color.hpp'
       - 'ci/fixtures/official-orca-opencv-smoke.cpp'
       - 'ci/fixtures/official-orca-opencv-consumer/**'
   pull_request:
@@ -17,6 +20,7 @@ on:
       - 'third_party/orca-official/src/libslic3r/ObjColorUtils.hpp'
       - 'app/cmake/official-orca/FindOpenCV.cmake'
       - 'ci/fixtures/official-orca-opencv-smoke.cpp'
+      - 'ci/fixtures/official-orca-opencv-consumer/**'
   workflow_dispatch:
 
 permissions:
