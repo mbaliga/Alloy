@@ -1341,3 +1341,64 @@ target_link_libraries(slic3r PRIVATE
         boost_wserialization
         ${OCCT_LIBS}
 )
+
+# Compile the exact pinned official Orca libslic3r source list as an isolated
+# static target when explicitly requested by the native CI port probe. This is
+# deliberately not linked into the shipping JNI library: it is the first
+# compile/build-closure step for the separate official engine, not runtime or
+# parity evidence.
+option(ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE
+        "Compile pinned official Orca libslic3r separately from the legacy engine" OFF)
+if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
+    set(OFFICIAL_ORCA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/orca-official")
+    require_native_input(
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/CMakeLists.txt"
+            "pinned official Orca libslic3r source")
+
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(_official_orca_source_manifest "${CMAKE_CURRENT_BINARY_DIR}/official-orca-sources.cmake")
+    execute_process(
+            COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../ci/export_official_orca_sources.py"
+            --official-source "${OFFICIAL_ORCA_SOURCE_DIR}"
+            --output "${_official_orca_source_manifest}"
+            COMMAND_ERROR_IS_FATAL ANY)
+    include("${_official_orca_source_manifest}")
+    if (NOT OFFICIAL_ORCA_CPP_SOURCES)
+        message(FATAL_ERROR "Official Orca compile probe has no C++ sources")
+    endif ()
+
+    set(_official_orca_binary_dir "${CMAKE_CURRENT_BINARY_DIR}/official-orca")
+    file(MAKE_DIRECTORY "${_official_orca_binary_dir}")
+    set(SLIC3R_APP_NAME "Alloy")
+    set(SLIC3R_APP_KEY "alloy")
+    set(SLIC3R_BUILD_TIME "android-compile-probe")
+    set(BBL_RELEASE_TO_PUBLIC 0)
+    set(BBL_INTERNAL_TESTING 0)
+    set(ORCA_CHECK_GCODE_PLACEHOLDERS 0)
+    configure_file(
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/libslic3r_version.h.in"
+            "${_official_orca_binary_dir}/libslic3r_version.h"
+            @ONLY)
+
+    get_target_property(_legacy_slic3r_include_dirs slic3r INCLUDE_DIRECTORIES)
+    get_target_property(_legacy_slic3r_compile_defs slic3r COMPILE_DEFINITIONS)
+    add_library(official_orca_libslic3r STATIC ${OFFICIAL_ORCA_CPP_SOURCES}
+            "${_official_orca_binary_dir}/libslic3r_version.h")
+    target_compile_features(official_orca_libslic3r PRIVATE cxx_std_17)
+    target_compile_definitions(official_orca_libslic3r PRIVATE
+            ${_legacy_slic3r_compile_defs}
+            USE_TBB
+            TBB_USE_CAPTURED_EXCEPTION=0)
+    target_include_directories(official_orca_libslic3r BEFORE PRIVATE
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src"
+            "${_official_orca_binary_dir}"
+            ${_legacy_slic3r_include_dirs}
+            ${OpenCV_INCLUDE_DIRS})
+    # Reuse only the legacy target's compile-time include/define surface. Do
+    # not link the official archive against the legacy engine or into the APK.
+    target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS})
+    add_custom_target(official_orca_compile_probe
+            DEPENDS official_orca_libslic3r)
+endif ()

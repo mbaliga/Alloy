@@ -5,6 +5,7 @@ plugins {
 import groovy.json.JsonSlurper
 
 def nativeEngineEnabled = project.findProperty('alloyNativeEngine')?.toString()?.toBoolean() ?: false
+def officialOrcaCompileProbe = project.findProperty('alloyOfficialOrcaCompileProbe')?.toString()?.toBoolean() ?: false
 def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.toString()?.toBoolean() ?: false
 def productionRelease = project.findProperty('alloyProductionRelease')?.toString()?.toBoolean() ?: false
 def ciDebugSign = project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean() ?: false
@@ -30,6 +31,9 @@ def includeSuppliedReferenceVisuals = project.hasProperty('alloyIncludeSuppliedR
 // release pipeline cannot accidentally label a Java-only APK as verified.
 if (nativeEngineVerified && !nativeEngineEnabled) {
     throw new GradleException('alloyNativeEngineVerified=true requires alloyNativeEngine=true')
+}
+if (officialOrcaCompileProbe && !nativeEngineEnabled) {
+    throw new GradleException('alloyOfficialOrcaCompileProbe=true requires alloyNativeEngine=true')
 }
 if (productionRelease && (!nativeEngineEnabled || !nativeEngineVerified)) {
     throw new GradleException('alloyProductionRelease=true requires the native engine and its explicit verification flag')
@@ -142,7 +146,11 @@ android {
                 cmake {
                     arguments '-DANDROID_STL=c++_shared', '-DANDROID_PLATFORM=26',
                             '-DCMAKE_BUILD_TYPE=Release', '-DSLIC3R_VERSION="1.0.0"',
-                            '-DSLIC3R_BUILD_ID="1"'
+                            '-DSLIC3R_BUILD_ID="1"',
+                            "-DALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE=${officialOrcaCompileProbe ? 'ON' : 'OFF'}"
+                    if (officialOrcaCompileProbe) {
+                        targets 'slic3r', 'official_orca_compile_probe'
+                    }
                 }
             }
         }

@@ -101,8 +101,8 @@ def main() -> None:
     require(app_build_text, "if (physicalPilot)", app_build)
     require(app_build_text, "applicationIdSuffix '.pilot'", app_build)
     for token in (
-        "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyCiDebugSign=true",
-        "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true",
+        "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
+        "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true",
         "app/build/outputs/apk/release/app-release.apk",
         "app/build/outputs/apk/androidTest/release/app-release-androidTest.apk",
