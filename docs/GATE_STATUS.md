@@ -1,6 +1,28 @@
 # Alloy engine gate status
 
-Date: 2026-09-22
+Date: 2026-10-09
+
+2026-10-09 native integration recovery checkpoint: commit
+`64fc3503a1bb1812f8e6a0870a7a8c765198793c` removes the Android-incompatible
+MSVC `/imsvc` include override. Native Actions run
+[`37883851621`](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
+then passed the complete pinned source-dependency build, GMP/MPFR source build,
+ARM64 native app compile, API-35 ARM-translation instrumentation, G3 evidence
+export, and isolated five-fixture A1 Mini software-pilot lane. The instrumented
+native run reported **187 tests, 0 failures, 2 skipped**; the native smoke
+class contained 7 tests (5 passed, 2 skipped), and the separate pilot test
+passed. Artifacts: native release CI APK ZIP SHA-256
+`d69137ac5c6074b1af7466e27aee950542dda2fbfa43cbadc0d8444ed63566dc`, G3
+evidence ZIP `5b3e854b340f101e97432fae7b7e3c48aaafe78db4e1b4b4746bc7262cb33532`,
+and A1 Mini pilot ZIP
+`c9300883ef7f1d55d7023b1632a5afb9889fa1f56cba526e4d7d34e8bd197c76`.
+Ordinary Android run
+[`37883851602`](https://github.com/mbaliga/Alloy/actions/runs/37883851602)
+also passed and published `alloy-v1-release-ci-apk` (artifact ZIP SHA-256
+`f399275b175629abb01c65d9eed52953c0193df5d18cdd699bea56ec5ebc8f0a`). These
+are emulator/software and CI-debug artifacts only: G2 provenance remains
+**FAIL / NO-GO**, G3 semantic parity remains open, and neither physical printer
+acceptance, Bambu Handy import, nor production signing is proven.
 
 2026-10-08 offline troubleshooting usability checkpoint: symptom search now
 updates as the user types, begins with stop-now cards rather than expanding all
