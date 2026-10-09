@@ -7,6 +7,7 @@ on:
       - 'app/build.gradle'
       - 'app/CMakeLists.txt'
       - 'app/CMakeLists.native.txt'
+      - 'app/cmake/official-orca/FindOpenCV.cmake'
       - 'app/src/main/jni/**'
       - 'app/src/main/jniImports/**'
       - 'app/src/main/jniLibs/**'
@@ -104,6 +105,8 @@ env:
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
+  OPENCV_VERSION: 4.6.0
+  OPENCV_SHA256: 1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277
 
 jobs:
   native-build:
@@ -181,6 +184,52 @@ jobs:
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y autoconf automake libtool make ninja-build pkg-config python3 git curl unzip
+      - name: Build Orca-pinned OpenCV for Android ARM64
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl --fail --location --retry 3 \
+            "https://github.com/opencv/opencv/archive/refs/tags/${OPENCV_VERSION}.tar.gz" \
+            --output opencv-${OPENCV_VERSION}.tar.gz
+          echo "${OPENCV_SHA256}  opencv-${OPENCV_VERSION}.tar.gz" | sha256sum --check
+          tar -xzf opencv-${OPENCV_VERSION}.tar.gz
+          cmake -S "opencv-${OPENCV_VERSION}" -B opencv-build-arm64 -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-23 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/opencv-install-arm64" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_LIST=core,highgui,imgcodecs,imgproc,world \
+            -DBUILD_opencv_world=ON \
+            -DBUILD_opencv_java=OFF \
+            -DBUILD_ANDROID_EXAMPLES=OFF \
+            -DBUILD_ANDROID_PROJECTS=OFF \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_PERF_TESTS=OFF \
+            -DBUILD_EXAMPLES=OFF \
+            -DBUILD_opencv_apps=OFF \
+            -DBUILD_opencv_python2=OFF \
+            -DBUILD_opencv_python3=OFF \
+            -DWITH_OPENCL=OFF \
+            -DWITH_LAPACK=OFF \
+            -DWITH_EIGEN=OFF \
+            -DWITH_FFMPEG=OFF \
+            -DWITH_GSTREAMER=OFF \
+            -DWITH_GTK=OFF \
+            -DWITH_OPENEXR=OFF \
+            -DWITH_OPENJPEG=OFF \
+            -DWITH_PROTOBUF=OFF \
+            -DWITH_V4L=OFF \
+            -DWITH_WEBP=OFF \
+            -DWITH_TBB=OFF \
+            -DBUILD_TBB=OFF \
+            -DBUILD_ZLIB=OFF \
+            -DBUILD_PNG=ON \
+            -DBUILD_JPEG=ON
+          cmake --build opencv-build-arm64 --target opencv_world --parallel 2
+          cmake --install opencv-build-arm64
+          echo "ALLOY_OPENCV_ANDROID_ROOT=${GITHUB_WORKSPACE}/opencv-install-arm64/sdk/native" >> "$GITHUB_ENV"
       - name: Clone pinned SliceBeam source for dependency bootstrap
         shell: bash
         run: |
