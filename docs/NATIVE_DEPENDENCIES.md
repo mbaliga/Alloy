@@ -63,3 +63,31 @@ Pinned source archives:
   `eae9326beb4158c386e39a356818031bd28f3124cf915f8c5b1dc4c7a36b4d7c`
 - MPFR 4.2.2 — `https://www.mpfr.org/mpfr-4.2.2/mpfr-4.2.2.tar.bz2` — SHA-256
   `9ad62c7dc910303cd384ff8f1f4767a655124980bb6d8650fe62c815a231bb7b`
+
+## Android OpenCV for OBJ color processing
+
+The native Android target uses the pinned OpenCV 4.6.0 opencv_world package
+for the existing libslic3r/ObjColorUtils.cpp source. The source archive is
+pinned to SHA-256
+1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277. The
+native build currently targets arm64-v8a; OpenCV itself is configured for
+Android API 23 so the resulting static library remains compatible with the
+API-35 native build.
+
+Set ALLOY_OPENCV_ANDROID_ROOT to the installed package sdk/native directory
+(for example, $PWD/opencv-install-arm64/sdk/native) before configuring the
+native Gradle build. Alloy's app/cmake/official-orca/FindOpenCV.cmake adapter
+checks the version header, libopencv_world.a, and the required libtegra_hal.a
+and libittnotify.a static dependencies. The native workflow builds and
+installs this exact package before invoking Gradle; the isolated consumer
+workflow also verifies that the pinned package compiles and links for Android
+ARM64.
+
+See [the native workflow](../.github/workflows/alloy-native-build.yml) for
+the full reproducible configure/build/install recipe and [the OpenCV consumer
+workflow](../.github/workflows/official-orca-opencv-android.yml) for the
+standalone linker check. The standalone Android consumer passed in [run
+37878912402](https://github.com/mbaliga/Alloy/actions/runs/37878912402).
+That result does not yet verify the complete Alloy native app link; the
+native workflow including this dependency remains the required integration
+check.
