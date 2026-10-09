@@ -334,6 +334,8 @@ def main() -> None:
     require(gradle, "jniLibs.srcDirs = []", gradle_path)
     require(gradle, "assets.srcDirs += file('../third_party/licenses')", gradle_path)
     require(gradle, "path file('CMakeLists.txt')", gradle_path)
+    require(gradle, "alloyOfficialOrcaCompileProbe=true requires alloyNativeEngine=true", gradle_path)
+    require(gradle, "official_orca_compile_probe", gradle_path)
     for token in ("cmake_minimum_required", "project(SliceBeam)", "CMakeLists.native.txt"):
         require(cmake_entry, token, cmake_entry_path)
     cmake_path = ROOT / "app/CMakeLists.native.txt"
@@ -343,7 +345,7 @@ def main() -> None:
     # dependency (such as OpenCV) contributes an include directory.
     if "set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX" in cmake or "set(IS_CLANG_CL TRUE)" in cmake:
         raise SystemExit(f"{cmake_path}: clang-cl system include flags are invalid for Android NDK Clang")
-    for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise"):
+    for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise", "ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE", "official_orca_libslic3r STATIC", "official_orca_compile_probe", "export_official_orca_sources.py", "OFFICIAL_ORCA_CPP_SOURCES"):
         require(cmake, token, cmake_path)
     # CMake accepts paths on case-insensitive developer volumes that fail
     # later on Linux/Android builders. Validate every explicit JNI source and
@@ -363,6 +365,9 @@ def main() -> None:
     require(workflow, "ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26", workflow_path)
     require(workflow, "ci/validate_native_dependency_inputs.py arm64-v8a", workflow_path)
     require(workflow, "ci/validate_native_prebuilts.py arm64-v8a --source-built", workflow_path)
+    require(workflow, "-PalloyOfficialOrcaCompileProbe=true", workflow_path)
+    require(workflow, "git submodule update --init --depth 1 third_party/orca-official", workflow_path)
+    require(workflow, "python3 -m unittest -v ci.test_export_official_orca_sources", workflow_path)
     for token in ("Initialize pinned official libnoise source", "git submodule update --init --depth 1 third_party/orca-deps-libnoise", "ci/validate_official_orca_snapshot.py", "--libnoise-source-root third_party/orca-deps-libnoise"):
         require(workflow, token, workflow_path)
     # GitHub's default Linux runner is x86_64 and cannot boot an arm64 Android

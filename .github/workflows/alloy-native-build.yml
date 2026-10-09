@@ -8,6 +8,7 @@ on:
       - 'app/CMakeLists.txt'
       - 'app/CMakeLists.native.txt'
       - 'app/cmake/official-orca/FindOpenCV.cmake'
+      - 'third_party/orca-official/**'
       - 'app/src/main/jni/**'
       - 'app/src/main/jniImports/**'
       - 'app/src/main/jniLibs/**'
@@ -34,6 +35,8 @@ on:
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
+      - 'ci/export_official_orca_sources.py'
+      - 'ci/test_export_official_orca_sources.py'
       - 'ci/validate_native_jni_contract.py'
       - 'ci/validate_native_dependency_inputs.py'
       - 'ci/normalize_occt_headers.py'
@@ -48,6 +51,8 @@ on:
       - 'app/build.gradle'
       - 'app/CMakeLists.txt'
       - 'app/CMakeLists.native.txt'
+      - 'app/cmake/official-orca/FindOpenCV.cmake'
+      - 'third_party/orca-official/**'
       - 'app/src/main/jni/**'
       - 'app/src/main/jniImports/**'
       - 'app/src/main/jniLibs/**'
@@ -72,6 +77,8 @@ on:
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
+      - 'ci/export_official_orca_sources.py'
+      - 'ci/test_export_official_orca_sources.py'
       - 'ci/validate_native_jni_contract.py'
       - 'ci/validate_native_dependency_inputs.py'
       - 'ci/normalize_occt_headers.py'
@@ -121,6 +128,15 @@ jobs:
           git submodule update --init --depth 1 third_party/orca-deps-libnoise
           python3 ci/validate_official_orca_snapshot.py \
             --libnoise-source-root third_party/orca-deps-libnoise
+      - name: Initialize exact official Orca source for compile probe
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git submodule update --init --depth 1 third_party/orca-official
+          python3 ci/validate_official_orca_snapshot.py \
+            --source-root third_party/orca-official \
+            --libnoise-source-root third_party/orca-deps-libnoise
+          python3 -m unittest -v ci.test_export_official_orca_sources
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
       - name: Verify pinned Orca profile snapshot
@@ -276,9 +292,9 @@ jobs:
         with:
           gradle-version: 8.9
       - name: Build Alloy with the optional native engine
-        run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
+        run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Compile native instrumentation smoke test
-        run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
+        run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       # Use hosted KVM where available; some runner pools do not expose it.
       # In that case keep the test runnable with QEMU's software fallback.
       - name: Configure Android emulator acceleration
