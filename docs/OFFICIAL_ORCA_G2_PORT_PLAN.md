@@ -37,6 +37,15 @@ differences include model/config, G-code generation, support, Arachne,
 arrange, profile, wipe-tower and CMake integration. A partial copy is not an
 official engine and must never be described as one.
 
+The port-plan checkpoint on branch commit
+[`657aee56cfb8921cba9ebee7babed6c1a84efecf`](https://github.com/mbaliga/Alloy/commit/657aee56cfb8921cba9ebee7babed6c1a84efecf)
+passed the dedicated official-source verification workflow
+[`37893118887`](https://github.com/mbaliga/Alloy/actions/runs/37893118887):
+the pinned source snapshot, libnoise package-adapter tests, official/legacy
+source-list inventory, Android port-surface audit, and a clean source build of
+the pinned libnoise closure all succeeded. The run does not compile or link an
+official Orca Android `libslic3r` target.
+
 ## Port stages
 
 1. **Hermetic source snapshot — complete as a source-only checkpoint**
