@@ -11,6 +11,11 @@ include(CheckCSourceCompiles)
 project(SliceBeam)
 cmake_minimum_required(VERSION 3.4.1)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/official-orca")
+set(ALLOY_OPENCV_ANDROID_ROOT "$ENV{ALLOY_OPENCV_ANDROID_ROOT}" CACHE PATH
+        "Root of the pinned Android OpenCV package")
+find_package(OpenCV REQUIRED COMPONENTS core)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -933,6 +938,7 @@ add_library(slic3r
         src/main/jni/libslic3r/Format/STEP.hpp
         src/main/jni/libslic3r/format.hpp
         src/main/jni/libslic3r/Format/OBJ.cpp
+        src/main/jni/libslic3r/ObjColorUtils.cpp
         src/main/jni/libslic3r/Format/OBJ.hpp
         src/main/jni/libslic3r/Format/objparser.cpp
         src/main/jni/libslic3r/Format/objparser.hpp
@@ -1282,6 +1288,7 @@ target_include_directories(slic3r PRIVATE
 find_library(log-lib log)
 
 target_link_libraries(slic3r PRIVATE
+        ${OpenCV_LIBS}
         m
         dl
         mpfr
