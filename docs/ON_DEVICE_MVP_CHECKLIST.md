@@ -1,35 +1,34 @@
 # Alloy on-device MVP verification
 
 Use the exact build lane named in each section. The latest successful native
-verification is run 37798978170 at app-source commit
-`2e90a483cef89c2d34dc91af44773b7bcf7fed2b`. Its native build,
-API-35 ARM-translation instrumentation, G3 software evidence export,
-five-fixture software pilot, and isolated A1 Mini pilot APK pair all passed.
-The artifact is available as
-[`alloy-a1-mini-physical-pilot-ci`](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
-(SHA-256 `078b31f7db4183e551c8b39cf3e359ca95f093fdb18a446c9efb0d93b9ec135e`).
-This is still software/QA evidence only: it does not prove a physical print,
-Bambu Handy acceptance, or production signing. The previous baseline at
-`4c41928faa645af59185f97966e2a3c6cbc7f76e` predates the latest inventory and
-emulator-retry changes. The latest
-ordinary Android acceptance run is
-[37810227273](https://github.com/mbaliga/Alloy/actions/runs/37810227273)
-at app-source commit `5c0af0931e0f4b1f4e0196c559b6afa8e26d3e65`; it passed
-with zero failures and published `alloy-v1-release-ci-apk` (SHA-256
-`ecc048d08170cb902d6e83ea6dccf78535f978aa8c41a41bd061002dade81102`). It
-includes the live symptom-search update described below. The native pilot lane
-[37798978170](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
-passed at native-source commit `2e90a483`; no native-engine files changed in
-the later learning UI update. Both artifacts remain CI-debug QA builds, not
-production releases, and do not prove physical printing or Bambu Handy
-acceptance.
-Fresh G2 provenance remains **INSUFFICIENT / FAIL**. None of these builds
-authorizes general direct printing or production release promotion.
+verification is run [37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
+at app-source commit `64fc3503a1bb1812f8e6a0870a7a8c765198793c`. It passed
+the full ARM64 source-dependency/native build, API-35 ARM-translation native
+instrumentation, G3 evidence export, and isolated five-fixture A1 Mini
+software-pilot lane. The native instrumentation report records **187 tests,
+0 failures, 2 skipped**; `NativeEngineSmokeTest` records 7 tests (5 passed,
+2 skipped), and the separate software-pilot test passed. The pilot artifact
+[`alloy-a1-mini-physical-pilot-ci`](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
+has ZIP SHA-256 `c9300883ef7f1d55d7023b1632a5afb9889fa1f56cba526e4d7d34e8bd197c76`.
+The native release CI APK artifact ZIP SHA-256 is
+`d69137ac5c6074b1af7466e27aee950542dda2fbfa43cbadc0d8444ed63566dc`; the G3
+evidence artifact ZIP SHA-256 is
+`5b3e854b340f101e97432fae7b7e3c48aaafe78db4e1b4b4746bc7262cb33532`.
+The latest ordinary Android run is
+[37883851602](https://github.com/mbaliga/Alloy/actions/runs/37883851602) at
+the same source commit; it passed and published `alloy-v1-release-ci-apk`
+(artifact ZIP SHA-256
+`f399275b175629abb01c65d9eed52953c0193df5d18cdd699bea56ec5ebc8f0a`). These
+are CI-debug QA artifacts and emulator/software evidence only; they do not
+prove a physical print, Bambu Handy acceptance, or production signing. Fresh
+G2 provenance remains **INSUFFICIENT / FAIL**, and G3 semantic parity remains
+open. No software artifact authorizes general direct printing or production
+release promotion.
 
 ## 1. Install the matching artifacts
 
 **Pilot-install status:** the current-source native run
-[37798978170](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
+[37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
 succeeded and published `alloy-a1-mini-physical-pilot-ci`. The workflow built
 and verified the separate `.pilot` app/test package IDs and passed the bounded
 five-fixture software-only package checks. Use only for the scope below; it is
@@ -38,8 +37,8 @@ merely to replace it with a CI-debug-signed QA build.
 
 1. For the UI/software smoke pass and Handy receiver-resolution check, use the
    current-source `alloy-v1-release-ci-apk` from successful Android v1 run
-   [37810227273](https://github.com/mbaliga/Alloy/actions/runs/37810227273)
-   (source commit `5c0af093`). After extracting, install `app-release.apk` on
+   [37883851602](https://github.com/mbaliga/Alloy/actions/runs/37883851602)
+   (source commit `64fc3503`). After extracting, install `app-release.apk` on
    an ARM64 Android phone; compute and record the APK's own SHA-256 separately.
    CI-debug signatures can differ between runs, so Android may refuse to update
    an existing Alloy install. Before uninstalling, export projects you need as
@@ -48,7 +47,7 @@ merely to replace it with a CI-debug-signed QA build.
    or stop if you cannot back up safely.
    This QA build verifies the app workflow/Handy package-visibility wiring, not
    native slicing, printer transport, Handy's actual import acceptance, or release.
-2. Successful [native run 37798978170](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
+2. Successful [native run 37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
    produced native QA, instrumentation and G3 evidence, plus five-fixture
    software-pilot evidence and a package-ID-verified isolated pilot APK pair.
    CI-debug signing remains
@@ -62,7 +61,7 @@ merely to replace it with a CI-debug-signed QA build.
    [run 37741025606](https://github.com/mbaliga/Alloy/actions/runs/37741025606)).
    No physical printer route has been qualified.
 3. The five-fixture software evidence is not physical qualification. Use the
-   current-source pilot artifact from run 37798978170 for section 6. Keep all
+   current-source pilot artifact from run 37883851621 for section 6. Keep all
    printer, firmware, transport and production-release
    claims unqualified until the human-reviewed on-device evidence and
    provenance gates pass.
@@ -205,7 +204,7 @@ Only after sections 1–5 pass, follow
 - Scope: A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
   external/direct feed, no AMS and no supports.
 - The package-ID-verified pilot artifact from
-  [native run 37798978170](https://github.com/mbaliga/Alloy/actions/runs/37798978170)
+  [native run 37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
   is the current successful baseline. Its app/test package-ID assertions passed.
   Then install only the current-source
   `app-release.apk`; its `.pilot` ID should coexist with regular Alloy. The matching
