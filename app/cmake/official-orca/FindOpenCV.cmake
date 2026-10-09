@@ -30,6 +30,5 @@ if(EXISTS "${_opencv_include}/opencv2/opencv.hpp"
 endif()
 
 find_package_handle_standard_args(OpenCV
-    REQUIRED_VARS _opencv_include _opencv_world _opencv_version_header
     REQUIRED_VARS _opencv_include _opencv_world _opencv_version_header OpenCV_core_FOUND
     VERSION_VAR OpenCV_VERSION)
