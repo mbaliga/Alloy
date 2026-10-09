@@ -338,6 +338,11 @@ def main() -> None:
         require(cmake_entry, token, cmake_entry_path)
     cmake_path = ROOT / "app/CMakeLists.native.txt"
     cmake = cmake_path.read_text()
+    # Android NDK Clang is not clang-cl: overriding CMake's system-include
+    # flag with -imsvc breaks every translation unit once an imported
+    # dependency (such as OpenCV) contributes an include directory.
+    if "CMAKE_INCLUDE_SYSTEM_FLAG_CXX" in cmake or "-imsvc" in cmake:
+        raise SystemExit(f"{cmake_path}: clang-cl system include flags are invalid for Android NDK Clang")
     for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise"):
         require(cmake, token, cmake_path)
     # CMake accepts paths on case-insensitive developer volumes that fail
