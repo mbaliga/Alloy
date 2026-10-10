@@ -19,6 +19,7 @@ final class BambuHandyHandoff {
     /** Current Google Play application id for Bambu Handy, reviewed 2026-10-01. */
     static final String PACKAGE_NAME = "bbl.intl.bambulab.com";
     static final String MIME_TYPE = "application/octet-stream";
+    static final String CHOOSER_TITLE = "Share validated package — confirm recipient compatibility";
 
     private BambuHandyHandoff() { }
 
@@ -35,6 +36,10 @@ final class BambuHandyHandoff {
 
     static Intent targetedShare(Uri artifactUri) {
         return genericShare(artifactUri).setPackage(PACKAGE_NAME);
+    }
+
+    static Intent chooserShare(Uri artifactUri) {
+        return Intent.createChooser(genericShare(artifactUri), CHOOSER_TITLE);
     }
 
     /** Resolve before launch so an absent or non-importing Handy install falls back to Android's chooser. */
