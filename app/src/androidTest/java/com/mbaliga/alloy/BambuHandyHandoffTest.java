@@ -39,4 +39,28 @@ public final class BambuHandyHandoffTest {
             }
         }
     }
+
+    @Test public void chooserFallbackRetainsReadOnlyGrantAndNeverClaimsHandyAccepted() {
+        Uri artifact = Uri.parse("content://com.mbaliga.alloy.artifactshare/artifact/demo.gcode.3mf");
+        Intent chooser = BambuHandyHandoff.chooserShare(artifact);
+        Intent generic = (Intent) chooser.getParcelableExtra(Intent.EXTRA_INTENT);
+
+        Assert.assertEquals(Intent.ACTION_CHOOSER, chooser.getAction());
+        Assert.assertEquals(BambuHandyHandoff.CHOOSER_TITLE,
+                chooser.getStringExtra(Intent.EXTRA_TITLE));
+        Assert.assertNotNull(generic);
+        Assert.assertEquals(Intent.ACTION_SEND, generic.getAction());
+        Assert.assertEquals(artifact, generic.getParcelableExtra(Intent.EXTRA_STREAM));
+        Assert.assertEquals(artifact, generic.getClipData().getItemAt(0).getUri());
+        Assert.assertNotEquals(0, generic.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Assert.assertEquals(0, generic.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+    }
+
+    @Test public void missingResolverCannotBeTreatedAsHandyAvailability() {
+        Uri artifact = Uri.parse("content://com.mbaliga.alloy.artifactshare/artifact/demo.gcode.3mf");
+        Assert.assertFalse(BambuHandyHandoff.canHandle(null,
+                BambuHandyHandoff.targetedShare(artifact)));
+        Assert.assertFalse(BambuHandyHandoff.canHandle(null,
+                BambuHandyHandoff.genericShare(artifact)));
+    }
 }
