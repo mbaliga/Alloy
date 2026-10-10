@@ -349,6 +349,10 @@ def main() -> None:
         require(cmake, token, cmake_path)
     require(cmake, 'COMPILE_OPTIONS "-include;TDF_LabelSequence.hxx"', cmake_path)
     require(cmake, 'COMPILE_OPTIONS "-include;sstream"', cmake_path)
+    require(cmake, 'COMPILE_OPTIONS "-include;occt_legacy_text_api.hxx"', cmake_path)
+    text_compat = ROOT / "app/src/main/jni/official_orca_compat/occt_legacy_text_api.hxx"
+    require(text_compat.read_text(), "using NCollection_Utf8Iter = NCollection_UtfIterator<char>", text_compat)
+    require(text_compat.read_text(), "using TColStd_SequenceOfHAsciiString", text_compat)
     require(cmake, '"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"', cmake_path)
     require(cmake, "target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)", cmake_path)
     for token in (

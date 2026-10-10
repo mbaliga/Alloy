@@ -1424,6 +1424,12 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     set_source_files_properties(
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/LocalesUtils.cpp"
             PROPERTIES COMPILE_OPTIONS "-include;sstream")
+    # TextShape.cpp uses two OCCT 7.x aliases that were renamed/removed in
+    # Alloy's pinned OCCT 8.x source. Provide type-equivalent compatibility
+    # names only to this upstream translation unit.
+    set_source_files_properties(
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Shape/TextShape.cpp"
+            PROPERTIES COMPILE_OPTIONS "-include;occt_legacy_text_api.hxx")
     # Reuse only the legacy target's compile-time include/define surface. Do
     # not link the official archive against the legacy engine or into the APK.
     target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)
