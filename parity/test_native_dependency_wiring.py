@@ -28,6 +28,14 @@ class NativeDependencyWiringTests(unittest.TestCase):
         locale_options = cmake.split("set_source_files_properties(\n            \"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/LocalesUtils.cpp\"", 1)[1]
         self.assertIn('COMPILE_OPTIONS "-include;sstream"', locale_options)
 
+    def test_official_orca_probe_uses_the_pinned_libnoise_public_target(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        official_probe = cmake.split("add_library(official_orca_libslic3r STATIC", 1)[1]
+        self.assertIn('"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"', official_probe)
+        self.assertIn("target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)", official_probe)
+        wrapper = ROOT / "app/src/main/jni/official_orca_compat/libnoise/noise.h"
+        self.assertIn('#include <noise.h>', wrapper.read_text(encoding="utf-8"))
+
     def test_explicit_cmake_sources_exist_with_exact_case(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         pattern = re.compile(r"\bsrc/main/jni/[A-Za-z0-9_./-]+\.(?:c|cc|cpp|cxx|h|hpp)\b")

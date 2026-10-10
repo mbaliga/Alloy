@@ -1409,6 +1409,7 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libnest2d/include"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src"
             "${_official_orca_binary_dir}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"
             ${_legacy_slic3r_include_dirs}
             ${OpenCV_INCLUDE_DIRS})
     # This pinned Orca STEP.cpp relies on a transitive OCCT alias declaration
@@ -1425,7 +1426,7 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             PROPERTIES COMPILE_OPTIONS "-include;sstream")
     # Reuse only the legacy target's compile-time include/define surface. Do
     # not link the official archive against the legacy engine or into the APK.
-    target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS})
+    target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)
     add_custom_target(official_orca_compile_probe
             DEPENDS official_orca_libslic3r)
 endif ()
