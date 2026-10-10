@@ -10,6 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class NativeDependencyWiringTests(unittest.TestCase):
+    def test_official_orca_probe_uses_its_own_libnest2d_headers_first(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        probe = cmake.split("target_include_directories(official_orca_libslic3r BEFORE PRIVATE", 1)[1]
+        official_libnest = '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libnest2d/include"'
+        legacy_libnest = "${_legacy_slic3r_include_dirs}"
+        self.assertIn(official_libnest, probe)
+        self.assertLess(probe.index(official_libnest), probe.index(legacy_libnest))
+
     def test_explicit_cmake_sources_exist_with_exact_case(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         pattern = re.compile(r"\bsrc/main/jni/[A-Za-z0-9_./-]+\.(?:c|cc|cpp|cxx|h|hpp)\b")
