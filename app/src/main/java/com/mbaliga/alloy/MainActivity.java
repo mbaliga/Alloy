@@ -1,117 +1,6320 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éí×o;ÓÔèµ©hºÚn¶X§zÍ\XÚØYÙHÛÛK›X˜[YØK˜[ŞNÂ‚š[\Ü[™›ÚY“X[šY™\İÂš[\Ü[™›ÚY˜\Xİ]š]NÂš[\Ü[™›ÚY˜\[\X[ÙÎÂš[\Ü[™›ÚY˜\‘X[ÙÎÂš[\Ü[™›ÚY˜ÛÛ[Xİ]š]S›İ›İ[™^Ù\[ÛÂš[\Ü[™›ÚY˜ÛÛ[œ™\ËÛÛÜ”İ]S\İÂš[\Ü[™›ÚY˜ÛÛ[œ›ØYØ\İ™XÙZ]™\Âš[\Ü[™›ÚY˜ÛÛ[Û\]NÂš[\Ü[™›ÚY˜ÛÛ[’[[Âš[\Ü[™›ÚY˜ÛÛ[’[[š[\Âš[\Ü[™›ÚY˜ÛÛ[œK”XÚØYÙSX[˜YÙ\Âš[\Ü[™›ÚY™Ü˜\XÜËš]X\Âš[\Ü[™›ÚY™Ü˜\XÜËš]X\˜XİÜNÂš[\Ü[™›ÚY™Ü˜\XÜËÛÛÜÂš[\Ü[™›ÚY™Ü˜\XÜË™˜]ØX›KÛÛÜ‘˜]ØX›NÂš[\Ü[™›ÚY›™]•\šNÂš[\Ü[™›ÚY›ÜË[™NÂš[\Ü[™›ÚY›ÜËZ[Âš[\Ü[™›ÚY›ÜË’[™\Âš[\Ü[™›ÚY›ÜË“ÛÜ\Âš[\Ü[™›ÚYœ›İšY\‹“Ü[˜X›PÛÛ[[œÎÂš[\Ü[™›ÚYšY]Ë‘Ü˜]š]NÂš[\Ü[™›ÚYšY]Ë•šY]ÎÂš[\Ü[™›ÚYšY]Ë•Ú[™İÎÂš[\Ü[™›ÚYšY]Ë•Ú[™İÒ[œÙ]ÎÂš[\Ü[™›ÚYÚYÙ]]ÛÂš[\Ü[™›ÚYÚYÙ]ÚXÚĞ›ŞÂš[\Ü[™›ÚYÚYÙ]‘Y]^Âš[\Ü[™›ÚYÚYÙ]‘œ˜[YS^[İ]Âš[\Ü[™›ÚYÚYÙ]’Üš^›Û[ØÜ›ÛšY]ÎÂš[\Ü[™›ÚYÚYÙ]’[XYÙUšY]ÎÂš[\Ü[™›ÚYÚYÙ]“[™X\“^[İ]Âš[\Ü[™›ÚYÚYÙ]”˜Y[Ğ]ÛÂš[\Ü[™›ÚYÚYÙ]”˜Y[ÑÜ›İ\Âš[\Ü[™›ÚYÚYÙ]”ØÜ›ÛšY]ÎÂš[\Ü[™›ÚYÚYÙ]”ÙYZĞ˜\Âš[\Ü[™›ÚYÚYÙ]•^šY]ÎÂš[\Ü[™›ÚYÚYÙ]•Ø\İÂ‚š[\Ü˜]˜Kš[Ë’SÑ^Ù\[ÛÂš[\Ü˜]˜Kš[Ë’[œ]İ™X[NÂš[\Ü˜]˜K][\œ˜^S\İÂš[\Ü˜]˜K][\œ˜^\ÎÂš[\Ü˜]˜K][“\İÂš[\Ü˜]˜K][“ØØ[NÂš[\Ü˜]˜K][˜ÛÛ˜İ\œ™[Ø[˜Ù[][Û‘^Ù\[ÛÂš[\Ü˜]˜K][˜ÛÛ˜İ\œ™[‘^Xİ]Ü”Ù\šXÙNÂš[\Ü˜]˜K][˜ÛÛ˜İ\œ™[‘^Xİ]ÜœÎÂš[\Ü˜]˜K][˜ÛÛ˜İ\œ™[‘]\™NÂš[\Ü˜]˜K][˜ÛÛ˜İ\œ™[˜]ÛZXË]ÛZXÓÛ™ÎÂ‚‹ÊŠˆ[ŞHŒH\ÚËY›İÈÚ[ˆ[\Ü8¡¤ˆ™\\™H8¡¤ˆÛXÙH8¡¤ˆ[œÜXİ8¡¤ˆ^Üˆ
-‹ÂœX›XÈš[˜[Û\ÜÈXZ[Xİ]š]H^[™ÈXİ]š]HÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÓÔSˆHNÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÑVÔ•HÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÔ“Ò‘PÕÑVÔ•HÎÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÔ“Ò‘PÕÓÔSˆHÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕĞUÒÑVÔ•HNÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÓ“ÕQ’PĞUSÓ”ÈHÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÔ“Ñ’SHHÎÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÔ“Ñ’SWÑVÔ•HÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÕ’QU×ÑVÔ•HNÂˆš]˜]Hİ]XÈš[˜[[‘TUQTÕÕ’TÕPSVUSÓ—ÑVÔ•HLÂˆš]˜]Hİ]XÈš[˜[İš[™ÈSTÔ•QÔ“Ñ’SWÑ’SHHœ›Ùš[\ËÚ[\ÜYX˜[XKšœÛÛˆÂˆš]˜]Hİ]XÈš[˜[İš[™È•S‘QÔ“Ñ’SWÔ’S•T—ÒQH˜[™YÜ›Ùš[WÜš[\—ÚYÂˆš]˜]Hİ]XÈš[˜[[TÕÔ–WÔ‘TÑUHÂˆš]˜]Hİ]XÈš[˜[[TÕÔ–WÔ‘TÕÔ‘HHNÂˆš]˜]Hİ]XÈš[˜[[TÕÔ–WÓUUUSÓˆHÂˆš]˜]Hİ]XÈš[˜[İš[™È“ÕQ’PĞUSÓ—ÔT“RTÔÒSÓ—Ô“ÓTQH››İYšXØ][Û—Ü\›Z\ÜÚ[Û—Ü›Û\YÂˆš]˜]Hİ]XÈš[˜[İš[™ÈSSQT”ÒU‘WÒS•“×ÔÒÕÓˆHš[[Y\œÚ]™WÚ[›×ÜÚİÛˆÂˆËÈÙY\H™\œÚ[Û™YX\šÙ\ˆÛÈ[ˆ[œİ[][™XYH\ÛZ\ÜÙYHX\›BˆËÈ›İİ\H[›Èİ[™XÙZ]™\ÈHš\œİÛ\ÚYİ\YY[[Ù[\›ÂˆËÈšY]ÈÛ˜ÙHY\ˆ\Èš\İX[\™]šY]ÈZ[\İÛ™K‚ˆš]˜]Hİ]XÈš[˜[İš[™ÈSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓˆHš[[Y\œÚ]™WÚ[›×İ™\œÚ[ÛˆÂˆš]˜]Hİ]XÈš[˜[[ÕT”‘S•ÒSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓˆHÂˆš]˜]Hİ]XÈš[˜[İš[™È’T”ÕÔ•S—ÓÓ“ĞT‘S‘×Õ‘T”ÒSÓˆH™š\œİÜ[—ÛÛ˜›Ø\™[™×İ™\œÚ[ÛˆÂˆš]˜]Hİ]XÈš[˜[[ÕT”‘S•Ñ’T”ÕÔ•S—ÓÓ“ĞT‘S‘×Õ‘T”ÒSÓˆHNÂˆš]˜]Hİ]XÈš[˜[[‘ÈHÛÛÜ‹œ™ØŠ‹KJNÂˆš]˜]Hİ]XÈš[˜[[ÕT‘PÑHHÛÛÜ‹•ÒUNÂˆš]˜]Hİ]XÈš[˜[[S‘SHÛÛÜ‹œ™ØŠŒÍËŒÍŒÊNÂˆš]˜]Hİ]XÈš[˜[[VHÛÛÜ‹œ™ØŠÌKÊNÂˆš]˜]Hİ]XÈš[˜[[UUQHÛÛÜ‹œ™ØŠLL‹LLJNÂˆš]˜]Hİ]XÈš[˜[[S’ÈHÛÛÜ‹œ™ØŠ‹ŒKM
-NÂˆš]˜]Hİ]XÈš[˜[[ÓÓHÛÛÜ‹œ™ØŠM‹LË
-NÂˆš]˜]Hİ]XÈš[˜[[Ô‘QSˆHÛÛÜ‹œ™ØŠËLKLŠNÂˆš]˜]Hİ]XÈš[˜[[SP‘TˆHÛÛÜ‹œ™ØŠNLŒKÌJNÂˆš]˜]Hİ]XÈš[˜[[‘QHÛÛÜ‹œ™ØŠNKKM
-NÂˆš]˜]Hİ]XÈš[˜[İš[™Ö×HÕQS×Ñ’S’TÒTÈHÂˆ“˜]\˜[H‹“X]H›XÚÈ‹\˜İXÈÚ]H‹”ØY™]HÜ˜[™ÙH‹“Y][XÈ‚ˆNÂ‚ˆš]˜]H[™X\“^[İ]›ÛİXİ[ÛœË^Y\’[œÜXİÜÂˆš]˜]H\˜Ó˜]šYØ][Û˜\ˆ\˜Ó˜]šYØ][ÛÂˆš]˜]HÙYZĞ˜\ˆ^Y\”ÙYZÎÂˆš]˜]H^šY]È^Y\’[œÜXİÜ“X™[Âˆš]˜]H^šY]Èİ]\Ë]Z[Ë[Ù[Y]K[™[ÜTİ[[X\K[™[ÜTİ]\ÑİÂˆš]˜]H^šY]Èš[\“X\šÙ\•˜[YKX]\šX[X\šÙ\•˜[YK]X[]SX\šÙ\•˜[YKİ\ÜÓX\šÙ\•˜[YK]SX\šÙ\•˜[YNÂˆš]˜]HšY]Èš[\“X\šÙ\‹X]\šX[X\šÙ\Âˆš]˜]HšY]ÜÜšY]ÈšY]ÜÜÂˆš]˜]HY\Ú[Ù[[Ù[Ûİ\˜ÙS[Ù[[›[ÙYšYYÛİ\˜ÙS[Ù[Âˆš]˜]Hš[˜[\œ˜^S\İY\Ú[Ù[”\˜[œÙ›Ü›Oˆ\˜[œÙ›Ü›\ÈH™]È\œ˜^S\İŠ
-NÂˆš]˜]Hš[˜[\œ˜^S\İ\šOˆ[Ù[\š\ÈH™]È\œ˜^S\İŠ
-NÂˆš]˜]Hš[˜[\œ˜^S\İİš[™Ïˆ[Ù[˜[Y\ÈH™]È\œ˜^S\İŠ
-NÂˆš]˜]H›Ø][Ù[ØØ[HHY‹[Ù[›İ][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÎÂˆš]˜]H›ÛÛX[ˆÙ[ÛY]T™\Z\‘[˜X›YÂˆš]˜]H›ÛÛX[ˆ™\Z\š[™ÑÙ[ÛY]NÂˆš]˜]HÛXÙ\‹”™\İ[ÛXÙNÂˆš]˜]H›ÛÛX[ˆÛXÚ[™ÎÂˆš]˜]H›ÛÛX[ˆ˜]ÚÛXÚ[™ÎÂˆš]˜]H˜]ÚÛXÙR›ØÛÛ›Û\‹˜]Ú™\İ[\İ˜]ÚÂˆš]˜]Hš[˜[ÛXÙ\‹ÛÛ™šYÈÛÛ™šYÈH™]ÈÛXÙ\‹ÛÛ™šYÊ
-NÂˆš]˜]H[™[ÜTİÜ™H[™[ÜTİÜ™NÂˆš]˜]H[\ÜY[Ù[İÜ™H[\ÜY[Ù[İÜ™NÂˆš]˜]H›Ú™XİİÜ™H›Ú™XİİÜ™NÂˆš]˜]H›Ú™Xİ\İÜTİÜ™H›Ú™Xİ\İÜTİÜ™NÂˆš]˜]H[Ù[\İÜTİÜ™H[Ù[\İÜTİÜ™NÂˆš]˜]H]TİÜ™H]TİÜ™NÂˆš]˜]H[Xİ]™T]R[™^Âˆš]˜]Hš[\’›Ø”İÜ™Hš[\’›Ø”İÜ™NÂˆš]˜]Hš[\Ü™Y[X[İÜ™HÜ™Y[X[İÜ™NÂˆš]˜]Hš\İX[^˜][ÛÜ™Y[X[İÜ™Hš\İX[^˜][ÛÜ™Y[X[İÜ™NÂˆš]˜]H˜[XS[•˜[œÜÜš[\•˜[œÜÜÂˆš]˜]H˜[XTš[\‘\ØÛİ™\K”ØØ[ˆXİ]™Q\ØÛİ™\NÂˆš]˜]Hš[\•˜[œÜÜ\Y˜XİİYÙY\Y˜XİÂˆËÈÙ]Û›HY\ˆ[ˆ[İXÚY[™Yš^\™Hš[š\Ú\È[\Ü[™Ëˆ\Ù\‚ˆËÈ[\ÜË™\İÜ™Y›Ú™XİÈ[™[Ù[ÛY]H]]][ÛœÈÛX\ˆ\È›ÛÙ‹‚ˆš]˜]Hİš[™È\İY[İš^\™P\ÜÙ]]ÂˆÊŠ‚ˆ
-ˆH™XÛİ™\™Y\Y˜Xİ™[Û™ÜÈÈH[\œ\Yš[\ˆ˜[œØXİ[Û‹ˆ
-ˆ›İÈÚXÚ]™\ˆ[Ù[H\Ù\ˆØYÈ™^ˆÙY\]Ù\\˜]Hœ›ÛHBˆ
-ˆİ\œ™[ÛXÙHÛÈ[Ù[[\ÜÜ]HİÚ]Ú[™ÈØ[››İXØÚY[[H\˜\ÙBˆ
-ˆH]šY[˜ÙH™YYY›Üˆ^XÚ]™XÛİ™\H™]šY]Ë‚ˆ
-‹Âˆš]˜]Hš[\•˜[œÜÜ\Y˜Xİ™XÛİ™\™Y\Y˜XİÂˆš]˜]Hš[\•˜[œÜÜ”š[\•\™Ù]Xİ]™Tš[\•\™Ù]Âˆš]˜]Hİš[™ÈXİ]™Tš[\’›Ø’YÂˆš]˜]H›ÛÛX[ˆš[Xİ]™NÂˆš]˜]H›ÛÛX[ˆš[\\ŞNÂˆš]˜]Hœ›ØYØ\İ™XÙZ]™\ˆš[\‘]™[™XÙZ]™\Âˆš]˜]Hœ›ØYØ\İ™XÙZ]™\ˆÛXÙQ]™[™XÙZ]™\Âˆš]˜]Hœ›ØYØ\İ™XÙZ]™\ˆ˜]ÚÛXÙQ]™[™XÙZ]™\Âˆš]˜]HÛXÙR›Ø”İÜ™HÛXÙR›Ø”İÜ™NÂˆš]˜]Hİš[™ÈXİ]™TÛXÙR›Ø’YÂˆš]˜]HX[ÙÈÛXÙT›ÙÜ™\ÜÑX[ÙÎÂˆš]˜]Hš[[Y[İÙY\ØY\ˆÛXÙT›ÙÜ™\ÜÓØY\Âˆš]˜]H˜]ÚÛXÙR›Ø”İÜ™H˜]ÚÛXÙR›Ø”İÜ™NÂˆš]˜]Hİš[™ÈXİ]™P˜]ÚÛXÙR›Ø’YÂˆš]˜]H›ÛÛX[ˆ˜]Ú™\İÜš[™ÎÂˆš]˜]H›ÛÛX[ˆ[\Ü[™ÎÂˆš]˜]H›ÛÛX[ˆ›Ú™Xİ˜[œÙ™\œš[™ÎÂˆš]˜]H›ÛÛX[ˆ˜]Ú˜[œÙ™\œš[™ÎÂˆš]˜]H›ÛÛX[ˆ›Ùš[R[\Ü[™ÎÂˆš]˜]H›ÛÛX[ˆš\İX[^š[™ÎÂˆš]˜]H›ÛÛX[ˆÜ[š[™Ôš]˜]PLTİYNÂˆš]˜]H›ÛÛX[ˆ[Ù[[™ÎÂˆš]˜]H›ÛÛX[ˆ]R[\Ü[‘›YÚÂˆš]˜]Hš[˜[[™\ˆXZ[’[™\ˆH™]È[™\ŠÛÜ\‹™Ù]XZ[“ÛÜ\Š
-JNÂˆš]˜]Hš[˜[^Xİ]Ü”Ù\šXÙH[\Ü^Xİ]ÜˆH^Xİ]ÜœË›™]ÔÚ[™ÛU™XY^Xİ]ÜŠˆOˆÂˆ™XY™XYH™]È™XY
-‹˜[ŞKZ[\ÜŠNÂˆ™XYœÙ]š[Üš]J™XY““Ô“WÔ’SÔ’UJNÂˆ™]\›ˆ™XYÂˆJNÂˆš]˜]Hš[˜[]ÛZXÓÛ™È[\ÜYÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]H]\™OÏˆXİ]™R[\ÜÂˆš]˜]HÛ™ÈXİ]™R[\ÜYÂˆÊŠˆ™]™[Hİ[YØİ[Y[›İšY\ˆœ›ÛH˜\[™ÈHÛ™K[Û›HÙ\ÜÚ[Û‹ˆ
-‹Âˆš]˜]H[›˜X›H[\Ü[Y[İ][›˜X›NÂˆš]˜]Hš[˜[]ÛZXÓÛ™ÈÙ[ÛY]T™\Z\’YÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]H]\™OÏˆXİ]™QÙ[ÛY]T™\Z\Âˆš]˜]HÛ™ÈXİ]™QÙ[ÛY]T™\Z\’YÂˆš]˜]Hš[˜[]ÛZXÓÛ™È›Ú™Xİ˜[œÙ™\’YÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]H]\™OÏˆXİ]™T›Ú™Xİ˜[œÙ™\Âˆš]˜]HÛ™ÈXİ]™T›Ú™Xİ˜[œÙ™\’YÂˆš]˜]Hš[˜[]ÛZXÓÛ™È˜]Ú˜[œÙ™\’YÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]H]\™OÏˆXİ]™P˜]Ú˜[œÙ™\Âˆš]˜]HÛ™ÈXİ]™P˜]Ú˜[œÙ™\’YÂˆš]˜]H]\™OÏˆXİ]™Uš\İX[^˜][ÛÂˆš]˜]Hš[˜[]ÛZXÓÛ™Èš\İX[^˜][Û’YÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]HÛ™ÈXİ]™Uš\İX[^˜][Û’YÂˆš]˜]H]V×H[™[™Õš\İX[^˜][Û”™ÎÂˆš]˜]H]\™OÏˆXİ]™PÙ\YšXØ]R[œÜXİ[ÛÂˆš]˜]Hš[˜[]ÛZXÓÛ™ÈÙ\YšXØ]R[œÜXİ[Û’YÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]HÛ™ÈXİ]™PÙ\YšXØ]R[œÜXİ[Û’YÂˆš]˜]H]\™OÏˆXİ]™S[Ù[[™ÎÂˆš]˜]Hš[˜[]ÛZXÓÛ™È[Ù[[™ÒYÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]HÛ™ÈXİ]™S[Ù[[™ÒYÂˆš]˜]H]\™OÏˆXİ]™P˜]ÚÛ˜\ÚİÂˆš]˜]H[›˜X›H[™[™Ó›İYšXØ][ÛXİ[ÛÂˆš]˜]HÛXÙR›ØÛÛ›Û\ˆÛXÙR›ØœÎÂˆš]˜]H˜]ÚÛXÙR›ØÛÛ›Û\ˆ˜]ÚÛXÙR›ØœÎÂˆš]˜]H›Ùš[PØ][ÙË”›Ùš[H›Ùš[NÂˆš]˜]H]\™OÏˆXİ]™T›Ùš[R[\ÜÂˆš]˜]Hš[˜[]ÛZXÓÛ™È›Ùš[R[\ÜYÈH™]È]ÛZXÓÛ™Ê
-NÂˆš]˜]HÛ™ÈXİ]™T›Ùš[R[\ÜYÂˆš]˜]H[›˜X›H›Ùš[R[\Ü[Y[İ][›˜X›NÂ‚ˆİ™\œšYHX›XÈ›ÚYÛÜ™X]J[™Hİ]JHÂˆİ\\‹›ÛÜ™X]Jİ]JNÂˆÚ[™İÈÚ[™İÈHÙ]Ú[™İÊ
-NÂˆÚ[™İËœÙ]İ]\Ğ˜\ÛÛÜŠ‘ÊNÂˆÚ[™İËœÙ]˜]šYØ][Û˜\ÛÛÜŠ‘ÊNÂˆÚ[™İË™Ù]XÛÜ•šY]Ê
-KœÙ]Ş\İ[UZUš\ÚXš[]JšY]Ë”ÖTÕSWÕRWÑ“Q×ÓQÒÔÕUT×ĞTˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÓQÒÓU’QĞUSÓ—ĞTŠNÂˆ[™[ÜTİÜ™HH™]È[™[ÜTİÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÚ[™[ÜH‹SÑWÔ’UUJJNÂˆ™]È[™[ÜT™XÛÛ˜Ú[X][Û”İÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÚ[™[ÜWÜ™XÛÛ˜Ú[X][Ûˆ‹SÑWÔ’UUJJBˆ™˜Z[Š[™[ÜTİÜ™JNÂˆ[\ÜY[Ù[İÜ™HH™]È[\ÜY[Ù[İÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÛ[Ù[ÛXœ˜\H‹SÑWÔ’UUJJNÂˆ›Ú™XİİÜ™HH™]È›Ú™XİİÜ™JÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJJNÂˆ›Ú™Xİ\İÜTİÜ™HH™]È›Ú™Xİ\İÜTİÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÜ›Ú™XİÚ\İÜH‹SÑWÔ’UUJJNÂˆ]TİÜ™HH™]È]TİÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÜ]\È‹SÑWÔ’UUJJNÂˆ[Ù[\İÜTİÜ™HH™]È[Ù[\İÜTİÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÛ[Ù[Ú\İÜH‹SÑWÔ’UUJJNÂˆ›Ú™Xİ\˜Ú]™Kœ[™TİÜ™Y›Ú™XİÊ™]È˜]˜Kš[Ë‘š[JÙ]š[\Ñ\Š
-Kœ›Ú™XİÈŠK]TİÜ™Kœ]\Ê
-JNÂˆ[™S[Ù[ØXÚJ
-NÂˆXİ]™T]R[™^H]TİÜ™K˜Xİ]™R[™^
+package com.mbaliga.alloy;
 
-NÂˆš[\’›Ø”İÜ™HH™]Èš[\’›Ø”İÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÜš[\—Ú›Øˆ‹SÑWÔ’UUJJNÂˆš[\’›Ø”İÜ™K’›Øˆ™XÛİ™\™Y›ØˆHš[\’›Ø”İÜ™Kœ™XÛİ™\Y\”™\İ\
-š[\’›Ø”Ù\šXÙK›İÛœĞ[R›ØŠ
-JNÂˆYˆ
-™XÛİ™\™Y›ØˆOH[	‰ˆ™XÛİ™\™Y›Ø‹œİ]HOHš[\•˜[œÜÜ”İ]KÓÓTUQˆ	‰ˆ™XÛİ™\™Y›Ø‹™š[[Y[[HˆŠHÂˆHÂˆ[™[ÜT™XÛÛ˜Ú[X][Û”İÜ™H™XÛÛ˜Ú[X][ÛˆH™]È[™[ÜT™XÛÛ˜Ú[X][Û”İÜ™JˆÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÚ[™[ÜWÜ™XÛÛ˜Ú[X][Ûˆ‹SÑWÔ’UUJJNÂˆ™XÛÛ˜Ú[X][Û‹™[œ]Y]YJ™XÛİ™\™Y›Ø‹š›Ø’Y™XÛİ™\™Y›Ø‹™š[[Y[ˆ™XÛİ™\™Y›Ø‹™š[[Y[[K™XÛİ™\™Y›Ø‹™š[[Y[X[Y]\“[JNÂˆ™XÛÛ˜Ú[X][Û‹™˜Z[Š[™[ÜTİÜ™JNÂˆHØ]Ú
-^Ù\[ÛˆYÛ›Ü™Y
-HÂˆËÈH\˜X›H]Y]YH™[XZ[œÈHÛİ\˜ÙHÙˆ]›ÜˆH™^][˜Ú‚ˆBˆBˆYˆ
-™XÛİ™\™Y›ØˆOH[	‰ˆ™XÛİ™\™Y›Ø‹œİ]HOHš[\•˜[œÜÜ”İ]K”‘PÓÕ‘T–WÔ‘TURT‘Q
-HÂˆHÂˆ™XÛİ™\™Y\Y˜XİH™XÛİ™\”š[\\Y˜Xİ
-™XÛİ™\™Y›ØŠNÂˆHØ]Ú
-^Ù\[ÛˆYÛ›Ü™Y
-HÂˆËÈHZ\ÜÚ[™ÈÜˆ]šXİY\Y˜Xİ™]™\ˆ™XÛÛY\ÈH™X\ÛÛˆÂˆËÈ™]HHš[\ˆ›ØÈHÚXÚÜÚ[™[XZ[œÈ˜Z[XÛÜÙY‚ˆBˆBˆÜ™Y[X[İÜ™HH™]Èš[\Ü™Y[X[İÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÜš[\ˆ‹SÑWÔ’UUJJNÂˆš\İX[^˜][ÛÜ™Y[X[İÜ™HH™]Èš\İX[^˜][ÛÜ™Y[X[İÜ™JˆÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWİš\İX[^˜][Ûˆ‹SÑWÔ’UUJJNÂˆÛXÙR›Ø”İÜ™HH™]ÈÛXÙR›Ø”İÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWÜÛXÙWÚ›Øˆ‹SÑWÔ’UUJJNÂˆÛXÙR›Ø”İÜ™K’›Øˆ^\İ[™ÔÛXÙHHÛXÙR›Ø”İÜ™K›ØY
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.ActivityNotFoundException;
+import android.content.res.ColorStateList;
+import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.OpenableColumns;
+import android.view.Gravity;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.ScrollView;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
-NÂˆ›ÛÛX[ˆ]™TÛXÙHH^\İ[™ÔÛXÙHOH[	‰ˆÛXÙR›Ø”Ù\šXÙK›İÛœÒ›ØŠ^\İ[™ÔÛXÙKš›Ø’Y
-NÂˆÛXÙR›Ø”İÜ™K’›Øˆ™XÛİ™\™YÛXÙHHÛXÙR›Ø”İÜ™Kœ™XÛİ™\Y\”™\İ\
-]™TÛXÙJNÂˆYˆ
-™XÛİ™\™YÛXÙHOH[	‰ˆ
-™XÛİ™\™YÛXÙKœİ]HOHÛXÙR›Ø”İÜ™K”İ]K”UQUQQˆ™XÛİ™\™YÛXÙKœİ]HOHÛXÙR›Ø”İÜ™K”İ]K”•S“’S‘ÊH	‰ˆÛXÙR›Ø”Ù\šXÙK›İÛœÒ›ØŠ™XÛİ™\™YÛXÙKš›Ø’Y
-JHÂˆXİ]™TÛXÙR›Ø’YH™XÛİ™\™YÛXÙKš›Ø’YÂˆÛXÚ[™ÈHYNÂˆBˆ˜]ÚÛXÙR›Ø”İÜ™HH™]È˜]ÚÛXÙR›Ø”İÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ŞWØ˜]ÚÜÛXÙWÚ›Øˆ‹SÑWÔ’UUJJNÂˆ˜]ÚÛXÙR›Ø”İÜ™K’›Øˆ^\İ[™Ğ˜]ÚH˜]ÚÛXÙR›Ø”İÜ™K›ØY
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
-NÂˆ›ÛÛX[ˆ]™P˜]ÚH^\İ[™Ğ˜]ÚOH[	‰ˆ˜]ÚÛXÙR›Ø”Ù\šXÙK›İÛœÒ›ØŠ^\İ[™Ğ˜]Úš›Ø’Y
-NÂˆ˜]ÚÛXÙR›Ø”İÜ™K’›Øˆ™XÛİ™\™Y˜]ÚH˜]ÚÛXÙR›Ø”İÜ™Kœ™XÛİ™\Y\”™\İ\
-]™P˜]Ú
-NÂˆYˆ
-™XÛİ™\™Y˜]ÚOH[	‰ˆ
-™XÛİ™\™Y˜]Úœİ]HOH˜]ÚÛXÙR›Ø”İÜ™K”İ]K”UQUQQˆ™XÛİ™\™Y˜]Úœİ]HOH˜]ÚÛXÙR›Ø”İÜ™K”İ]K”•S“’S‘ÊH	‰ˆ˜]ÚÛXÙR›Ø”Ù\šXÙK›İÛœÒ›ØŠ™XÛİ™\™Y˜]Úš›Ø’Y
-JHÂˆXİ]™P˜]ÚÛXÙR›Ø’YH™XÛİ™\™Y˜]Úš›Ø’YÂˆ˜]ÚÛXÚ[™ÈHYNÂˆBˆHÂˆİš[™È[™Yš[\’YHÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJBˆ™Ù]İš[™Ê•S‘QÔ“Ñ’SWÔ’S•T—ÒQ˜˜[XK˜LK[Z[šHŠNÂˆ›Ùš[HH›Ùš[PØ][ÙË›ØY[š]X[Tš[\’Y
-Ù]\ÜÙ]Ê
-K[™Yš[\’Y
-NÂˆ˜]˜Kš[Ë‘š[H[\ÜY›Ùš[Qš[HH™]È˜]˜Kš[Ë‘š[JÙ]š[\Ñ\Š
-KSTÔ•QÔ“Ñ’SWÑ’SJNÂˆYˆ
-[\ÜY›Ùš[Qš[Kš\Ñš[J
-JHÂˆHÂˆH
-[œ]İ™X[H[œ]H™]È˜]˜Kš[Ë‘š[R[œ]İ™X[J[\ÜY›Ùš[Qš[JJHÂˆ›Ùš[HH›Ùš[PØ][ÙË›ØY
-[œ]
-NÂˆBˆHØ]Ú
-^Ù\[ÛˆYÛ›Ü™Y
-HÂˆËÈH[XYÙYš]˜]Hİ™\œšYH]\İ˜[˜XÚÈÈBˆËÈXÚØYÙY›Ùš[H˜]\ˆ[ˆX]š[™È[ˆ[‹X\YYˆËÈ™XÚ\H[ˆY[[ÜK‚ˆBˆBˆ›Ùš[K˜\UÊÛÛ™šYÊNÂˆHØ]Ú
-^Ù\[ÛˆYÛ›Ü™Y
-HÂˆËÈÙY\HÛÛœÙ\˜]]™H[‹XÛÙHY˜][ÈYˆHXÚØYÙY›Ùš[H\È[˜]˜Z[X›K‚ˆBˆ›Ú™XİİÜ™Kœ™\İÜ™T™XÚ\JÛÛ™šYÊNÂˆÛXÙ\‘[™Ú[™H[™Ú[™HHZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÑSP“QˆÈ™]È˜]]™TÛXÙ\‘[™Ú[™JÙ]ØXÚQ\Š
-KZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÕ‘T’Q’QQ
-Bˆˆ™]ÈYØXŞSÙ™›[™Q[™Ú[™J
-NÂˆÛXÙR›ØœÈH™]ÈÛXÙR›ØÛÛ›Û\Š[™Ú[™JNÂˆ˜]ÚÛXÙR›ØœÈH™]È˜]ÚÛXÙR›ØÛÛ›Û\Š[™Ú[™JNÂˆZ[ZJ
-NÂˆ™YÚ\İ\”š[\‘]™[Ê
-NÂˆ™YÚ\İ\”ÛXÙQ]™[Ê
-NÂˆ™YÚ\İ\˜]ÚÛXÙQ]™[Ê
-NÂˆ™Yœ™\Úš[\•ZJ
-NÂˆ™Yœ™\ÚÛXÙUZJ
-NÂˆ™Yœ™\Ú˜]ÚÛXÙUZJ
-NÂˆ\šH[˜ÛÛZ[™ÈH[Ù[\šQœ›ÛR[[
-Ù][[
+/** Alloy v1 task-flow shell: Import â†’ Prepare â†’ Slice â†’ Inspect â†’ Export. */
+public final class MainActivity extends Activity {
+    private static final int REQUEST_OPEN = 41;
+    private static final int REQUEST_EXPORT = 42;
+    private static final int REQUEST_PROJECT_EXPORT = 43;
+    private static final int REQUEST_PROJECT_OPEN = 44;
+    private static final int REQUEST_BATCH_EXPORT = 45;
+    private static final int REQUEST_NOTIFICATIONS = 46;
+    private static final int REQUEST_PROFILE = 47;
+    private static final int REQUEST_PROFILE_EXPORT = 48;
+    private static final int REQUEST_VIEW_EXPORT = 49;
+    private static final int REQUEST_VISUALIZATION_EXPORT = 50;
+    private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
+    private static final String BUNDLED_PROFILE_PRINTER_ID = "bundled_profile_printer_id";
+    private static final int HISTORY_RESET = 0;
+    private static final int HISTORY_RESTORE = 1;
+    private static final int HISTORY_MUTATION = 2;
+    private static final String NOTIFICATION_PERMISSION_PROMPTED = "notification_permission_prompted";
+    private static final String IMMERSIVE_INTRO_SHOWN = "immersive_intro_shown";
+    // Keep a versioned marker so an install that already dismissed the early
+    // prototype intro still receives the first polished supplied-model Hero
+    // view once after this visual-review milestone.
+    private static final String IMMERSIVE_INTRO_VERSION = "immersive_intro_version";
+    private static final int CURRENT_IMMERSIVE_INTRO_VERSION = 2;
+    private static final String FIRST_RUN_ONBOARDING_VERSION = "first_run_onboarding_version";
+    private static final int CURRENT_FIRST_RUN_ONBOARDING_VERSION = 1;
+    private static final int BG = Color.rgb(246, 245, 241);
+    private static final int SURFACE = Color.WHITE;
+    private static final int PANEL = Color.rgb(237, 234, 227);
+    private static final int TEXT = Color.rgb(30, 29, 27);
+    private static final int MUTED = Color.rgb(112, 108, 101);
+    private static final int INK = Color.rgb(66, 61, 54);
+    private static final int GOLD = Color.rgb(146, 103, 48);
+    private static final int GREEN = Color.rgb(43, 125, 92);
+    private static final int AMBER = Color.rgb(184, 121, 31);
+    private static final int RED = Color.rgb(181, 69, 54);
+    private static final String[] STUDIO_FINISHES = {
+            "Natural PLA", "Matte black", "Arctic white", "Safety orange", "Metallic"
+    };
 
-JNÂˆYˆ
-[˜ÛÛZ[™ÈOH[
-HÂˆ™[Y[X™\•\šT\›Z\ÜÚ[ÛŠ[˜ÛÛZ[™ËÙ][[
+    private LinearLayout root, actions, layerInspector;
+    private ArcNavigationBar arcNavigation;
+    private SeekBar layerSeek;
+    private TextView layerInspectorLabel;
+    private TextView status, details, modelMeta, inventorySummary, inventoryStatusDot;
+    private TextView printerMarkerValue, materialMarkerValue, qualityMarkerValue, supportsMarkerValue, plateMarkerValue;
+    private View printerMarker, materialMarker;
+    private ViewportView viewport;
+    private MeshModel model, sourceModel, unmodifiedSourceModel;
+    private final ArrayList<MeshModel.PartTransform> partTransforms = new ArrayList<>();
+    private final ArrayList<Uri> modelUris = new ArrayList<>();
+    private final ArrayList<String> modelNames = new ArrayList<>();
+    private float modelScale = 1f, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees;
+    private boolean geometryRepairEnabled;
+    private boolean repairingGeometry;
+    private Slicer.Result slice;
+    private boolean slicing;
+    private boolean batchSlicing;
+    private BatchSliceJobController.BatchResult lastBatch;
+    private final Slicer.Config config = new Slicer.Config();
+    private InventoryStore inventoryStore;
+    private ImportedModelStore importedModelStore;
+    private ProjectStore projectStore;
+    private ProjectHistoryStore projectHistoryStore;
+    private ModelHistoryStore modelHistoryStore;
+    private PlateStore plateStore;
+    private int activePlateIndex;
+    private PrinterJobStore printerJobStore;
+    private PrinterCredentialStore credentialStore;
+    private VisualizationCredentialStore visualizationCredentialStore;
+    private BambuLanTransport printerTransport;
+    private BambuPrinterDiscovery.Scan activeDiscovery;
+    private PrinterTransport.Artifact stagedArtifact;
+    // Set only after an untouched bundled fixture finishes importing. User
+    // imports, restored projects and all geometry mutations clear this proof.
+    private String trustedPilotFixtureAssetPath;
+    /**
+     * A recovered artifact belongs to the interrupted printer transaction,
+     * not to whichever model the user loads next. Keep it separate from the
+     * current slice so model import/plate switching cannot accidentally erase
+     * the evidence needed for explicit recovery review.
+     */
+    private PrinterTransport.Artifact recoveredArtifact;
+    private PrinterTransport.PrinterTarget activePrinterTarget;
+    private String activePrinterJobId;
+    private boolean printActive;
+    private boolean printerBusy;
+    private BroadcastReceiver printerEventReceiver;
+    private BroadcastReceiver sliceEventReceiver;
+    private BroadcastReceiver batchSliceEventReceiver;
+    private SliceJobStore sliceJobStore;
+    private String activeSliceJobId;
+    private Dialog sliceProgressDialog;
+    private FilamentSweepLoader sliceProgressLoader;
+    private BatchSliceJobStore batchSliceJobStore;
+    private String activeBatchSliceJobId;
+    private boolean batchRestoring;
+    private boolean importing;
+    private boolean projectTransferring;
+    private boolean batchTransferring;
+    private boolean profileImporting;
+    private boolean visualizing;
+    private boolean openingPrivateA1Study;
+    private boolean modeling;
+    private boolean plateImportInFlight;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final ExecutorService importExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread thread = new Thread(r, "alloy-import");
+        thread.setPriority(Thread.NORM_PRIORITY);
+        return thread;
+    });
+    private final AtomicLong importIds = new AtomicLong();
+    private Future<?> activeImport;
+    private long activeImportId;
+    /** Prevent a stalled document provider from trapping a phone-only session. */
+    private Runnable importTimeoutRunnable;
+    private final AtomicLong geometryRepairIds = new AtomicLong();
+    private Future<?> activeGeometryRepair;
+    private long activeGeometryRepairId;
+    private final AtomicLong projectTransferIds = new AtomicLong();
+    private Future<?> activeProjectTransfer;
+    private long activeProjectTransferId;
+    private final AtomicLong batchTransferIds = new AtomicLong();
+    private Future<?> activeBatchTransfer;
+    private long activeBatchTransferId;
+    private Future<?> activeVisualization;
+    private final AtomicLong visualizationIds = new AtomicLong();
+    private long activeVisualizationId;
+    private byte[] pendingVisualizationPng;
+    private Future<?> activeCertificateInspection;
+    private final AtomicLong certificateInspectionIds = new AtomicLong();
+    private long activeCertificateInspectionId;
+    private Future<?> activeModeling;
+    private final AtomicLong modelingIds = new AtomicLong();
+    private long activeModelingId;
+    private Future<?> activeBatchSnapshot;
+    private Runnable pendingNotificationAction;
+    private SliceJobController sliceJobs;
+    private BatchSliceJobController batchSliceJobs;
+    private ProfileCatalog.Profile profile;
+    private Future<?> activeProfileImport;
+    private final AtomicLong profileImportIds = new AtomicLong();
+    private long activeProfileImportId;
+    private Runnable profileImportTimeoutRunnable;
 
-K™Ù]›YÜÊ
-JNÂˆØY\šJ[˜ÛÛZ[™Ë˜[ÙJNÂˆH[ÙHÂˆ]TİÜ™K”]HXİ]™T]HH]TİÜ™K˜Xİ]™T]J
-NÂˆYˆ
-XXİ]™T]K\š\Ëš\Ñ[\J
-JHÂˆ™\İÜ™T]PÚXÚÜÚ[
-Xİ]™T]JNÂˆØY\š\ÊXİ]™T]K\š\ËXİ]™T]K›˜[Y\ËYJNÂˆH[ÙHÂˆ›Ú™XİİÜ™K”Ø]™Y›Ú™XİØ]™YH›Ú™XİİÜ™KœØ]™Y›Ú™Xİ
+    @Override public void onCreate(Bundle state) {
+        super.onCreate(state);
+        Window window = getWindow();
+        window.setStatusBarColor(BG);
+        window.setNavigationBarColor(BG);
+        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        inventoryStore = new InventoryStore(getSharedPreferences("alloy_inventory", MODE_PRIVATE));
+        new InventoryReconciliationStore(getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE))
+                .drain(inventoryStore);
+        importedModelStore = new ImportedModelStore(getSharedPreferences("alloy_model_library", MODE_PRIVATE));
+        projectStore = new ProjectStore(getPreferences(MODE_PRIVATE));
+        projectHistoryStore = new ProjectHistoryStore(getSharedPreferences("alloy_project_history", MODE_PRIVATE));
+        plateStore = new PlateStore(getSharedPreferences("alloy_plates", MODE_PRIVATE));
+        modelHistoryStore = new ModelHistoryStore(getSharedPreferences("alloy_model_history", MODE_PRIVATE));
+        ProjectArchive.pruneStoredProjects(new java.io.File(getFilesDir(), "projects"), plateStore.plates());
+        pruneModelCache();
+        activePlateIndex = plateStore.activeIndex();
+        printerJobStore = new PrinterJobStore(getSharedPreferences("alloy_printer_job", MODE_PRIVATE));
+        PrinterJobStore.Job recoveredJob = printerJobStore.recoverAfterRestart(PrinterJobService.ownsAnyJob());
+        if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.COMPLETED
+                && recoveredJob.filamentMm > 0f) {
+            try {
+                InventoryReconciliationStore reconciliation = new InventoryReconciliationStore(
+                        getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE));
+                reconciliation.enqueue(recoveredJob.jobId, recoveredJob.filament,
+                        recoveredJob.filamentMm, recoveredJob.filamentDiameterMm);
+                reconciliation.drain(inventoryStore);
+            } catch (Exception ignored) {
+                // The durable queue remains the source of truth for the next launch.
+            }
+        }
+        if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
+            try {
+                recoveredArtifact = recoverPrinterArtifact(recoveredJob);
+            } catch (Exception ignored) {
+                // A missing or evicted artifact never becomes a reason to
+                // retry a printer job; the checkpoint remains fail-closed.
+            }
+        }
+        credentialStore = new PrinterCredentialStore(getSharedPreferences("alloy_printer", MODE_PRIVATE));
+        visualizationCredentialStore = new VisualizationCredentialStore(
+                getSharedPreferences("alloy_visualization", MODE_PRIVATE));
+        sliceJobStore = new SliceJobStore(getSharedPreferences("alloy_slice_job", MODE_PRIVATE));
+        SliceJobStore.Job existingSlice = sliceJobStore.load();
+        boolean liveSlice = existingSlice != null && SliceJobService.ownsJob(existingSlice.jobId);
+        SliceJobStore.Job recoveredSlice = sliceJobStore.recoverAfterRestart(liveSlice);
+        if (recoveredSlice != null && (recoveredSlice.state == SliceJobStore.State.QUEUED
+                || recoveredSlice.state == SliceJobStore.State.RUNNING) && SliceJobService.ownsJob(recoveredSlice.jobId)) {
+            activeSliceJobId = recoveredSlice.jobId;
+            slicing = true;
+        }
+        batchSliceJobStore = new BatchSliceJobStore(getSharedPreferences("alloy_batch_slice_job", MODE_PRIVATE));
+        BatchSliceJobStore.Job existingBatch = batchSliceJobStore.load();
+        boolean liveBatch = existingBatch != null && BatchSliceJobService.ownsJob(existingBatch.jobId);
+        BatchSliceJobStore.Job recoveredBatch = batchSliceJobStore.recoverAfterRestart(liveBatch);
+        if (recoveredBatch != null && (recoveredBatch.state == BatchSliceJobStore.State.QUEUED
+                || recoveredBatch.state == BatchSliceJobStore.State.RUNNING) && BatchSliceJobService.ownsJob(recoveredBatch.jobId)) {
+            activeBatchSliceJobId = recoveredBatch.jobId;
+            batchSlicing = true;
+        }
+        try {
+            String bundledPrinterId = getPreferences(MODE_PRIVATE)
+                    .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+            profile = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
+            java.io.File importedProfileFile = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
+            if (importedProfileFile.isFile()) {
+                try {
+                    try (InputStream input = new java.io.FileInputStream(importedProfileFile)) {
+                        profile = ProfileCatalog.load(input);
+                    }
+                } catch (Exception ignored) {
+                    // A damaged private override must fall back to the
+                    // packaged profile rather than leaving an un-applied
+                    // recipe in memory.
+                }
+            }
+            profile.applyTo(config);
+        } catch (Exception ignored) {
+            // Keep the conservative in-code defaults if the packaged profile is unavailable.
+        }
+        projectStore.restoreRecipe(config);
+        SlicerEngine engine = BuildConfig.NATIVE_ENGINE_ENABLED
+                ? new NativeSlicerEngine(getCacheDir(), BuildConfig.NATIVE_ENGINE_VERIFIED)
+                : new LegacyOfflineEngine();
+        sliceJobs = new SliceJobController(engine);
+        batchSliceJobs = new BatchSliceJobController(engine);
+        buildUi();
+        registerPrinterEvents();
+        registerSliceEvents();
+        registerBatchSliceEvents();
+        refreshPrinterUi();
+        refreshSliceUi();
+        refreshBatchSliceUi();
+        Uri incoming = modelUriFromIntent(getIntent());
+        if (incoming != null) {
+            rememberUriPermission(incoming, getIntent().getFlags());
+            loadUri(incoming, false);
+        } else {
+            PlateStore.Plate activePlate = plateStore.activePlate();
+            if (!activePlate.uris.isEmpty()) {
+                restorePlateCheckpoint(activePlate);
+                loadUris(activePlate.uris, activePlate.names, true);
+            } else {
+                ProjectStore.SavedProject saved = projectStore.savedProject();
+                if (saved != null) {
+                    loadUris(saved.uris, saved.names, true);
+                } else {
+                    // Give a fresh install an immediately inspectable 3D model.
+                    // Owner visual-review builds add the supplied Redmagic
+                    // design through an optional catalog overlay; ordinary
+                    // builds retain the Alloy-authored showcase. Both paths
+                    // materialize through the same offline cache boundary.
+                    ModelCatalog.Entry ownerStartup = privateOwnerStartupModel();
+                    if (ownerStartup == null) loadShowcaseModel();
+                    else loadAssetModel(ownerStartup.assetPath, ownerStartup.name);
+                    openingPrivateA1Study = hasBundledA1Reference();
+                    // The supplied handoff is an immersive presentation first,
+                    // not merely a slicer canvas. Make that experience visible
+                    // once on a genuinely fresh install, or once after a
+                    // visual-review upgrade; subsequent launches return
+                    // directly to the project so this never becomes a
+                    // blocking welcome screen. The old boolean is retained
+                    // for backwards compatibility but the versioned marker
+                    // makes the upgrade path explicit.
+                    int introVersion = 0;
+                    try {
+                        introVersion = getPreferences(MODE_PRIVATE)
+                                .getInt(IMMERSIVE_INTRO_VERSION, 0);
+                    } catch (ClassCastException ignored) {
+                        // A very early build used only IMMERSIVE_INTRO_SHOWN;
+                        // treat that legacy preference shape as version zero.
+                    }
+                    if (introVersion < CURRENT_IMMERSIVE_INTRO_VERSION && !firstRunOnboardingPending()) {
+                        getPreferences(MODE_PRIVATE).edit()
+                                .putInt(IMMERSIVE_INTRO_VERSION, CURRENT_IMMERSIVE_INTRO_VERSION)
+                                .putBoolean(IMMERSIVE_INTRO_SHOWN, true)
+                                .apply();
+                        mainHandler.postDelayed(() -> {
+                            if (isFinishing() || model == null) return;
+                            // The private visual-review build is meant to
+                            // make the supplied A1 Mini study discoverable
+                            // immediately: land on the machine, receding
+                            // plates and scale props first. The supplied
+                            // Redmagic/box/parts catalog remains available
+                            // through the model workspace and atlas.
+                            if (hasBundledA1Reference()) {
+                                openingPrivateA1Study = false;
+                                showPrinterStudy();
+                            }
+                            else showImmersiveView();
+                        }, 350L);
+                    }
+                }
+            }
+        }
+        if (incoming == null) scheduleFirstRunOnboarding();
+    }
 
-NÂˆYˆ
-Ø]™YOH[
-HÂˆØY\š\ÊØ]™Y\š\ËØ]™Y›˜[Y\ËYJNÂˆH[ÙHÂˆËÈÚ]™HHœ™\Ú[œİ[[ˆ[[YYX][H[œÜXİX›HÑ[Ù[‚ˆËÈİÛ™\ˆš\İX[\™]šY]ÈZ[ÈYHİ\YY™YXYÚXÂˆËÈ\ÚYÛˆ›İYÚ[ˆÜ[Û˜[Ø][ÙÈİ™\›^NÈÜ™[˜\BˆËÈZ[È™]Z[ˆH[ŞKX]]Ü™YÚİØØ\ÙKˆ›İ]ÂˆËÈX]\šX[^™H›İYÚHØ[YHÙ™›[™HØXÚH›İ[™\K‚ˆ[Ù[Ø][ÙË‘[HİÛ™\”İ\\Hš]˜]SİÛ™\”İ\\[Ù[
+    /**
+     * Ask only when the user starts a background-capable job. Requesting this
+     * on launch obscures the first-run 3D study and gives no context for why
+     * Alloy needs notifications. The job still starts if the user declines.
+     */
+    private void requestNotificationPermissionIfNeeded(Runnable afterPermission) {
+        if (afterPermission == null) return;
+        if (Build.VERSION.SDK_INT < 33
+                || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                || getPreferences(MODE_PRIVATE).getBoolean(NOTIFICATION_PERMISSION_PROMPTED, false)) {
+            afterPermission.run();
+            return;
+        }
+        pendingNotificationAction = afterPermission;
+        getPreferences(MODE_PRIVATE).edit().putBoolean(NOTIFICATION_PERMISSION_PROMPTED, true).apply();
+        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
+    }
 
-NÂˆYˆ
-İÛ™\”İ\\OH[
-HØYÚİØØ\ÙS[Ù[
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_NOTIFICATIONS) {
+            Runnable afterPermission = pendingNotificationAction;
+            pendingNotificationAction = null;
+            if (grantResults == null || grantResults.length == 0
+                    || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Notifications are off; job progress remains available inside Alloy", Toast.LENGTH_LONG).show();
+            }
+            if (afterPermission != null) mainHandler.post(afterPermission);
+        }
+    }
 
-NÂˆ[ÙHØY\ÜÙ][Ù[
-İÛ™\”İ\\˜\ÜÙ]]İÛ™\”İ\\›˜[YJNÂˆÜ[š[™Ôš]˜]PLTİYHH\Ğ[™YLT™Y™\™[˜ÙJ
-NÂˆËÈHİ\YY[™Ù™ˆ\È[ˆ[[Y\œÚ]™H™\Ù[][Ûˆš\œİˆËÈ›İY\™[HHÛXÙ\ˆØ[˜\ËˆXZÙH]^\šY[˜ÙHš\ÚX›BˆËÈÛ˜ÙHÛˆHÙ[Z[™[Hœ™\Ú[œİ[ÜˆÛ˜ÙHY\ˆBˆËÈš\İX[\™]šY]È\Ü˜YNÈİXœÙ\]Y[][˜Ú\È™]\›‚ˆËÈ\™XİHÈH›Ú™XİÛÈ\È™]™\ˆ™XÛÛY\ÈBˆËÈ›ØÚÚ[™ÈÙ[ÛÛYHØÜ™Y[‹ˆHÛ›ÛÛX[ˆ\È™]Z[™YˆËÈ›Üˆ˜XÚİØ\™ÈÛÛ\]Xš[]H]H™\œÚ[Û™YX\šÙ\‚ˆËÈXZÙ\ÈH\Ü˜YH]^XÚ]‚ˆ[[›Õ™\œÚ[ÛˆHÂˆHÂˆ[›Õ™\œÚ[ÛˆHÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJBˆ™Ù][
-SSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓ‹
-NÂˆHØ]Ú
-Û\ÜĞØ\İ^Ù\[ÛˆYÛ›Ü™Y
-HÂˆËÈH™\HX\›HZ[\ÙYÛ›HSSQT”ÒU‘WÒS•“×ÔÒÕÓÂˆËÈ™X]]YØXŞH™Y™\™[˜ÙHÚ\H\È™\œÚ[Ûˆ™\›Ë‚ˆBˆYˆ
-[›Õ™\œÚ[ÛˆÕT”‘S•ÒSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓˆ	‰ˆYš\œİ[“Û˜›Ø\™[™Ô[™[™Ê
-JHÂˆÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJK™Y]
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        Uri incoming = modelUriFromIntent(intent);
+        if (incoming == null) return;
+        rememberUriPermission(incoming, intent.getFlags());
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation before opening another model", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        loadUri(incoming, false);
+    }
 
-Bˆœ][
-SSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓ‹ÕT”‘S•ÒSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓŠBˆœ]›ÛÛX[ŠSSQT”ÒU‘WÒS•“×ÔÒÕÓ‹YJBˆ˜\J
-NÂˆ5×®ôöÚ$z{-®éÜj×             if (transferId != activeProjectTransferId || isFinishing()) return;
+    /** Accept both normal file opens and Android share-sheet handoffs. */
+    @SuppressWarnings("deprecation")
+    static Uri modelUriFromIntent(Intent intent) {
+        if (intent == null) return null;
+        if (intent.getData() != null) return intent.getData();
+        Object stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        return stream instanceof Uri ? (Uri) stream : null;
+    }
+
+    private void registerPrinterEvents() {
+        printerEventReceiver = new BroadcastReceiver() {
+            @Override public void onReceive(android.content.Context context, Intent intent) {
+                handlePrinterEvent(intent);
+            }
+        };
+        IntentFilter filter = new IntentFilter(PrinterJobService.ACTION_STATUS);
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(printerEventReceiver, filter, RECEIVER_NOT_EXPORTED);
+        else registerReceiver(printerEventReceiver, filter);
+    }
+
+    private void registerSliceEvents() {
+        sliceEventReceiver = new BroadcastReceiver() {
+            @Override public void onReceive(android.content.Context context, Intent intent) {
+                handleSliceEvent(intent);
+            }
+        };
+        IntentFilter filter = new IntentFilter(SliceJobService.ACTION_STATUS);
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(sliceEventReceiver, filter, RECEIVER_NOT_EXPORTED);
+        else registerReceiver(sliceEventReceiver, filter);
+    }
+
+    private void registerBatchSliceEvents() {
+        batchSliceEventReceiver = new BroadcastReceiver() {
+            @Override public void onReceive(android.content.Context context, Intent intent) {
+                handleBatchSliceEvent(intent);
+            }
+        };
+        IntentFilter filter = new IntentFilter(BatchSliceJobService.ACTION_STATUS);
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(batchSliceEventReceiver, filter, RECEIVER_NOT_EXPORTED);
+        else registerReceiver(batchSliceEventReceiver, filter);
+    }
+
+    private void handleBatchSliceEvent(Intent intent) {
+        if (intent == null || batchSliceJobStore == null || status == null) return;
+        String jobId = intent.getStringExtra(BatchSliceJobService.EXTRA_JOB_ID);
+        BatchSliceJobStore.Job current = batchSliceJobStore.load();
+        if (current == null || jobId == null || !jobId.equals(current.jobId)) return;
+        BatchSliceJobStore.State state;
+        try { state = BatchSliceJobStore.State.valueOf(intent.getStringExtra(BatchSliceJobService.EXTRA_STATE)); }
+        catch (Exception ignored) { return; }
+        int progress = intent.getIntExtra(BatchSliceJobService.EXTRA_PROGRESS, current.progress);
+        String phase = intent.getStringExtra(BatchSliceJobService.EXTRA_PHASE);
+        String detail = intent.getStringExtra(BatchSliceJobService.EXTRA_DETAIL);
+        if (state == BatchSliceJobStore.State.QUEUED || state == BatchSliceJobStore.State.RUNNING) {
+            activeBatchSliceJobId = jobId;
+            batchSlicing = true;
+            status.setText("Batch  Â·  " + (progress < 0 ? "working" : progress + "%")
+                    + "  Â·  " + (phase == null || phase.length() == 0 ? "processing" : phase));
+        } else if (state == BatchSliceJobStore.State.COMPLETED) {
+            activeBatchSliceJobId = null;
+            batchSlicing = false;
+            status.setText("Batch  Â·  validating plate resultsâ€¦");
+            refreshActions();
+            restoreForegroundBatchAsync(true);
+            return;
+        } else if (state == BatchSliceJobStore.State.CANCELLED) {
+            activeBatchSliceJobId = null;
+            batchSlicing = false;
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch slice cancelled");
+        } else if (state == BatchSliceJobStore.State.RECOVERY_REQUIRED) {
+            activeBatchSliceJobId = null;
+            batchSlicing = false;
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  previous batch needs review");
+        } else if (state == BatchSliceJobStore.State.FAILED) {
+            activeBatchSliceJobId = null;
+            batchSlicing = false;
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch slice failed");
+            if (detail != null && detail.length() > 0)
+                Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
+        }
+        refreshActions();
+    }
+
+    private void refreshBatchSliceUi() {
+        if (batchSliceJobStore == null || status == null) return;
+        BatchSliceJobStore.Job job = batchSliceJobStore.load();
+        if (job == null) return;
+        if ((job.state == BatchSliceJobStore.State.QUEUED || job.state == BatchSliceJobStore.State.RUNNING)
+                && BatchSliceJobService.ownsJob(job.jobId)) {
+            activeBatchSliceJobId = job.jobId;
+            batchSlicing = true;
+            status.setText("Batch  Â·  " + (job.progress > 0 ? job.progress + "%  Â·  " : "") + job.phase);
+        } else if (job.state == BatchSliceJobStore.State.COMPLETED && model != null && lastBatch == null) {
+            restoreForegroundBatchAsync(false);
+        } else if (job.state == BatchSliceJobStore.State.RECOVERY_REQUIRED && !batchSlicing) {
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  previous batch needs review");
+        }
+        refreshActions();
+    }
+
+    /** Rehydrate a completed durable batch only when its project fingerprint still matches. */
+    private void restoreForegroundBatchAsync(boolean showSummary) {
+        if (batchRestoring || batchSliceJobStore == null || model == null) return;
+        BatchSliceJobStore.Job job = batchSliceJobStore.load();
+        if (job == null || job.state != BatchSliceJobStore.State.COMPLETED) return;
+        final String jobId = job.jobId;
+        final ArrayList<PlateStore.Plate> currentPlates = plateStore.plates();
+        final Slicer.Config currentConfig = config.copy();
+        final String currentProjectHash;
+        try { currentProjectHash = BatchSliceRequestStore.fingerprint(currentPlates, currentConfig); }
+        catch (Exception error) { return; }
+        batchRestoring = true;
+        activeBatchSnapshot = importExecutor.submit(() -> {
+            try {
+                BatchSliceRequestStore.Request request = BatchSliceRequestStore.read(getFilesDir(), jobId);
+                if (!request.projectSha256.equalsIgnoreCase(currentProjectHash) || !sameConfig(request.config, currentConfig))
+                    throw new IOException("The completed batch belongs to a different project or recipe");
+                BatchSliceJobController.BatchResult restored = BatchSliceResultStore.read(getFilesDir(), getContentResolver(), request,
+                        BatchSliceRequestStore.jobDirectory(getFilesDir(), jobId));
+                mainHandler.post(() -> {
+                    batchRestoring = false;
+                    activeBatchSnapshot = null;
+                    if (!jobId.equals(activeBatchJobIdOrEmpty()) || isFinishing()) return;
+                    lastBatch = restored;
+                    bindBatchResult(restored);
+                    status.setText("Inspect  Â·  " + restored.plates.size() + " plates ready");
+                    details.setText(String.format(Locale.US, "%d plates  Â·  %d layers  Â·  %.0f mm filament  Â·  %s",
+                            restored.plates.size(), restored.totalLayers(), restored.totalFilamentMm(),
+                            restored.totalPrintTimeSeconds() > 0f ? formatDuration(restored.totalPrintTimeSeconds()) : "time pending"));
+                    refreshActions();
+                    if (showSummary) showBatchSummary(restored);
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    batchRestoring = false;
+                    activeBatchSnapshot = null;
+                    if (isFinishing()) return;
+                    status.setText("Prepare  Â·  completed batch needs review");
+                    refreshActions();
+                    Toast.makeText(this, "Batch result could not be revalidated: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private String activeBatchJobIdOrEmpty() {
+        BatchSliceJobStore.Job job = batchSliceJobStore == null ? null : batchSliceJobStore.load();
+        return job == null ? "" : job.jobId;
+    }
+
+    private void bindBatchResult(BatchSliceJobController.BatchResult result) {
+        if (result == null) return;
+        for (BatchSliceJobController.PlateResult plate : result.plates) {
+            if (plate.plate.index != activePlateIndex) continue;
+            model = plate.model;
+            slice = plate.slice;
+            stagedArtifact = plate.artifact;
+            viewport.setModel(model);
+            viewport.setResult(slice);
+            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+            return;
+        }
+    }
+
+    private void handleSliceEvent(Intent intent) {
+        if (intent == null || sliceJobStore == null) return;
+        String jobId = intent.getStringExtra(SliceJobService.EXTRA_JOB_ID);
+        SliceJobStore.Job current = sliceJobStore.load();
+        if (current == null || jobId == null || !jobId.equals(current.jobId)) return;
+        SliceJobStore.State state;
+        try { state = SliceJobStore.State.valueOf(intent.getStringExtra(SliceJobService.EXTRA_STATE)); }
+        catch (Exception ignored) { return; }
+        int progress = intent.getIntExtra(SliceJobService.EXTRA_PROGRESS, current.progress);
+        String phase = intent.getStringExtra(SliceJobService.EXTRA_PHASE);
+        String detail = intent.getStringExtra(SliceJobService.EXTRA_DETAIL);
+        if (state == SliceJobStore.State.QUEUED || state == SliceJobStore.State.RUNNING) {
+            activeSliceJobId = jobId;
+            slicing = true;
+            status.setText("Slice  Â·  " + (progress < 0 ? "working" : progress + "%")
+                    + "  Â·  " + (phase == null || phase.length() == 0 ? "processing" : phase));
+            showSliceProgressLoader(progress, phase);
+        } else if (state == SliceJobStore.State.COMPLETED) {
+            activeSliceJobId = null;
+            slicing = false;
+            dismissSliceProgressLoader();
+            if (!restoreForegroundSliceIfMatching()) {
+                status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  slice result needs review");
+                Toast.makeText(this, "Slice completed but its local result could not be revalidated", Toast.LENGTH_LONG).show();
+            }
+        } else if (state == SliceJobStore.State.CANCELLED) {
+            activeSliceJobId = null;
+            slicing = false;
+            dismissSliceProgressLoader();
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  slice cancelled");
+        } else if (state == SliceJobStore.State.RECOVERY_REQUIRED) {
+            activeSliceJobId = null;
+            slicing = false;
+            dismissSliceProgressLoader();
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  previous slice needs review");
+        } else if (state == SliceJobStore.State.FAILED) {
+            activeSliceJobId = null;
+            slicing = false;
+            dismissSliceProgressLoader();
+            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  slice failed");
+            if (detail != null && detail.length() > 0)
+                Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
+        }
+        refreshActions();
+    }
+
+    private void refreshSliceUi() {
+        if (sliceJobStore == null || status == null) return;
+        SliceJobStore.Job job = sliceJobStore.load();
+        if (job == null) return;
+        if ((job.state == SliceJobStore.State.QUEUED || job.state == SliceJobStore.State.RUNNING)
+                && SliceJobService.ownsJob(job.jobId)) {
+            activeSliceJobId = job.jobId;
+            slicing = true;
+            status.setText("Slice  Â·  " + (job.progress > 0 ? job.progress + "%  Â·  " : "") + job.phase);
+            showSliceProgressLoader(job.progress, job.phase);
+        } else if (job.state == SliceJobStore.State.COMPLETED && model != null) {
+            dismissSliceProgressLoader();
+            if (restoreForegroundSliceIfMatching()) {
+                status.setText("Inspect  Â·  " + slice.layers.size() + " layers");
+                details.setText(String.format(Locale.US, "%.0f mm filament  Â·  %s  Â·  %d warning(s)", slice.filamentMm,
+                        slice.printTimeSeconds < 0f ? "time pending" : formatDuration(slice.printTimeSeconds), slice.warnings));
+            }
+        }
+        refreshActions();
+    }
+
+    /**
+     * Slicing happens in a durable foreground service. This surface mirrors
+     * its actual progress and offers a visible cancellation route; it never
+     * manufactures completion just to make the animation look polished.
+     */
+    private void showSliceProgressLoader(int progress, String phase) {
+        if (isFinishing()) return;
+        if (sliceProgressDialog == null) {
+            sliceProgressDialog = new Dialog(this);
+            sliceProgressDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            sliceProgressDialog.setCancelable(false);
+            FrameLayout page = new FrameLayout(this);
+            page.setBackgroundColor(Color.rgb(5, 8, 8));
+            sliceProgressLoader = new FilamentSweepLoader(this);
+            page.addView(sliceProgressLoader, new FrameLayout.LayoutParams(-1, -1));
+            TextView cancel = label("Cancel slice", 14, Color.rgb(184, 188, 184));
+            cancel.setGravity(Gravity.CENTER);
+            cancel.setPadding(dp(18), dp(12), dp(18), dp(12));
+            cancel.setContentDescription("Cancel slicing");
+            cancel.setOnClickListener(v -> cancelSlice());
+            FrameLayout.LayoutParams cancelLp = new FrameLayout.LayoutParams(-2, -2,
+                    Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            cancelLp.topMargin = dp(24);
+            page.addView(cancel, cancelLp);
+            sliceProgressDialog.setContentView(page);
+            Window dialogWindow = sliceProgressDialog.getWindow();
+            if (dialogWindow != null) {
+                dialogWindow.setBackgroundDrawable(new ColorDrawable(Color.rgb(5, 8, 8)));
+                dialogWindow.setDimAmount(0f);
+            }
+        }
+        sliceProgressLoader.setProgress(progress, phase);
+        if (!sliceProgressDialog.isShowing()) {
+            sliceProgressDialog.show();
+            Window dialogWindow = sliceProgressDialog.getWindow();
+            if (dialogWindow != null) dialogWindow.setLayout(-1, -1);
+        }
+    }
+
+    private void dismissSliceProgressLoader() {
+        if (sliceProgressDialog != null && sliceProgressDialog.isShowing()) sliceProgressDialog.dismiss();
+        sliceProgressDialog = null;
+        sliceProgressLoader = null;
+    }
+
+    /** Reattach a completed service result only to the exact model and recipe that created it. */
+    private boolean restoreForegroundSliceIfMatching() {
+        if (sliceJobStore == null || model == null) return false;
+        SliceJobStore.Job job = sliceJobStore.load();
+        if (job == null || job.state != SliceJobStore.State.COMPLETED) return false;
+        try {
+            if (!job.modelSha256.equalsIgnoreCase(SliceRequestStore.fingerprint(model))) return false;
+            SliceRequestStore.Request request = SliceRequestStore.read(getFilesDir(), job.jobId);
+            if (!sameConfig(request.config, config)) return false;
+            Slicer.Result restored = SliceResultStore.read(SliceRequestStore.jobDirectory(getFilesDir(), job.jobId), request.config);
+            PrinterTransport.Artifact artifact = ArtifactStore.recover(getFilesDir(), job.artifactName, job.artifactSize, job.artifactSha256);
+            slice = restored;
+            stagedArtifact = artifact;
+            lastBatch = null;
+            viewport.setModel(model);
+            viewport.setResult(restored);
+            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+            details.setText(String.format(Locale.US, "%.0f mm filament  Â·  %s  Â·  %d warning(s)", restored.filamentMm,
+                    restored.printTimeSeconds < 0f ? "time pending" : formatDuration(restored.printTimeSeconds), restored.warnings));
+            return true;
+        } catch (Exception error) {
+            return false;
+        }
+    }
+
+    private static boolean sameConfig(Slicer.Config left, Slicer.Config right) {
+        if (left == null || right == null) return false;
+        return close(left.layerHeight, right.layerHeight) && close(left.firstLayerHeight, right.firstLayerHeight)
+                && close(left.nozzle, right.nozzle) && close(left.filamentDiameter, right.filamentDiameter)
+                && close(left.infill, right.infill) && close(left.bedX, right.bedX) && close(left.bedY, right.bedY)
+                && close(left.bedZ, right.bedZ) && safeEquals(left.printer, right.printer) && safeEquals(left.filament, right.filament)
+                && close(left.nozzleTemperature, right.nozzleTemperature) && close(left.firstLayerNozzleTemperature, right.firstLayerNozzleTemperature)
+                && close(left.bedTemperature, right.bedTemperature) && close(left.firstLayerBedTemperature, right.firstLayerBedTemperature)
+                && close(left.extrusionMultiplier, right.extrusionMultiplier) && close(left.maxVolumetricSpeed, right.maxVolumetricSpeed)
+                && close(left.travelSpeed, right.travelSpeed) && close(left.outerWallSpeed, right.outerWallSpeed)
+                && close(left.innerWallSpeed, right.innerWallSpeed) && close(left.infillSpeed, right.infillSpeed)
+                && close(left.initialLayerSpeed, right.initialLayerSpeed) && close(left.fanMinPercent, right.fanMinPercent)
+                && close(left.fanMaxPercent, right.fanMaxPercent) && left.supports == right.supports
+                && close(left.supportThresholdDegrees, right.supportThresholdDegrees) && left.perimeters == right.perimeters
+                && left.topLayers == right.topLayers && left.bottomLayers == right.bottomLayers
+                && left.nativeSettings.equals(right.nativeSettings);
+    }
+
+    private static boolean close(float left, float right) { return Math.abs(left - right) <= 0.0001f; }
+    private static boolean safeEquals(String left, String right) { return left == null ? right == null : left.equals(right); }
+
+    private void handlePrinterEvent(Intent intent) {
+        if (intent == null || printerJobStore == null) return;
+        String jobId = intent.getStringExtra(PrinterJobService.EXTRA_JOB_ID);
+        PrinterJobStore.Job current = printerJobStore.load();
+        if (current == null || jobId == null || !jobId.equals(current.jobId)) return;
+        String encoded = intent.getStringExtra(PrinterJobService.EXTRA_STATE);
+        PrinterTransport.State state;
+        try { state = PrinterTransport.State.valueOf(encoded); }
+        catch (Exception ignored) { return; }
+        int progress = intent.getIntExtra(PrinterJobService.EXTRA_PROGRESS, -1);
+        String phase = intent.getStringExtra(PrinterJobService.EXTRA_PHASE);
+        String detail = intent.getStringExtra(PrinterJobService.EXTRA_DETAIL);
+        if (state == PrinterTransport.State.UPLOADING && progress >= 0) {
+            status.setText("Printer  Â·  " + progress + "%  Â·  " + (phase == null ? "Uploading artifact" : phase));
+        } else if (state == PrinterTransport.State.UPLOADED) {
+            activePrinterJobId = current.jobId;
+            activePrinterTarget = printerTarget(current);
+            printActive = false;
+            printerBusy = false;
+            recoverUploadedArtifact(current);
+            status.setText("Printer  Â·  artifact uploaded  Â·  ready to start");
+        } else if (state == PrinterTransport.State.CONNECTING || state == PrinterTransport.State.START_REQUESTED
+                || state == PrinterTransport.State.RUNNING || state == PrinterTransport.State.PAUSE_REQUESTED
+                || state == PrinterTransport.State.PAUSED || state == PrinterTransport.State.RESUME_REQUESTED
+                || state == PrinterTransport.State.CANCEL_REQUESTED) {
+            activePrinterJobId = current.jobId;
+            activePrinterTarget = printerTarget(current);
+            printActive = state == PrinterTransport.State.START_REQUESTED
+                    || state == PrinterTransport.State.RUNNING || state == PrinterTransport.State.PAUSE_REQUESTED
+                    || state == PrinterTransport.State.PAUSED || state == PrinterTransport.State.RESUME_REQUESTED
+                    || state == PrinterTransport.State.CANCEL_REQUESTED;
+            printerBusy = true;
+            status.setText("Printer  Â·  " + state.name());
+        } else if (state == PrinterTransport.State.RECOVERY_REQUIRED) {
+            printActive = false;
+            printerBusy = false;
+            activePrinterTarget = null;
+            activePrinterJobId = null;
+            recoverUploadedArtifact(current);
+            status.setText("Printer  Â·  recovery review required");
+        } else if (state == PrinterTransport.State.FAILED || state == PrinterTransport.State.COMPLETED
+                || state == PrinterTransport.State.CANCELLED) {
+            printActive = false;
+            printerBusy = false;
+            activePrinterTarget = null;
+            activePrinterJobId = null;
+            if (state == PrinterTransport.State.COMPLETED) updateInventorySummary();
+            status.setText("Printer  Â·  " + state.name());
+            if (state == PrinterTransport.State.FAILED && detail != null && detail.length() > 0)
+                Toast.makeText(this, "Printer job failed: " + detail, Toast.LENGTH_LONG).show();
+        }
+        refreshActions();
+    }
+
+    private void refreshPrinterUi() {
+        if (printerJobStore == null) return;
+        PrinterJobStore.Job job = printerJobStore.load();
+        if (job == null) return;
+        if (job.state == PrinterTransport.State.UPLOADED || job.state == PrinterTransport.State.RECOVERY_REQUIRED)
+            recoverUploadedArtifact(job);
+        if (job.state == PrinterTransport.State.CONNECTING || job.state == PrinterTransport.State.UPLOADING
+                || job.state == PrinterTransport.State.START_REQUESTED || job.state == PrinterTransport.State.RUNNING
+                || job.state == PrinterTransport.State.PAUSE_REQUESTED || job.state == PrinterTransport.State.PAUSED
+                || job.state == PrinterTransport.State.RESUME_REQUESTED || job.state == PrinterTransport.State.CANCEL_REQUESTED) {
+            activePrinterJobId = job.jobId;
+            activePrinterTarget = printerTarget(job);
+            printActive = job.state == PrinterTransport.State.START_REQUESTED
+                    || job.state == PrinterTransport.State.RUNNING || job.state == PrinterTransport.State.PAUSE_REQUESTED
+                    || job.state == PrinterTransport.State.PAUSED || job.state == PrinterTransport.State.RESUME_REQUESTED
+                    || job.state == PrinterTransport.State.CANCEL_REQUESTED;
+            printerBusy = true;
+            status.setText("Printer  Â·  " + job.state.name());
+        } else if (job.state == PrinterTransport.State.UPLOADED) {
+            activePrinterJobId = job.jobId;
+            activePrinterTarget = printerTarget(job);
+            printActive = false;
+            printerBusy = false;
+            status.setText("Printer  Â·  artifact uploaded  Â·  ready to start");
+        } else if (job.state == PrinterTransport.State.RECOVERY_REQUIRED) {
+            activePrinterTarget = null;
+            activePrinterJobId = null;
+            printActive = false;
+            printerBusy = false;
+        }
+        refreshActions();
+    }
+
+    private void recoverUploadedArtifact(PrinterJobStore.Job job) {
+        try {
+            recoveredArtifact = recoverPrinterArtifact(job);
+        } catch (Exception ignored) {
+            recoveredArtifact = null;
+        }
+    }
+
+    private PrinterTransport.Artifact recoverPrinterArtifact(PrinterJobStore.Job job) throws Exception {
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            return ArtifactStore.recoverForA1MiniNoSupportPilot(getFilesDir(), job.artifactName,
+                    job.artifactSize, job.artifactSha256);
+        }
+        return ArtifactStore.recoverForPhysicalPrint(getFilesDir(), job.artifactName,
+                job.artifactSize, job.artifactSha256);
+    }
+
+    private PrinterTransport.PrinterTarget printerTarget(PrinterJobStore.Job job) {
+        try { return new PrinterTransport.PrinterTarget(job.printerName, job.host, job.serial); }
+        catch (Exception ignored) { return null; }
+    }
+
+    private void buildUi() {
+        root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(BG);
+        root.setPadding(dp(18), dp(12), dp(18), 0);
+        // Android 15 enforces edge-to-edge for target 35. Keep the workshop
+        // header and bottom action rail clear of system bars on every API.
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+            int top;
+            int bottom;
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                top = bars.top;
+                bottom = bars.bottom;
+            } else {
+                top = insets.getSystemWindowInsetTop();
+                bottom = insets.getSystemWindowInsetBottom();
+            }
+            view.setPadding(dp(18), dp(12) + top, dp(18), bottom);
+            return insets;
+        });
+
+        root.addView(buildHeader(), new LinearLayout.LayoutParams(-1, dp(76)));
+
+        status = label("Import a model to begin", 13, MUTED);
+        status.setGravity(Gravity.CENTER_VERTICAL);
+        status.setPadding(dp(14), 0, dp(14), 0);
+        status.setBackground(round(Color.rgb(239, 236, 230), Color.rgb(222, 216, 206), 1, 14));
+        root.addView(status, new LinearLayout.LayoutParams(-1, dp(42)));
+
+        FrameLayout workspace = new FrameLayout(this);
+        workspace.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 2, 28));
+        workspace.setClipToOutline(true);
+        LinearLayout.LayoutParams workspaceLp = new LinearLayout.LayoutParams(-1, 0, 1);
+        workspaceLp.topMargin = dp(10);
+        workspaceLp.bottomMargin = dp(10);
+        viewport = new ViewportView(this);
+        viewport.setPartSelectionListener(part -> {
+            if (model == null || model.parts == null || part < 0 || part >= model.parts.length) return;
+            if (!modelUris.isEmpty()) projectStore.saveSelectedPart(part);
+            saveCurrentPlate();
+            status.setText("Prepare  Â·  focused on " + model.parts[part].name);
+        });
+        workspace.addView(viewport, new FrameLayout.LayoutParams(-1, -1));
+
+        modelMeta = label("NEW PROJECT\n" + profileShortLabel(), 10, MUTED);
+        modelMeta.setLetterSpacing(0.12f);
+        modelMeta.setLineSpacing(2, 1.0f);
+        modelMeta.setMaxWidth(dp(150));
+        modelMeta.setMaxLines(3);
+        FrameLayout.LayoutParams metaLp = new FrameLayout.LayoutParams(dp(132), -2, Gravity.TOP | Gravity.START);
+        metaLp.setMargins(dp(16), dp(16), 0, 0);
+        modelMeta.setPadding(dp(12), dp(9), dp(12), dp(9));
+        modelMeta.setBackground(round(Color.argb(236, 255, 255, 255), Color.rgb(226, 222, 213), 1, 14));
+        modelMeta.setElevation(dp(2));
+        workspace.addView(modelMeta, metaLp);
+
+        TextView fit = control("âŠ™", "Fit model", v -> { viewport.fitModel(); Toast.makeText(this, "Model fitted to the build plate", Toast.LENGTH_SHORT).show(); });
+        FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
+        fitLp.setMargins(0, dp(16), dp(16), 0);
+        workspace.addView(fit, fitLp);
+
+        TextView orbit = control("â†»", "Reset view", v -> { viewport.resetView(); Toast.makeText(this, "View reset", Toast.LENGTH_SHORT).show(); });
+        FrameLayout.LayoutParams orbitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
+        orbitLp.setMargins(0, dp(70), dp(16), 0);
+        workspace.addView(orbit, orbitLp);
+
+        // Keep the subject unobstructed: these tags sit in the same orbit as
+        // the reference configurator instead of becoming a second toolbar on
+        // top of the model.
+        // The header already owns the study shortcut. Reserve the left and
+        // right lanes beside the subject for context pills so they do not
+        // collide with the metadata card or the fit/reset controls.
+        workspace.addView(marker("â–£", "Printer", profilePrinterLabel(), v -> showPrinterStatus(), Gravity.TOP | Gravity.START, dp(16), dp(150)));
+        workspace.addView(marker("M", "Material", profileMaterialLabel(), v -> showRecipe(), Gravity.TOP | Gravity.END, dp(16), dp(150)));
+        workspace.addView(marker(Integer.toString(activePlateIndex + 1), "Plate", currentPlateLabel(), v -> showPlates(), Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(16)));
+        workspace.addView(marker(String.format(Locale.US, "%.2f", config.layerHeight), "Quality", "Layer height", v -> showRecipe(), Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(70)));
+        workspace.addView(marker("âŒ", "Supports", config.supports ? "Auto supports" : "Off", v -> showRecipe(), Gravity.BOTTOM | Gravity.END, dp(22), dp(22)));
+        workspace.addView(marker("â†—", "Arrange", "Scale / tilt / pack", v -> showPrepare(), Gravity.BOTTOM | Gravity.START, dp(22), dp(22)));
+
+        root.addView(workspace, workspaceLp);
+        root.addView(buildInventoryStrip(), new LinearLayout.LayoutParams(-1, dp(76)));
+
+        details = label("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume", 12, MUTED);
+        details.setGravity(Gravity.CENTER_VERTICAL);
+        details.setPadding(dp(14), 0, dp(14), 0);
+        details.setBackground(round(Color.rgb(239, 236, 230), Color.rgb(222, 216, 206), 1, 14));
+        details.setOnClickListener(v -> showParts());
+        details.setContentDescription("Model dimensions and part list");
+        LinearLayout.LayoutParams detailsLp = new LinearLayout.LayoutParams(-1, dp(42));
+        detailsLp.bottomMargin = dp(8);
+        root.addView(details, detailsLp);
+
+        // Dynamic task actions stay in this off-screen source of truth. The
+        // upper curve triggers one contextual next step; the lower "more"
+        // destination exposes the remaining routes. This avoids turning the
+        // contextual bar into an unstructured list of every action.
+        actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        arcNavigation = new ArcNavigationBar(this);
+        arcNavigation.setListener(new ArcNavigationBar.Listener() {
+            @Override public void onContext() { openArcContext(); }
+            @Override public void onSearch() { showModelLibrary(); }
+            @Override public void onAlerts() { showPrinterReadiness(); }
+            @Override public void onHome() {
+                if (viewport != null) viewport.resetView();
+                status.setText(model == null ? "Start  Â·  choose a model" : "Prepare  Â·  " + model.displayName);
+            }
+            @Override public void onLibrary() { showModelLibrary(); }
+            @Override public void onPrepare() { showPrepare(); }
+            @Override public void onHistory() { showModelHistory(); }
+            @Override public void onMore() { showMoreActions(); }
+        });
+        root.addView(arcNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
+
+        layerInspector = new LinearLayout(this);
+        layerInspector.setOrientation(LinearLayout.VERTICAL);
+        layerInspector.setPadding(dp(12), dp(2), dp(12), 0);
+        layerInspector.setBackground(round(Color.rgb(239, 236, 230), Color.rgb(222, 216, 206), 1, 14));
+        layerInspectorLabel = label("LAYER INSPECTION", 10, MUTED);
+        layerInspectorLabel.setContentDescription("Selected toolpath layer details");
+        layerInspector.addView(layerInspectorLabel, new LinearLayout.LayoutParams(-1, dp(22)));
+        layerSeek = new SeekBar(this);
+        layerSeek.setContentDescription("Toolpath layer scrubber");
+        layerSeek.setMax(0);
+        layerSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser || slice == null || slice.layers == null || slice.layers.isEmpty()) return;
+                viewport.setSelectedLayer(progress);
+                Slicer.Layer layer = slice.layers.get(progress);
+                layerInspectorLabel.setText(String.format(Locale.US, "LAYER %d / %d  Â·  Z %.2f mm  Â·  %d segments",
+                        progress + 1, slice.layers.size(), layer.z, layer.segments.size()));
+                status.setText(String.format(Locale.US, "Inspect  Â·  layer %d / %d  Â·  Z %.2f mm  Â·  %d segments",
+                        progress + 1, slice.layers.size(), layer.z, layer.segments.size()));
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
+            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
+        layerInspector.addView(layerSeek, new LinearLayout.LayoutParams(-1, dp(34)));
+        LinearLayout.LayoutParams inspectorLp = new LinearLayout.LayoutParams(-1, dp(60));
+        inspectorLp.bottomMargin = dp(8);
+        root.addView(layerInspector, inspectorLp);
+        setContentView(root);
+        root.requestApplyInsets();
+        updateRecipeMarkers();
+        refreshActions();
+    }
+
+    /** A distraction-free presentation surface for the model and toolpath. */
+    private void showImmersiveView() {
+        if (model == null) {
+            Toast.makeText(this, "Import or create a model before opening the 3D view", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setBackgroundColor(Color.WHITE);
+        page.setPadding(0, 0, 0, 0);
+
+        FrameLayout stage = new FrameLayout(this);
+        stage.setBackgroundColor(Color.WHITE);
+        stage.setClipToOutline(false);
+        ViewportView scene = new ViewportView(this);
+        // Immersive study keeps the selected model as the hero, matching the
+        // supplied configurator reference. The main workspace retains the
+        // contextual printer envelope; this view is for inspecting the part.
+        scene.setPresentationMode(false);
+        scene.setCleanPresentation(true);
+        scene.setModel(model);
+        scene.setResult(slice);
+        scene.setSelectedPart(viewport == null ? -1 : viewport.getSelectedPart());
+        stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
+
+        TextView title = label(presentationTitle(model.displayName) + "\n"
+                + profileMaterialLabel() + "  Â·  " + currentPlateLabel(), 13, TEXT);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setLineSpacing(3, 1.0f);
+        // Keep the plate badge in its own visual lane on narrow phones; the
+        // supplied configurator reference has generous desktop whitespace,
+        // while Android presentation surfaces can be only 360dp wide.
+        title.setMaxWidth(dp(185));
+        title.setMaxLines(2);
+        title.setPadding(dp(16), dp(12), dp(16), dp(12));
+        title.setBackground(round(Color.argb(248, 255, 255, 255), Color.rgb(231, 228, 221), 1, 18));
+        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+        titleLp.setMargins(dp(14), dp(14), 0, 0);
+        stage.addView(title, titleLp);
+
+        ImageView logo = alloyLogo();
+        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        logoLp.topMargin = dp(14);
+        stage.addView(logo, logoLp);
+
+        TextView close = control("Ã—", "Close immersive 3D view", v -> dialog.dismiss());
+        FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
+        closeLp.setMargins(0, dp(14), dp(14), 0);
+        stage.addView(close, closeLp);
+        TextView fit = control("âŠ™", "Fit model in immersive view", v -> scene.fitModel());
+        FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
+        fitLp.setMargins(0, dp(68), dp(14), 0);
+        stage.addView(fit, fitLp);
+        addPresentationAppearanceControls(stage, scene, dp(122));
+
+        TextView hint = label("DRAG TO ORBIT  Â·  PINCH TO ZOOM  Â·  TAP A PART TO FOCUS", 9, MUTED);
+        hint.setGravity(Gravity.CENTER);
+        hint.setLetterSpacing(0.08f);
+        FrameLayout.LayoutParams hintLp = new FrameLayout.LayoutParams(-2, dp(30), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        hintLp.bottomMargin = dp(12);
+        stage.addView(hint, hintLp);
+
+        // These are deliberately lightweight callouts: the model remains the
+        // hero while the same product vocabulary as the supplied reference
+        // identifies the print context around it.
+        // The reference has a desktop-sized centered badge. On a phone, drop
+        // it into the open upper stage so it never competes with the title.
+        stage.addView(sceneTag("01", "PLATE", currentPlateLabel(), Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(88)));
+        // Give each callout a dedicated visual lane. Center-vertical
+        // placement looks balanced on a desktop canvas, but on a tall phone
+        // it puts pills over the hero mesh or the appearance controls and
+        // makes the study feel like an early debug overlay.
+        stage.addView(sceneTag("M", "MATERIAL", profileMaterialLabel(), Gravity.TOP | Gravity.START, dp(16), dp(136)));
+        stage.addView(sceneTag("âŒ", "SUPPORTS", config.supports ? "AUTO" : "OFF", Gravity.BOTTOM | Gravity.END, dp(16), dp(154)));
+        stage.addView(sceneTag("â–£", "PRINTER", profilePrinterLabel().toUpperCase(Locale.US), Gravity.BOTTOM | Gravity.START, dp(22), dp(62)));
+        page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
+
+        LinearLayout footer = new LinearLayout(this);
+        footer.setGravity(Gravity.CENTER_VERTICAL);
+        footer.setPadding(dp(14), dp(10), dp(14), dp(14));
+        footer.setBackgroundColor(Color.WHITE);
+        TextView meta = label(currentPlateLabel() + "  Â·  " + profileShortLabel(), 11, MUTED);
+        meta.setGravity(Gravity.CENTER_VERTICAL);
+        meta.setSingleLine(true);
+        meta.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        meta.setMinWidth(dp(110));
+        footer.addView(meta, new LinearLayout.LayoutParams(0, dp(50), 1));
+        Button study = dialogButton("A1 study", v -> {
+            dialog.dismiss();
+            showPrinterStudy();
+        });
+        study.setContentDescription("Open A1 Mini visual study");
+        footer.addView(study, new LinearLayout.LayoutParams(-2, dp(50)));
+        if (slice != null) {
+            Button path = dialogButton("Path view", null);
+            path.setOnClickListener(v -> {
+                scene.setToolpathOnly(!scene.isToolpathOnly());
+                path.setText(scene.isToolpathOnly() ? "Model view" : "Path view");
+            });
+            footer.addView(path, new LinearLayout.LayoutParams(-2, dp(50)));
+        }
+        if (model.parts != null && model.parts.length > 1) {
+            Button assembly = dialogButton("Explode", null);
+            assembly.setContentDescription("Toggle exploded assembly view");
+            assembly.setOnClickListener(v -> {
+                boolean exploded = !scene.isExplodedPresentation();
+                scene.setExplodedPresentation(exploded);
+                assembly.setText(exploded ? "Assemble" : "Explode");
+                Toast.makeText(this, exploded ? "Exploded inspection view" : "Assembled inspection view", Toast.LENGTH_SHORT).show();
+            });
+            footer.addView(assembly, new LinearLayout.LayoutParams(-2, dp(50)));
+        }
+        Button framing = dialogButton("Machine view", null);
+        framing.setOnClickListener(v -> {
+            boolean machine = framing.getText().toString().equals("Machine view");
+            scene.setPresentationMode(machine);
+            scene.setCleanPresentation(!machine);
+            framing.setText(machine ? "Hero view" : "Machine view");
+        });
+        footer.addView(framing, new LinearLayout.LayoutParams(-2, dp(50)));
+        Button done = dialogButton("Done", v -> dialog.dismiss());
+        done.setTextSize(13);
+        done.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(54), 1);
+        doneLp.leftMargin = dp(8);
+        footer.addView(done, doneLp);
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(78)));
+
+        dialog.setContentView(page);
+        dialog.setOnDismissListener(ignored -> scene.onHostPause());
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setLayout(-1, -1);
+            enterPresentationMode(window);
+        }
+    }
+
+    private Button dialogButton(String text, View.OnClickListener listener) {
+        Button button = new Button(this);
+        button.setText(text);
+        button.setTextSize(12);
+        button.setTextColor(TEXT);
+        button.setAllCaps(false);
+        button.setStateListAnimator(null);
+        button.setMinHeight(dp(48));
+        button.setPadding(dp(14), 0, dp(14), 0);
+        button.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
+        button.setOnClickListener(listener);
+        return button;
+    }
+
+    /** Remove platform chrome while a presentation study is on screen. */
+    private void enterPresentationMode(Window window) {
+        if (window == null) return;
+        // Dialog windows can briefly inherit the host activity's system-bar
+        // policy during a cold launch. The study is a full-bleed product
+        // surface, so make fullscreen an explicit window property as well as
+        // an insets request; otherwise status/navigation chrome can appear
+        // over marketing captures and change the composition.
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        if (Build.VERSION.SDK_INT >= 30) {
+            window.setDecorFitsSystemWindows(false);
+            android.view.WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
+                controller.hide(WindowInsets.Type.systemBars());
+                controller.setSystemBarsBehavior(
+                        android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            window.getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        }
+    }
+
+    /**
+     * Presentation controls are intentionally inside the 3D stage so the
+     * visual treatment is discoverable. They only change renderer uniforms;
+     * geometry, recipes, slices and printer commands remain untouched.
+     */
+    private void addPresentationAppearanceControls(FrameLayout stage, ViewportView scene, int topMargin) {
+        Button finish = dialogButton(STUDIO_FINISHES[scene.getFinishMode()], null);
+        finish.setTextSize(10);
+        finish.setMinWidth(dp(112));
+        finish.setContentDescription("Cycle studio finish");
+        finish.setOnClickListener(v -> {
+            int next = (scene.getFinishMode() + 1) % STUDIO_FINISHES.length;
+            scene.setFinishMode(next);
+            finish.setText(STUDIO_FINISHES[next]);
+            Toast.makeText(this, "Studio finish Â· " + STUDIO_FINISHES[next], Toast.LENGTH_SHORT).show();
+        });
+        FrameLayout.LayoutParams finishLp = new FrameLayout.LayoutParams(-2, dp(40), Gravity.TOP | Gravity.END);
+        finishLp.setMargins(0, topMargin, dp(14), 0);
+        stage.addView(finish, finishLp);
+
+        Button theme = dialogButton("Light stage", null);
+        theme.setTextSize(10);
+        theme.setMinWidth(dp(112));
+        theme.setContentDescription("Toggle studio stage theme");
+        theme.setOnClickListener(v -> {
+            boolean dark = !scene.isNightStage();
+            scene.setNightStage(dark);
+            theme.setText(dark ? "Dark stage" : "Light stage");
+            Toast.makeText(this, dark ? "Dark studio stage" : "Light studio stage", Toast.LENGTH_SHORT).show();
+        });
+        FrameLayout.LayoutParams themeLp = new FrameLayout.LayoutParams(-2, dp(40), Gravity.TOP | Gravity.END);
+        themeLp.setMargins(0, topMargin + dp(44), dp(14), 0);
+        stage.addView(theme, themeLp);
+    }
+
+    private View sceneTag(String glyph, String eyebrow, String value, int gravity,
+                          int horizontalMargin, int verticalMargin) {
+        LinearLayout tag = new LinearLayout(this);
+        tag.setOrientation(LinearLayout.HORIZONTAL);
+        tag.setGravity(Gravity.CENTER_VERTICAL);
+        tag.setPadding(dp(6), dp(5), dp(12), dp(5));
+        tag.setBackground(round(Color.argb(246, 255, 255, 255), Color.rgb(226, 222, 213), 1, 22));
+        tag.setElevation(dp(4));
+        TextView icon = label(glyph, glyph.length() > 2 ? 9 : 13, INK);
+        icon.setGravity(Gravity.CENTER);
+        icon.setTypeface(null, android.graphics.Typeface.BOLD);
+        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 17));
+        tag.addView(icon, new LinearLayout.LayoutParams(dp(32), dp(32)));
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(dp(7), 0, 0, 0);
+        TextView small = label(eyebrow, 8, MUTED);
+        small.setLetterSpacing(0.08f);
+        TextView main = label(value, 11, TEXT);
+        main.setTypeface(null, android.graphics.Typeface.BOLD);
+        copy.addView(small);
+        copy.addView(main);
+        tag.addView(copy);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
+        if ((gravity & Gravity.START) != 0) lp.leftMargin = horizontalMargin;
+        if ((gravity & Gravity.END) != 0) lp.rightMargin = horizontalMargin;
+        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
+        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
+        tag.setLayoutParams(lp);
+        return tag;
+    }
+
+    /** A quieter configurator pill for the standalone machine marketing study. */
+    private View compactSceneTag(String glyph, String eyebrow, String value, int gravity,
+                                 int horizontalMargin, int verticalMargin) {
+        LinearLayout tag = new LinearLayout(this);
+        tag.setOrientation(LinearLayout.HORIZONTAL);
+        tag.setGravity(Gravity.CENTER_VERTICAL);
+        tag.setPadding(dp(3), dp(2), dp(7), dp(2));
+        tag.setBackground(round(Color.argb(238, 255, 255, 255), Color.rgb(226, 222, 213), 1, 18));
+        tag.setElevation(dp(3));
+        TextView icon = label(glyph, glyph.length() > 2 ? 7 : 10, INK);
+        icon.setGravity(Gravity.CENTER);
+        icon.setTypeface(null, android.graphics.Typeface.BOLD);
+        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 12));
+        tag.addView(icon, new LinearLayout.LayoutParams(dp(22), dp(22)));
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(dp(6), 0, 0, 0);
+        TextView small = label(eyebrow, 6, MUTED);
+        small.setLetterSpacing(0.07f);
+        TextView main = label(value, 9, TEXT);
+        main.setTypeface(null, android.graphics.Typeface.BOLD);
+        copy.addView(small);
+        copy.addView(main);
+        tag.addView(copy);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
+        if ((gravity & Gravity.START) != 0) lp.leftMargin = horizontalMargin;
+        if ((gravity & Gravity.END) != 0) lp.rightMargin = horizontalMargin;
+        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
+        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
+        tag.setLayoutParams(lp);
+        return tag;
+    }
+
+    private View buildHeader() {
+        FrameLayout header = new FrameLayout(this);
+        // The bundled profile is source-backed, but physical-print promotion
+        // remains a separate gate until the native/runtime and real-printer
+        // acceptance evidence is complete. Avoid presenting that intentional
+        // fail-closed state as if the profile were malformed or untrusted.
+        String profileState = profile != null && profile.verified ? "PROFILE VERIFIED" : "PROFILE REVIEW REQUIRED";
+        TextView context = label("WORKSHOP\nPHONE-FIRST  Â·  " + profileState, 9, MUTED);
+        context.setLetterSpacing(0.11f);
+        context.setLineSpacing(2, 1.0f);
+        // Keep the contextual copy below the centered wordmark on narrow
+        // phones; a long profile state must never render underneath the logo.
+        FrameLayout.LayoutParams contextLp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.START);
+        contextLp.leftMargin = dp(8);
+        contextLp.bottomMargin = 0;
+        header.addView(context, contextLp);
+        context.setContentDescription("Open Learn: beginner guide, materials and troubleshooting");
+        context.setOnClickListener(v -> showLearnHub());
+
+        // The real mark owns the visual centre of the header. It is clipped
+        // to a circle, rather than being scaled down inside one, so the black
+        // field and luminous lettering retain the intended icon treatment.
+        ImageView logo = alloyLogo();
+        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        logoLp.topMargin = 0;
+        header.addView(logo, logoLp);
+
+        LinearLayout leftControls = new LinearLayout(this);
+        leftControls.setGravity(Gravity.CENTER_VERTICAL);
+        TextView printerStudy = control("3D", "Open model 3D study", v -> {
+            if (model == null) showModelLibrary();
+            else showImmersiveView();
+        });
+        TextView machineStudy = control("A1", "Open A1 Mini 3D study", v -> showPrinterStudy());
+        leftControls.addView(printerStudy, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        LinearLayout.LayoutParams machineStudyLp = new LinearLayout.LayoutParams(dp(42), dp(42));
+        machineStudyLp.leftMargin = dp(6);
+        leftControls.addView(machineStudy, machineStudyLp);
+        FrameLayout.LayoutParams leftControlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+        leftControlsLp.leftMargin = dp(2);
+        header.addView(leftControls, leftControlsLp);
+
+        LinearLayout rightControls = new LinearLayout(this);
+        rightControls.setGravity(Gravity.CENTER_VERTICAL);
+        TextView inventory = control("â–¦", "Workshop inventory", v -> showInventory());
+        TextView menu = control("Â·", "Project menu", v -> showProjectMenu());
+        LinearLayout.LayoutParams printerInventoryLp = new LinearLayout.LayoutParams(dp(42), dp(42));
+        rightControls.addView(inventory, printerInventoryLp);
+        LinearLayout.LayoutParams menuLp = new LinearLayout.LayoutParams(dp(42), dp(42));
+        menuLp.leftMargin = dp(6);
+        rightControls.addView(menu, menuLp);
+        FrameLayout.LayoutParams rightControlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
+        rightControlsLp.rightMargin = dp(2);
+        header.addView(rightControls, rightControlsLp);
+        return header;
+    }
+
+    /** A standalone A1 Mini study makes the supplied/reviewed printer model discoverable. */
+    private void showPrinterStudy() {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setBackgroundColor(Color.WHITE);
+        page.setPadding(0, 0, 0, 0);
+
+        FrameLayout stage = new FrameLayout(this);
+        stage.setBackgroundColor(Color.WHITE);
+        stage.setClipToOutline(false);
+        ViewportView scene = new ViewportView(this);
+        scene.setMachineStudy(true);
+        scene.setPresentationMode(true);
+        scene.setCleanPresentation(false);
+        // Start in the light, airy treatment used by the supplied product
+        // reference. The appearance control still exposes the dark study,
+        // but the first frame should make the machine and its scale props
+        // immediately discoverable instead of hiding them in a black field.
+        scene.setNightStage(false);
+        scene.setModel(null);
+        stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
+
+        TextView title = label("A1 MINI\nBambu Lab\n180 Ã— 180 Ã— 180 MM", 9, TEXT);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setLetterSpacing(0.06f);
+        title.setLineSpacing(3, 1.0f);
+        title.setPadding(dp(2), dp(2), dp(2), dp(2));
+        title.setBackgroundColor(Color.TRANSPARENT);
+        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(215), -2, Gravity.TOP | Gravity.START);
+        titleLp.setMargins(dp(20), dp(18), 0, 0);
+        stage.addView(title, titleLp);
+        ImageView logo = alloyLogo();
+        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        logoLp.topMargin = dp(12);
+        stage.addView(logo, logoLp);
+        TextView close = control("Ã—", "Close A1 Mini 3D study", v -> dialog.dismiss());
+        FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
+        closeLp.setMargins(0, dp(14), dp(14), 0);
+        stage.addView(close, closeLp);
+        TextView fit = control("âŠ™", "Fit A1 Mini in study view", v -> scene.fitModel());
+        FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
+        fitLp.setMargins(0, dp(68), dp(14), 0);
+        stage.addView(fit, fitLp);
+        // The supplied reference is a calm product configurator: callouts
+        // orbit the hero subject while controls stay quiet at the edges.
+        // Keep the renderer controls available through the scene itself, but
+        // do not let them dominate the first marketing frame.
+        // Match the supplied configurator's visual grammar: one quiet size
+        // selector above the hero, material and nozzle selectors orbiting it,
+        // and only two small context selectors near the lower edge. The
+        // labels are presentation-only; printer configuration remains in the
+        // actual preparation and pairing flows.
+        // Keep the configurable labels in quiet top/bottom bands. The older
+        // orbit layout put material and nozzle pills directly over the
+        // machine's gantry and uprights on portrait phones, obscuring the
+        // very mesh this study is meant to present.
+        // The fit button occupies the upper-right control rail. Keep all
+        // three configurator callouts below that rail on portrait screens;
+        // the previous 78dp row collided with the nozzle pill and fit button
+        // on narrow devices, making the first frame feel like a debug HUD.
+        // Leave a full control-height plus touch-spacing below the fit button.
+        // On tall, dense phones 124dp still landed on that rail after status
+        // bar/window insets were applied to the stage.
+        int calloutTop = dp(160);
+        View sizeTag = compactSceneTag("â–¡", "SIZE", "180 Ã— 180 Ã— 180 MM",
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, calloutTop);
+        sizeTag.setOnClickListener(v -> {
+            scene.fitModel();
+            Toast.makeText(this, "A1 Mini volume Â· 180 Ã— 180 Ã— 180 mm", Toast.LENGTH_SHORT).show();
+        });
+        stage.addView(sizeTag);
+        View materialTag = compactSceneTag("â—Œ", "MATERIAL", "NATURAL PLA",
+                Gravity.TOP | Gravity.START, dp(8), calloutTop);
+        materialTag.setOnClickListener(v -> {
+            int next = (scene.getFinishMode() + 1) % 5;
+            scene.setFinishMode(next);
+            String[] finishes = {"Natural PLA", "Matte black", "Silk white", "Signal orange", "Steel blue"};
+            Toast.makeText(this, "Preview finish Â· " + finishes[next], Toast.LENGTH_SHORT).show();
+        });
+        stage.addView(materialTag);
+        View nozzleTag = compactSceneTag("âŒ", "NOZZLE", "0.4 MM",
+                Gravity.TOP | Gravity.END, dp(8), calloutTop);
+        nozzleTag.setOnClickListener(v -> showProfileReview());
+        stage.addView(nozzleTag);
+        View printerTag = compactSceneTag("A1", "PRINTER", "A1 MINI",
+                Gravity.BOTTOM | Gravity.START, dp(12), dp(18));
+        printerTag.setOnClickListener(v -> showPrinterStatus());
+        stage.addView(printerTag);
+        View scaleTag = compactSceneTag("â‰ˆ", "SCALE", "CAN  Â·  BALL  Â·  KEY",
+                Gravity.BOTTOM | Gravity.END, dp(12), dp(18));
+        scaleTag.setOnClickListener(v -> {
+            if (model == null) {
+                Toast.makeText(this, "Import a model to use known-dimension scaling", Toast.LENGTH_SHORT).show();
+            } else {
+                showScaleToKnownDimension();
+            }
+        });
+        stage.addView(scaleTag);
+        page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
+
+        LinearLayout footer = new LinearLayout(this);
+        footer.setOrientation(LinearLayout.VERTICAL);
+        footer.setGravity(Gravity.CENTER_VERTICAL);
+        footer.setPadding(dp(18), dp(10), dp(18), dp(12));
+        footer.setBackgroundColor(Color.WHITE);
+        TextView note = label("ALLOY  Â·  A1 MINI", 9, MUTED);
+        note.setGravity(Gravity.CENTER);
+        note.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        note.setLineSpacing(1, 1.0f);
+        footer.addView(note, new LinearLayout.LayoutParams(-1, dp(22)));
+        LinearLayout footerActions = new LinearLayout(this);
+        footerActions.setOrientation(LinearLayout.HORIZONTAL);
+        footerActions.setGravity(Gravity.CENTER);
+        Button done = dialogButton("Done", v -> dialog.dismiss());
+        done.setTextSize(13);
+        done.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-1, dp(44));
+        footerActions.addView(done, doneLp);
+        footer.addView(footerActions, new LinearLayout.LayoutParams(-1, dp(44)));
+        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(88)));
+
+        dialog.setContentView(page);
+        dialog.setOnDismissListener(ignored -> scene.onHostPause());
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setLayout(-1, -1);
+            enterPresentationMode(window);
+        }
+    }
+
+    private LinearLayout buildInventoryStrip() {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(dp(14), dp(8), dp(10), dp(8));
+        card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 20));
+
+        inventoryStatusDot = label("â—", 16, GREEN);
+        inventoryStatusDot.setContentDescription("Workshop inventory status");
+        card.addView(inventoryStatusDot, new LinearLayout.LayoutParams(dp(26), -2));
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        TextView title = label("Workshop inventory", 13, TEXT);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        inventorySummary = label("", 11, MUTED);
+        copy.addView(title);
+        copy.addView(inventorySummary);
+        card.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView open = label("VIEW", 10, GOLD);
+        open.setTypeface(null, android.graphics.Typeface.BOLD);
+        open.setGravity(Gravity.CENTER);
+        open.setOnClickListener(v -> showInventory());
+        card.addView(open, new LinearLayout.LayoutParams(dp(58), -1));
+        updateInventorySummary();
+        return card;
+    }
+
+    private void updateInventorySummary() {
+        int reorder = 0;
+        int service = 0;
+        int attention = 0;
+        for (InventoryStore.Item item : inventoryStore.items()) {
+            boolean low = item.needsReorder();
+            boolean upkeep = item.needsServiceAttention();
+            if (low) reorder++;
+            if (upkeep) service++;
+            if (low || upkeep) attention++;
+        }
+        String summary = attention == 0
+                ? "All stocked  Â·  no service due"
+                : attention + " item" + (attention == 1 ? "" : "s") + " need attention  Â·  "
+                        + reorder + " reorder  Â·  " + service + " service due";
+        inventorySummary.setText(summary);
+        if (inventoryStatusDot != null) {
+            int color = reorder > 0 ? RED : service > 0 ? AMBER : GREEN;
+            inventoryStatusDot.setTextColor(color);
+            inventoryStatusDot.setContentDescription(summary);
+        }
+    }
+
+    private TextView label(String text, float size, int color) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        view.setTextSize(size);
+        view.setTextColor(color);
+        view.setFontFeatureSettings("kern");
+        return view;
+    }
+
+    /** Keep the hand-built product shell consistent across phone densities. */
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private String profileShortLabel() {
+        return profile == null ? "A1 MINI  Â·  0.4 MM NOZZLE" : profile.name.toUpperCase(Locale.US);
+    }
+
+    private String viewportDisplayName(String value) {
+        String name = value == null ? "MODEL" : value.trim();
+        if (name.length() == 0) name = "MODEL";
+        if ("ALLOY SHOWCASE BOX".equalsIgnoreCase(name)) name = "SHOWCASE BOX";
+        name = name.toUpperCase(Locale.US);
+        return name.length() > 24 ? name.substring(0, 24).trim() + "â€¦" : name;
+    }
+
+    /** Keep filesystem-heavy CAD names legible in the small presentation title. */
+    private String presentationTitle(String value) {
+        String name = value == null ? "MODEL" : value.trim().toLowerCase(Locale.US);
+        if (name.contains("redmagic") && name.contains("assembly")) return "REDMAGIC ASSEMBLY";
+        if (name.contains("redmagic") && name.contains("chassis")) return "REDMAGIC CHASSIS";
+        if (name.contains("redmagic") && name.contains("bezel")) return "REDMAGIC BEZEL";
+        if (name.contains("showcase")) return "SHOWCASE BOX";
+        String compact = viewportDisplayName(value);
+        return compact.length() > 18 ? compact.substring(0, 18).trim() + "â€¦" : compact;
+    }
+
+    private String profilePrinterLabel() {
+        if (profile == null) return "A1 Mini";
+        String label = profile.name == null ? "A1 Mini" : profile.name;
+        int separator = label.indexOf(" Â· ");
+        if (separator > 0) label = label.substring(0, separator);
+        if (label.toLowerCase(Locale.US).contains("a1 mini")) return "A1 Mini";
+        return label.length() > 24 ? label.substring(0, 24).trim() + "â€¦" : label;
+    }
+
+    private String profileMaterialLabel() {
+        return profile == null ? "PLA Basic" : profile.filamentName.replace("Bambu ", "");
+    }
+
+    private String profileBuildVolumeLabel() {
+        return profile == null ? "180 Ã— 180 Ã— 180 mm" : profile.buildVolumeLabel();
+    }
+
+    /** Active dimensions are profile-derived, bounded to the disclosed A1/P1S maximum. */
+    private float activeBedX() { return finite(config.bedX) ? clamp(config.bedX, 0.5f, 256f) : 180f; }
+    private float activeBedY() { return finite(config.bedY) ? clamp(config.bedY, 0.5f, 256f) : 180f; }
+    private float activeBedZ() { return finite(config.bedZ) ? clamp(config.bedZ, 0.5f, 256f) : 180f; }
+
+    private void requireActiveBuildVolume(MeshModel candidate) throws IOException {
+        if (candidate == null) throw new IOException("Generated model is empty");
+        float width = candidate.maxX - candidate.minX;
+        float depth = candidate.maxY - candidate.minY;
+        float height = candidate.maxZ - candidate.minZ;
+        if (width > activeBedX() + 0.001f || depth > activeBedY() + 0.001f || height > activeBedZ() + 0.001f)
+            throw new IOException("Generated model exceeds the " + profileBuildVolumeLabel() + " "
+                    + profilePrinterLabel() + " build volume");
+    }
+
+    private String currentPlateLabel() {
+        return "Plate " + (activePlateIndex + 1);
+    }
+
+    private String currentPlateName() {
+        if (model == null || model.displayName == null || model.displayName.trim().length() == 0)
+            return currentPlateLabel();
+        return currentPlateLabel() + "  Â·  " + model.displayName;
+    }
+
+    private void updatePlateMarker() {
+        if (plateMarkerValue != null) plateMarkerValue.setText(currentPlateLabel());
+    }
+
+    private Button action(String text, View.OnClickListener listener) {
+        Button button = new Button(this);
+        button.setText(text);
+        button.setTextSize(12);
+        button.setTextColor(TEXT);
+        button.setAllCaps(false);
+        button.setOnClickListener(listener);
+        button.setMinHeight(dp(48));
+        button.setPadding(dp(14), 0, dp(14), 0);
+        button.setStateListAnimator(null);
+        button.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(50));
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        actions.addView(button, lp);
+        return button;
+    }
+
+    private TextView control(String glyph, String description, View.OnClickListener listener) {
+        TextView view = label(glyph, 20, INK);
+        view.setGravity(Gravity.CENTER);
+        view.setContentDescription(description);
+        view.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 24));
+        view.setElevation(dp(3));
+        view.setOnClickListener(listener);
+        return view;
+    }
+
+    private View marker(String glyph, String eyebrow, String value, View.OnClickListener listener, int gravity, int margin, int verticalMargin) {
+        LinearLayout pill = new LinearLayout(this);
+        pill.setOrientation(LinearLayout.HORIZONTAL);
+        pill.setGravity(Gravity.CENTER_VERTICAL);
+        pill.setPadding(dp(6), dp(5), dp(11), dp(5));
+        pill.setBackground(round(SURFACE, Color.rgb(216, 211, 201), 1, 24));
+        pill.setElevation(dp(5));
+        TextView badge = label(glyph, glyph.length() > 2 ? 8 : 13, INK);
+        badge.setGravity(Gravity.CENTER);
+        badge.setTypeface(null, android.graphics.Typeface.BOLD);
+        badge.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 17));
+        pill.addView(badge, new LinearLayout.LayoutParams(dp(33), dp(33)));
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(dp(6), 0, 0, 0);
+        TextView small = label(eyebrow.toUpperCase(Locale.US), 8, MUTED);
+        small.setLetterSpacing(0.08f);
+        TextView main = label(value, 11, TEXT);
+        main.setTypeface(null, android.graphics.Typeface.BOLD);
+        if ("Quality".equals(eyebrow)) qualityMarkerValue = main;
+        if ("Supports".equals(eyebrow)) supportsMarkerValue = main;
+        if ("Plate".equals(eyebrow)) plateMarkerValue = main;
+        if ("Printer".equals(eyebrow)) { printerMarkerValue = main; printerMarker = pill; }
+        if ("Material".equals(eyebrow)) { materialMarkerValue = main; materialMarker = pill; }
+        copy.addView(small);
+        copy.addView(main);
+        pill.addView(copy);
+        pill.setContentDescription(eyebrow + ": " + value);
+        pill.setOnClickListener(listener);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
+        if ((gravity & Gravity.START) != 0) lp.leftMargin = margin;
+        if ((gravity & Gravity.END) != 0) lp.rightMargin = margin;
+        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
+        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
+        pill.setLayoutParams(lp);
+        return pill;
+    }
+
+    private void updateRecipeMarkers() {
+        if (printerMarkerValue != null) printerMarkerValue.setText(profilePrinterLabel());
+        if (printerMarker != null) printerMarker.setContentDescription("Printer: " + profilePrinterLabel());
+        if (materialMarkerValue != null) materialMarkerValue.setText(profileMaterialLabel());
+        if (materialMarker != null) materialMarker.setContentDescription("Material: " + profileMaterialLabel());
+        if (qualityMarkerValue != null) qualityMarkerValue.setText(String.format(Locale.US, "%.2f mm", config.layerHeight));
+        if (supportsMarkerValue != null) supportsMarkerValue.setText(config.supports ? "Auto supports" : "Off");
+        if (viewport != null) viewport.setBuildVolume(config.bedX, config.bedY, config.bedZ);
+    }
+
+    private android.graphics.drawable.Drawable round(int fill, int stroke, int strokeWidth, int radius) {
+        android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
+        drawable.setColor(fill);
+        drawable.setStroke(dp(strokeWidth), stroke);
+        drawable.setCornerRadius(dp(radius));
+        return drawable;
+    }
+
+    /** One true mark everywhere: centred, circle-clipped and never shrunk into a badge. */
+    private ImageView alloyLogo() {
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.alloy_logo);
+        logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        logo.setBackground(round(Color.BLACK, Color.rgb(99, 224, 211), 1, 21));
+        logo.setClipToOutline(true);
+        logo.setContentDescription("Alloy");
+        return logo;
+    }
+
+    private void showPrinterStatus() {
+        PrinterCredentialStore.Credentials credentials = savedCredentials();
+        String statusTitle = profile == null ? "Printer status" : profilePrinterLabel();
+        String pairing = credentials == null ? "No printer is paired." : "Paired target: " + credentials.name + " Â· " + credentials.host
+                + "\nModel: " + (credentials.model.length() == 0 ? "not confirmed" : credentials.model)
+                + (credentials.certificateFingerprint.length() > 0 ? "\nCertificate pin: configured" : "\nCertificate pin: not configured");
+        PrinterJobStore.Job previousJob = printerJobStore.load();
+        PrinterReadiness.Report readiness = printerReadinessReport();
+        StringBuilder readinessText = new StringBuilder(readiness.summary());
+        for (PrinterReadiness.Check check : readiness.checks()) {
+            readinessText.append("\n").append(check.passed() ? "âœ“ " : "! ")
+                    .append(check.label).append(" Â· ").append(check.detail);
+        }
+        if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
+            pairing += "\n\nUNCONFIRMED JOB\n" + previousJob.summary() + "\n" + previousJob.detail
+                    + "\n\n" + (recoveredArtifact == null
+                    ? "The staged artifact could not be revalidated; sending is blocked."
+                    : "The staged artifact was recovered and its package, size and SHA-256 identity were revalidated.")
+                    + "\nVerify the printer's physical/app state before dismissing this record.";
+        }
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
+                .setTitle(statusTitle)
+                .setMessage("" + (profile == null ? "Conservative fallback profile" : profile.name)
+                        + "\n\nProfile status: " + (profile != null && profile.verified ? "verified" : "unverified")
+                        + "\nSource: " + (profile == null ? "built-in fallback" : profile.provenanceSource)
+                        + "\n\n" + pairing
+                        + "\n\nPRINT READINESS\n" + readinessText
+                        + "\n\nLAN upload/control stays behind the transport and physical-printer gates. This screen can probe the paired services; it does not start a print.")
+                .setNegativeButton("Close", null)
+                .setPositiveButton(credentials == null ? "Pair / test LAN" : "Refresh telemetry", (ignored, which) -> {
+                    if (credentials == null) showPrinterPairing();
+                    else refreshPrinterStatus();
+                });
+        if (credentials != null && (previousJob == null || previousJob.state != PrinterTransport.State.RECOVERY_REQUIRED))
+            dialog.setNeutralButton("Pair / test LAN", (ignored, which) -> showPrinterPairing());
+        if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
+            dialog.setNeutralButton("Dismiss record", (ignored, which) -> {
+                printerJobStore.clear();
+                recoveredArtifact = null;
+                status.setText("Printer  Â·  recovery record dismissed");
+                refreshActions();
+            });
+        }
+        dialog.show();
+    }
+
+    private void refreshPrinterStatus() {
+        PrinterCredentialStore.Credentials credentials = savedCredentials();
+        if (credentials == null) {
+            showPrinterPairing();
+            return;
+        }
+        try {
+            if (printerTransport != null) printerTransport.close();
+            if (!credentials.hasCertificatePin()) {
+                Toast.makeText(this, "Read and save the printer certificate fingerprint before checking LAN status", Toast.LENGTH_LONG).show();
+                showPrinterPairing();
+                return;
+            }
+            BambuLanTransport transport = BambuLanTransport.pinned(credentials, credentials.certificateFingerprint);
+            printerTransport = transport;
+            PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(
+                    credentials.name, credentials.host, credentials.serial);
+            status.setText("Printer  Â·  reading telemetryâ€¦");
+            transport.readStatus(target, (state, detail) -> runOnUiThread(() -> {
+                if (isFinishing() || printerTransport != transport) return;
+                if (state == PrinterTransport.State.READY) status.setText("Printer  Â·  " + detail);
+                else if (state == PrinterTransport.State.STATUS_UNCONFIRMED) {
+                    status.setText("Printer  Â·  status unconfirmed");
+                    Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
+                }
+                else if (state == PrinterTransport.State.FAILED) {
+                    status.setText("Printer  Â·  status unavailable");
+                    Toast.makeText(this, "Printer status failed: " + detail, Toast.LENGTH_LONG).show();
+                }
+            }));
+        } catch (Exception error) {
+            Toast.makeText(this, "Printer status could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showPrinterPairing() {
+        if (printerBusy || slicing || batchSlicing || batchTransferring) {
+            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        PrinterCredentialStore.Credentials current = savedCredentials();
+        EditText name = textField(current == null ? profilePrinterLabel() : current.name, "Printer name");
+        EditText host = textField(current == null ? "" : current.host, "LAN IP or hostname");
+        EditText serial = textField(current == null ? "" : current.serial, "Printer serial");
+        EditText modelCode = textField(current == null ? "" : current.model,
+                "Bambu model code (N1 = A1 Mini; required for current pilot)");
+        EditText accessCode = textField(current == null ? "" : current.accessCode, "Developer/LAN access code");
+        accessCode.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        EditText fingerprint = textField(current == null ? "" : current.certificateFingerprint, "Optional SHA-256 certificate fingerprint");
+        fields.addView(name); fields.addView(host); fields.addView(serial); fields.addView(modelCode);
+        fields.addView(accessCode); fields.addView(fingerprint);
+        final AlertDialog[] pairingDialogRef = new AlertDialog[1];
+        Button findPrinter = new Button(this);
+        findPrinter.setText("Find printer on Wi-Fi");
+        findPrinter.setAllCaps(false);
+        findPrinter.setTextColor(GOLD);
+        findPrinter.setOnClickListener(view -> {
+            if (activeDiscovery != null) activeDiscovery.close();
+            findPrinter.setEnabled(false);
+            findPrinter.setText("Searching local networkâ€¦");
+            activeDiscovery = BambuPrinterDiscovery.discover(this, 5_000L, new BambuPrinterDiscovery.Callback() {
+                @Override public void onComplete(List<BambuPrinterDiscovery.Printer> printers) {
+                    runOnUiThread(() -> {
+                        if (isFinishing() || pairingDialogRef[0] == null || !pairingDialogRef[0].isShowing()) return;
+                        findPrinter.setEnabled(true);
+                        findPrinter.setText("Find printer on Wi-Fi");
+                        if (printers.isEmpty()) {
+                            Toast.makeText(MainActivity.this,
+                                    "No Bambu printer announced itself. Try manual IP entry on blocked/VLAN networks.",
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            showDiscoveredPrinters(printers, name, host, serial, modelCode);
+                        }
+                    });
+                }
+
+                @Override public void onError(Exception error) {
+                    runOnUiThread(() -> {
+                        if (isFinishing() || pairingDialogRef[0] == null || !pairingDialogRef[0].isShowing()) return;
+                        findPrinter.setEnabled(true);
+                        findPrinter.setText("Find printer on Wi-Fi");
+                        Toast.makeText(MainActivity.this,
+                                "Wi-Fi discovery unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
+        });
+        fields.addView(findPrinter);
+        TextView note = label("Discovery is read-only and fills the printer name, host, serial and model code; the access code is never broadcast. A1 Mini, A1 and P1S planning profiles can be reviewed here, but the current physical pilot is deliberately restricted to model N1 (A1 Mini) plus an explicitly saved certificate fingerprint. Certificate inspection is the only unauthenticated network step; Alloy never sends MQTT/FTP commands over an unpinned session. Pairing stores the secret only in Android Keystore-backed encrypted preferences.", 12, MUTED);
+        note.setPadding(0, 16, 0, 0); fields.addView(note);
+        Button inspectCertificate = new Button(this);
+        inspectCertificate.setText("Read printer certificate");
+        inspectCertificate.setAllCaps(false);
+        inspectCertificate.setTextColor(GOLD);
+        inspectCertificate.setOnClickListener(view -> {
+            String hostValue = host.getText().toString().trim();
+            activeCertificateInspectionId = certificateInspectionIds.incrementAndGet();
+            long inspectionId = activeCertificateInspectionId;
+            if (activeCertificateInspection != null) activeCertificateInspection.cancel(true);
+            inspectCertificate.setEnabled(false);
+            inspectCertificate.setText("Reading certificateâ€¦");
+            activeCertificateInspection = importExecutor.submit(() -> {
+                try {
+                    String digest = BambuLanTransport.inspectCertificateFingerprint(hostValue);
+                    mainHandler.post(() -> {
+                        if (isFinishing() || inspectionId != activeCertificateInspectionId) return;
+                        fingerprint.setText(displayFingerprint(digest));
+                        inspectCertificate.setText("Fingerprint loaded");
+                        inspectCertificate.setEnabled(true);
+                        Toast.makeText(this, "Fingerprint loaded; tap Save and probe to pair", Toast.LENGTH_LONG).show();
+                    });
+                } catch (Exception error) {
+                    mainHandler.post(() -> {
+                        if (isFinishing() || inspectionId != activeCertificateInspectionId) return;
+                        inspectCertificate.setText("Read printer certificate");
+                        inspectCertificate.setEnabled(true);
+                        Toast.makeText(this, "Certificate inspection failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
+        });
+        fields.addView(inspectCertificate);
+        AlertDialog pairingDialog = new AlertDialog.Builder(this)
+                .setTitle("Pair printer")
+                .setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save and probe", (dialog, which) -> {
+                    try {
+                        PrinterCredentialStore.Credentials credentials = new PrinterCredentialStore.Credentials(
+                                name.getText().toString(), host.getText().toString(), serial.getText().toString(),
+                                accessCode.getText().toString(), fingerprint.getText().toString(),
+                                modelCode.getText().toString());
+                        if (!credentials.hasCertificatePin()) {
+                            throw new IllegalArgumentException("Read and save the printer certificate fingerprint before probing LAN services");
+                        }
+                        credentialStore.save(credentials);
+                        if (printerTransport != null) printerTransport.close();
+                        printerTransport = BambuLanTransport.pinned(credentials, credentials.certificateFingerprint);
+                        PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(credentials.name, credentials.host, credentials.serial);
+                        status.setText("Printer  Â·  probing LAN servicesâ€¦");
+                        printerTransport.probe(target, (state, detail) -> runOnUiThread(() -> {
+                            status.setText(state == PrinterTransport.State.READY ? "Printer  Â·  LAN services ready" : "Printer  Â·  " + state);
+                            if (state == PrinterTransport.State.FAILED) Toast.makeText(this, "Printer probe failed: " + detail, Toast.LENGTH_LONG).show();
+                        }));
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Printer pairing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                })
+                .create();
+        pairingDialogRef[0] = pairingDialog;
+        pairingDialog.setOnDismissListener(dialog -> {
+            if (activeDiscovery != null) {
+                activeDiscovery.close();
+                activeDiscovery = null;
+            }
+        });
+        pairingDialog.show();
+    }
+
+    private void showDiscoveredPrinters(List<BambuPrinterDiscovery.Printer> printers,
+                                        EditText name, EditText host, EditText serial, EditText modelCode) {
+        if (printers == null || printers.isEmpty()) return;
+        String[] labels = new String[printers.size()];
+        for (int index = 0; index < printers.size(); index++) {
+            BambuPrinterDiscovery.Printer printer = printers.get(index);
+            labels[index] = printer.summary() + (printer.isA1Mini() ? "" : " Â· profile review needed");
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Printers found on Wi-Fi")
+                .setItems(labels, (dialog, which) -> {
+                    if (which < 0 || which >= printers.size()) return;
+                    BambuPrinterDiscovery.Printer printer = printers.get(which);
+                    name.setText(printer.name);
+                    host.setText(printer.host);
+                    serial.setText(printer.serial);
+                    modelCode.setText(printer.model);
+                    Toast.makeText(this,
+                            printer.isLanMode() ? "Printer details filled; enter the access code to continue"
+                                    : "Printer is not advertising LAN mode; review before pairing",
+                            Toast.LENGTH_LONG).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private PrinterCredentialStore.Credentials savedCredentials() {
+        try { return credentialStore == null ? null : credentialStore.load(); }
+        catch (Exception ignored) { return null; }
+    }
+
+    private static String displayFingerprint(String digest) {
+        if (digest == null || !digest.matches("[0-9a-fA-F]{64}")) return digest == null ? "" : digest;
+        String normalized = digest.toLowerCase(Locale.US);
+        StringBuilder display = new StringBuilder(95);
+        for (int index = 0; index < normalized.length(); index++) {
+            if (index > 0 && index % 2 == 0) display.append(':');
+            display.append(normalized.charAt(index));
+        }
+        return display.toString();
+    }
+
+    private void explainUnsupported(String feature) {
+        Toast.makeText(this, feature + " is reserved for the validated native engine", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showInventory() {
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(4, 6, 4, 4);
+        TextView intro = label("A small workshop ledger for consumables, tools and care routines. Status is intentionally conservative: missing stock means reorder, while a due service stays visible until checked off.", 12, MUTED);
+        intro.setLineSpacing(3, 1.0f);
+        intro.setPadding(4, 0, 4, 14);
+        content.addView(intro, new LinearLayout.LayoutParams(-1, -2));
+        Button add = new Button(this);
+        add.setText("Add workshop item");
+        add.setAllCaps(false);
+        add.setTextColor(GOLD);
+        add.setOnClickListener(v -> showAddInventoryItem());
+        add.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 16));
+        LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(-1, 48);
+        addLp.setMargins(0, 0, 0, 10);
+        content.addView(add, addLp);
+        for (InventoryStore.Item item : InventoryStore.orderedForAttention(inventoryStore.items()))
+            content.addView(inventoryRow(item));
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(content);
+        new AlertDialog.Builder(this)
+                .setTitle("Workshop inventory")
+                .setView(scroll)
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void showAddInventoryItem() {
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        EditText name = textField("", "Item name");
+        EditText category = textField("Tool", "Category (tool, consumable, spareâ€¦)");
+        EditText unit = textField("each", "Unit (each, spools, bottlesâ€¦)");
+        EditText quantity = field("0", "Current quantity");
+        EditText minimum = field("0", "Reorder below this quantity");
+        EditText interval = field("0", "Service interval in days (0 = none)");
+        EditText care = textField("Inspect, clean, or replace as needed", "Care notes");
+        fields.addView(name); fields.addView(category); fields.addView(unit);
+        fields.addView(quantity); fields.addView(minimum); fields.addView(interval); fields.addView(care);
+        TextView note = label("Items are stored only on this phone. A low quantity shows REORDER; a service interval creates a visible upkeep reminder.", 12, MUTED);
+        note.setPadding(0, 16, 0, 0);
+        fields.addView(note);
+        new AlertDialog.Builder(this)
+                .setTitle("Add workshop item")
+                .setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Add", (dialog, which) -> {
+                    try {
+                        InventoryStore.Item added = inventoryStore.addCustom(
+                                name.getText().toString(), category.getText().toString(), unit.getText().toString(),
+                                Integer.parseInt(quantity.getText().toString()),
+                                Integer.parseInt(minimum.getText().toString()),
+                                Integer.parseInt(interval.getText().toString()), care.getText().toString());
+                        updateInventorySummary();
+                        Toast.makeText(this, added.name + " added to inventory", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                        showInventory();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Inventory values were not valid", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .show();
+    }
+
+    private View inventoryRow(InventoryStore.Item item) {
+        LinearLayout row = new LinearLayout(this);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(10, 10, 10, 10);
+        int statusColor = inventoryStatusColor(item);
+        row.setBackground(round(statusColor == RED ? Color.rgb(255, 245, 242) : statusColor == AMBER ? Color.rgb(255, 250, 239) : SURFACE, Color.rgb(226, 222, 213), 1, 16));
+        row.setElevation(2);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+        rowLp.setMargins(0, 0, 0, 8);
+
+        TextView icon = label(item.glyph(), 15, statusColor);
+        icon.setGravity(Gravity.CENTER);
+        icon.setTypeface(null, android.graphics.Typeface.BOLD);
+        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(216, 211, 201), 1, 22));
+        row.addView(icon, new LinearLayout.LayoutParams(42, 42));
+
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(10, 0, 8, 0);
+        TextView name = label(item.name, 13, TEXT);
+        name.setTypeface(null, android.graphics.Typeface.BOLD);
+        String usage = item.usageLabel();
+        TextView meta = label(item.category + "  Â·  " + item.quantityLabel()
+                + (usage.length() == 0 ? "" : "  Â·  " + usage), 11, MUTED);
+        TextView schedule = label(item.serviceLabel(), 10, item.needsServiceAttention() ? statusColor : MUTED);
+        TextView care = label(item.care, 10, MUTED);
+        care.setMaxLines(2);
+        // A compact stock gauge makes the reorder state legible without
+        // opening the item. The scale is intentionally relative to four
+        // minimum-stock units, so a full spool or spare does not disappear
+        // into a nearly-empty bar while a zero-stock item remains obvious.
+        android.widget.ProgressBar stock = new android.widget.ProgressBar(
+                this, null, android.R.attr.progressBarStyleHorizontal);
+        int gaugeMax = Math.max(1, Math.max(item.quantity, Math.max(1, item.minimum * 4)));
+        stock.setMax(gaugeMax);
+        stock.setProgress(Math.max(0, Math.min(gaugeMax, item.quantity)));
+        stock.setProgressTintList(ColorStateList.valueOf(statusColor));
+        stock.setContentDescription(item.name + " stock level: " + item.quantityLabel());
+        copy.addView(name);
+        copy.addView(meta);
+        copy.addView(stock, new LinearLayout.LayoutParams(-1, dp(5)));
+        copy.addView(schedule);
+        copy.addView(care);
+        row.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView status = label(item.statusLabel(), 9, statusColor);
+        status.setGravity(Gravity.CENTER);
+        status.setTypeface(null, android.graphics.Typeface.BOLD);
+        status.setLetterSpacing(0.08f);
+        status.setBackground(round(Color.WHITE, statusColor, 1, 14));
+        row.addView(status, new LinearLayout.LayoutParams(76, 30));
+        row.setOnClickListener(v -> showInventoryItem(item));
+        row.setContentDescription(item.name + " inventory status: " + item.statusLabel());
+        row.setLayoutParams(rowLp);
+        return row;
+    }
+
+    private int inventoryStatusColor(InventoryStore.Item item) {
+        if (item.needsReorder()) return RED;
+        if (item.needsServiceAttention()) return AMBER;
+        return GREEN;
+    }
+
+    private void showInventoryItem(InventoryStore.Item item) {
+        boolean grams = item.usesGrams();
+        String[] actions = item.isCustom()
+                ? new String[]{grams ? "Add 100 g" : "Add one", grams ? "Use 100 g" : "Use one", "Mark serviced", "Remove item"}
+                : new String[]{grams ? "Add 100 g" : "Add one", grams ? "Use 100 g" : "Use one", "Mark serviced"};
+        new AlertDialog.Builder(this)
+                .setTitle(item.name)
+                .setMessage(item.category + "\n" + item.quantityLabel()
+                        + (item.usageLabel().length() == 0 ? "" : "\n" + item.usageLabel())
+                        + "\n\n" + item.care + "\n" + item.serviceLabel()
+                        + "\n\nCurrent state: " + item.statusLabel())
+                .setItems(actions, (dialog, which) -> {
+                    if (which == 0) {
+                        if (grams) inventoryStore.addQuantity(item, 100); else inventoryStore.addOne(item);
+                    }
+                    if (which == 1) {
+                        if (grams) inventoryStore.useQuantity(item, 100); else inventoryStore.useOne(item);
+                    }
+                    if (which == 2) inventoryStore.markServiced(item);
+                    if (which == 3 && item.isCustom()) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Remove " + item.name + "?")
+                                .setMessage("This removes the custom inventory record from this phone.")
+                                .setNegativeButton("Keep", null)
+                                .setPositiveButton("Remove", (ignored, confirmed) -> {
+                                    inventoryStore.delete(item);
+                                    updateInventorySummary();
+                                    Toast.makeText(this, item.name + " removed", Toast.LENGTH_SHORT).show();
+                                })
+                                .show();
+                        return;
+                    }
+                    updateInventorySummary();
+                    Toast.makeText(this, item.name + " updated", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void showParts() {
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (model == null || model.parts == null || model.parts.length == 0) {
+            Toast.makeText(this, "Import a model before viewing parts", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] labels = new String[model.parts.length + 1];
+        labels[0] = "All parts  Â·  " + (model.triangles.length / 3) + " triangles";
+        for (int index = 0; index < model.parts.length; index++) {
+            MeshModel.Part part = model.parts[index];
+            MeshModel.PartBounds bounds = model.partBounds(index);
+            labels[index + 1] = String.format(Locale.US, "%s  Â·  %.1f Ã— %.1f Ã— %.1f mm  Â·  %d triangles",
+                    part.name, bounds.width(), bounds.depth(), bounds.height(), part.triangleCount);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Model parts")
+                .setMessage("Select a part to bring it forward in the 3D view.\n\nGeometry: " + model.geometryReport().summary()
+                        + (geometryRepairEnabled ? "\n\nConservative repair is active for this plate." : ""))
+                .setSingleChoiceItems(labels, viewport.getSelectedPart() + 1, (dialog, which) -> {
+                    viewport.setSelectedPart(which - 1);
+                    if (!modelUris.isEmpty()) projectStore.saveSelectedPart(which - 1);
+                    saveCurrentPlate();
+                    status.setText(which == 0 ? "Prepare  Â·  showing all parts" : "Prepare  Â·  focused on " + model.parts[which - 1].name);
+                })
+                .setNeutralButton("Transform", (dialog, which) -> {
+                    int selected = viewport.getSelectedPart();
+                    if (selected < 0) {
+                        Toast.makeText(this, "Select a part before transforming it", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    dialog.dismiss();
+                    showPartTransform(selected);
+                })
+                .setNegativeButton(geometryRepairEnabled ? "Original geometry" : "Repair geometry",
+                        (dialog, which) -> {
+                            if (geometryRepairEnabled) restoreOriginalGeometry();
+                            else repairGeometry();
+                        })
+                .setPositiveButton("Done", null)
+                .show();
+    }
+
+    private void showPartTransform(int partIndex) {
+        if (sourceModel == null || model == null || partIndex < 0 || partIndex >= model.parts.length) return;
+        MeshModel.PartTransform current = partTransformAt(partIndex);
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        EditText scale = field(String.format(Locale.US, "%.0f", current.scale * 100f), "Part scale (%)");
+        EditText rotation = field(String.format(Locale.US, "%.0f", current.rotationDegrees), "Part rotation (degrees)", true);
+        EditText tiltX = field(String.format(Locale.US, "%.0f", current.tiltXDegrees), "Tilt X (degrees)", true);
+        EditText tiltY = field(String.format(Locale.US, "%.0f", current.tiltYDegrees), "Tilt Y (degrees)", true);
+        EditText offsetX = field(String.format(Locale.US, "%.1f", current.offsetX), "Move X (mm)", true);
+        EditText offsetY = field(String.format(Locale.US, "%.1f", current.offsetY), "Move Y (mm)", true);
+        fields.addView(scale); fields.addView(rotation); fields.addView(tiltX); fields.addView(tiltY); fields.addView(offsetX); fields.addView(offsetY);
+        TextView note = label("Transforming one part preserves the other parts. Alloy re-levels the assembly on the bed and discards any previous slice.", 13, MUTED);
+        note.setPadding(0, 18, 0, 0);
+        fields.addView(note);
+        new AlertDialog.Builder(this)
+                .setTitle("Transform Â· " + model.parts[partIndex].name)
+                .setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Apply", (dialog, which) -> {
+                    try {
+                        float nextScale = clamp(Float.parseFloat(scale.getText().toString()) / 100f, 0.1f, 10f);
+                        float nextRotation = clamp(Float.parseFloat(rotation.getText().toString()), -360f, 360f);
+                        float nextTiltX = clamp(Float.parseFloat(tiltX.getText().toString()), -360f, 360f);
+                        float nextTiltY = clamp(Float.parseFloat(tiltY.getText().toString()), -360f, 360f);
+                        float nextOffsetX = clamp(Float.parseFloat(offsetX.getText().toString()), -1_000f, 1_000f);
+                        float nextOffsetY = clamp(Float.parseFloat(offsetY.getText().toString()), -1_000f, 1_000f);
+                        prepareModelMutation("Transform  Â·  " + model.parts[partIndex].name);
+                        while (partTransforms.size() <= partIndex) partTransforms.add(MeshModel.PartTransform.identity());
+                        partTransforms.set(partIndex, new MeshModel.PartTransform(nextScale, nextRotation, nextTiltX, nextTiltY, nextOffsetX, nextOffsetY));
+                        projectStore.savePartTransforms(partTransforms);
+                        saveCurrentPlate();
+                        model = rebuildModel(model.displayName);
+                        slice = null;
+                        stagedArtifact = null;
+                        viewport.setModel(model);
+                        viewport.setSelectedPart(partIndex);
+                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+                        status.setText("Prepare  Â·  transformed " + model.parts[partIndex].name);
+                        details.setText(modelDetails(model));
+                        finishModelMutation("Transform  Â·  " + model.parts[partIndex].name);
+                        refreshActions();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Part transform values were not valid", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
+    }
+
+    private void repairGeometry() {
+        if (printerBusy || slicing || batchSlicing || importing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation before repairing geometry", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (repairingGeometry || sourceModel == null || model == null) return;
+        prepareModelMutation("Repair geometry");
+        final MeshModel input = sourceModel;
+        final String name = model.displayName;
+        final long repairId = geometryRepairIds.incrementAndGet();
+        activeGeometryRepairId = repairId;
+        repairingGeometry = true;
+        status.setText("Prepare  Â·  repairing geometryâ€¦");
+        refreshActions();
+        activeGeometryRepair = importExecutor.submit(() -> {
+            try {
+                MeshModel.RepairResult result = input.repair(name);
+                mainHandler.post(() -> {
+                    if (repairId != activeGeometryRepairId || !repairingGeometry || isFinishing()) return;
+                    repairingGeometry = false;
+                    activeGeometryRepair = null;
+                    try {
+                        sourceModel = result.mesh;
+                        geometryRepairEnabled = true;
+                        model = rebuildModel(name);
+                        slice = null;
+                        stagedArtifact = null;
+                        lastBatch = null;
+                        projectStore.saveGeometryRepair(true);
+                        saveCurrentPlate();
+                        viewport.setModel(model);
+                        viewport.setResult(null);
+                        status.setText("Prepare  Â·  geometry repaired");
+                        details.setText(modelDetails(model));
+                        finishModelMutation("Repair geometry");
+                        refreshActions();
+                        Toast.makeText(this, result.report.summary(), Toast.LENGTH_LONG).show();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Repaired geometry could not be applied: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                        refreshActions();
+                    }
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (repairId != activeGeometryRepairId || !repairingGeometry || isFinishing()) return;
+                    repairingGeometry = false;
+                    activeGeometryRepair = null;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    refreshActions();
+                    Toast.makeText(this, "Geometry repair failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void restoreOriginalGeometry() {
+        if (printerBusy || slicing || batchSlicing || importing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation before restoring geometry", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (unmodifiedSourceModel == null || model == null) return;
+        try {
+            prepareModelMutation("Restore original geometry");
+            sourceModel = unmodifiedSourceModel;
+            geometryRepairEnabled = false;
+            projectStore.saveGeometryRepair(false);
+            model = rebuildModel(model.displayName);
+            slice = null;
+            stagedArtifact = null;
+            lastBatch = null;
+            saveCurrentPlate();
+            viewport.setModel(model);
+            viewport.setResult(null);
+            status.setText("Prepare  Â·  original geometry restored");
+            details.setText(modelDetails(model));
+            finishModelMutation("Restore original geometry");
+            refreshActions();
+        } catch (Exception error) {
+            Toast.makeText(this, "Original geometry could not be restored: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private synchronized void cancelGeometryRepair() {
+        activeGeometryRepairId = geometryRepairIds.incrementAndGet();
+        if (activeGeometryRepair != null) {
+            activeGeometryRepair.cancel(true);
+            activeGeometryRepair = null;
+        }
+        if (!repairingGeometry) return;
+        repairingGeometry = false;
+        if (status != null) status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+        if (actions != null) refreshActions();
+    }
+
+    private MeshModel.PartTransform partTransformAt(int index) {
+        return index >= 0 && index < partTransforms.size()
+                ? partTransforms.get(index) : MeshModel.PartTransform.identity();
+    }
+
+    private String modelDetails(MeshModel value) {
+        int partCount = value.parts == null ? 1 : value.parts.length;
+        return String.format(Locale.US, "%.1f Ã— %.1f Ã— %.1f mm  Â·  %d triangles  Â·  %d %s  Â·  %s  Â·  centered on %s plate",
+                value.maxX - value.minX, value.maxY - value.minY, value.maxZ - value.minZ,
+                value.triangles.length / 3, partCount, partCount == 1 ? "part" : "parts",
+                value.geometryReport().summary(), profilePrinterLabel());
+    }
+
+    private void refreshActions() {
+        actions.removeAllViews();
+        // Help stays available during every task state. It is intentionally a
+        // read-only route: lessons may explain a blocked gate, never open it.
+        action("Learn", v -> showLearnHub());
+        if (projectTransferring || batchTransferring) {
+            Button busy = action(projectTransferring ? "Project fileâ€¦" : "Batch archiveâ€¦", null);
+            busy.setEnabled(false);
+        } else if (visualizing) {
+            Button busy = action("Visualizingâ€¦", null);
+            busy.setEnabled(false);
+            action("Cancel", v -> cancelVisualization()).setTextColor(RED);
+        } else if (modeling) {
+            Button busy = action("Modelingâ€¦", null);
+            busy.setEnabled(false);
+            action("Cancel", v -> cancelNativeBoolean()).setTextColor(RED);
+        } else if (repairingGeometry) {
+            Button busy = action("Repairing geometryâ€¦", null);
+            busy.setEnabled(false);
+            Button cancel = action("Cancel", v -> cancelGeometryRepair());
+            cancel.setTextColor(RED);
+        } else if (importing) {
+            Button busy = action("Loading modelâ€¦", null);
+            busy.setEnabled(false);
+            Button cancel = action("Cancel", v -> cancelImport());
+            cancel.setTextColor(RED);
+        } else if (model == null && (batchSlicing || slicing)) {
+            Button busy = action(batchSlicing ? "Slicing platesâ€¦" : "Slicingâ€¦", null);
+            busy.setEnabled(false);
+            Button cancel = action("Cancel", v -> {
+                if (batchSlicing) cancelBatchSlice(); else cancelSlice();
+            });
+            cancel.setTextColor(RED);
+        } else if (model == null) {
+            action("Import model", v -> openModel());
+            action("A1 3D", v -> showPrinterStudy());
+            action("Model", v -> showModelWorkbench());
+            action("Library", v -> showModelLibrary());
+            action("Profile", v -> showProfileReview());
+            action("Recipe", v -> showRecipe());
+            action("Print readiness", v -> showPrinterReadiness());
+            if (hasPrinterRecovery()) {
+                Button review = action("Review printer job", v -> showPrinterStatus());
+                review.setTextColor(RED);
+            }
+            addUploadedPrintAction();
+        } else if (batchSlicing) {
+            Button busy = action("Slicing platesâ€¦", null); busy.setEnabled(false);
+            Button cancel = action("Cancel", v -> cancelBatchSlice()); cancel.setTextColor(RED);
+        } else if (slicing) {
+            Button busy = action("Slicingâ€¦", null); busy.setEnabled(false);
+            Button cancel = action("Cancel", v -> cancelSlice()); cancel.setTextColor(RED);
+        } else if (slice == null) {
+            action("Import another", v -> openModel());
+            action("A1 3D", v -> showPrinterStudy());
+            action("Model", v -> showModelWorkbench());
+            action("Library", v -> showModelLibrary());
+            action("Model 3D", v -> showImmersiveView());
+            action("Print readiness", v -> showPrinterReadiness());
+            addHistoryActions();
+            action("Visualize", v -> showVisualization());
+            if (model.parts != null && model.parts.length > 1) action("Parts", v -> showParts());
+            if (model.parts != null && model.parts.length > 1) action("Arrange", v -> autoArrangeParts());
+            action("Profile", v -> showProfileReview());
+            action("Prepare", v -> showPrepare());
+            Button sliceButton = action("Slice", v -> startSlice());
+            sliceButton.setTextColor(GOLD);
+            if (hasPrinterRecovery()) {
+                Button review = action("Review printer job", v -> showPrinterStatus());
+                review.setTextColor(RED);
+            }
+            addUploadedPrintAction();
+        } else {
+            action("Model", v -> showModelWorkbench());
+            action("A1 3D", v -> showPrinterStudy());
+            action("Library", v -> showModelLibrary());
+            action("Model 3D", v -> showImmersiveView());
+            action("Print readiness", v -> showPrinterReadiness());
+            addHistoryActions();
+            action("Visualize", v -> showVisualization());
+            action("Prepare", v -> showPrepare());
+            action("Profile", v -> showProfileReview());
+            if (model.parts != null && model.parts.length > 1) action("Parts", v -> showParts());
+            action("Print plan", v -> showPrintPlan());
+            action("Inspect", v -> showInspection());
+            action(viewport.isToolpathOnly() ? "Model view" : "Path view", v -> {
+                viewport.setToolpathOnly(!viewport.isToolpathOnly());
+                status.setText(viewport.isToolpathOnly() ? "Inspect  Â·  top-down toolpath" : "Inspect  Â·  model view");
+                refreshActions();
+            });
+            action("Layer âˆ’", v -> changeLayer(-1));
+            action("Layer +", v -> changeLayer(1));
+            if (lastBatch != null && !lastBatch.plates.isEmpty()) {
+                Button batch = action("Export all plates", v -> exportBatchArchive());
+                batch.setTextColor(GOLD);
+            }
+            if (printActive && activePrinterTarget != null) {
+                PrinterJobStore.Job activeJob = printerJobStore.load();
+                if (activeJob != null && activeJob.state == PrinterTransport.State.PAUSED) {
+                    Button resume = action("Resume print", v -> resumePrint());
+                    resume.setTextColor(GOLD);
+                } else if (activeJob != null && activeJob.state == PrinterTransport.State.RUNNING) {
+                    Button pause = action("Pause print", v -> pausePrint());
+                    pause.setTextColor(GOLD);
+                }
+                Button cancel = action("Cancel print", v -> cancelPrint());
+                cancel.setTextColor(RED);
+            } else if (printerBusy) {
+                Button busy = action("Uploadingâ€¦", null);
+                busy.setEnabled(false);
+            } else {
+                PrinterJobStore.Job previousJob = printerJobStore.load();
+                if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
+                    Button review = action("Review printer job", v -> showPrinterStatus());
+                    review.setTextColor(RED);
+                } else if (hasUploadedPrinterArtifact()) {
+                    addUploadedPrintAction();
+                } else if (printerReadinessReport().canSend()) {
+                    Button send = action("Send to printer", v -> sendToPrinter());
+                    send.setTextColor(GOLD);
+                }
+            }
+            Button export = action("Export .3mf", v -> exportPackage()); export.setTextColor(GOLD);
+            action("Share package", v -> sharePackage());
+            action("Try Bambu Handy", v -> shareToBambuHandy());
+        }
+        if (arcNavigation != null) arcNavigation.setContextLabel(arcContextLabel());
+        updateLayerInspector();
+    }
+
+    private String arcContextLabel() {
+        if (projectTransferring) return "Saving project";
+        if (batchTransferring) return "Saving plates";
+        if (visualizing) return "Visualizing";
+        if (importing) return "Importing";
+        if (modeling) return "Modeling";
+        if (repairingGeometry) return "Repairing";
+        if (batchSlicing) return "Slicing plates";
+        if (slicing) return "Slicing";
+        if (printerBusy) return "Sending job";
+        if (printActive) return "Printer status";
+        if (model == null) return "Start a project";
+        return slice == null ? "Prepare" : "Inspect";
+    }
+
+    /**
+     * The upper arc is deliberately a single, state-specific action. It is
+     * not a menu: this preserves the visual hierarchy of the two-level Hyle
+     * navigation and means a tap always advances the print workflow.
+     */
+    private void openArcContext() {
+        if (projectTransferring || batchTransferring || visualizing || importing || modeling
+                || repairingGeometry || batchSlicing || slicing || printerBusy || printActive) {
+            showActiveArcOperation();
+            return;
+        }
+        if (model == null) {
+            openModel();
+            return;
+        }
+        if (slice == null) {
+            showPrepare();
+            return;
+        }
+        showInspection();
+    }
+
+    /** Surface a long-running operation without reopening the global action menu. */
+    private void showActiveArcOperation() {
+        String label = arcContextLabel();
+        Button cancel = findAction("Cancel");
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(label)
+                .setMessage(label + " is in progress. Alloy will keep this work on-device and preserve the current project.")
+                .setNegativeButton("Keep working", null);
+        if (cancel != null && cancel.isEnabled()) {
+            builder.setPositiveButton("Cancel", (dialog, which) -> cancel.performClick());
+        } else if (printActive) {
+            builder.setPositiveButton("View printer", (dialog, which) -> showPrinterStatus());
+        } else {
+            builder.setPositiveButton("OK", null);
+        }
+        builder.show();
+    }
+
+    private Button findAction(String label) {
+        if (actions == null) return null;
+        for (int index = 0; index < actions.getChildCount(); index++) {
+            View child = actions.getChildAt(index);
+            if (child instanceof Button && label.equals(((Button) child).getText().toString())) {
+                return (Button) child;
+            }
+        }
+        return null;
+    }
+
+    /** The lower ellipsis is the explicit overflow route, never the upper action. */
+    private void showMoreActions() {
+        if (actions == null || actions.getChildCount() == 0) return;
+        ArrayList<String> labels = new ArrayList<>();
+        ArrayList<View> destinations = new ArrayList<>();
+        for (int index = 0; index < actions.getChildCount(); index++) {
+            View child = actions.getChildAt(index);
+            if (!(child instanceof Button)) continue;
+            Button button = (Button) child;
+            String label = button.getText().toString();
+            // Primary destinations already have dedicated controls in the
+            // lower curve or are the upper curve's direct next action.
+            if ("Import model".equals(label) || "Import another".equals(label)
+                    || "Prepare".equals(label) || "Inspect".equals(label)
+                    || "Library".equals(label) || "Model".equals(label)
+                    || "History".equals(label)) continue;
+            if (!button.isEnabled()) label += "  Â·  working";
+            labels.add(label);
+            destinations.add(button);
+        }
+        if (labels.isEmpty()) return;
+        new AlertDialog.Builder(this)
+                .setTitle("More")
+                .setItems(labels.toArray(new String[0]), (dialog, which) -> {
+                    View target = destinations.get(which);
+                    if (target.isEnabled()) target.performClick();
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    /** Scrub the selected toolpath layer directly on a phone. */
+    private void updateLayerInspector() {
+        if (layerInspector == null || layerSeek == null || layerInspectorLabel == null) return;
+        boolean available = slice != null && slice.layers != null && !slice.layers.isEmpty();
+        layerInspector.setVisibility(available ? View.VISIBLE : View.GONE);
+        if (!available) return;
+        int max = Math.max(0, slice.layers.size() - 1);
+        int selected = viewport == null ? max : viewport.getSelectedLayer();
+        if (selected < 0) selected = max;
+        selected = Math.max(0, Math.min(max, selected));
+        layerSeek.setMax(max);
+        if (layerSeek.getProgress() != selected) layerSeek.setProgress(selected);
+        Slicer.Layer layer = slice.layers.get(selected);
+        layerInspectorLabel.setText(String.format(Locale.US, "LAYER %d / %d  Â·  Z %.2f mm  Â·  %d segments",
+                selected + 1, slice.layers.size(), layer.z, layer.segments.size()));
+    }
+
+    private void addHistoryActions() {
+        if (modelHistoryStore == null || model == null) return;
+        boolean undo = modelHistoryStore.canUndo(activePlateIndex);
+        boolean redo = modelHistoryStore.canRedo(activePlateIndex);
+        if (undo) {
+            Button button = action("Undo", v -> undoModel());
+            button.setTextColor(GOLD);
+        }
+        if (redo) {
+            Button button = action("Redo", v -> redoModel());
+            button.setTextColor(GOLD);
+        }
+        if (undo || redo) action("History", v -> showModelHistory());
+    }
+
+    private void sendToPrinter() {
+        PrinterReadiness.Report readiness = printerReadinessReport();
+        if (!readiness.canSend()) {
+            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
+            showPrinterReadiness();
+            return;
+        }
+        PrinterCredentialStore.Credentials credentials = savedCredentials();
+        if (credentials == null) {
+            Toast.makeText(this, "Pair a printer and slice a validated artifact first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!credentials.hasCertificatePin()) {
+            Toast.makeText(this, "Add the printer's SHA-256 certificate pin before physical printing", Toast.LENGTH_LONG).show();
+            showPrinterPairing();
+            return;
+        }
+        PrinterJobStore.Job previousJob = printerJobStore.load();
+        if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
+            Toast.makeText(this, "Review the unconfirmed printer job in Printer status first", Toast.LENGTH_LONG).show();
+            showPrinterStatus();
+            return;
+        }
+        if (previousJob != null && previousJob.state == PrinterTransport.State.UPLOADED && recoveredArtifact != null) {
+            PrinterTransport.PrinterTarget uploadedTarget = printerTarget(previousJob);
+            if (uploadedTarget != null) {
+                activePrinterTarget = uploadedTarget;
+                activePrinterJobId = previousJob.jobId;
+                showStartConfirmation(uploadedTarget,
+                        previousJob.remotePath.length() == 0 ? "/" + recoveredArtifact.displayName : previousJob.remotePath,
+                        recoveredArtifact, previousJob.jobId);
+                return;
+            }
+        }
+        if (stagedArtifact == null) {
+            Toast.makeText(this, "Pair a printer and slice a validated artifact first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            // A foreground slice can finish without a GLES surface. Re-stage
+            // only at the user-visible handoff so LAN uploads always carry a
+            // Bambu-recognized preview without coupling the service to UI.
+            if (!ArtifactStore.hasThumbnail(stagedArtifact.sourceFile)) {
+                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
+                        artifactDisplayName(), viewport.thumbnailPng(512));
+            }
+        } catch (Exception error) {
+            Toast.makeText(this, "Printer preview staging failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Upload controlled pilot package?")
+                    .setMessage("PILOT BUILD Â· This can upload only the pinned bundled A1 Mini PLA fixture with supports off. It collects acceptance evidence; it does not qualify ordinary direct printing.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Upload pilot", (dialog, which) -> beginPrinterUpload(credentials))
+                    .show();
+            return;
+        }
+        beginPrinterUpload(credentials);
+    }
+
+    private void beginPrinterUpload(PrinterCredentialStore.Credentials credentials) {
+        PrinterReadiness.Report readiness = printerReadinessReport();
+        if (!readiness.canSend() || credentials == null || stagedArtifact == null) {
+            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
+            showPrinterReadiness();
+            return;
+        }
+        final PrinterTransport.Artifact artifact = stagedArtifact;
+        final String filament = config.filament;
+        final float filamentMm = slice.filamentMm;
+        final float filamentDiameterMm = config.filamentDiameter;
+        try {
+            PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(credentials.name, credentials.host, credentials.serial);
+            final String jobId = printerJobStore.begin(target, artifact, filament, filamentMm, filamentDiameterMm);
+            activePrinterJobId = jobId;
+            activePrinterTarget = target;
+            printActive = false;
+            printerBusy = true;
+            refreshActions();
+            status.setText("Printer  Â·  uploading artifactâ€¦");
+            PrinterJobService.startUpload(this, jobId);
+        } catch (Exception error) {
+            try { printerJobStore.update(PrinterTransport.State.FAILED, "Printer upload could not start: " + error.getMessage(), ""); }
+            catch (Exception ignored) { }
+            activePrinterTarget = null;
+            activePrinterJobId = null;
+            printActive = false;
+            printerBusy = false;
+            refreshActions();
+            Toast.makeText(this, "Printer upload could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private boolean hasPrinterRecovery() {
+        PrinterJobStore.Job job = printerJobStore == null ? null : printerJobStore.load();
+        return job != null && job.state == PrinterTransport.State.RECOVERY_REQUIRED;
+    }
+
+    private boolean physicalPrintCredentialsReady() {
+        PrinterCredentialStore.Credentials credentials = savedCredentials();
+        return isA1MiniPhysicalScope() && credentials != null && credentials.isA1Mini()
+                && credentials.hasCertificatePin();
+    }
+
+    /**
+     * A1, A1 Mini and P1S all have shipped planning profiles. The only
+     * physical lane has intentionally been scoped to the A1 Mini pilot, so a
+     * future verified A1/P1S profile cannot accidentally inherit that pilot's
+     * transport permission merely because the paired printer is N1.
+     */
+    private boolean isA1MiniPhysicalScope() {
+        return profile != null && "bambu.a1-mini".equals(profile.printerId);
+    }
+
+    /**
+     * Snapshot the current physical-print prerequisites without probing or
+     * mutating the printer. The report is informational until every gate is
+     * true; sendToPrinter() evaluates it again immediately before beginning a
+     * durable transaction.
+     */
+    private PrinterReadiness.Report printerReadinessReport() {
+        return printerReadinessReport(stagedArtifact);
+    }
+
+    private PrinterReadiness.Report printerReadinessReport(PrinterTransport.Artifact artifact) {
+        PrinterCredentialStore.Credentials credentials = savedCredentials();
+        boolean artifactReady = artifact != null && artifact.hasSourceFile()
+                && artifact.sourceFile.isFile()
+                && artifact.sourceFile.length() == artifact.sizeBytes;
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            A1MiniNoSupportPilot.Verdict pilot = A1MiniNoSupportPilot.evaluate(
+                    profile, config, slice, trustedPilotFixtureAssetPath);
+            return PrinterReadiness.evaluateA1MiniNoSupportPilot(
+                    true, BuildConfig.NATIVE_ENGINE_ENABLED, pilot, artifactReady,
+                    credentials != null, credentials != null && credentials.isA1Mini(),
+                    credentials != null && credentials.hasCertificatePin(), !hasPrinterRecovery());
+        }
+        return PrinterReadiness.evaluate(
+                BuildConfig.NATIVE_ENGINE_ENABLED,
+                BuildConfig.NATIVE_ENGINE_VERIFIED,
+                profile != null,
+                profile != null && profile.verified && isA1MiniPhysicalScope(),
+                slice != null,
+                slice != null && slice.engineVerified,
+                artifactReady,
+                credentials != null,
+                credentials != null && credentials.isA1Mini() && isA1MiniPhysicalScope(),
+                credentials != null && credentials.hasCertificatePin(),
+                !hasPrinterRecovery(),
+                SupportEngineStatus.physicalPrintReady(config, slice),
+                SupportEngineStatus.detail(config, slice));
+    }
+
+    private void showPrinterReadiness() {
+        PrinterReadiness.Report report = printerReadinessReport();
+        StringBuilder message = new StringBuilder(report.summary()).append("\n\n");
+        for (PrinterReadiness.Check check : report.checks()) {
+            message.append(check.passed() ? "âœ“ " : "! ")
+                    .append(check.label).append("  Â·  ")
+                    .append(check.detail).append('\n');
+        }
+        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
+            message.append("\nPILOT BUILD Â· This lane is only for collecting A1 Mini acceptance evidence with an immutable bundled fixture. It is excluded from production and does not qualify general direct printing.");
+        } else {
+            message.append("\nThis checklist is local and fail-closed. A1, A1 Mini and P1S are planning profiles; only the A1 Mini/N1 physical-pilot lane has an acceptance path. A green checklist still requires the target A1 Mini's physical acceptance evidence before this build can be promoted.");
+        }
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
+                .setTitle("Print readiness")
+                .setMessage(message.toString())
+                .setNegativeButton("Close", null);
+        if (savedCredentials() == null) {
+            dialog.setPositiveButton("Pair printer", (ignored, which) -> showPrinterPairing());
+        } else {
+            dialog.setPositiveButton("Printer status", (ignored, which) -> showPrinterStatus());
+        }
+        dialog.show();
+    }
+
+    private boolean hasUploadedPrinterArtifact() {
+        PrinterJobStore.Job job = printerJobStore == null ? null : printerJobStore.load();
+        return job != null && job.state == PrinterTransport.State.UPLOADED
+                && recoveredArtifact != null && printerTarget(job) != null
+                && physicalPrintCredentialsReady();
+    }
+
+    private void addUploadedPrintAction() {
+        if (!hasUploadedPrinterArtifact()) return;
+        PrinterJobStore.Job job = printerJobStore.load();
+        PrinterTransport.PrinterTarget target = printerTarget(job);
+        if (!printerReadinessReport(recoveredArtifact).canSend()) {
+            Button review = action("Print readiness", v -> showPrinterReadiness());
+            review.setTextColor(RED);
+            return;
+        }
+        Button start = action("Start uploaded print", v -> showStartConfirmation(target,
+                job.remotePath.length() == 0 ? "/" + recoveredArtifact.displayName : job.remotePath,
+                recoveredArtifact, job.jobId));
+        start.setTextColor(GOLD);
+    }
+
+    private void showStartConfirmation(PrinterTransport.PrinterTarget target, String remotePath,
+                                       PrinterTransport.Artifact artifact, String jobId) {
+        if (target == null || artifact == null || jobId == null) return;
+        PrinterReadiness.Report readiness = printerReadinessReport(artifact);
+        if (!readiness.canSend()) {
+            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
+            showPrinterReadiness();
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Start print?")
+                .setMessage((BuildConfig.PHYSICAL_PILOT_ENABLED
+                        ? "PILOT BUILD Â· This is an acceptance fixture, not a qualified direct-send job.\n\n" : "")
+                        + "The artifact was uploaded to " + target.name + ". The printer must confirm PREPARE/RUNNING telemetry before Alloy reports a start.")
+                .setNegativeButton("Keep uploaded", (dialog, which) -> {
+                    if (!printerJobStore.updateIfMatches(jobId, target, artifact, PrinterTransport.State.UPLOADED,
+                            "Artifact uploaded; start was not requested", remotePath)) return;
+                    activePrinterTarget = null;
+                    activePrinterJobId = null;
+                    printerBusy = false;
+                    refreshActions();
+                })
+                .setPositiveButton("Start", (dialog, which) -> {
+                    PrinterJobStore.Job current = printerJobStore.load();
+                    if (current == null || !jobId.equals(current.jobId) || current.state != PrinterTransport.State.UPLOADED) {
+                        Toast.makeText(this, "This printer job is no longer active", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    PrinterReadiness.Report latest = printerReadinessReport(artifact);
+                    if (!latest.canSend()) {
+                        Toast.makeText(this, latest.summary(), Toast.LENGTH_LONG).show();
+                        showPrinterReadiness();
+                        return;
+                    }
+                    printActive = true;
+                    printerBusy = true;
+                    refreshActions();
+                    status.setText("Printer  Â·  requesting startâ€¦");
+                    try {
+                        PrinterJobService.startPrint(this, jobId);
+                    } catch (Exception error) {
+                        printActive = false;
+                        printerBusy = false;
+                        activePrinterTarget = null;
+                        activePrinterJobId = null;
+                        refreshActions();
+                        Toast.makeText(this, "Print start could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                })
+                .show();
+    }
+
+    private void cancelPrint() {
+        if (!printActive || activePrinterTarget == null || activePrinterJobId == null) return;
+        final String jobId = activePrinterJobId;
+        status.setText("Printer  Â·  requesting cancellationâ€¦");
+        try {
+            PrinterJobService.cancelPrint(this, jobId);
+        } catch (Exception error) {
+            Toast.makeText(this, "Cancellation could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void pausePrint() {
+        if (!printActive || activePrinterTarget == null || activePrinterJobId == null) return;
+        final String jobId = activePrinterJobId;
+        status.setText("Printer  Â·  requesting pauseâ€¦");
+        try {
+            PrinterJobService.pausePrint(this, jobId);
+        } catch (Exception error) {
+            Toast.makeText(this, "Pause could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void resumePrint() {
+        if (!printActive || activePrinterTarget == null || activePrinterJobId == null) return;
+        final String jobId = activePrinterJobId;
+        status.setText("Printer  Â·  requesting resumeâ€¦");
+        try {
+            PrinterJobService.resumePrint(this, jobId);
+        } catch (Exception error) {
+            Toast.makeText(this, "Resume could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void openModel() {
+        if (printerBusy || slicing || batchSlicing || batchTransferring || profileImporting) {
+            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("*/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"model/stl", "model/obj", "model/3mf", "model/step", "model/stp", "application/step", "application/vnd.ms-package.3dmanufacturing-3dmodel+xml", "application/octet-stream", "application/zip", "application/x-zip-compressed"});
+        startActivityForResult(intent, REQUEST_OPEN);
+    }
+
+    @Override protected void onActivityResult(int request, int resultCode, Intent data) {
+        super.onActivityResult(request, resultCode, data);
+        if (resultCode != RESULT_OK || data == null) return;
+        if (request == REQUEST_PROFILE) {
+            ArrayList<Uri> sources = new ArrayList<>();
+            if (data.getClipData() != null) {
+                for (int index = 0; index < data.getClipData().getItemCount(); index++)
+                    sources.add(data.getClipData().getItemAt(index).getUri());
+            } else if (data.getData() != null) {
+                sources.add(data.getData());
+            }
+            if (sources.isEmpty()) return;
+            for (Uri uri : sources) rememberUriPermission(uri, data.getFlags());
+            importBambuProfiles(sources);
+            return;
+        }
+        if (request == REQUEST_PROFILE_EXPORT && data.getData() != null) {
+            writeProfileExport(data.getData());
+            return;
+        }
+        if (request == REQUEST_OPEN) {
+            ArrayList<Uri> uris = new ArrayList<>();
+            if (data.getClipData() != null) {
+                for (int index = 0; index < data.getClipData().getItemCount(); index++)
+                    uris.add(data.getClipData().getItemAt(index).getUri());
+            } else if (data.getData() != null) {
+                uris.add(data.getData());
+            }
+            if (uris.isEmpty()) return;
+            for (Uri uri : uris) rememberUriPermission(uri, data.getFlags());
+            loadUris(uris, false);
+        }
+        if (request == REQUEST_EXPORT && data.getData() != null) writeExport(data.getData());
+        if (request == REQUEST_VIEW_EXPORT && data.getData() != null) writeViewExport(data.getData());
+        if (request == REQUEST_VISUALIZATION_EXPORT && data.getData() != null) writeVisualizationExport(data.getData());
+        if (request == REQUEST_PROJECT_EXPORT && data.getData() != null) writeProjectArchive(data.getData());
+        if (request == REQUEST_BATCH_EXPORT && data.getData() != null) writeBatchArchive(data.getData());
+        if (request == REQUEST_PROJECT_OPEN && data.getData() != null) {
+            rememberUriPermission(data.getData(), data.getFlags());
+            readProjectArchive(data.getData());
+        }
+    }
+
+    private void openBambuProfile() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring || profileImporting) {
+            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/json");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "application/octet-stream", "text/plain"});
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_PROFILE);
+    }
+
+    private void importBambuProfiles(ArrayList<Uri> sources) {
+        if (sources == null || sources.isEmpty()) return;
+        final ProfileCatalog.Profile baseline = profile;
+        final long importId = profileImportIds.incrementAndGet();
+        activeProfileImportId = importId;
+        profileImporting = true;
+        status.setText("Profile  Â·  importing Bambu preset chainâ€¦");
+        refreshActions();
+        profileImportTimeoutRunnable = () -> {
+            synchronized (MainActivity.this) {
+                if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
+            }
+            cancelProfileImport();
+            Toast.makeText(MainActivity.this,
+                    "Profile import timed out. Check the selected files and try again.",
+                    Toast.LENGTH_LONG).show();
+        };
+        mainHandler.postDelayed(profileImportTimeoutRunnable, 60_000L);
+        activeProfileImport = importExecutor.submit(() -> {
+            try {
+                byte[][] documents = new byte[sources.size()][];
+                for (int index = 0; index < sources.size(); index++) {
+                    try (InputStream input = getContentResolver().openInputStream(sources.get(index))) {
+                        if (input == null) throw new IOException("A selected profile could not be opened");
+                        documents[index] = ProfileCatalog.readProfileDocument(input);
+                    }
+                }
+                ProfileCatalog.Profile imported = ProfileCatalog.importBambu(baseline, documents);
+                byte[] normalized = ProfileCatalog.serialize(imported);
+                writeImportedProfile(imported, normalized);
+                mainHandler.post(() -> {
+                    synchronized (MainActivity.this) {
+                        if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
+                        if (profileImportTimeoutRunnable != null) {
+                            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
+                            profileImportTimeoutRunnable = null;
+                        }
+                    }
+                    profileImporting = false;
+                    activeProfileImport = null;
+                    if (isFinishing()) return;
+                    profile = imported;
+                    profile.applyTo(config);
+                    projectStore.saveRecipe(config);
+                    slice = null;
+                    stagedArtifact = null;
+                    lastBatch = null;
+                    if (viewport != null) viewport.setResult(null);
+                    if (model != null) {
+                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+                        details.setText(modelDetails(model));
+                    } else {
+                        modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
+                        details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
+                    }
+                    updateRecipeMarkers();
+                    status.setText("Profile  Â·  imported Â· review required");
+                    refreshActions();
+                    Toast.makeText(this, "Imported Bambu profile Â· review required before printing", Toast.LENGTH_LONG).show();
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    synchronized (MainActivity.this) {
+                        if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
+                        if (profileImportTimeoutRunnable != null) {
+                            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
+                            profileImportTimeoutRunnable = null;
+                        }
+                    }
+                    profileImporting = false;
+                    activeProfileImport = null;
+                    if (isFinishing()) return;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    refreshActions();
+                    Toast.makeText(this, "Profile import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private synchronized void cancelProfileImport() {
+        activeProfileImportId = profileImportIds.incrementAndGet();
+        if (profileImportTimeoutRunnable != null) {
+            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
+            profileImportTimeoutRunnable = null;
+        }
+        if (activeProfileImport != null) {
+            activeProfileImport.cancel(true);
+            activeProfileImport = null;
+        }
+        if (!profileImporting) return;
+        profileImporting = false;
+        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+        refreshActions();
+    }
+
+    /** Persist a normalized profile with a same-directory temporary replacement. */
+    private void writeImportedProfile(ProfileCatalog.Profile imported, byte[] normalized) throws IOException {
+        if (imported == null || normalized == null || normalized.length == 0)
+            throw new IOException("The imported profile is empty");
+        java.io.File destination = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
+        java.io.File parent = destination.getParentFile();
+        if (parent != null && !parent.isDirectory() && !parent.mkdirs() && !parent.isDirectory())
+            throw new IOException("The private profile store could not be created");
+        if (parent == null) throw new IOException("The private profile store has no parent");
+        java.io.File temporary = new java.io.File(parent, destination.getName() + ".tmp");
+        try (java.io.FileOutputStream output = new java.io.FileOutputStream(temporary)) {
+            output.write(normalized);
+            output.flush();
+            output.getFD().sync();
+        }
+        if (!temporary.renameTo(destination)) {
+            try (java.io.FileOutputStream output = new java.io.FileOutputStream(destination)) {
+                output.write(normalized);
+                output.flush();
+                output.getFD().sync();
+            }
+            temporary.delete();
+        }
+    }
+
+    private boolean importedProfileActive() {
+        return profile != null && "Bambu JSON preset import".equals(profile.provenanceSource);
+    }
+
+    private void showBundledProfilePicker() {
+        if (importedProfileActive()) {
+            Toast.makeText(this, "Reset the imported profile before selecting a bundled planning profile", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadInitial(getAssets());
+            String[] labels = new String[choices.size()];
+            for (int index = 0; index < choices.size(); index++) {
+                ProfileCatalog.Profile choice = choices.get(index);
+                labels[index] = choice.name + "\nPlanning / inspection only Â· direct printing remains locked";
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("Select planning printer")
+                    .setMessage("This changes the build envelope and starter PLA recipe. It clears the current slice for review; it does not pair, send to, or qualify a physical printer.")
+                    .setItems(labels, (ignored, which) -> applyBundledProfile(choices.get(which)))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Bundled profiles are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void applyBundledProfile(ProfileCatalog.Profile selected) {
+        if (selected == null) return;
+        profile = selected;
+        profile.applyTo(config);
+        getPreferences(MODE_PRIVATE).edit()
+                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId).apply();
+        projectStore.saveRecipe(config);
+        slice = null;
+        stagedArtifact = null;
+        lastBatch = null;
+        if (viewport != null) viewport.setResult(null);
+        if (model != null) {
+            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+            details.setText(modelDetails(model));
+        } else {
+            modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
+            details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
+        }
+        updateRecipeMarkers();
+        status.setText("Prepare  Â·  " + profilePrinterLabel() + " planning profile selected; re-slice to review");
+        refreshActions();
+        Toast.makeText(this, "Planning profile selected Â· direct printing remains locked", Toast.LENGTH_LONG).show();
+    }
+
+    private void showProfileReview() {
+        if (profile == null) {
+            new AlertDialog.Builder(this).setTitle("Active profile")
+                    .setMessage("The bundled fallback profile is unavailable. Slicing and printing are blocked until a valid profile is loaded.")
+                    .setPositiveButton("Done", null).show();
+            return;
+        }
+        String statusLabel = profile.verified ? "verified" : "review required Â· source-backed";
+        String message = profile.name
+                + "\n\nPrinter envelope\n" + profile.buildVolumeLabel()
+                + "\nNozzle " + String.format(Locale.US, "%.2f mm", profile.nozzle)
+                + "\n\nMaterial\n" + profile.filamentName + " Â· " + profile.material
+                + "\n\nProfile status\n" + statusLabel
+                + "\nSource\n" + profile.provenanceSource
+                + "\nRevision\n" + profile.provenanceRevision
+                + "\n\nOnly allowlisted scalar settings are projected into the native engine. G-code templates and unknown settings stay out of the job package.";
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
+                .setTitle("Active profile")
+                .setMessage(message)
+                .setNegativeButton("Close", null)
+                .setPositiveButton("Export JSON", (ignored, which) -> openProfileExport());
+        if (importedProfileActive()) {
+            dialog.setNeutralButton("Reset to bundled", (ignored, which) -> resetImportedProfile());
+        } else {
+            dialog.setNeutralButton("Select planning printer", (ignored, which) -> showBundledProfilePicker());
+        }
+        dialog.show();
+    }
+
+    private void openProfileExport() {
+        if (profile == null) {
+            Toast.makeText(this, "There is no active profile to export", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/json");
+        intent.putExtra(Intent.EXTRA_TITLE, safeName(profile.name) + ".alloy-profile.json");
+        startActivityForResult(intent, REQUEST_PROFILE_EXPORT);
+    }
+
+    private void writeProfileExport(Uri uri) {
+        try {
+            byte[] data = ProfileCatalog.serialize(profile);
+            try (java.io.OutputStream output = getContentResolver().openOutputStream(uri)) {
+                if (output == null) throw new IOException("Output destination could not be opened");
+                output.write(data);
+                output.flush();
+            }
+            Toast.makeText(this, "Exported normalized Alloy profile", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Profile export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void resetImportedProfile() {
+        if (!importedProfileActive()) {
+            Toast.makeText(this, "A bundled planning profile is already active", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Reset imported profile?")
+                    .setMessage("This removes only Alloy's private imported-profile override and restores the selected bundled planning profile. Saved models, plates, project archives, and inventory remain unchanged. Any slice must be reviewed again.")
+                .setNegativeButton("Keep it", null)
+                .setPositiveButton("Reset profile", (ignored, which) -> {
+                    java.io.File destination = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
+                    if (destination.exists() && !destination.delete()) {
+                        Toast.makeText(this, "The private profile override could not be removed", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    try {
+                        String bundledPrinterId = getPreferences(MODE_PRIVATE)
+                                .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+                        ProfileCatalog.Profile restored = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
+                        profile = restored;
+                        profile.applyTo(config);
+                        projectStore.saveRecipe(config);
+                        slice = null;
+                        stagedArtifact = null;
+                        lastBatch = null;
+                        if (viewport != null) viewport.setResult(null);
+                        if (model != null) {
+                            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+                            details.setText(modelDetails(model));
+                        } else {
+                            modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
+                            details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
+                        }
+                        updateRecipeMarkers();
+                        status.setText(model == null ? "Profile  Â·  bundled planning profile restored" : "Prepare  Â·  recipe reset, review model");
+                        refreshActions();
+                        Toast.makeText(this, "Bundled planning profile restored", Toast.LENGTH_LONG).show();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Profile reset failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).show();
+    }
+
+    private void rememberUriPermission(Uri uri, int flags) {
+        int takeFlags = flags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        if (takeFlags == 0) takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+        try {
+            getContentResolver().takePersistableUriPermission(uri, takeFlags);
+        } catch (SecurityException ignored) {
+            // Some providers expose a readable URI without persistable grants.
+        }
+    }
+
+    private void loadUri(Uri uri) { loadUri(uri, false); }
+
+    private void loadUri(Uri uri, boolean restoreTransform) {
+        ArrayList<Uri> uris = new ArrayList<>();
+        uris.add(uri);
+        loadUris(uris, restoreTransform);
+    }
+
+    private void loadUris(ArrayList<Uri> uris, boolean restoreTransform) {
+        loadUris(uris, null, restoreTransform);
+    }
+
+    private void loadUris(ArrayList<Uri> uris, ArrayList<String> preferredNames, boolean restoreTransform) {
+        loadUris(uris, preferredNames, restoreTransform, null);
+    }
+
+    private void loadUris(ArrayList<Uri> uris, ArrayList<String> preferredNames, boolean restoreTransform,
+                          String pilotFixtureAssetPath) {
+        if (uris == null || uris.isEmpty()) return;
+        final ArrayList<Uri> requestedUris = new ArrayList<>(uris);
+        final ArrayList<String> requestedNames = preferredNames == null ? null : new ArrayList<>(preferredNames);
+        final String requestedPilotFixture = A1MiniNoSupportPilot.isFixtureAsset(pilotFixtureAssetPath)
+                ? pilotFixtureAssetPath : null;
+        // A document import runs off the UI thread. Snapshot the recipe used
+        // for STEP conversion so a concurrent editor change cannot produce a
+        // converted mesh whose cache identity and visible recipe disagree.
+        final Slicer.Config importConfig = config.copy();
+        final ProfileCatalog.Profile importProfileBaseline = profile;
+        final boolean restoreGeometryRepair = restoreTransform && projectStore.savedGeometryRepair();
+        cancelImport();
+        sliceJobs.cancel();
+        final long importId = importIds.incrementAndGet();
+        activeImportId = importId;
+        importing = true;
+        status.setText("Import  Â·  reading modelâ€¦");
+        refreshActions();
+        importTimeoutRunnable = () -> {
+            synchronized (MainActivity.this) {
+                if (importId != activeImportId || !importing || isFinishing()) return;
+            }
+            cancelImport();
+            Toast.makeText(MainActivity.this,
+                    "Model import timed out. Check the file provider or try a smaller model.",
+                    Toast.LENGTH_LONG).show();
+        };
+        mainHandler.postDelayed(importTimeoutRunnable, 90_000L);
+        activeImport = importExecutor.submit(() -> {
+            try {
+            ArrayList<MeshModel> loaded = new ArrayList<>();
+            ArrayList<MeshModel> pristineLoaded = new ArrayList<>();
+            ArrayList<Uri> loadedUris = new ArrayList<>();
+            ArrayList<String> names = new ArrayList<>();
+            byte[] embeddedProjectSettings = null;
+            for (int index = 0; index < requestedUris.size(); index++) {
+                if (Thread.currentThread().isInterrupted()) throw new CancellationException("Import cancelled");
+                Uri uri = requestedUris.get(index);
+                if (uri == null) throw new IllegalArgumentException("A selected model URI is missing");
+                String preferred = requestedNames != null && index < requestedNames.size() ? requestedNames.get(index) : null;
+                String name = preferred == null || preferred.trim().length() == 0 ? displayName(uri) : preferred;
+                try (InputStream raw = getContentResolver().openInputStream(uri)) {
+                    if (raw == null) throw new IllegalArgumentException("The selected file could not be opened");
+                    java.io.BufferedInputStream probe = new java.io.BufferedInputStream(raw);
+                    boolean direct3mf = ModelBundleExtractor.isDirect3mf(name, getContentResolver().getType(uri));
+                    if (ModelBundleExtractor.isZip(probe) && !direct3mf) {
+                        if (name.toLowerCase(Locale.US).endsWith(".alloy.zip"))
+                            throw new IOException("This is an Alloy project archive; use Open project archive");
+                        ArrayList<ModelBundleExtractor.Extracted> extracted = ModelBundleExtractor.extract(getFilesDir(), probe);
+                        for (ModelBundleExtractor.Extracted item : extracted) {
+                            String itemName = item.displayName;
+                            if (".3mf".equals(item.materialized.extension)) {
+                                embeddedProjectSettings = mergeProjectSettings(embeddedProjectSettings,
+                                        BambuProjectSettingsExtractor.extract(item.materialized.file));
+                            }
+                            ModelStore.Materialized renderable = renderableMaterialized(item.materialized, itemName, importConfig);
+                            loadedUris.add(renderable.uri);
+                            try (InputStream input = getContentResolver().openInputStream(renderable.uri)) {
+                                if (input == null) throw new IllegalArgumentException("The extracted model could not be opened");
+                                MeshModel parsed = MeshModel.read(ModelStore.parserName(itemName, renderable.extension), input);
+                                pristineLoaded.add(parsed);
+                                loaded.add(restoreGeometryRepair ? parsed.repair(itemName).mesh : parsed);
+                                names.add(itemName);
+                            }
+                        }
+                    } else {
+                        ModelStore.Materialized materialized = ModelStore.materialize(getFilesDir(), getContentResolver(), uri, name);
+                        if (".3mf".equals(materialized.extension)) {
+                            embeddedProjectSettings = mergeProjectSettings(embeddedProjectSettings,
+                                    BambuProjectSettingsExtractor.extract(materialized.file));
+                        }
+                        ModelStore.Materialized renderable = renderableMaterialized(materialized, name, importConfig);
+                        loadedUris.add(renderable.uri);
+                        try (InputStream input = getContentResolver().openInputStream(renderable.uri)) {
+                            if (input == null) throw new IllegalArgumentException("The selected file could not be opened");
+                            // Parse from the content-detected suffix, while keeping
+                            // the provider's friendly name for project labels.
+                            MeshModel parsed = MeshModel.read(ModelStore.parserName(name, renderable.extension), input);
+                            pristineLoaded.add(parsed);
+                            loaded.add(restoreGeometryRepair ? parsed.repair(name).mesh : parsed);
+                            names.add(name);
+                        }
+                    }
+                }
+            }
+            String projectName = loaded.size() == 1 ? names.get(0) : "Project Â· " + loaded.size() + " models";
+            MeshModel combined = loaded.size() == 1 ? loaded.get(0)
+                    : MeshModel.combine(projectName, loaded, null, activeBedX());
+            MeshModel pristineCombined = pristineLoaded.size() == 1
+                    ? pristineLoaded.get(0) : MeshModel.combine(projectName, pristineLoaded, null, activeBedX());
+            float scale = restoreTransform ? projectStore.savedScale() : 1f;
+            float rotation = restoreTransform ? projectStore.savedRotation() : 0f;
+            float tiltX = restoreTransform ? projectStore.savedTiltX() : 0f;
+            float tiltY = restoreTransform ? projectStore.savedTiltY() : 0f;
+            final ArrayList<Uri> importedUris = new ArrayList<>(loadedUris);
+            final ArrayList<String> importedNames = new ArrayList<>(names);
+            final ProfileCatalog.Profile importedProjectProfile;
+            if (embeddedProjectSettings == null) {
+                importedProjectProfile = null;
+            } else {
+                importedProjectProfile = ProfileCatalog.importBambu(importProfileBaseline,
+                        new byte[][]{embeddedProjectSettings});
+                writeImportedProfile(importedProjectProfile,
+                        ProfileCatalog.serialize(importedProjectProfile));
+            }
+            mainHandler.post(() -> {
+                synchronized (MainActivity.this) {
+                    if (importId != activeImportId || !importing || isFinishing()) return;
+                    importing = false;
+                    activeImport = null;
+                    if (importTimeoutRunnable != null) {
+                        mainHandler.removeCallbacks(importTimeoutRunnable);
+                        importTimeoutRunnable = null;
+                    }
+                }
+                try {
+                    if (importedProjectProfile != null) {
+                        profile = importedProjectProfile;
+                        profile.applyTo(config);
+                        projectStore.saveRecipe(config);
+                    }
+                    applyLoadedModel(combined, pristineCombined, projectName, importedUris, importedNames,
+                            scale, rotation, tiltX, tiltY, restoreTransform, restoreGeometryRepair);
+                    trustedPilotFixtureAssetPath = !restoreTransform ? requestedPilotFixture : null;
+                    if (!restoreTransform && importedModelStore != null)
+                        importedModelStore.remember(getFilesDir(), importedUris, importedNames);
+                    // A new import is a visual handoff as much as it is a
+                    // preparation event. Land on the object-first surface so
+                    // a supplied box, part, assembly or CAD conversion is
+                    // immediately inspectable; restored projects still open
+                    // in the normal workspace to preserve their task context.
+                    if (!restoreTransform && !openingPrivateA1Study) mainHandler.postDelayed(() -> {
+                        if (!isFinishing() && model != null && !importing && !slicing && !batchSlicing)
+                            showImmersiveView();
+                    }, 120L);
+                } catch (Exception error) {
+                    Toast.makeText(MainActivity.this, "Import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    refreshActions();
+                }
+            });
+            } catch (CancellationException ignored) {
+                // Cancellation is an expected user action; no error toast is needed.
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    synchronized (MainActivity.this) {
+                        if (importId != activeImportId || !importing || isFinishing()) return;
+                        importing = false;
+                        activeImport = null;
+                        if (importTimeoutRunnable != null) {
+                            mainHandler.removeCallbacks(importTimeoutRunnable);
+                            importTimeoutRunnable = null;
+                        }
+                    }
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    pruneModelCache();
+                    refreshActions();
+                    if (restoreTransform && model == null) {
+                        // Keep the saved URI/project intact for a later retry,
+                        // but never strand a phone-only session on an empty
+                        // workspace because a provider document disappeared.
+                        loadShowcaseWithoutReplacingSavedProject();
+                        status.setText("Prepare  Â·  saved model needs review");
+                        // The workspace itself is already the recovery affordance.
+                        // Keep the explanation in the durable status line so a
+                        // stale provider URI cannot cover the first useful 3D
+                        // frame with a transient warning surface.
+                    } else {
+                        Toast.makeText(MainActivity.this, "Import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
+    }
+
+    /** Turn CAD sources into the mesh format consumed by the renderer/project store. */
+    private ModelStore.Materialized renderableMaterialized(ModelStore.Materialized materialized,
+                                                            String displayName,
+                                                            Slicer.Config importConfig) throws IOException {
+        if (materialized == null) throw new IOException("Imported model is missing");
+        if (!".step".equals(materialized.extension)) return materialized;
+        return NativeStepImporter.convertTo3mf(getFilesDir(), materialized, importConfig, displayName);
+    }
+
+    private static byte[] mergeProjectSettings(byte[] existing, byte[] candidate) throws IOException {
+        if (candidate == null) return existing;
+        if (existing != null && !Arrays.equals(existing, candidate))
+            throw new IOException("Select one Bambu 3MF project when embedded recipes differ");
+        return candidate;
+    }
+
+    private synchronized void cancelImport() {
+        activeImportId = importIds.incrementAndGet();
+        if (importTimeoutRunnable != null) {
+            mainHandler.removeCallbacks(importTimeoutRunnable);
+            importTimeoutRunnable = null;
+        }
+        if (activeImport != null) {
+            activeImport.cancel(true);
+            activeImport = null;
+        }
+        if (!importing) return;
+        importing = false;
+        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+        refreshActions();
+    }
+
+    private boolean firstRunOnboardingPending() {
+        try {
+            return getPreferences(MODE_PRIVATE).getInt(FIRST_RUN_ONBOARDING_VERSION, 0)
+                    < CURRENT_FIRST_RUN_ONBOARDING_VERSION;
+        } catch (ClassCastException ignored) {
+            return true;
+        }
+    }
+
+    /**
+     * A first run needs orientation, not an unexplained model canvas or a
+     * premature permission prompt. This deliberately stays independent of the
+     * immersive visual intro so an external Android share can still open its
+     * model immediately.
+     */
+    private void scheduleFirstRunOnboarding() {
+        if (!firstRunOnboardingPending()) return;
+        mainHandler.postDelayed(() -> {
+            if (!isFinishing() && firstRunOnboardingPending()) showFirstRunOnboarding(0);
+        }, 280L);
+    }
+
+    private void finishFirstRunOnboarding() {
+        getPreferences(MODE_PRIVATE).edit()
+                .putInt(FIRST_RUN_ONBOARDING_VERSION, CURRENT_FIRST_RUN_ONBOARDING_VERSION)
+                .apply();
+    }
+
+    private void showFirstRunOnboarding(int step) {
+        final int safeStep = Math.max(0, Math.min(4, step));
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = learnPage();
+        TextView eyebrow = label("WELCOME TO ALLOY  Â·  " + (safeStep + 1) + " / 5", 10, MUTED);
+        eyebrow.setLetterSpacing(0.10f);
+        page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(26)));
+
+        String title;
+        String body;
+        if (safeStep == 0) {
+            title = "Your print workshop, on your phone";
+            body = "Import a model, arrange real geometry, prepare a plate and inspect the result without needing a desktop. Start with a small, familiar object and keep the printer in view for any physical work.";
+        } else if (safeStep == 1) {
+            title = "Pair later, or explore now";
+            body = "You can use Library, 3D planning and Learn without pairing a printer. Pairing is only for a future qualified LAN route; Alloy will ask for printer details and notifications when there is a clear reason, never during this tour.";
+        } else if (safeStep == 2) {
+            title = "Match the physical setup";
+            body = "A printer name is not enough. Before slicing, identify the printer, nozzle, build plate, material and feed route in front of you. The active profile changes the printable envelope, but it cannot verify the machine automatically.";
+        } else if (safeStep == 3) {
+            title = "Start with one understandable object";
+            body = "Import a small STL, OBJ, 3MF or supported STEP source, or choose a Library model. Place it inside the real plate boundary, then inspect the first layer, thin features, bridges and warnings after slicing.";
+        } else {
+            title = "Review before any physical step";
+            body = "A recipe, estimate, preview and export are planning tools. A direct printer job stays locked until the exact printer, profile, native engine, package and physical evidence are qualified. A lock is a safety boundary, not an error to bypass.";
+        }
+        TextView heading = label(title, 25, TEXT);
+        heading.setTypeface(null, android.graphics.Typeface.BOLD);
+        heading.setLineSpacing(dp(3), 1f);
+        page.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+        TextView intro = label(body, 14, MUTED);
+        intro.setLineSpacing(dp(4), 1f);
+        LinearLayout.LayoutParams introLp = new LinearLayout.LayoutParams(-1, -2);
+        introLp.topMargin = dp(12);
+        page.addView(intro, introLp);
+        boolean feedArtwork = safeStep == 1 || safeStep == 2 || safeStep == 4;
+        addLearnArtwork(page, feedArtwork ? "learn/material-feed-route-v1.png" : "learn/first-layer-hotend-v1.png",
+                feedArtwork ? "Illustration of a spool and feed route" : "Illustration of a hotend placing a line");
+
+        TextView boundary = label(safeStep == 4
+                        ? "DIRECT PRINTING REMAINS FAIL-CLOSED UNTIL ITS SEPARATE EVIDENCE GATES PASS"
+                        : "NO NOTIFICATIONS OR PRINTER PERMISSIONS ARE REQUESTED DURING ONBOARDING",
+                10, safeStep == 4 ? RED : INK);
+        boundary.setLetterSpacing(0.06f);
+        boundary.setLineSpacing(dp(2), 1f);
+        LinearLayout.LayoutParams boundaryLp = new LinearLayout.LayoutParams(-1, -2);
+        boundaryLp.topMargin = dp(8);
+        page.addView(boundary, boundaryLp);
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+        actions.setPadding(0, dp(18), 0, 0);
+        Button skip = dialogButton(safeStep == 4 ? "Not now" : "Skip tour", v -> {
+            finishFirstRunOnboarding();
+            dialog.dismiss();
+        });
+        actions.addView(skip, new LinearLayout.LayoutParams(0, dp(50), 1));
+        Button next = dialogButton(safeStep == 4 ? "Open Library" : "Continue", v -> {
+            if (safeStep < 4) {
+                dialog.dismiss();
+                showFirstRunOnboarding(safeStep + 1);
+            } else {
+                finishFirstRunOnboarding();
+                dialog.dismiss();
+                showModelLibrary();
+            }
+        });
+        next.setTypeface(null, android.graphics.Typeface.BOLD);
+        LinearLayout.LayoutParams nextLp = new LinearLayout.LayoutParams(0, dp(50), 1);
+        nextLp.leftMargin = dp(8);
+        actions.addView(next, nextLp);
+        page.addView(actions, new LinearLayout.LayoutParams(-1, dp(70)));
+        setDialogPage(dialog, page);
+    }
+
+    /** Offline, data-driven field guide. It deliberately has no print-control affordance. */
+    private void showLearnHub() {
+        try {
+            LearningCatalog catalog = LearningCatalog.load(getAssets());
+            final Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            LinearLayout page = learnPage();
+            TextView eyebrow = label("LEARN Â· OFFLINE FIELD GUIDE", 10, MUTED);
+            eyebrow.setLetterSpacing(0.10f);
+            page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+            TextView title = label("A calm start, when you need it", 22, TEXT);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            page.addView(title, new LinearLayout.LayoutParams(-1, dp(38)));
+            TextView intro = label("Short, source-labelled guidance for preparing a model, choosing material and recognising when to stop. Learning never unlocks physical printing.", 13, MUTED);
+            intro.setLineSpacing(dp(3), 1f);
+            page.addView(intro, new LinearLayout.LayoutParams(-1, -2));
+            addLearnArtwork(page, "learn/first-layer-hotend-v1.png", "Illustration of a hotend placing a first-layer line");
+
+            addLearnButton(page, "Replay welcome", "A short, skippable tour of the safe phone-first route", v -> { dialog.dismiss(); showFirstRunOnboarding(0); });
+            addLearnButton(page, "Start here", "A first-print checklist with no hidden promises", v -> showLearnArticles(dialog, catalog.ofKind("start"), "Start here"));
+            addLearnButton(page, "Quick cheat sheet", "Plain-language layers, materials, supports and first-layer basics", v -> showLearnArticles(dialog, catalog.ofKind("cheatsheet"), "Quick cheat sheet"));
+            addLearnButton(page, "Materials & compatibility", "A1 mini, A1 and P1S records; Bambu capability is separate from Alloy send approval", v -> showMaterials(dialog));
+            addLearnButton(page, "Fix a symptom", "Search by what you see. Hard-stop guidance comes first.", v -> showTroubleshooting(dialog, catalog));
+            TextView boundary = label("Safety boundary Â· Never remove a certificate, readiness gate or physical safeguard to continue. Use the printer and current manufacturer guidance as the source of truth during a fault.", 11, RED);
+            boundary.setPadding(dp(4), dp(12), dp(4), dp(8));
+            page.addView(boundary, new LinearLayout.LayoutParams(-1, -2));
+            Button close = dialogButton("Done", v -> dialog.dismiss());
+            page.addView(close, new LinearLayout.LayoutParams(-1, dp(48)));
+            setDialogPage(dialog, page);
+        } catch (IOException error) {
+            Toast.makeText(this, "Learn is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private LinearLayout learnPage() {
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(20), dp(18), dp(20), dp(24));
+        content.setBackgroundColor(BG);
+        return content;
+    }
+
+    // Dialog accepts the content root directly; wrapping makes long articles
+    // readable with large text and keeps the action rail off the content.
+    private void setDialogPage(Dialog dialog, LinearLayout content) {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+        dialog.setContentView(scroll);
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setLayout(-1, -1);
+        }
+    }
+
+    private void addLearnButton(LinearLayout page, String title, String detail, View.OnClickListener listener) {
+        Button button = dialogButton(title + "\n" + detail, listener);
+        button.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        button.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        button.setTextSize(14);
+        button.setPadding(dp(16), dp(8), dp(16), dp(8));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(68));
+        lp.topMargin = dp(10);
+        page.addView(button, lp);
+    }
+
+    private void addLearnArtwork(LinearLayout page, String asset, String description) {
+        if (asset == null || asset.length() == 0) return;
+        try (InputStream input = getAssets().open(asset)) {
+            Bitmap bitmap = BitmapFactory.decodeStream(input);
+            if (bitmap == null) return;
+            ImageView image = new ImageView(this);
+            image.setImageBitmap(bitmap);
+            image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            image.setAdjustViewBounds(true);
+            image.setContentDescription(description);
+            image.setBackground(round(PANEL, Color.rgb(226, 222, 213), 1, 22));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(164));
+            lp.topMargin = dp(14); lp.bottomMargin = dp(4);
+            page.addView(image, lp);
+        } catch (IOException ignored) {
+            // Text remains a complete accessible equivalent when art is absent.
+        }
+    }
+
+    private void showLearnArticles(Dialog parent, List<LearningCatalog.Article> articles, String heading) {
+        parent.dismiss();
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = learnPage();
+        TextView eyebrow = label("LEARN Â· " + heading.toUpperCase(Locale.US), 10, MUTED);
+        eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+        TextView title = label(heading, 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD);
+        page.addView(title, new LinearLayout.LayoutParams(-1, dp(40)));
+        for (LearningCatalog.Article article : articles) addLearnArticle(page, article);
+        Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); });
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.topMargin = dp(12); page.addView(back, lp);
+        setDialogPage(dialog, page);
+    }
+
+    private void addLearnArticle(LinearLayout page, LearningCatalog.Article article) {
+        LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(14), dp(13), dp(14), dp(13)); card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
+        TextView safety = label(article.safety.toUpperCase(Locale.US), 10, "Hard stop".equals(article.safety) ? RED : AMBER);
+        safety.setLetterSpacing(0.10f); card.addView(safety);
+        TextView title = label(article.title, 17, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setPadding(0, dp(4), 0, dp(5)); card.addView(title);
+        TextView summary = label(article.summary, 13, MUTED); summary.setLineSpacing(dp(3), 1f); card.addView(summary);
+        if (article.artwork.length() > 0) {
+            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary);
+        } else {
+            addLearnDiagram(card, article);
+        }
+        TextView next = label("SAFE NEXT STEPS", 10, INK); next.setLetterSpacing(0.08f); next.setPadding(0, dp(10), 0, dp(2)); card.addView(next);
+        for (int i = 0; i < article.steps.size(); i++) {
+            TextView step = label((i + 1) + ". " + article.steps.get(i), 13, TEXT); step.setPadding(0, dp(3), 0, 0); step.setLineSpacing(dp(2), 1f); card.addView(step);
+        }
+        TextView scope = label("Scope Â· " + article.scope + "\nSource Â· " + article.source, 10, MUTED);
+        scope.setPadding(0, dp(10), 0, 0); scope.setLineSpacing(dp(2), 1f); card.addView(scope);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(12); page.addView(card, lp);
+    }
+
+    /** Every text-only field-guide article gets an offline visual and accessible equivalent. */
+    private void addLearnDiagram(LinearLayout page, LearningCatalog.Article article) {
+        LearningIllustrationView illustration = new LearningIllustrationView(this, article.id,
+                "Diagram for " + article.title + ". " + article.summary);
+        illustration.setBackground(round(PANEL, Color.rgb(226, 222, 213), 1, 18));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(144));
+        lp.topMargin = dp(14); lp.bottomMargin = dp(4);
+        page.addView(illustration, lp);
+    }
+
+    private void showTroubleshooting(Dialog parent, LearningCatalog catalog) {
+        parent.dismiss();
+        final Dialog dialog = new Dialog(this); dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        LinearLayout page = learnPage();
+        TextView eyebrow = label("LEARN Â· SYMPTOM FIRST", 10, MUTED); eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+        TextView title = label("What are you seeing?", 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD); page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
+        EditText search = new EditText(this); search.setHint("Search: lifting, stringing, collision, pairing"); search.setSingleLine(true); search.setContentDescription("Search troubleshooting symptoms");
+        search.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 14)); search.setPadding(dp(14), 0, dp(14), 0); page.addView(search, new LinearLayout.LayoutParams(-1, dp(52)));
+        TextView resultStatus = label("", 11, MUTED);
+        resultStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        resultStatus.setPadding(dp(2), dp(10), dp(2), dp(2));
+        page.addView(resultStatus, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout results = new LinearLayout(this); results.setOrientation(LinearLayout.VERTICAL); page.addView(results, new LinearLayout.LayoutParams(-1, -2));
+        renderTroubleshootingResults(results, resultStatus, catalog, "");
+        search.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                renderTroubleshootingResults(results, resultStatus, catalog, s.toString());
+            }
+            @Override public void afterTextChanged(android.text.Editable editable) { }
+        });
+        Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); }); LinearLayout.LayoutParams backLp = new LinearLayout.LayoutParams(-1, dp(48)); backLp.topMargin = dp(12); page.addView(back, backLp);
+        setDialogPage(dialog, page);
+    }
+
+    private void renderTroubleshootingResults(LinearLayout results, TextView status,
+                                             LearningCatalog catalog, String query) {
+        results.removeAllViews();
+        List<LearningCatalog.Article> matches = catalog.searchTroubleshooting(query);
+        String trimmed = query == null ? "" : query.trim();
+        if (trimmed.isEmpty()) {
+            status.setText("Safety stop checks Â· search to narrow by symptom");
+        } else {
+            status.setText(matches.size() + (matches.size() == 1 ? " matching guide" : " matching guides"));
+        }
+        for (LearningCatalog.Article article : matches) addLearnArticle(results, article);
+        if (!trimmed.isEmpty() && matches.isEmpty()) {
+            TextView empty = label("No exact offline match. If the printer is hot, moving, smoking, colliding, or has damaged wiring, stop and use current manufacturer support.", 13, RED);
+            empty.setPadding(0, dp(14), 0, 0); results.addView(empty);
+        }
+    }
+
+    private void showMaterials(Dialog parent) {
+        parent.dismiss();
+        try {
+            PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
+            final Dialog dialog = new Dialog(this); dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            LinearLayout page = learnPage();
+            TextView eyebrow = label("LEARN Â· MATERIALS & COMPATIBILITY", 10, MUTED); eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
+            TextView title = label("Choose a known setup", 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD); page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
+            TextView note = label("Bambu-published capability is not an Alloy direct-send approval. Every record below remains blocked until its printer, profile, native engine and physical evidence gates pass.", 13, RED); note.setLineSpacing(dp(3), 1f); page.addView(note, new LinearLayout.LayoutParams(-1, -2));
+            addLearnArtwork(page, "learn/material-feed-route-v1.png", "Illustration of material spool and feed route");
+            for (PrinterCapabilityCatalog.Printer printer : catalog.printers) addPrinterCapability(page, printer);
+            Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); }); LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.topMargin = dp(12); page.addView(back, lp);
+            setDialogPage(dialog, page);
+        } catch (IOException error) { Toast.makeText(this, "Material catalog is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show(); }
+    }
+
+    private void addPrinterCapability(LinearLayout page, PrinterCapabilityCatalog.Printer printer) {
+        LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL); card.setPadding(dp(14), dp(13), dp(14), dp(13)); card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
+        TextView name = label(printer.name, 18, TEXT); name.setTypeface(null, android.graphics.Typeface.BOLD); card.addView(name);
+        TextView facts = label(printer.buildVolume + " Â· " + printer.nozzle + " Â· Bed " + printer.bed, 12, MUTED); facts.setPadding(0, dp(3), 0, 0); card.addView(facts);
+        TextView direct = label("ALLOY DIRECT SEND Â· " + printer.directSendState, 10, RED); direct.setLetterSpacing(0.07f); direct.setPadding(0, dp(10), 0, dp(4)); card.addView(direct);
+        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu: " + material.bambuStatus + " Â· Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
+        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) { TextView row = label(route.title + " Â· " + route.state + "\n" + route.note, 12, TEXT); row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
+        for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
+            TextView row = label(form.title + " Â· " + form.state + "\n"
+                    + "Form: " + form.form + " Â· Routes: " + form.compatibleRoutes + "\n"
+                    + "Fit: " + form.geometry + "\n" + form.note, 12, TEXT);
+            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
+        }
+        TextView spool = label("SPOOL CHECK", 10, INK); spool.setLetterSpacing(0.08f); spool.setPadding(0, dp(12), 0, dp(2)); card.addView(spool);
+        for (String guidance : printer.spoolGuidance) { TextView row = label("â€¢ " + guidance, 12, TEXT); row.setPadding(0, dp(4), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        TextView source = label("Source/scope Â· " + printer.source + " Â· reviewed " + printer.reviewed, 10, MUTED); source.setPadding(0, dp(10), 0, 0); source.setLineSpacing(dp(2), 1f); card.addView(source);
+        Button openSource = dialogButton("Open official Bambu source", v -> openCapabilitySource(printer.sourceUrl));
+        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(8); card.addView(openSource, sourceLp);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(12); page.addView(card, lp);
+    }
+
+    private void showModelLibrary() {
+        if (printerBusy || slicing || batchSlicing || batchTransferring) {
+            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            ArrayList<ModelCatalog.Entry> entries = ModelCatalog.load(getAssets());
+            final Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            LinearLayout page = new LinearLayout(this);
+            page.setOrientation(LinearLayout.VERTICAL);
+            page.setBackgroundColor(BG);
+            page.setPadding(dp(14), dp(12), dp(14), dp(12));
+
+            TextView eyebrow = label("LIBRARY", 11, MUTED);
+            eyebrow.setLetterSpacing(0.16f);
+            page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(28)));
+            TextView title = label("Library", 24, TEXT);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
+            TextView subtitle = label("Saved models  /  Recently opened", 13, MUTED);
+            page.addView(subtitle, new LinearLayout.LayoutParams(-1, dp(34)));
+
+            // Make the supplied/user-owned geometry path obvious at the point
+            // where a person is looking for models. The catalog remains
+            // license-audited, while imported STL/OBJ/3MF files go through
+            // the normal content-addressed cache and the same live renderer.
+            HorizontalScrollView quickActionsScroll = new HorizontalScrollView(this);
+            quickActionsScroll.setHorizontalScrollBarEnabled(false);
+            LinearLayout quickActions = new LinearLayout(this);
+            quickActions.setOrientation(LinearLayout.HORIZONTAL);
+            Button import3d = dialogButton("Import 3D file", v -> {
+                dialog.dismiss();
+                openModel();
+            });
+            quickActions.addView(import3d, new LinearLayout.LayoutParams(-2, dp(46)));
+            Button create3d = dialogButton("Create / edit", v -> {
+                dialog.dismiss();
+                showModelWorkbench();
+            });
+            LinearLayout.LayoutParams createLp = new LinearLayout.LayoutParams(-2, dp(46));
+            createLp.leftMargin = dp(8);
+            quickActions.addView(create3d, createLp);
+            Button printer3d = dialogButton("A1 Mini study", v -> {
+                dialog.dismiss();
+                showPrinterStudy();
+            });
+            LinearLayout.LayoutParams printerLp = new LinearLayout.LayoutParams(-2, dp(46));
+            printerLp.leftMargin = dp(8);
+            quickActions.addView(printer3d, printerLp);
+            quickActionsScroll.addView(quickActions, new HorizontalScrollView.LayoutParams(-2, dp(46)));
+            page.addView(quickActionsScroll, new LinearLayout.LayoutParams(-1, dp(54)));
+
+            TextView recentTitle = label("RECENT ON THIS PHONE", 10, MUTED);
+            recentTitle.setLetterSpacing(0.12f);
+            recentTitle.setPadding(dp(2), dp(8), 0, 0);
+            page.addView(recentTitle, new LinearLayout.LayoutParams(-1, dp(30)));
+            HorizontalScrollView recentScroll = new HorizontalScrollView(this);
+            recentScroll.setHorizontalScrollBarEnabled(false);
+            LinearLayout recent = new LinearLayout(this);
+            recent.setOrientation(LinearLayout.HORIZONTAL);
+            recent.setPadding(0, 0, dp(4), dp(6));
+            ArrayList<ImportedModelStore.Entry> recentEntries = importedModelStore == null
+                    ? new ArrayList<>() : importedModelStore.entries(getFilesDir());
+            android.content.SharedPreferences favourites = getSharedPreferences("alloy_model_favourites", MODE_PRIVATE);
+            ArrayList<View> libraryItems = new ArrayList<>();
+            ArrayList<ModelCatalog.Entry> libraryCatalog = new ArrayList<>();
+            final String[] activeFilter = {"All"};
+            final String[] searchQuery = {""};
+            final ArrayList<Button> filterButtons = new ArrayList<>();
+            final Runnable[] refreshFilterCounts = {() -> {}};
+            if (recentEntries.isEmpty()) {
+                TextView emptyRecent = label("Import a box, bow part, STEP or 3MF and it will stay here for offline reopen.", 11, MUTED);
+                emptyRecent.setGravity(Gravity.CENTER_VERTICAL);
+                recent.addView(emptyRecent, new LinearLayout.LayoutParams(-1, dp(42)));
+            } else {
+                for (ImportedModelStore.Entry entry : recentEntries) {
+                    Button recentChip = dialogButton(galleryShortName(entry.name), null);
+                    recentChip.setTextSize(11);
+                    recentChip.setMinWidth(dp(126));
+                    recentChip.setContentDescription("Open imported model " + entry.name);
+                    recentChip.setTag("uri:" + entry.sha256);
+                    recentChip.setOnClickListener(v -> {
+                        dialog.dismiss();
+                        loadUri(entry.uri, false);
+                    });
+                    LinearLayout.LayoutParams recentLp = new LinearLayout.LayoutParams(-2, dp(42));
+                    if (recent.getChildCount() > 0) recentLp.leftMargin = dp(6);
+                    recent.addView(recentChip, recentLp);
+                    libraryItems.add(recentChip);
+                }
+            }
+            recentScroll.addView(recent, new HorizontalScrollView.LayoutParams(-2, dp(48)));
+            page.addView(recentScroll, new LinearLayout.LayoutParams(-1, dp(52)));
+
+            HorizontalScrollView chooserScroll = new HorizontalScrollView(this);
+            chooserScroll.setHorizontalScrollBarEnabled(false);
+            LinearLayout chooser = new LinearLayout(this);
+            chooser.setOrientation(LinearLayout.HORIZONTAL);
+            chooser.setPadding(0, dp(2), dp(4), dp(8));
+            chooserScroll.addView(chooser, new HorizontalScrollView.LayoutParams(-2, dp(56)));
+            page.addView(chooserScroll, new LinearLayout.LayoutParams(-1, dp(58)));
+
+            FrameLayout stage = new FrameLayout(this);
+            stage.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 2, 28));
+            stage.setClipToOutline(true);
+            ViewportView preview = new ViewportView(this);
+            preview.setPresentationMode(false);
+            preview.setCleanPresentation(true);
+            stage.addView(preview, new FrameLayout.LayoutParams(-1, -1));
+            addPresentationAppearanceControls(stage, preview, dp(14));
+            stage.addView(sceneTag("â—‡", "STUDY", "LIVE MODEL", Gravity.TOP | Gravity.START, dp(16), dp(18)));
+            stage.addView(sceneTag("01", "PLATE", "EXAMPLE", Gravity.BOTTOM | Gravity.START, dp(22), dp(18)));
+            page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1f));
+
+            TextView selectedName = label("", 16, TEXT);
+            selectedName.setTypeface(null, android.graphics.Typeface.BOLD);
+            selectedName.setPadding(dp(2), dp(10), dp(2), 0);
+            LinearLayout selectedHeader = new LinearLayout(this);
+            selectedHeader.setGravity(Gravity.CENTER_VERTICAL);
+            selectedHeader.addView(selectedName, new LinearLayout.LayoutParams(0, dp(36), 1f));
+            TextView favouriteToggle = label("â™¡", 26, INK);
+            favouriteToggle.setGravity(Gravity.CENTER);
+            favouriteToggle.setContentDescription("Add to favourites");
+            selectedHeader.addView(favouriteToggle, new LinearLayout.LayoutParams(dp(42), dp(36)));
+            page.addView(selectedHeader, new LinearLayout.LayoutParams(-1, dp(38)));
+            TextView selectedProvenance = label("", 11, MUTED);
+            selectedProvenance.setLineSpacing(1, 1.0f);
+            page.addView(selectedProvenance, new LinearLayout.LayoutParams(-1, dp(46)));
+
+            int initialIndex = 0;
+            for (int index = 0; index < entries.size(); index++) {
+                if (entries.get(index).name.toLowerCase(Locale.US).contains("assembly")) {
+                    initialIndex = index;
+                    break;
+                }
+            }
+            final ModelCatalog.Entry[] selected = new ModelCatalog.Entry[]{entries.get(initialIndex)};
+            Runnable refreshFavourite = () -> {
+                boolean isFavourite = favourites.getBoolean("asset:" + selected[0].assetPath, false);
+                favouriteToggle.setText(isFavourite ? "â™¥" : "â™¡");
+                favouriteToggle.setTextColor(isFavourite ? GOLD : INK);
+                favouriteToggle.setContentDescription(isFavourite ? "Remove from favourites" : "Add to favourites");
+            };
+            favouriteToggle.setOnClickListener(v -> {
+                String key = "asset:" + selected[0].assetPath;
+                favourites.edit().putBoolean(key, !favourites.getBoolean(key, false)).apply();
+                refreshFavourite.run();
+                filterLibraryItems(libraryItems, searchQuery[0], activeFilter[0], favourites);
+                refreshFilterCounts[0].run();
+            });
+            for (int index = 0; index < entries.size(); index++) {
+                ModelCatalog.Entry entry = entries.get(index);
+                Button chip = dialogButton(galleryShortName(entry.name), null);
+                chip.setTextSize(11);
+                chip.setMinWidth(dp(108));
+                chip.setTag("asset:" + entry.assetPath);
+                chip.setContentDescription(entry.name);
+                LinearLayout.LayoutParams chipLp = new LinearLayout.LayoutParams(-2, dp(46));
+                if (index > 0) chipLp.leftMargin = dp(6);
+                chooser.addView(chip, chipLp);
+                libraryItems.add(chip);
+                libraryCatalog.add(entry);
+                final ModelCatalog.Entry chosen = entry;
+                chip.setOnClickListener(v -> {
+                    try {
+                        ModelCatalog.verify(getAssets(), chosen);
+                        try (InputStream input = getAssets().open(chosen.assetPath)) {
+                            MeshModel parsed = MeshModel.read(chosen.name, input);
+                            selected[0] = chosen;
+                            preview.setModel(parsed);
+                            selectedName.setText(chosen.name);
+                            selectedProvenance.setText(chosen.provenanceLabel() + "  Â·  checksum verified");
+                            refreshFavourite.run();
+                        }
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Example rejected: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            EditText modelSearch = new EditText(this);
+            modelSearch.setSingleLine(true);
+            modelSearch.setTextSize(12);
+            modelSearch.setHint("âŒ• Search");
+            modelSearch.setPadding(dp(10), 0, dp(8), 0);
+            modelSearch.setBackground(round(SURFACE, Color.rgb(222, 216, 206), 1, 18));
+            Button sort = dialogButton("â˜·  Sort", null);
+            sort.setTextSize(11);
+            LinearLayout.LayoutParams sortLp = new LinearLayout.LayoutParams(-2, dp(34));
+            sortLp.leftMargin = dp(6);
+
+            int favCount = 0;
+            for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) favCount++;
+            HorizontalScrollView filterScroll = new HorizontalScrollView(this);
+            filterScroll.setHorizontalScrollBarEnabled(false);
+            LinearLayout filterRow = new LinearLayout(this);
+            filterRow.setGravity(Gravity.CENTER_VERTICAL);
+            filterRow.addView(modelSearch, new LinearLayout.LayoutParams(dp(98), dp(38)));
+            filterScroll.addView(filterRow, new HorizontalScrollView.LayoutParams(-2, dp(40)));
+            page.addView(filterScroll, new LinearLayout.LayoutParams(-1, dp(42)));
+            String[] filterLabels = {"All " + libraryItems.size(), "Favourites " + favCount, "Recent " + recentEntries.size()};
+            for (String filterLabel : filterLabels) {
+                Button filter = dialogButton(filterLabel, null);
+                filter.setTextSize(11);
+                LinearLayout.LayoutParams filterLp = new LinearLayout.LayoutParams(-2, dp(34));
+                if (filterRow.getChildCount() > 0) filterLp.leftMargin = dp(6);
+                filterRow.addView(filter, filterLp);
+                filterButtons.add(filter);
+                filter.setOnClickListener(v -> {
+                    activeFilter[0] = filterLabel.startsWith("Favourites") ? "Favourites" : filterLabel.startsWith("Recent") ? "Recent" : "All";
+                    filterLibraryItems(libraryItems, modelSearch.getText().toString(), activeFilter[0], favourites);
+                    for (int i = 0; i < filterRow.getChildCount(); i++) filterRow.getChildAt(i).setAlpha(filterRow.getChildAt(i) == filter ? 1f : .7f);
+                });
+            }
+            filterRow.addView(sort, sortLp);
+            refreshFilterCounts[0] = () -> {
+                int count = 0;
+                for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) count++;
+                if (filterButtons.size() == 3) {
+                    filterButtons.get(0).setText("All " + libraryItems.size());
+                    filterButtons.get(1).setText("Favourites " + count);
+                    filterButtons.get(2).setText("Recent " + recentEntries.size());
+                }
+            };
+            refreshFilterCounts[0].run();
+            modelSearch.addTextChangedListener(new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    searchQuery[0] = s.toString();
+                    filterLibraryItems(libraryItems, s.toString(), activeFilter[0], favourites);
+                }
+                @Override public void afterTextChanged(android.text.Editable s) {}
+            });
+            sort.setOnClickListener(v -> {
+                boolean ascending = !Boolean.TRUE.equals(sort.getTag());
+                sort.setTag(ascending);
+                sort.setText(ascending ? "â˜·  Aâ€“Z" : "â˜·  Zâ€“A");
+                java.util.Collections.sort(libraryCatalog, (left, right) -> {
+                    int order = left.name.compareToIgnoreCase(right.name);
+                    return ascending ? order : -order;
+                });
+                // Reorder existing views instead of relabeling them. Each click
+                // listener captures its verified catalog entry; relabeling alone
+                // would make a sorted chip open a different model than it names.
+                ArrayList<View> sortedItems = new ArrayList<>();
+                for (ModelCatalog.Entry entry : libraryCatalog) {
+                    String expectedTag = "asset:" + entry.assetPath;
+                    for (View item : libraryItems) {
+                        if (expectedTag.equals(String.valueOf(item.getTag()))) {
+                            sortedItems.add(item);
+                            break;
+                        }
+                    }
+                }
+                chooser.removeAllViews();
+                for (View item : sortedItems) {
+                    LinearLayout.LayoutParams itemLp = new LinearLayout.LayoutParams(-2, dp(46));
+                    if (chooser.getChildCount() > 0) itemLp.leftMargin = dp(6);
+                    chooser.addView(item, itemLp);
+                }
+            });
+            page.removeView(filterScroll);
+            page.addView(filterScroll, 3);
+
+            LinearLayout footer = new LinearLayout(this);
+            footer.setGravity(Gravity.CENTER_VERTICAL);
+            footer.setPadding(0, dp(8), 0, 0);
+            Button community = dialogButton("Community sources", v -> {
+                dialog.dismiss();
+                showCommunityModelSources();
+            });
+            footer.addView(community, new LinearLayout.LayoutParams(0, dp(50), 1f));
+            Button open = dialogButton("Use & open 3D", v -> {
+                dialog.dismiss();
+                loadAssetModel(selected[0].assetPath, selected[0].name);
+            });
+            LinearLayout.LayoutParams openLp = new LinearLayout.LayoutParams(-2, dp(50));
+            openLp.leftMargin = dp(8);
+            footer.addView(open, openLp);
+            Button close = dialogButton("Done", v -> dialog.dismiss());
+            LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(-2, dp(50));
+            closeLp.leftMargin = dp(8);
+            footer.addView(close, closeLp);
+            page.addView(footer, new LinearLayout.LayoutParams(-1, dp(58)));
+
+            ArcNavigationBar libraryNavigation = new ArcNavigationBar(this);
+            libraryNavigation.setContextLabel("Open in workshop");
+            libraryNavigation.setSelectedDestination(1);
+            libraryNavigation.setListener(new ArcNavigationBar.Listener() {
+                @Override public void onContext() { dialog.dismiss(); loadAssetModel(selected[0].assetPath, selected[0].name); }
+                @Override public void onSearch() { modelSearch.requestFocus(); }
+                @Override public void onAlerts() { dialog.dismiss(); showPrinterReadiness(); }
+                @Override public void onHome() { dialog.dismiss(); if (viewport != null) viewport.resetView(); }
+                @Override public void onLibrary() { modelSearch.requestFocus(); }
+                @Override public void onPrepare() { dialog.dismiss(); showPrepare(); }
+                @Override public void onHistory() { dialog.dismiss(); showModelHistory(); }
+                @Override public void onMore() { dialog.dismiss(); showMoreActions(); }
+            });
+            page.addView(libraryNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
+
+            // Load only the first preview up front; the remaining surfaces are
+            // parsed when selected, keeping the phone's initial memory cost
+            // bounded while making every catalog entry visible in the atlas.
+            try {
+                ModelCatalog.Entry first = entries.get(initialIndex);
+                ModelCatalog.verify(getAssets(), first);
+                try (InputStream input = getAssets().open(first.assetPath)) {
+                    preview.setModel(MeshModel.read(first.name, input));
+                }
+                selectedName.setText(first.name);
+                selectedProvenance.setText(first.provenanceLabel() + "  Â·  checksum verified");
+                refreshFavourite.run();
+            } catch (Exception error) {
+                selectedName.setText("No preview available");
+                selectedProvenance.setText(error.getMessage());
+            }
+            dialog.setContentView(page);
+            dialog.setOnDismissListener(ignored -> preview.onHostPause());
+            dialog.show();
+            filterLibraryItems(libraryItems, "", "All", favourites);
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawableResource(android.R.color.transparent);
+                window.setLayout(-1, -1);
+            }
+        } catch (Exception error) {
+            Toast.makeText(this, "Model library unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String galleryShortName(String value) {
+        if (value == null || value.trim().length() == 0) return "Model";
+        int separator = value.indexOf(" Â· ");
+        String shortName = separator > 0 ? value.substring(0, separator) : value;
+        return shortName.length() > 18 ? shortName.substring(0, 18) + "â€¦" : shortName;
+    }
+
+    private void filterLibraryItems(ArrayList<View> items, String query, String filter,
+                                    android.content.SharedPreferences favourites) {
+        String needle = query == null ? "" : query.trim().toLowerCase(Locale.US);
+        for (View item : items) {
+            String key = String.valueOf(item.getTag());
+            String name = String.valueOf(item.getContentDescription()).toLowerCase(Locale.US);
+            boolean isRecent = key.startsWith("uri:");
+            boolean visible = "All".equals(filter)
+                    || ("Favourites".equals(filter) && favourites.getBoolean(key, false))
+                    || ("Recent".equals(filter) && isRecent);
+            if (visible && !needle.isEmpty()) visible = name.contains(needle);
+            item.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void showCommunityModelSources() {
+        List<CommunityModelCatalog.Entry> entries = CommunityModelCatalog.entries();
+        String[] labels = new String[entries.size()];
+        for (int index = 0; index < entries.size(); index++) labels[index] = entries.get(index).summary();
+        new AlertDialog.Builder(this)
+                .setTitle("Community model sources")
+                .setMessage("Open the original page to download a model. Alloy does not mirror these files; the source page remains the authority for license, attribution and revision terms.")
+                .setItems(labels, (dialog, which) -> {
+                    CommunityModelCatalog.Entry entry = entries.get(which);
+                    new AlertDialog.Builder(this)
+                            .setTitle(entry.name)
+                            .setMessage(entry.details())
+                            .setNegativeButton("Back", null)
+                            .setPositiveButton("Open source", (info, open) -> {
+                                try {
+                                    startActivity(entry.browserIntent());
+                                } catch (Exception error) {
+                                    Toast.makeText(this, "No browser is available for this source", Toast.LENGTH_LONG).show();
+                                }
+                            })
+                            .show();
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    /** Open the bounded primitive/assembly workbench. */
+    private void showModelWorkbench() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring || visualizing || modeling) {
+            Toast.makeText(this, "Finish the current operation before modeling", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ModelWorkbench.Primitive[] primitives = ModelWorkbench.Primitive.values();
+        int customIndex = primitives.length;
+        int booleanIndex = primitives.length + 1;
+        int arrayIndex = model == null ? -1 : primitives.length + 2;
+        int mirrorIndex = model == null ? -1 : primitives.length + 3;
+        int layFlatIndex = model == null ? -1 : primitives.length + 4;
+        int autoOrientIndex = model == null ? -1 : primitives.length + 5;
+        String[] labels = new String[primitives.length + 2 + (model == null ? 0 : 4)];
+        for (int index = 0; index < primitives.length; index++) labels[index] = primitives[index].label;
+        labels[customIndex] = "Custom sketch  Â·  extrude";
+        labels[booleanIndex] = "Boolean with primitive  Â·  native OCCT";
+        if (arrayIndex >= 0) {
+            labels[arrayIndex] = "Duplicate current model  Â·  array";
+            labels[mirrorIndex] = "Mirror current model  Â·  X / Y";
+            labels[layFlatIndex] = "Lay flat  Â·  largest face";
+            labels[autoOrientIndex] = "Auto orient  Â·  axis-aligned";
+        }
+        final int[] selectedPrimitive = new int[]{0};
+        new AlertDialog.Builder(this)
+                .setTitle("Model workbench")
+                .setMessage("Create a printable primitive, extrude a convex sketch, or use exact native union/subtract/intersect editing. Dimensions are bounded to the " + profilePrinterLabel() + " build volume.")
+                .setSingleChoiceItems(labels, 0, (dialog, which) -> selectedPrimitive[0] = which)
+                .setNegativeButton("Close", null)
+                .setPositiveButton("Continue", (dialog, which) -> {
+                    if (selectedPrimitive[0] == customIndex) showSketchExtrusion();
+                    else if (selectedPrimitive[0] == booleanIndex) showBooleanOperation();
+                    else if (selectedPrimitive[0] == arrayIndex) showModelArray();
+                    else if (selectedPrimitive[0] == mirrorIndex) showMirrorModel();
+                    else if (selectedPrimitive[0] == layFlatIndex) layCurrentModelFlat();
+                    else if (selectedPrimitive[0] == autoOrientIndex) autoOrientCurrentModel();
+                    else showPrimitiveDimensions(primitives[Math.max(0, selectedPrimitive[0])]);
+                })
+                .show();
+    }
+
+    private void layCurrentModelFlat() {
+        if (model == null) {
+            Toast.makeText(this, "Import or create a model before laying it flat", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            MeshModel flattened = model.layFlat(model.displayName + " Â· largest face on bed");
+            installGeneratedModel(flattened, flattened.displayName);
+            Toast.makeText(this, "Largest face placed on the build plate; review orientation before slicing", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Model could not be laid flat: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void autoOrientCurrentModel() {
+        if (model == null) {
+            Toast.makeText(this, "Import or create a model before auto-orienting it", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            MeshModel oriented = model.autoOrient(model.displayName + " Â· auto-oriented");
+            installGeneratedModel(oriented, oriented.displayName);
+            Toast.makeText(this, "Best bounded axis-aligned orientation applied; review the bed and supports before slicing", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Model could not be auto-oriented: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showMirrorModel() {
+        if (model == null) {
+            Toast.makeText(this, "Import or create a model before mirroring it", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        RadioGroup axes = new RadioGroup(this);
+        axes.setPadding(28, 4, 28, 0);
+        RadioButton x = new RadioButton(this);
+        x.setId(View.generateViewId());
+        x.setText("Mirror across X centreline"); x.setTextColor(TEXT); x.setTag(Boolean.TRUE);
+        RadioButton y = new RadioButton(this);
+        y.setId(View.generateViewId());
+        y.setText("Mirror across Y centreline"); y.setTextColor(TEXT); y.setTag(Boolean.FALSE);
+        axes.addView(x); axes.addView(y); axes.check(x.getId());
+        TextView note = label("Mirrors the current printable mesh around the centre of its footprint, preserves named parts, and keeps the same bounds and bed placement. This is a geometry edit and can be undone from History.", 12, MUTED);
+        note.setPadding(28, 14, 28, 0);
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL); content.addView(axes); content.addView(note);
+        new AlertDialog.Builder(this).setTitle("Mirror current model").setView(content)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Mirror", (dialog, which) -> {
+                    try {
+                        boolean xAxis = Boolean.TRUE.equals(axes.findViewById(axes.getCheckedRadioButtonId()).getTag());
+                        String axis = xAxis ? "X" : "Y";
+                        MeshModel mirrored = ModelWorkbench.mirror(model.displayName + " Â· mirror " + axis, model, xAxis);
+                        installGeneratedModel(mirrored, model.displayName + " Â· mirror " + axis);
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Mirror could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).show();
+    }
+
+    private void showModelArray() {
+        if (model == null) {
+            Toast.makeText(this, "Import or create a model before duplicating it", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
+        EditText copies = field("2", "Copies (2â€“32)");
+        fields.addView(copies);
+        TextView note = label("Creates repeated copies with a deterministic 5 mm clearance shelf pack. The result remains an editable named-part assembly and must fit the " + profileBuildVolumeLabel() + " " + profilePrinterLabel() + " envelope.", 12, MUTED);
+        note.setPadding(0, 14, 0, 0); fields.addView(note);
+        new AlertDialog.Builder(this).setTitle("Duplicate current model").setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Create array", (dialog, which) -> {
+                    try {
+                        int count = Math.round(clamp(Float.parseFloat(copies.getText().toString()), 2f, 32f));
+                        MeshModel generated = ModelWorkbench.createArray(model.displayName + " Â· array", model, count,
+                                activeBedX(), activeBedY(), activeBedZ());
+                        installGeneratedModel(generated, model.displayName + " Â· " + count + " copies");
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Array could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).show();
+    }
+
+    /** Configure a native exact-solid operation using the current model as the first operand. */
+    private void showBooleanOperation() {
+        if (!BuildConfig.NATIVE_ENGINE_ENABLED) {
+            explainUnsupported("Exact solid modeling");
+            return;
+        }
+        if (model == null) {
+            Toast.makeText(this, "Import or create a model before boolean editing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
+
+        TextView operationLabel = label("OPERATION", 10, GOLD);
+        operationLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        fields.addView(operationLabel);
+        RadioGroup operations = new RadioGroup(this);
+        String[] operationNames = {"Union  Â·  add primitive", "Subtract  Â·  cut primitive", "Intersect  Â·  keep overlap"};
+        for (int index = 0; index < operationNames.length; index++) {
+            RadioButton option = new RadioButton(this);
+            option.setId(View.generateViewId());
+            option.setText(operationNames[index]); option.setTextColor(TEXT); option.setTag(index);
+            operations.addView(option);
+        }
+        operations.check(operations.getChildAt(NativeGeometry.CUT).getId());
+        fields.addView(operations);
+
+        TextView primitiveLabel = label("TOOL PRIMITIVE", 10, GOLD);
+        primitiveLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        primitiveLabel.setPadding(0, 12, 0, 0); fields.addView(primitiveLabel);
+        RadioGroup primitives = new RadioGroup(this);
+        ModelWorkbench.Primitive[] available = ModelWorkbench.Primitive.values();
+        for (int index = 0; index < available.length; index++) {
+            RadioButton option = new RadioButton(this);
+            option.setId(View.generateViewId());
+            option.setText(available[index].label); option.setTextColor(TEXT); option.setTag(index);
+            primitives.addView(option);
+        }
+        primitives.check(primitives.getChildAt(0).getId());
+        fields.addView(primitives);
+
+        EditText width = field("30", "Width / outer diameter (mm)");
+        EditText depth = field("30", "Depth / outer diameter (mm)");
+        EditText height = field("20", "Height (mm)");
+        fields.addView(width); fields.addView(depth); fields.addView(height);
+        TextView note = label("Uses the bundled OCCT solid kernel. Both inputs must be one watertight solid; the result is revalidated, cached and returned to the normal 3D/slicing path. Native runtime required.", 12, MUTED);
+        note.setPadding(0, 14, 0, 0); fields.addView(note);
+        new AlertDialog.Builder(this).setTitle("Exact solid edit").setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Apply", (dialog, which) -> {
+                    try {
+                        int operation = (Integer) operations.findViewById(operations.getCheckedRadioButtonId()).getTag();
+                        int primitiveIndex = (Integer) primitives.findViewById(primitives.getCheckedRadioButtonId()).getTag();
+                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, activeBedX());
+                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, activeBedY());
+                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
+                        startNativeBoolean(operation, available[primitiveIndex], w, d, h);
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Boolean edit could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).show();
+    }
+
+    private void startNativeBoolean(int operation, ModelWorkbench.Primitive primitive,
+                                    float width, float depth, float height) {
+        if (model == null || primitive == null) return;
+        final MeshModel source = model;
+        final String sourceName = model.displayName;
+        prepareModelMutation("Boolean  Â·  " + NativeGeometry.label(operation));
+        final long id = modelingIds.incrementAndGet();
+        activeModelingId = id; modeling = true;
+        status.setText("Model  Â·  " + NativeGeometry.label(operation).toLowerCase(Locale.US) + "â€¦");
+        refreshActions();
+        activeModeling = importExecutor.submit(() -> {
+            try {
+                if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException("Modeling cancelled");
+                ModelStore.Materialized first = ModelStore.materializeGenerated(getFilesDir(),
+                        ModelWorkbench.toBinaryStl(source, 200_000));
+                MeshModel toolMesh = ModelWorkbench.create(primitive, "Boolean tool", width, depth, height);
+                ModelStore.Materialized second = ModelStore.materializeGenerated(getFilesDir(),
+                        ModelWorkbench.toBinaryStl(toolMesh));
+                ModelStore.Materialized resultFile = NativeGeometry.apply(getFilesDir(), first.file, second.file, operation);
+                MeshModel result;
+                try (InputStream input = new java.io.FileInputStream(resultFile.file)) {
+                    result = MeshModel.read(ModelStore.parserName("Boolean result", resultFile.extension), input);
+                }
+                final MeshModel resultModel = result;
+                final String resultName = sourceName + "  Â·  " + NativeGeometry.label(operation).toLowerCase(Locale.US);
+                mainHandler.post(() -> {
+                    if (id != activeModelingId || isFinishing()) return;
+                    modeling = false; activeModeling = null;
+                    try {
+                        ArrayList<Uri> uris = new ArrayList<>(); uris.add(resultFile.uri);
+                        ArrayList<String> names = new ArrayList<>(); names.add(resultName);
+                        requireActiveBuildVolume(resultModel);
+                        applyLoadedModel(resultModel, resultModel, resultName, uris, names,
+                                1f, 0f, 0f, 0f, false, false, HISTORY_MUTATION);
+                        finishModelMutation("Boolean  Â·  " + NativeGeometry.label(operation));
+                        status.setText("Prepare  Â·  " + resultName);
+                    } catch (Exception error) {
+                        status.setText("Prepare  Â·  " + sourceName);
+                        Toast.makeText(this, "Boolean result could not be opened: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                        refreshActions();
+                    }
+                });
+            } catch (java.util.concurrent.CancellationException ignored) {
+                // Cancellation is expected; stale completion is suppressed by the operation id.
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (id != activeModelingId || isFinishing()) return;
+                    modeling = false; activeModeling = null;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    refreshActions();
+                    Toast.makeText(this, "Boolean edit failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private synchronized void cancelNativeBoolean() {
+        activeModelingId = modelingIds.incrementAndGet();
+        if (activeModeling != null) { activeModeling.cancel(true); activeModeling = null; }
+        if (!modeling) return;
+        modeling = false;
+        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+        refreshActions();
+    }
+
+    private void showSketchExtrusion() {
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
+        EditText sketch = textField("-20,-15\n20,-15\n20,15\n-20,15", "One x,y point per line");
+        sketch.setMinLines(4); sketch.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        EditText height = field("25", "Extrusion height (mm)");
+        CheckBox addToAssembly = new CheckBox(this);
+        addToAssembly.setText("Add to current assembly"); addToAssembly.setTextColor(TEXT);
+        addToAssembly.setChecked(model != null); addToAssembly.setEnabled(model != null);
+        fields.addView(sketch); fields.addView(height); fields.addView(addToAssembly);
+        TextView note = label("Convex, consistently wound sketches only Â· 3â€“16 points Â· millimetres. The result is watertight and uses the same repair, cache, project and slicing gates as imported geometry.", 12, MUTED);
+        note.setPadding(0, 14, 0, 0); fields.addView(note);
+        new AlertDialog.Builder(this).setTitle("Extrude sketch").setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    try {
+                        float[][] points = parseSketchPoints(sketch.getText().toString());
+                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
+                        MeshModel generated = ModelWorkbench.createExtrudedPolygon("Sketch extrusion", points, h);
+                        MeshModel result = generated; String name = "Sketch extrusion  Â·  " + points.length + " points";
+                        if (addToAssembly.isChecked() && model != null) {
+                            ArrayList<MeshModel> sources = new ArrayList<>(); sources.add(model); sources.add(generated);
+                            result = MeshModel.combine("Assembly", sources, null, activeBedX()); name = "Assembly  Â·  " + model.displayName;
+                        }
+                        requireActiveBuildVolume(result);
+                        installGeneratedModel(result, name);
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Sketch could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).show();
+    }
+
+    private static float[][] parseSketchPoints(String text) throws IOException {
+        if (text == null) throw new IOException("Sketch is empty");
+        String[] rows = text.trim().split("(?:\\r?\\n|;)+");
+        ArrayList<float[]> points = new ArrayList<>();
+        for (String row : rows) {
+            String[] pair = row.trim().split("[,\\s]+", 3);
+            if (pair.length != 2) throw new IOException("Each sketch row must be x,y");
+            try { points.add(new float[]{Float.parseFloat(pair[0]), Float.parseFloat(pair[1])}); }
+            catch (NumberFormatException error) { throw new IOException("Sketch coordinates must be numbers", error); }
+        }
+        return points.toArray(new float[0][]);
+    }
+
+    private void showPrimitiveDimensions(ModelWorkbench.Primitive primitive) {
+        if (primitive == null) return;
+        float defaultWidth = primitive == ModelWorkbench.Primitive.CYLINDER || primitive == ModelWorkbench.Primitive.SPHERE ? 30f : 40f;
+        float defaultDepth = primitive == ModelWorkbench.Primitive.SPHERE ? 30f : 40f;
+        float defaultHeight = primitive == ModelWorkbench.Primitive.SPHERE ? 30f : 25f;
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        EditText width = field(String.format(Locale.US, "%.1f", defaultWidth), "Width / outer diameter (mm)");
+        EditText depth = field(String.format(Locale.US, "%.1f", defaultDepth), "Depth / outer diameter (mm)");
+        EditText height = field(String.format(Locale.US, "%.1f", defaultHeight), "Height (mm)");
+        fields.addView(width); fields.addView(depth); fields.addView(height);
+        EditText bevel = null;
+        EditText wall = null;
+        EditText bottom = null;
+        if (primitive == ModelWorkbench.Primitive.CHAMFERED_BOX) {
+            bevel = field("4.8", "Corner chamfer (mm; max 24% of smaller side)");
+            fields.addView(bevel);
+        } else if (primitive == ModelWorkbench.Primitive.HOLLOW_BOX) {
+            wall = field("2.0", "Wall thickness (mm; min 0.5)");
+            bottom = field("2.0", "Floor thickness (mm; min 0.5)");
+            fields.addView(wall); fields.addView(bottom);
+        }
+        final EditText bevelField = bevel;
+        final EditText wallField = wall;
+        final EditText bottomField = bottom;
+        CheckBox addToAssembly = new CheckBox(this);
+        addToAssembly.setText("Add to current assembly");
+        addToAssembly.setTextColor(TEXT);
+        addToAssembly.setChecked(model != null);
+        addToAssembly.setEnabled(model != null);
+        fields.addView(addToAssembly);
+        TextView note = label(primitive == ModelWorkbench.Primitive.TUBE
+                        ? "Tube uses a 55% inner-radius opening. Boolean cuts, fillets and freeform sculpting remain future workbench gates."
+                        : primitive == ModelWorkbench.Primitive.CHAMFERED_BOX
+                        ? "A deterministic eight-sided enclosure profile with a bounded, printable corner chamfer. Use native Boolean editing for openings and cut-outs."
+                        : primitive == ModelWorkbench.Primitive.HOLLOW_BOX
+                        ? "A watertight open-top enclosure with a printable floor, interior cavity and explicit wall thickness."
+                        : "All dimensions are millimetres. The result is validated, cached as STL, and can be sliced like an imported model.",
+                12, MUTED);
+        note.setPadding(0, 14, 0, 0); fields.addView(note);
+        new AlertDialog.Builder(this)
+                .setTitle("Create " + primitive.label.toLowerCase(Locale.US))
+                .setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    try {
+                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, activeBedX());
+                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, activeBedY());
+                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
+                        MeshModel generated;
+                        if (primitive == ModelWorkbench.Primitive.CHAMFERED_BOX) {
+                            float maxBevel = Math.min(w, d) * 0.24f;
+                            float b = clamp(Float.parseFloat(bevelField.getText().toString()), 0.5f, maxBevel);
+                            generated = ModelWorkbench.createChamferedBox(primitive.label, w, d, h, b);
+                        } else if (primitive == ModelWorkbench.Primitive.HOLLOW_BOX) {
+                            float wallThickness = Float.parseFloat(wallField.getText().toString());
+                            float floorThickness = Float.parseFloat(bottomField.getText().toString());
+                            generated = ModelWorkbench.createHollowBox(primitive.label, w, d, h,
+                                    wallThickness, floorThickness);
+                        } else {
+                            generated = ModelWorkbench.create(primitive, primitive.label, w, d, h);
+                        }
+                        MeshModel result = generated;
+                        String name = primitive.label + "  Â·  " + String.format(Locale.US, "%.0f Ã— %.0f Ã— %.0f mm", w, d, h);
+                        if (addToAssembly.isChecked() && model != null) {
+                            ArrayList<MeshModel> sources = new ArrayList<>();
+                            sources.add(model); sources.add(generated);
+                            result = MeshModel.combine("Assembly", sources, null, activeBedX());
+                            name = "Assembly  Â·  " + model.displayName;
+                        }
+                        requireActiveBuildVolume(result);
+                        installGeneratedModel(result, name);
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Primitive could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                })
+                .show();
+    }
+
+    private void installGeneratedModel(MeshModel generated, String name) throws Exception {
+        boolean mutation = model != null;
+        if (mutation) prepareModelMutation("Create  Â·  " + name);
+        byte[] stl = ModelWorkbench.toBinaryStl(generated);
+        ModelStore.Materialized materialized = ModelStore.materializeGenerated(getFilesDir(), stl);
+        try (InputStream input = getContentResolver().openInputStream(materialized.uri)) {
+            if (input == null) throw new IOException("Generated model cache could not be opened");
+            MeshModel parsed = MeshModel.read(ModelStore.parserName(name, materialized.extension), input);
+            ArrayList<Uri> uris = new ArrayList<>(); uris.add(materialized.uri);
+            ArrayList<String> names = new ArrayList<>(); names.add(name);
+            applyLoadedModel(parsed, parsed, name, uris, names, 1f, 0f, 0f, 0f, false, false,
+                    mutation ? HISTORY_MUTATION : HISTORY_RESET);
+            if (mutation) finishModelMutation("Create  Â·  " + name);
+        }
+    }
+
+    /** Let the user preview a bounded finish and environment locally without misrepresenting it as generative AI. */
+    private void showOnDevicePreview(byte[] thumbnail) {
+        StudioPreviewRenderer.Finish[] finishes = StudioPreviewRenderer.Finish.values();
+        String[] labels = new String[finishes.length];
+        for (int index = 0; index < finishes.length; index++) labels[index] = finishes[index].label;
+        new AlertDialog.Builder(this)
+                .setTitle("Local finish preview")
+                .setMessage("Choose a presentation finish. This stays on the phone and does not change printable geometry or material settings.")
+                .setItems(labels, (dialog, which) -> showLocalEnvironmentPreview(thumbnail, finishes[which]))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showLocalEnvironmentPreview(byte[] thumbnail, StudioPreviewRenderer.Finish finish) {
+        StudioPreviewRenderer.Environment[] environments = StudioPreviewRenderer.Environment.values();
+        String[] labels = new String[environments.length];
+        for (int index = 0; index < environments.length; index++) labels[index] = environments[index].label;
+        new AlertDialog.Builder(this)
+                .setTitle("Local environment")
+                .setMessage("Choose the scene framing for the concept preview.")
+                .setItems(labels, (dialog, which) -> showStyledLocalPreview(thumbnail, finish, environments[which]))
+                .setNegativeButton("Back", null)
+                .show();
+    }
+
+    private void showStyledLocalPreview(byte[] thumbnail, StudioPreviewRenderer.Finish finish,
+                                        StudioPreviewRenderer.Environment environment) {
+        try {
+            VisualizationProvider.Result result = new OnDeviceVisualizationProvider(getFilesDir()).generate(
+                    new VisualizationProvider.Request(thumbnail, finish.label + " in a " + environment.label + " scene"));
+            Bitmap bitmap = BitmapFactory.decodeByteArray(result.imagePng, 0, result.imagePng.length);
+            if (bitmap == null) throw new IOException("On-device preview returned an unsupported image");
+            ImageView image = new ImageView(this);
+            image.setAdjustViewBounds(true); image.setPadding(12, 12, 12, 12); image.setImageBitmap(bitmap);
+            pendingVisualizationPng = result.imagePng.clone();
+            new AlertDialog.Builder(this).setTitle("On-device studio preview")
+                    .setMessage(result.providerLabel + " Â· " + finish.label + " Â· " + environment.label
+                            + "\nGeometry, recipe and printer commands remain unchanged. This is not a generative AI result.")
+                    .setView(image).setNegativeButton("Done", null)
+                    .setPositiveButton("Save PNG", (dialog, which) -> openVisualizationExport()).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "The local preview could not be rendered: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showVisualization() {
+        if (model == null || viewport == null) {
+            Toast.makeText(this, "Create or import a model before visualizing it", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring || visualizing || modeling) {
+            Toast.makeText(this, "Finish the current operation before visualizing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final byte[] thumbnail = viewport.thumbnailPng(768);
+        if (thumbnail == null) {
+            Toast.makeText(this, "The 3D workspace is not ready for a reference image", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        VisualizationCredentialStore.Credentials current = null;
+        try { current = visualizationCredentialStore.load(); } catch (Exception ignored) { }
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
+        EditText endpoint = textField(current == null ? "" : current.endpoint, "HTTPS image-edit endpoint");
+        EditText modelName = textField(current == null ? "" : current.model, "Cloud model name");
+        EditText apiKey = textField("", "BYOK API key (blank keeps saved key)");
+        apiKey.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        String dimensions = String.format(Locale.US, "%.1f Ã— %.1f Ã— %.1f mm", model.maxX - model.minX, model.maxY - model.minY, model.maxZ - model.minZ);
+        EditText prompt = textField("Show this 3D-printed model painted in a premium workshop environment; preserve its shape and proportions.", "Visualization prompt");
+        fields.addView(endpoint); fields.addView(modelName); fields.addView(apiKey); fields.addView(prompt);
+        TextView note = label("On-device visualization: " + new OnDeviceVisualizationProvider(getFilesDir()).availabilityLabel()
+                + "\nBYOK sends only this bounded rendered thumbnail and your prompt to your HTTPS endpoint; it does not upload the STL, project, printer credentials or inventory.", 12, MUTED);
+        note.setPadding(0, 14, 0, 0); fields.addView(note);
+        new AlertDialog.Builder(this).setTitle("Visualize model")
+                .setMessage("Model size: " + dimensions + "\nUse presets such as painted, assembled, workshop, installed, or product-photo.")
+                .setView(fields)
+                .setNeutralButton("On-device preview", (dialog, which) -> showOnDevicePreview(thumbnail))
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Visualize with BYOK", (dialog, which) -> {
+                    try {
+                        VisualizationCredentialStore.Credentials saved = visualizationCredentialStore.load();
+                        String key = apiKey.getText().toString().trim();
+                        if (key.length() == 0 && saved != null) key = saved.apiKey;
+                        VisualizationCredentialStore.Credentials credentials = new VisualizationCredentialStore.Credentials(
+                                endpoint.getText().toString(), modelName.getText().toString(), key);
+                        visualizationCredentialStore.save(credentials);
+                        startByokVisualization(credentials, new VisualizationProvider.Request(thumbnail, prompt.getText().toString()));
+                    } catch (Exception error) {
+                        Toast.makeText(this, "BYOK visualization could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).show();
+    }
+
+    private void startByokVisualization(VisualizationCredentialStore.Credentials credentials,
+                                        VisualizationProvider.Request request) {
+        final long id = visualizationIds.incrementAndGet();
+        activeVisualizationId = id; visualizing = true;
+        status.setText("Visualize  Â·  sending bounded referenceâ€¦"); refreshActions();
+        activeVisualization = importExecutor.submit(() -> {
+            try {
+                VisualizationProvider.Result result = new ByokVisualizationProvider(credentials).generate(request);
+                mainHandler.post(() -> {
+                    if (id != activeVisualizationId || isFinishing()) return;
+                    visualizing = false; activeVisualization = null;
+                    status.setText("Visualize  Â·  result ready"); refreshActions(); showVisualizationResult(result);
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (id != activeVisualizationId || isFinishing()) return;
+                    visualizing = false; activeVisualization = null;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    refreshActions(); Toast.makeText(this, "Visualization failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void showVisualizationResult(VisualizationProvider.Result result) {
+        if (result == null) return;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(result.imagePng, 0, result.imagePng.length);
+        if (bitmap == null) {
+            Toast.makeText(this, "Visualization returned an unsupported image", Toast.LENGTH_LONG).show();
+            return;
+        }
+        ImageView image = new ImageView(this);
+        image.setAdjustViewBounds(true); image.setPadding(12, 12, 12, 12); image.setImageBitmap(bitmap);
+        ScrollView scroll = new ScrollView(this); scroll.addView(image);
+        pendingVisualizationPng = result.imagePng.clone();
+        new AlertDialog.Builder(this).setTitle("Visualization ready")
+                .setMessage(result.providerLabel + " Â· reference geometry remains unchanged")
+                .setView(scroll).setNegativeButton("Done", null)
+                .setPositiveButton("Save PNG", (dialog, which) -> openVisualizationExport()).show();
+    }
+
+    private void openVisualizationExport() {
+        if (pendingVisualizationPng == null || !VisualizationProvider.isBoundedPng(pendingVisualizationPng)) {
+            Toast.makeText(this, "Visualization image is no longer available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/png");
+        intent.putExtra(Intent.EXTRA_TITLE, "alloy-visualization.png");
+        startActivityForResult(intent, REQUEST_VISUALIZATION_EXPORT);
+    }
+
+    private void writeVisualizationExport(Uri uri) {
+        byte[] png = pendingVisualizationPng;
+        pendingVisualizationPng = null;
+        if (png == null || !VisualizationProvider.isBoundedPng(png)) {
+            Toast.makeText(this, "Visualization image is no longer available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
+            if (out == null) throw new IOException("Output destination could not be opened");
+            out.write(png);
+            out.flush();
+            Toast.makeText(this, "Saved visualization PNG", Toast.LENGTH_LONG).show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Visualization export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        } finally {
+            java.util.Arrays.fill(png, (byte) 0);
+        }
+    }
+
+    private synchronized void cancelVisualization() {
+        activeVisualizationId = visualizationIds.incrementAndGet();
+        if (activeVisualization != null) { activeVisualization.cancel(true); activeVisualization = null; }
+        if (!visualizing) return;
+        visualizing = false;
+        if (status != null) status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+        if (actions != null) refreshActions();
+    }
+
+    private void loadAssetModel(String assetPath, String name) {
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            ModelStore.Materialized materialized = ModelStore.materializeAsset(getFilesDir(), getAssets(), assetPath);
+            ArrayList<Uri> uris = new ArrayList<>();
+            uris.add(materialized.uri);
+            ArrayList<String> names = new ArrayList<>();
+            names.add(name);
+            // Route bundled sources through the same worker-backed import
+            // path as phone-selected files. This is important for the private
+            // STEP assembly: OCCT tessellation must never block the UI thread.
+            loadUris(uris, names, false, assetPath);
+        } catch (Exception e) {
+            Toast.makeText(this, "Example failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Optional owner-only startup design, absent from ordinary/public APKs. */
+    private ModelCatalog.Entry privateOwnerStartupModel() {
+        try {
+            ModelCatalog.Entry chassis = null;
+            for (ModelCatalog.Entry entry : ModelCatalog.load(getAssets())) {
+                // The positioned STEP assembly is the most useful first-run
+                // study because it preserves the owner's editable multi-part
+                // layout. Keep the single STL as a fallback for builds that
+                // deliberately omit the native OCCT importer.
+                if (BuildConfig.NATIVE_ENGINE_ENABLED
+                        && entry.assetPath.endsWith("redmagic-keyboard-case-assembly-v04-angled.step"))
+                    return entry;
+                if (entry.assetPath.endsWith("redmagic-keyboard-main-chassis-v04.stl")) chassis = entry;
+            }
+            return chassis;
+        } catch (Exception ignored) {
+            // A missing private overlay must not prevent the normal showcase.
+        }
+        return null;
+    }
+
+    /** Asset presence is the stable owner-review switch during first launch. */
+    private boolean hasBundledA1Reference() {
+        try (InputStream input = getAssets().open("visuals/a1-mini-reference.mesh")) {
+            return input.read() >= 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private void loadShowcaseModel() {
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            MeshModel showcase = ModelWorkbench.createShowcaseBoxAssembly();
+            byte[] stl = ModelWorkbench.toBinaryStl(showcase);
+            ModelStore.Materialized materialized = ModelStore.materializeGenerated(getFilesDir(), stl);
+            ArrayList<Uri> uris = new ArrayList<>(); uris.add(materialized.uri);
+            ArrayList<String> names = new ArrayList<>(); names.add("Alloy showcase box");
+            // Keep the authored part names for the first-run study view. The
+            // generated STL is still materialized for offline persistence and
+            // export; reopening a saved project remains parser-backed.
+            applyLoadedModel(showcase, showcase, "Alloy showcase box", uris, names,
+                    1f, 0f, 0f, 0f, false, false);
+        } catch (Exception error) {
+            Toast.makeText(this, "Showcase failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Show a local recovery model without overwriting the user's saved plate. */
+    private void loadShowcaseWithoutReplacingSavedProject() {
+        ProjectStore.SavedProject savedProject = projectStore.savedProject();
+        PlateStore.Plate savedPlate = plateStore.activePlate();
+        int savedActivePlate = plateStore.activeIndex();
+        ArrayList<ModelHistoryStore.Timeline> savedHistory = modelHistoryStore == null
+                ? new ArrayList<>() : modelHistoryStore.exportTimelines();
+        loadShowcaseModel();
+        try {
+            if (savedProject == null) projectStore.clearModel();
+            else projectStore.saveModels(savedProject.uris, savedProject.names);
+            projectStore.saveTransform(savedPlate.scale, savedPlate.rotationDegrees,
+                    savedPlate.tiltXDegrees, savedPlate.tiltYDegrees);
+            projectStore.saveSelectedPart(savedPlate.selectedPart);
+            projectStore.savePartTransforms(savedPlate.partTransforms);
+            projectStore.saveGeometryRepair(savedPlate.geometryRepairEnabled);
+            plateStore.save(savedPlate);
+            plateStore.setActiveIndex(savedActivePlate);
+            if (modelHistoryStore != null) modelHistoryStore.importTimelines(savedHistory);
+        } catch (Exception ignored) {
+            // The local showcase remains a valid recovery surface even if an
+            // older checkpoint is too damaged to restore every sidecar.
+        }
+    }
+
+    private void applyLoadedModel(MeshModel loaded, MeshModel pristine, String name, ArrayList<Uri> uris,
+                                  ArrayList<String> names, float scale, float rotationDegrees,
+                                  float tiltXDegrees, float tiltYDegrees, boolean restoreTransform,
+                                  boolean repairEnabled) throws Exception {
+        applyLoadedModel(loaded, pristine, name, uris, names, scale, rotationDegrees,
+                tiltXDegrees, tiltYDegrees, restoreTransform, repairEnabled,
+                restoreTransform ? HISTORY_RESTORE : HISTORY_RESET);
+    }
+
+    private void applyLoadedModel(MeshModel loaded, MeshModel pristine, String name, ArrayList<Uri> uris,
+                                  ArrayList<String> names, float scale, float rotationDegrees,
+                                  float tiltXDegrees, float tiltYDegrees, boolean restoreTransform,
+                                  boolean repairEnabled, int historyMode) throws Exception {
+        trustedPilotFixtureAssetPath = null;
+        // A foreground slice owns an immutable request snapshot. Loading the
+        // same project again during Activity recreation must not cancel it;
+        // a genuinely new model is blocked by the slicing UI until the job is
+        // explicitly cancelled or completed.
+        if (activeSliceJobId == null) {
+            sliceJobs.cancel();
+            slicing = false;
+        }
+        sourceModel = loaded;
+        unmodifiedSourceModel = pristine == null ? loaded : pristine;
+        geometryRepairEnabled = repairEnabled;
+        modelScale = finite(scale) ? clamp(scale, MeshModel.MIN_MODEL_SCALE, MeshModel.MAX_MODEL_SCALE) : 1f;
+        modelRotationDegrees = finite(rotationDegrees) ? clamp(rotationDegrees, -360f, 360f) : 0f;
+        modelTiltXDegrees = finite(tiltXDegrees) ? clamp(tiltXDegrees, -360f, 360f) : 0f;
+        modelTiltYDegrees = finite(tiltYDegrees) ? clamp(tiltYDegrees, -360f, 360f) : 0f;
+        partTransforms.clear();
+        modelNames.clear();
+        if (names != null) modelNames.addAll(names);
+        if (restoreTransform) partTransforms.addAll(projectStore.savedPartTransforms(loaded.parts.length));
+        else projectStore.savePartTransforms(partTransforms);
+        model = rebuildModel(name);
+        modelUris.clear();
+        if (uris != null) modelUris.addAll(uris);
+        slice = null;
+        stagedArtifact = null;
+        if (!restoreTransform) lastBatch = null;
+        viewport.setModel(model);
+        viewport.setSelectedPart(restoreTransform ? projectStore.savedSelectedPart() : -1);
+        if (!modelUris.isEmpty()) {
+            projectStore.saveModels(modelUris, names);
+            projectStore.saveTransform(modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
+            if (!restoreTransform) projectStore.saveSelectedPart(-1);
+        }
+        plateImportInFlight = false;
+        saveCurrentPlate();
+        pruneModelCache();
+        if (modelHistoryStore != null) {
+            if (historyMode == HISTORY_RESET) {
+                modelHistoryStore.resetDocument(activePlateIndex, currentPlateSnapshot(), "Opened  Â·  " + name);
+            } else if (historyMode == HISTORY_RESTORE) {
+                modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "Recovered plate");
+            }
+            pruneModelCache();
+        }
+        boolean restoredBatch = restoreBatchResultForActivePlate(restoreTransform);
+        boolean restoredForeground = !restoredBatch && restoreForegroundSliceIfMatching();
+        modelMeta.setText(viewportDisplayName(name) + "\n" + profileShortLabel());
+        status.setText(restoredBatch || restoredForeground ? "Inspect  Â·  " + slice.layers.size() + " layers" : "Prepare  Â·  " + name);
+        details.setText(restoredBatch || restoredForeground
+                ? String.format(Locale.US, "%.0f mm filament  Â·  %s  Â·  %d warning(s)", slice.filamentMm,
+                slice.printTimeSeconds < 0f ? "time pending" : formatDuration(slice.printTimeSeconds), slice.warnings)
+                : modelDetails(model));
+        refreshActions();
+        refreshBatchSliceUi();
+    }
+
+    private boolean restoreBatchResultForActivePlate(boolean restoreTransform) {
+        if (!restoreTransform || lastBatch == null) return false;
+        for (BatchSliceJobController.PlateResult plate : lastBatch.plates) {
+            if (plate.plate.index != activePlateIndex) continue;
+            model = plate.model;
+            slice = plate.slice;
+            stagedArtifact = plate.artifact;
+            viewport.setModel(model);
+            viewport.setResult(slice);
+            return true;
+        }
+        return false;
+    }
+
+    private MeshModel rebuildModel(String name) throws Exception {
+        if (sourceModel == null) throw new IllegalStateException("No source model is selected");
+        MeshModel rebuilt = sourceModel.transformed(name, modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
+        int count = Math.min(partTransforms.size(), rebuilt.parts.length);
+        for (int index = 0; index < count; index++) {
+            MeshModel.PartTransform transform = partTransforms.get(index);
+            if (transform == null) continue;
+            if (transform.scale == 1f && transform.rotationDegrees == 0f
+                    && transform.tiltXDegrees == 0f && transform.tiltYDegrees == 0f
+                    && transform.offsetX == 0f && transform.offsetY == 0f) continue;
+            rebuilt = rebuilt.transformedPart(name, index, transform.scale, transform.rotationDegrees,
+                    transform.tiltXDegrees, transform.tiltYDegrees, transform.offsetX, transform.offsetY);
+        }
+        return rebuilt.leveledOnBed(name);
+    }
+
+    /**
+     * Pack logical parts into a bounded phone-side layout. The planner may
+     * rotate each part by 90 degrees in XY, but never silently changes its
+     * Z-up/tilt orientation because that can alter supports and first-layer
+     * behavior. Existing scale, tilt and global transforms remain intact.
+     */
+    private void autoArrangeParts() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (sourceModel == null || model == null || model.parts == null || model.parts.length < 2) {
+            Toast.makeText(this, "Arrange is available for assemblies with multiple parts", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        prepareModelMutation("Arrange parts");
+        try {
+            final float margin = Math.max(2f, config.nozzle * 2f);
+            MeshModel base = sourceModel.transformed(model.displayName, modelScale, modelRotationDegrees,
+                    modelTiltXDegrees, modelTiltYDegrees);
+            ArrayList<PlateArrangementPlanner.Part> specs = new ArrayList<>();
+            for (int index = 0; index < base.parts.length; index++) {
+                MeshModel.PartTransform current = partTransformAt(index);
+                MeshModel preview = base.transformedPart(model.displayName, index, current.scale,
+                        current.rotationDegrees, current.tiltXDegrees, current.tiltYDegrees, 0f, 0f);
+                MeshModel.PartBounds bounds = preview.partBounds(index);
+                specs.add(new PlateArrangementPlanner.Part(index, bounds.width(), bounds.depth()));
+            }
+            ArrayList<PlateArrangementPlanner.Placement> placements = PlateArrangementPlanner.plan(
+                    specs, config.bedX - margin * 2f, config.bedY - margin * 2f, margin);
+            MeshModel arranged = base;
+            ArrayList<MeshModel.PartTransform> next = new ArrayList<>();
+            for (int index = 0; index < arranged.parts.length; index++)
+                next.add(MeshModel.PartTransform.identity());
+            for (PlateArrangementPlanner.Placement placement : placements) {
+                int index = placement.sourceIndex;
+                MeshModel.PartTransform current = partTransformAt(index);
+                float rotation = current.rotationDegrees + placement.rotationDegrees;
+                MeshModel oriented = arranged.transformedPart(model.displayName, index, current.scale,
+                        rotation, current.tiltXDegrees, current.tiltYDegrees, 0f, 0f);
+                MeshModel.PartBounds bounds = oriented.partBounds(index);
+                float targetCenterX = margin + placement.x + placement.width / 2f;
+                float targetCenterY = margin + placement.y + placement.depth / 2f;
+                float currentCenterX = (bounds.minX + bounds.maxX) / 2f;
+                float currentCenterY = (bounds.minY + bounds.maxY) / 2f;
+                float offsetX = targetCenterX - currentCenterX;
+                float offsetY = targetCenterY - currentCenterY;
+                arranged = arranged.transformedPart(model.displayName, index, current.scale,
+                        rotation, current.tiltXDegrees, current.tiltYDegrees, offsetX, offsetY);
+                next.set(index, new MeshModel.PartTransform(current.scale, rotation,
+                        current.tiltXDegrees, current.tiltYDegrees, offsetX, offsetY));
+            }
+            int selectedPart = viewport.getSelectedPart();
+            partTransforms.clear();
+            partTransforms.addAll(next);
+            model = arranged.leveledOnBed(model.displayName);
+            projectStore.savePartTransforms(partTransforms);
+            saveCurrentPlate();
+            viewport.setModel(model);
+            viewport.setSelectedPart(selectedPart);
+            slice = null;
+            stagedArtifact = null;
+            lastBatch = null;
+            // Packing only chooses a reversible 0Â°/90Â° XY rotation. It must
+            // not be presented as an orientation recommendation: tilt and
+            // first-contact decisions can change supports, strength and
+            // surface quality and remain visible user choices.
+            status.setText("Prepare  Â·  parts packed on plate");
+            details.setText(modelDetails(model));
+            finishModelMutation("Auto-pack parts");
+            refreshActions();
+        } catch (Exception error) {
+            Toast.makeText(this, "Parts could not be arranged: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showPrepare() {
+        if (printerBusy || batchSlicing || batchTransferring) {
+            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (model == null || sourceModel == null) {
+            Toast.makeText(this, "Import a model before preparing it", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        EditText scale = field(String.format(Locale.US, "%.0f", modelScale * 100f), "Scale (%)");
+        EditText rotation = field(String.format(Locale.US, "%.0f", modelRotationDegrees), "Rotate around Z (degrees)", true);
+        EditText tiltX = field(String.format(Locale.US, "%.0f", modelTiltXDegrees), "Tilt around X (degrees)", true);
+        EditText tiltY = field(String.format(Locale.US, "%.0f", modelTiltYDegrees), "Tilt around Y (degrees)", true);
+        fields.addView(scale);
+        fields.addView(rotation);
+        fields.addView(tiltX);
+        fields.addView(tiltY);
+        Button scaleHelper = dialogButton("Scale to known dimension", null);
+        scaleHelper.setContentDescription("Scale model to a known dimension");
+        scaleHelper.setOnClickListener(v -> showScaleToKnownDimension());
+        fields.addView(scaleHelper);
+        TextView note = label("The lowest point is placed on the bed. X/Y tilt and Z rotation apply before slicing; Alloy keeps the current model inside the selected build-volume gate.", 13, MUTED);
+        note.setPadding(0, 18, 0, 0);
+        fields.addView(note);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("Prepare model")
+                .setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Apply", (dialog, which) -> {
+                    try {
+                        float nextScale = clamp(Float.parseFloat(scale.getText().toString()) / 100f,
+                                MeshModel.MIN_MODEL_SCALE, MeshModel.MAX_MODEL_SCALE);
+                        float nextRotation = clamp(Float.parseFloat(rotation.getText().toString()), -360f, 360f);
+                        float nextTiltX = clamp(Float.parseFloat(tiltX.getText().toString()), -360f, 360f);
+                        float nextTiltY = clamp(Float.parseFloat(tiltY.getText().toString()), -360f, 360f);
+                        prepareModelMutation("Prepare model");
+                        modelScale = nextScale;
+                        modelRotationDegrees = nextRotation;
+                        modelTiltXDegrees = nextTiltX;
+                        modelTiltYDegrees = nextTiltY;
+                        model = rebuildModel(model.displayName);
+                        slice = null;
+                        stagedArtifact = null;
+                        lastBatch = null;
+                        viewport.setModel(model);
+                        if (!modelUris.isEmpty()) projectStore.saveTransform(modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
+                        saveCurrentPlate();
+                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+                        status.setText("Prepare  Â·  model updated");
+                        details.setText(modelDetails(model));
+                        finishModelMutation("Prepare model");
+                        refreshActions();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Preparation values were not valid", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        if (model.parts != null && model.parts.length > 1)
+            builder.setNeutralButton("Auto-arrange", (dialog, which) -> autoArrangeParts());
+        builder.show();
+    }
+
+    /**
+     * Unitless STL/OBJ files are common in community libraries. Let the user
+     * anchor one physical dimension without making an unsafe automatic guess;
+     * the normal build-volume preflight still decides whether the result fits.
+     */
+    private void showScaleToKnownDimension() {
+        if (model == null || sourceModel == null) return;
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation before scaling the model", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final String[] axes = {"Width (X)", "Depth (Y)", "Height (Z)"};
+        final RadioGroup axis = new RadioGroup(this);
+        axis.setOrientation(RadioGroup.VERTICAL);
+        for (String label : axes) {
+            RadioButton button = new RadioButton(this);
+            button.setText(label);
+            button.setTextColor(TEXT);
+            axis.addView(button, new RadioGroup.LayoutParams(-1, dp(44)));
+        }
+        ((RadioButton) axis.getChildAt(0)).setChecked(true);
+        EditText target = field(String.format(Locale.US, "%.1f", model.maxX - model.minX),
+                "Target dimension (mm)");
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        fields.addView(axis);
+        fields.addView(target);
+        String current = String.format(Locale.US, "Current size: %.1f Ã— %.1f Ã— %.1f mm",
+                model.maxX - model.minX, model.maxY - model.minY, model.maxZ - model.minZ);
+        TextView note = label(current + "\nUniform scale only; existing part placement offsets remain unchanged.\nAllowed scale: 10%â€“10,000%.", 12, MUTED);
+        note.setPadding(0, 12, 0, 0);
+        fields.addView(note);
+        new AlertDialog.Builder(this)
+                .setTitle("Scale to known dimension")
+                .setMessage("Use this for unitless STL/OBJ files when you know one real-world measurement.")
+                .setView(fields)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Apply", (dialog, which) -> {
+                    try {
+                        float targetMm = Float.parseFloat(target.getText().toString());
+                        if (!finite(targetMm) || targetMm <= 0f || targetMm > 10_000f)
+                            throw new IllegalArgumentException("Target dimension is invalid");
+                        int selected = axis.indexOfChild(axis.findViewById(axis.getCheckedRadioButtonId()));
+                        float currentMm = selected == 1 ? model.maxY - model.minY
+                                : selected == 2 ? model.maxZ - model.minZ : model.maxX - model.minX;
+                        if (!finite(currentMm) || currentMm <= 0f)
+                            throw new IllegalArgumentException("Current dimension is invalid");
+                        float nextScale = modelScale * targetMm / currentMm;
+                        if (!finite(nextScale) || nextScale < MeshModel.MIN_MODEL_SCALE
+                                || nextScale > MeshModel.MAX_MODEL_SCALE)
+                            throw new IllegalArgumentException("The resulting scale must be between 10% and 10,000%");
+                        prepareModelMutation("Scale to known dimension");
+                        modelScale = nextScale;
+                        model = rebuildModel(model.displayName);
+                        slice = null;
+                        stagedArtifact = null;
+                        lastBatch = null;
+                        viewport.setModel(model);
+                        if (!modelUris.isEmpty())
+                            projectStore.saveTransform(modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
+                        saveCurrentPlate();
+                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
+                        status.setText("Prepare  Â·  model scaled to known dimension");
+                        details.setText(modelDetails(model));
+                        finishModelMutation("Scale to known dimension");
+                        refreshActions();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Scale could not be applied: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                })
+                .show();
+    }
+
+    private String displayName(Uri uri) {
+        android.database.Cursor cursor = null;
+        try {
+            cursor = getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                String value = cursor.getString(0);
+                if (value != null && value.trim().length() > 0) return value;
+            }
+        } catch (Exception ignored) {
+            // Cloud/document providers are allowed to omit metadata; use the URI below.
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        String path = uri.getLastPathSegment(); return path == null ? "model.stl" : path;
+    }
+
+    private void startSlice() {
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (model == null) return;
+        PreparationValidator.Report preflight = PreparationValidator.validate(model, config, profile);
+        if (!preflight.isReady()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Cannot slice yet")
+                    .setMessage(preflight.message())
+                    .setPositiveButton("Done", null)
+                    .show();
+            return;
+        }
+        if (!preflight.warnings.isEmpty()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Review before slicing")
+                    .setMessage(preflight.message())
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Slice anyway", (dialog, which) -> requestNotificationPermissionIfNeeded(this::beginSlice))
+                    .show();
+            return;
+        }
+        requestNotificationPermissionIfNeeded(this::beginSlice);
+    }
+
+    private void beginSlice() {
+        if (model == null) return;
+        lastBatch = null;
+        if (batchSliceJobStore != null) batchSliceJobStore.clear();
+        activeBatchSliceJobId = null;
+        slice = null;
+        stagedArtifact = null;
+        if (sliceJobStore == null) return;
+        String jobId = SliceRequestStore.newJobId();
+        try {
+            String modelHash = SliceRequestStore.write(getFilesDir(), jobId, model, config, artifactDisplayName());
+            sliceJobStore.clear();
+            sliceJobStore.begin(jobId, artifactDisplayName(), modelHash);
+            activeSliceJobId = jobId;
+            slicing = true;
+            refreshActions();
+            status.setText("Slice  Â·  preparing foreground jobâ€¦");
+            showSliceProgressLoader(0, "Preparing the slice");
+            SliceJobService.start(this, jobId);
+        } catch (Exception error) {
+            activeSliceJobId = null;
+            slicing = false;
+            dismissSliceProgressLoader();
+            sliceJobStore.fail(jobId, "Could not start slice: " + error.getMessage());
+            status.setText("Prepare  Â·  slice could not start");
+            refreshActions();
+            Toast.makeText(this, "Slice could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void cancelSlice() {
+        if (!slicing && activeSliceJobId == null) return;
+        String jobId = activeSliceJobId;
+        if (jobId == null) return;
+        try {
+            SliceJobService.cancel(this, jobId);
+            status.setText("Slice  Â·  cancellingâ€¦");
+            // Preserve the head position while cancellation is acknowledged.
+            // Snapping it back to zero would falsely suggest the durable job
+            // restarted, even though SliceJobStore retains its last progress.
+            SliceJobStore.Job current = sliceJobStore == null ? null : sliceJobStore.load();
+            int visibleProgress = current == null ? 0 : current.progress;
+            showSliceProgressLoader(visibleProgress, "Cancelling slice");
+            refreshActions();
+        } catch (Exception error) {
+            Toast.makeText(this, "Slice cancellation failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void changeLayer(int delta) {
+        if (slice == null || slice.layers.isEmpty()) return;
+        int current = viewport.getSelectedLayer() < 0 ? slice.layers.size() - 1 : viewport.getSelectedLayer();
+        int next = Math.max(0, Math.min(slice.layers.size() - 1, current + delta));
+        viewport.setSelectedLayer(next);
+        Slicer.Layer layer = slice.layers.get(next);
+        status.setText(String.format(Locale.US, "Inspect  Â·  layer %d / %d  Â·  Z %.2f mm  Â·  %d segments",
+                next + 1, slice.layers.size(), layer.z, layer.segments.size()));
+    }
+
+    private void showInspection() {
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (slice == null || slice.layers == null || slice.layers.isEmpty()) {
+            Toast.makeText(this, "Slice the model before inspecting the toolpath", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int selected = viewport.getSelectedLayer() < 0 ? slice.layers.size() - 1 : viewport.getSelectedLayer();
+        Slicer.Layer layer = slice.layers.get(Math.max(0, Math.min(slice.layers.size() - 1, selected)));
+        String time = slice.printTimeSeconds < 0f ? "Not reported by engine" : formatDuration(slice.printTimeSeconds);
+        String engine = slice.engineId == null ? "Unknown" : slice.engineId;
+        if (!slice.engineVerified) engine += " Â· unverified";
+        String message = String.format(Locale.US,
+                "Selected layer\n%d / %d  Â·  Z %.2f mm  Â·  %d segments\n\nFilament estimate\n%.1f mm\n\nEstimated time\n%s\n\nTravel\n%s\n\nWarnings\n%d\n\nEngine\n%s",
+                layer.index + 1, slice.layers.size(), layer.z, layer.segments.size(), slice.filamentMm, time,
+                slice.travelMm < 0f ? "Not reported" : String.format(Locale.US, "%.1f mm", slice.travelMm), slice.warnings, engine);
+        new AlertDialog.Builder(this)
+                .setTitle("Toolpath inspection")
+                .setMessage(message)
+                .setPositiveButton("Done", null)
+                .show();
+    }
+
+    /**
+     * A preflight summary deliberately distinguishes the model toolpath from
+     * consumables a phone-side engine cannot measure. In particular, a
+     * single-material slice must never claim a purge, prime, or separately
+     * weighed support total that has not been emitted by the engine.
+     */
+    private void showPrintPlan() {
+        if (slice == null || slice.layers == null || slice.layers.isEmpty()) {
+            Toast.makeText(this, "Slice the model before opening its print plan", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
+        String orientation = String.format(Locale.US, "Z rotation %.0fÂ°  Â·  X tilt %.0fÂ°  Â·  Y tilt %.0fÂ°  Â·  scale %.0f%%",
+                modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
+        String message = String.format(Locale.US,
+                "%s\n%.0f mm  Â·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0fÂ°C (first layer %.0fÂ°C)  Â·  plate %.0fÂ°C (first layer %.0fÂ°C)\n%.2f mm layers  Â·  %.0f%% infill  Â·  %d walls\n\nORIENTATION\n%s\nUse Model â†’ Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  Â·  no live printer temperature or idle/running telemetry has been verified.",
+                estimate.filamentScope, estimate.reportedFilamentMm, estimate.approximateReportedFilamentGrams, config.filament,
+                estimate.supportMaterial, estimate.primePurgeCleaning, estimate.time,
+                config.nozzleTemperature, config.firstLayerNozzleTemperature,
+                config.bedTemperature, config.firstLayerBedTemperature,
+                config.layerHeight, config.infill * 100f, config.perimeters, orientation);
+        new AlertDialog.Builder(this)
+                .setTitle("Print plan")
+                .setMessage(message)
+                .setNegativeButton("Inspect toolpath", (dialog, which) -> showInspection())
+                .setNeutralButton("Orientation", (dialog, which) -> showModelWorkbench())
+                .setPositiveButton("Done", null)
+                .show();
+    }
+
+    private static String formatDuration(float seconds) {
+        int total = Math.max(0, Math.round(seconds));
+        int hours = total / 3600;
+        int minutes = (total % 3600) / 60;
+        int remainder = total % 60;
+        return hours > 0 ? String.format(Locale.US, "%dh %02dm", hours, minutes)
+                : String.format(Locale.US, "%dm %02ds", minutes, remainder);
+    }
+
+    private String artifactDisplayName() {
+        return (model == null ? "alloy-job" : model.displayName) + "-plate-" + (activePlateIndex + 1);
+    }
+
+    private void exportPackage() {
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("application/octet-stream");
+        intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
+    }
+
+    /** Offer a bounded package to another Android app without implying recipient compatibility. */
+    private void sharePackage() {
+        sharePackage(false);
+    }
+
+    /**
+     * Attempt Bambu Handy only when it advertises a suitable Android share
+     * target. An available activity is not treated as package/import proof.
+     */
+    private void shareToBambuHandy() {
+        sharePackage(true);
+    }
+
+    private void sharePackage(boolean preferBambuHandy) {
+        if (importing || model == null || slice == null) {
+            Toast.makeText(this, "Slice a model before sharing a package", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ArtifactValidator.Report report = ArtifactValidator.validate(model, slice, config);
+        if (!report.isValid()) {
+            Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            if (stagedArtifact == null || stagedArtifact.sourceFile == null
+                    || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
+                    || !ArtifactStore.sha256(stagedArtifact.sourceFile).equalsIgnoreCase(stagedArtifact.sha256)) {
+                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
+                        artifactDisplayName(), viewport.thumbnailPng(512));
+            }
+            Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
+            if (preferBambuHandy) {
+                Intent targeted = BambuHandyHandoff.targetedShare(uri);
+                if (BambuHandyHandoff.canHandle(getPackageManager(), targeted)) {
+                    try {
+                        startActivity(targeted);
+                        Toast.makeText(this,
+                                "Bambu Handy opened. Confirm its import result; recipient compatibility is not yet verified.",
+                                Toast.LENGTH_LONG).show();
+                    } catch (ActivityNotFoundException disappeared) {
+                        // Package resolution and launch are not atomic: Handy
+                        // may be removed or updated between those operations.
+                        Toast.makeText(this,
+                                "Bambu Handy is no longer available. Choose another recipient.",
+                                Toast.LENGTH_LONG).show();
+                        startActivity(BambuHandyHandoff.chooserShare(uri));
+                    }
+                } else {
+                    Toast.makeText(this,
+                            "Bambu Handy is unavailable for this package type. Choose a recipient manually.",
+                            Toast.LENGTH_LONG).show();
+                    startActivity(BambuHandyHandoff.chooserShare(uri));
+                }
+            } else {
+                startActivity(BambuHandyHandoff.chooserShare(uri));
+            }
+        } catch (Exception error) {
+            Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void openViewExport() {
+        if (viewport == null) {
+            Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/png");
+        intent.putExtra(Intent.EXTRA_TITLE, viewport.isMachineStudy()
+                ? "alloy-a1-mini-study.png" : "alloy-3d-view.png");
+        startActivityForResult(intent, REQUEST_VIEW_EXPORT);
+    }
+
+    private void writeViewExport(Uri uri) {
+        if (viewport == null) {
+            Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Capture the live GLES surface so A1 study exports contain the
+        // supplied machine mesh, real material pass and receding plates.
+        // thumbnailPng remains intentionally reserved for bounded archive and
+        // BYOK references, where deterministic CPU rendering is preferable.
+        viewport.capturePng(1_024, png -> {
+            if (png == null || png.length == 0) {
+                Toast.makeText(this, "3D view capture failed", Toast.LENGTH_LONG).show();
+                return;
+            }
+            try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
+                if (out == null) throw new IOException("Output destination could not be opened");
+                out.write(png);
+                out.flush();
+                Toast.makeText(this, "Saved 3D view PNG", Toast.LENGTH_LONG).show();
+            } catch (Exception error) {
+                Toast.makeText(this, "3D view export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void writeExport(Uri uri) {
+        ArtifactValidator.Report report = ArtifactValidator.validate(model, slice, config);
+        if (!report.isValid()) {
+            Toast.makeText(this, "Export blocked: " + report.summary(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            if (stagedArtifact == null || stagedArtifact.sourceFile == null
+                    || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
+                    || !ArtifactStore.sha256(stagedArtifact.sourceFile).equalsIgnoreCase(stagedArtifact.sha256)
+                    || !ArtifactStore.hasThumbnail(stagedArtifact.sourceFile)) {
+                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config, artifactDisplayName(), viewport.thumbnailPng(512));
+            }
+        } catch (Exception error) {
+            Toast.makeText(this, "Export staging failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri);
+             java.io.InputStream input = new java.io.FileInputStream(stagedArtifact.sourceFile)) {
+            if (out == null) throw new IllegalArgumentException("Output destination could not be opened");
+            byte[] buffer = new byte[32 * 1024];
+            int read;
+            long written = 0L;
+            while ((read = input.read(buffer)) != -1) {
+                if (read == 0) continue;
+                written += read;
+                if (written > stagedArtifact.sizeBytes) throw new IOException("Export source changed while copying");
+                out.write(buffer, 0, read);
+            }
+            if (written != stagedArtifact.sizeBytes) throw new IOException("Export destination received an incomplete artifact");
+            out.flush();
+            Toast.makeText(this, "Exported .gcode.3mf", Toast.LENGTH_LONG).show();
+        } catch (Exception e) { Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
+    }
+
+    private void showRecipe() {
+        if (printerBusy || batchSlicing || batchTransferring) {
+            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (importing) {
+            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (slicing || batchSlicing) {
+            Toast.makeText(this, "Cancel the current slice before changing the recipe", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        fields.setPadding(28, 4, 28, 0);
+        EditText layer = field(String.format(Locale.US, "%.2f", config.layerHeight), "Layer height (mm)");
+        EditText firstLayer = field(String.format(Locale.US, "%.2f", config.firstLayerHeight), "First layer height (mm)");
+        EditText infill = field(String.format(Locale.US, "%.0f", config.infill * 100), "Infill (%)");
+        EditText perimeters = field(Integer.toString(config.perimeters), "Perimeters");
+        EditText topLayers = field(Integer.toString(config.topLayers), "Top solid layers");
+        EditText bottomLayers = field(Integer.toString(config.bottomLayers), "Bottom solid layers");
+        EditText nozzleTemperature = field(String.format(Locale.US, "%.0f", config.nozzleTemperature), "Nozzle temperature (Â°C)");
+        EditText firstLayerNozzleTemperature = field(String.format(Locale.US, "%.0f", config.firstLayerNozzleTemperature), "First layer nozzle temperature (Â°C)");
+        String currentBuildPlate = nativeSetting(config, "curr_bed_type", "Hot Plate");
+        float displayedBedTemperature = selectedPlateTemperature(config, currentBuildPlate, false, config.bedTemperature);
+        float displayedFirstLayerBedTemperature = selectedPlateTemperature(config, currentBuildPlate, true, config.firstLayerBedTemperature);
+        EditText bedTemperature = field(String.format(Locale.US, "%.0f", displayedBedTemperature), "Selected plate temperature (Â°C)");
+        EditText firstLayerBedTemperature = field(String.format(Locale.US, "%.0f", displayedFirstLayerBedTemperature), "Selected plate first-layer temperature (Â°C)");
+        EditText extrusionMultiplier = field(String.format(Locale.US, "%.2f", config.extrusionMultiplier), "Flow / extrusion multiplier");
+        EditText maxVolumetricSpeed = field(String.format(Locale.US, "%.1f", config.maxVolumetricSpeed), "Max volumetric speed (mmÂ³/s)");
+        EditText travelSpeed = field(String.format(Locale.US, "%.0f", config.travelSpeed), "Travel speed (mm/s)");
+        EditText outerWallSpeed = field(String.format(Locale.US, "%.0f", config.outerWallSpeed), "Outer wall speed (mm/s)");
+        EditText innerWallSpeed = field(String.format(Locale.US, "%.0f", config.innerWallSpeed), "Inner wall speed (mm/s)");
+        EditText infillSpeed = field(String.format(Locale.US, "%.0f", config.infillSpeed), "Infill speed (mm/s)");
+        EditText initialLayerSpeed = field(String.format(Locale.US, "%.0f", config.initialLayerSpeed), "Initial layer speed (mm/s)");
+        EditText fanMin = field(String.format(Locale.US, "%.0f", config.fanMinPercent), "Minimum fan (%)");
+        EditText fanMax = field(String.format(Locale.US, "%.0f", config.fanMaxPercent), "Maximum fan (%)");
+        EditText threshold = field(String.format(Locale.US, "%.0f", config.supportThresholdDegrees), "Support overhang threshold (degrees)");
+        RadioGroup buildPlateTypes = choiceGroup(new String[][]{
+                {"Cool Plate", "Cool Plate"},
+                {"Engineering Plate", "Engineering Plate"},
+                {"Textured PEI Plate", "Textured PEI Plate"},
+                {"SuperTack Plate", "SuperTack Plate"},
+                {"Hot Plate", "Hot Plate"}
+        }, currentBuildPlate);
+        RadioGroup topSurfacePatterns = choiceGroup(new String[][]{
+                {"Monotonic", "monotoniclines"}, {"Rectilinear", "rectilinear"}, {"Concentric", "concentric"}
+        }, nativeSetting(config, "top_fill_pattern", "monotoniclines"));
+        RadioGroup bottomSurfacePatterns = choiceGroup(new String[][]{
+                {"Monotonic", "monotonic"}, {"Rectilinear", "rectilinear"}, {"Concentric", "concentric"}
+        }, nativeSetting(config, "bottom_fill_pattern", "monotonic"));
+        RadioGroup seamPositions = choiceGroup(new String[][]{
+                {"Aligned", "aligned"}, {"Nearest", "nearest"}, {"Rear", "rear"}, {"Random", "random"}
+        }, nativeSetting(config, "seam_position", "aligned"));
+        CheckBox ironing = new CheckBox(this);
+        ironing.setText("Iron top surfaces");
+        ironing.setTextColor(TEXT);
+        ironing.setChecked(nativeBoolean(config, "ironing", false));
+        EditText ironingFlow = field(nativeSetting(config, "ironing_flowrate", "10"), "Ironing flow (%)");
+        EditText bridgeSpeed = field(nativeSetting(config, "bridge_speed", "30"), "Bridge speed (mm/s)");
+        EditText defaultAcceleration = field(nativeSetting(config, "default_acceleration", "5000"), "Default acceleration (mm/sÂ²)");
+        CheckBox supports = new CheckBox(this);
+        supports.setText("Generate automatic supports");
+        supports.setTextColor(TEXT);
+        supports.setChecked(config.supports);
+
+        // Keep the common tree-support controls in the recipe surface instead
+        // of forcing phone users to edit a project file. These values travel
+        // through the same allowlisted native-settings boundary as the
+        // packaged profile, so edits remain portable and auditable.
+        String supportStyleValue = nativeSetting(config, "support_material_style", "organic");
+        RadioGroup supportStyles = new RadioGroup(this);
+        // The ordinary on-device fallback emits only conservative grid
+        // supports. Do not expose native tree labels there: selecting one
+        // would create a user expectation the fallback cannot meet. The
+        // native build keeps the source-backed choices visible, while its
+        // Bambu TreeSupport3D parity remains separately gated.
+        String[][] supportStyleOptions = BuildConfig.NATIVE_ENGINE_ENABLED
+                ? new String[][]{{"Organic tree", "organic"}, {"Slim tree", "tree"}, {"Grid", "grid"}}
+                : new String[][]{{"Grid (offline fallback)", "grid"}};
+        int selectedSupportStyle = 0;
+        for (int index = 0; index < supportStyleOptions.length; index++) {
+            RadioButton option = new RadioButton(this);
+            option.setId(View.generateViewId());
+            option.setText(supportStyleOptions[index][0]);
+            option.setTextColor(TEXT);
+            option.setTag(supportStyleOptions[index][1]);
+            supportStyles.addView(option);
+            if (supportStyleOptions[index][1].equalsIgnoreCase(supportStyleValue)) selectedSupportStyle = index;
+        }
+        supportStyles.check(supportStyles.getChildAt(selectedSupportStyle).getId());
+        EditText supportTopLayers = field(nativeSetting(config, "support_material_interface_layers", "2"), "Top interface layers (0â€“20)");
+        EditText supportBottomLayers = field(nativeSetting(config, "support_material_bottom_interface_layers", "2"), "Bottom interface layers (0â€“20)");
+        EditText supportXyDistance = field(nativeSetting(config, "support_material_xy_spacing", "0.35"), "Support XY distance (mm)");
+        EditText supportContactDistance = field(nativeSetting(config, "support_material_contact_distance", "0.2"), "Top contact gap (mm)");
+        EditText supportBottomContactDistance = field(nativeSetting(config, "support_material_bottom_contact_distance", "0.2"), "Bottom contact gap (mm)");
+        EditText supportSpacing = field(nativeSetting(config, "support_material_spacing", "2.5"), "Support spacing (mm)");
+        EditText supportSpeed = field(nativeSetting(config, "support_material_speed", "150"), "Support speed (mm/s)");
+        EditText supportInterfaceSpeed = field(nativeSetting(config, "support_material_interface_speed", "80"), "Interface speed (mm/s)");
+        EditText treeAngle = field(nativeSetting(config, "support_tree_angle", "45"), "Tree branch angle (degrees)");
+        EditText treeDistance = field(nativeSetting(config, "support_tree_branch_distance", "5"), "Tree branch distance (mm)");
+        EditText treeDiameter = field(nativeSetting(config, "support_tree_branch_diameter", "2"), "Tree branch diameter (mm)");
+        EditText treeDiameterAngle = field(nativeSetting(config, "support_tree_branch_diameter_angle", "5"), "Branch thickening angle (degrees)");
+        EditText treeWallCount = field(nativeSetting(config, "support_tree_branch_diameter_double_wall", "0"), "Tree wall mode (0â€“4)");
+        fields.addView(sectionLabel("QUALITY"));
+        fields.addView(layer); fields.addView(firstLayer); fields.addView(infill);
+        fields.addView(perimeters); fields.addView(topLayers); fields.addView(bottomLayers);
+        fields.addView(sectionLabel("MATERIAL"));
+        Button materialScope = dialogButton("Review material, feed route & spool fit", v -> showMaterialScopeReview());
+        materialScope.setContentDescription("Review material compatibility, feed route and spool fit for the active planning printer");
+        fields.addView(materialScope, new LinearLayout.LayoutParams(-1, dp(46)));
+        TextView materialScopeNote = label("The active recipe stays profile-locked. This review explains compatible material and spool forms; it never changes temperatures or qualifies a printer send.", 12, MUTED);
+        materialScopeNote.setPadding(0, dp(4), 0, dp(8));
+        materialScopeNote.setLineSpacing(dp(2), 1f);
+        fields.addView(materialScopeNote);
+        fields.addView(nozzleTemperature); fields.addView(firstLayerNozzleTemperature);
+        fields.addView(label("BUILD PLATE", 10, GOLD)); fields.addView(buildPlateTypes);
+        fields.addView(label("The selected surface and its temperatures are used for this job. Confirm the physical plate before sending.", 12, MUTED));
+        fields.addView(bedTemperature); fields.addView(firstLayerBedTemperature);
+        fields.addView(extrusionMultiplier); fields.addView(maxVolumetricSpeed);
+        fields.addView(sectionLabel("MOTION & COOLING"));
+        fields.addView(travelSpeed); fields.addView(outerWallSpeed); fields.addView(innerWallSpeed);
+        fields.addView(infillSpeed); fields.addView(initialLayerSpeed); fields.addView(fanMin); fields.addView(fanMax);
+        fields.addView(sectionLabel("SURFACES & PATH"));
+        fields.addView(label("TOP SURFACE", 10, GOLD)); fields.addView(topSurfacePatterns);
+        fields.addView(label("BOTTOM SURFACE", 10, GOLD)); fields.addView(bottomSurfacePatterns);
+        fields.addView(label("SEAM", 10, GOLD)); fields.addView(seamPositions);
+        fields.addView(ironing); fields.addView(ironingFlow); fields.addView(bridgeSpeed); fields.addView(defaultAcceleration);
+        fields.addView(sectionLabel("SUPPORTS"));
+        fields.addView(supports); fields.addView(threshold);
+        fields.addView(label("STYLE", 10, GOLD));
+        fields.addView(supportStyles);
+        fields.addView(supportTopLayers); fields.addView(supportBottomLayers);
+        fields.addView(supportXyDistance); fields.addView(supportContactDistance); fields.addView(supportBottomContactDistance);
+        fields.addView(supportSpacing); fields.addView(supportSpeed); fields.addView(supportInterfaceSpeed);
+        fields.addView(label("TREE GEOMETRY", 10, GOLD));
+        fields.addView(treeAngle); fields.addView(treeDistance); fields.addView(treeDiameter);
+        fields.addView(treeDiameterAngle); fields.addView(treeWallCount);
+        String profileNote = (profile == null ? "A1 Mini Â· 0.4 mm nozzle Â· PLA" : profile.name)
+                + "\nTyped values are loaded from the pinned profile snapshot. Native engine parity is still a documented gate.";
+        if (supports.isChecked()) {
+            profileNote += BuildConfig.NATIVE_ENGINE_ENABLED
+                    ? "\nNative support output uses the integrated Orca TreeSupport3D path; Bambu tree(auto) parity is still not available for production printing."
+                    : "\nOffline fallback uses conservative grid supports for simple overhangs; native engine support remains required for production printing.";
+        }
+        if (profile == null || !profile.verified) profileNote += "\nThis profile is not approved for physical printing.";
+        TextView note = label(profileNote, 13, MUTED); note.setPadding(0, 18, 0, 0); fields.addView(note);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(fields);
+        new AlertDialog.Builder(this).setTitle("Print recipe").setView(scroll).setNegativeButton("Cancel", null).setPositiveButton("Apply", (d, w) -> {
+            try {
+                float nextLayer = clamp(Float.parseFloat(layer.getText().toString()), 0.08f, 0.40f);
+                float nextFirstLayer = clamp(Float.parseFloat(firstLayer.getText().toString()), 0.08f, 0.40f);
+                float nextInfill = clamp(Float.parseFloat(infill.getText().toString()) / 100f, 0f, 1f);
+                int nextPerimeters = Math.round(clamp(Float.parseFloat(perimeters.getText().toString()), 1f, 20f));
+                int nextTopLayers = Math.round(clamp(Float.parseFloat(topLayers.getText().toString()), 0f, 100f));
+                int nextBottomLayers = Math.round(clamp(Float.parseFloat(bottomLayers.getText().toString()), 0f, 100f));
+                float nextNozzleTemperature = clamp(Float.parseFloat(nozzleTemperature.getText().toString()), 0f, 400f);
+                float nextFirstLayerNozzleTemperature = clamp(Float.parseFloat(firstLayerNozzleTemperature.getText().toString()), 0f, 400f);
+                float nextBedTemperature = clamp(Float.parseFloat(bedTemperature.getText().toString()), 0f, 150f);
+                float nextFirstLayerBedTemperature = clamp(Float.parseFloat(firstLayerBedTemperature.getText().toString()), 0f, 150f);
+                String nextBuildPlate = selectedChoice(buildPlateTypes, "Hot Plate");
+                float nextExtrusionMultiplier = clamp(Float.parseFloat(extrusionMultiplier.getText().toString()), 0.5f, 2f);
+                float nextMaxVolumetricSpeed = clamp(Float.parseFloat(maxVolumetricSpeed.getText().toString()), 0.1f, 200f);
+                float nextTravelSpeed = clamp(Float.parseFloat(travelSpeed.getText().toString()), 1f, 2_000f);
+                float nextOuterWallSpeed = clamp(Float.parseFloat(outerWallSpeed.getText().toString()), 1f, 1_000f);
+                float nextInnerWallSpeed = clamp(Float.parseFloat(innerWallSpeed.getText().toString()), 1f, 1_000f);
+                float nextInfillSpeed = clamp(Float.parseFloat(infillSpeed.getText().toString()), 1f, 1_000f);
+                float nextInitialLayerSpeed = clamp(Float.parseFloat(initialLayerSpeed.getText().toString()), 1f, 1_000f);
+                float nextFanMin = clamp(Float.parseFloat(fanMin.getText().toString()), 0f, 100f);
+                float nextFanMax = Math.max(nextFanMin, clamp(Float.parseFloat(fanMax.getText().toString()), 0f, 100f));
+                float nextThreshold = clamp(Float.parseFloat(threshold.getText().toString()), 0f, 90f);
+                float nextIroningFlow = clamp(Float.parseFloat(ironingFlow.getText().toString().replace("%", "").trim()), 0f, 100f);
+                float nextBridgeSpeed = clamp(Float.parseFloat(bridgeSpeed.getText().toString()), 1f, 1_000f);
+                float nextDefaultAcceleration = clamp(Float.parseFloat(defaultAcceleration.getText().toString()), 1f, 100_000f);
+                int nextSupportTopLayers = Math.round(clamp(Float.parseFloat(supportTopLayers.getText().toString()), 0f, 20f));
+                int nextSupportBottomLayers = Math.round(clamp(Float.parseFloat(supportBottomLayers.getText().toString()), 0f, 20f));
+                float nextSupportXyDistance = clamp(Float.parseFloat(supportXyDistance.getText().toString()), 0.01f, 5f);
+                float nextSupportContactDistance = clamp(Float.parseFloat(supportContactDistance.getText().toString()), 0f, 2f);
+                float nextSupportBottomContactDistance = clamp(Float.parseFloat(supportBottomContactDistance.getText().toString()), 0f, 2f);
+                float nextSupportSpacing = clamp(Float.parseFloat(supportSpacing.getText().toString()), 0.5f, 10f);
+                float nextSupportSpeed = clamp(Float.parseFloat(supportSpeed.getText().toString()), 1f, 1_000f);
+                float nextSupportInterfaceSpeed = clamp(Float.parseFloat(supportInterfaceSpeed.getText().toString()), 1f, 1_000f);
+                float nextTreeAngle = clamp(Float.parseFloat(treeAngle.getText().toString()), 0f, 89f);
+                float nextTreeDistance = clamp(Float.parseFloat(treeDistance.getText().toString()), 0.1f, 100f);
+                float nextTreeDiameter = clamp(Float.parseFloat(treeDiameter.getText().toString()), 0.5f, 10f);
+                float nextTreeDiameterAngle = clamp(Float.parseFloat(treeDiameterAngle.getText().toString()), 0f, 89f);
+                int nextTreeWallCount = Math.round(clamp(Float.parseFloat(treeWallCount.getText().toString()), 0f, 4f));
+                config.layerHeight = nextLayer;
+                config.firstLayerHeight = nextFirstLayer;
+                config.infill = nextInfill;
+                config.perimeters = nextPerimeters;
+                config.topLayers = nextTopLayers;
+                config.bottomLayers = nextBottomLayers;
+                config.nozzleTemperature = nextNozzleTemperature;
+                config.firstLayerNozzleTemperature = nextFirstLayerNozzleTemperature;
+                config.bedTemperature = nextBedTemperature;
+                config.firstLayerBedTemperature = nextFirstLayerBedTemperature;
+                config.nativeSettings.put("curr_bed_type", nextBuildPlate);
+                config.nativeSettings.put(plateTemperatureKey(nextBuildPlate, false), number(nextBedTemperature));
+                config.nativeSettings.put(plateTemperatureKey(nextBuildPlate, true), number(nextFirstLayerBedTemperature));
+                config.extrusionMultiplier = nextExtrusionMultiplier;
+                config.maxVolumetricSpeed = nextMaxVolumetricSpeed;
+                config.travelSpeed = nextTravelSpeed;
+                config.outerWallSpeed = nextOuterWallSpeed;
+                config.innerWallSpeed = nextInnerWallSpeed;
+                config.infillSpeed = nextInfillSpeed;
+                config.initialLayerSpeed = nextInitialLayerSpeed;
+                config.fanMinPercent = nextFanMin;
+                config.fanMaxPercent = nextFanMax;
+                config.supports = supports.isChecked();
+                config.supportThresholdDegrees = nextThreshold;
+                config.nativeSettings.put("top_fill_pattern", selectedChoice(topSurfacePatterns, "monotoniclines"));
+                config.nativeSettings.put("bottom_fill_pattern", selectedChoice(bottomSurfacePatterns, "monotonic"));
+                config.nativeSettings.put("seam_position", selectedChoice(seamPositions, "aligned"));
+                config.nativeSettings.put("ironing", ironing.isChecked() ? "1" : "0");
+                config.nativeSettings.put("ironing_flowrate", number(nextIroningFlow) + "%");
+                config.nativeSettings.put("bridge_speed", number(nextBridgeSpeed));
+                config.nativeSettings.put("default_acceleration", number(nextDefaultAcceleration));
+                config.nativeSettings.put("support_material_style",
+                        String.valueOf(supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag()));
+                config.nativeSettings.put("support_material_interface_layers", Integer.toString(nextSupportTopLayers));
+                config.nativeSettings.put("support_material_bottom_interface_layers", Integer.toString(nextSupportBottomLayers));
+                config.nativeSettings.put("support_material_xy_spacing", number(nextSupportXyDistance));
+                config.nativeSettings.put("support_material_contact_distance", number(nextSupportContactDistance));
+                config.nativeSettings.put("support_material_bottom_contact_distance", number(nextSupportBottomContactDistance));
+                config.nativeSettings.put("support_material_spacing", number(nextSupportSpacing));
+                config.nativeSettings.put("support_material_speed", number(nextSupportSpeed));
+                config.nativeSettings.put("support_material_interface_speed", number(nextSupportInterfaceSpeed));
+                config.nativeSettings.put("support_tree_angle", number(nextTreeAngle));
+                config.nativeSettings.put("support_tree_branch_distance", number(nextTreeDistance));
+                config.nativeSettings.put("support_tree_branch_diameter", number(nextTreeDiameter));
+                config.nativeSettings.put("support_tree_branch_diameter_angle", number(nextTreeDiameterAngle));
+                config.nativeSettings.put("support_tree_branch_diameter_double_wall", Integer.toString(nextTreeWallCount));
+                projectStore.saveRecipe(config);
+                slice = null;
+                stagedArtifact = null;
+                lastBatch = null;
+                viewport.setResult(null);
+                updateRecipeMarkers();
+                details.setText("Recipe applied Â· " + profilePrinterLabel() + " Â· " + String.format(Locale.US, "%.2f mm layer Â· %.0f%% infill Â· %d walls Â· supports %s", config.layerHeight, config.infill * 100, config.perimeters, config.supports ? "on" : "off"));
+                refreshActions();
+            } catch (Exception e) { Toast.makeText(this, "Recipe values were not valid", Toast.LENGTH_SHORT).show(); }
+        }).show();
+    }
+
+    /**
+     * Keep Bambu-published material/spool capability beside the actual recipe
+     * decision. This deliberately is not a material selector: choosing PETG
+     * while retaining a PLA profile would be an unsafe, misleading shortcut.
+     */
+    private void showMaterialScopeReview() {
+        if (profile == null) {
+            Toast.makeText(this, "Load a planning profile before reviewing materials", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
+            PrinterCapabilityCatalog.Printer printer = catalog.byId(profile.printerId);
+            if (printer == null) {
+                Toast.makeText(this, "No bounded material catalog is available for this profile", Toast.LENGTH_LONG).show();
+                return;
+            }
+            LinearLayout page = new LinearLayout(this);
+            page.setOrientation(LinearLayout.VERTICAL);
+            page.setPadding(dp(22), dp(8), dp(22), dp(4));
+            TextView active = label("ACTIVE PROFILE\n" + profile.name + "\n" + profile.filamentName
+                    + " Â· " + profile.material + " Â· " + String.format(Locale.US, "%.2f mm", profile.filamentDiameter), 14, TEXT);
+            active.setLineSpacing(dp(2), 1f);
+            page.addView(active);
+            TextView boundary = label("Compatibility is not a recipe. To change filament, select or import a source-backed material profile, then re-slice and review. Direct send remains " + printer.directSendState + ".", 12, RED);
+            boundary.setPadding(0, dp(10), 0, dp(6)); boundary.setLineSpacing(dp(2), 1f);
+            page.addView(boundary);
+            TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
+            materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
+            for (PrinterCapabilityCatalog.Material material : printer.materials) {
+                TextView row = label(material.name + "\nBambu: " + material.bambuStatus
+                        + " Â· Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT);
+                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            TextView routes = label("FEED ROUTES", 10, GOLD); routes.setLetterSpacing(0.08f);
+            routes.setPadding(0, dp(12), 0, 0); page.addView(routes);
+            for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
+                TextView row = label(route.title + " Â· " + route.state + "\n" + route.note, 12, TEXT);
+                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            TextView forms = label("SPOOL FORM & FIT", 10, GOLD); forms.setLetterSpacing(0.08f);
+            forms.setPadding(0, dp(12), 0, 0); page.addView(forms);
+            for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
+                TextView row = label(form.title + " Â· " + form.state + "\n"
+                        + "Form: " + form.form + "\nRoutes: " + form.compatibleRoutes
+                        + "\nFit: " + form.geometry + "\n" + form.note, 12, TEXT);
+                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            TextView source = label("Source/scope Â· " + printer.source + " Â· reviewed " + printer.reviewed, 10, MUTED);
+            source.setPadding(0, dp(12), 0, 0); source.setLineSpacing(dp(2), 1f); page.addView(source);
+            Button openSource = dialogButton("Open official Bambu source", v -> openCapabilitySource(printer.sourceUrl));
+            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(44)); sourceLp.topMargin = dp(8); page.addView(openSource, sourceLp);
+            ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true); scroll.addView(page);
+            new AlertDialog.Builder(this)
+                    .setTitle("Material & spool review")
+                    .setView(scroll)
+                    .setPositiveButton("Done", null)
+                    .show();
+        } catch (IOException error) {
+            Toast.makeText(this, "Material catalog is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void openCapabilitySource(String sourceUrl) {
+        try {
+            Uri uri = Uri.parse(sourceUrl);
+            if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null
+                    || !(uri.getHost().equalsIgnoreCase("bambulab.com")
+                    || uri.getHost().toLowerCase(Locale.US).endsWith(".bambulab.com")))
+                throw new IllegalArgumentException("The capability source is not an official HTTPS URL");
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception error) {
+            Toast.makeText(this, "Could not open the official source: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showPlates() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current import, slice, or printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        saveCurrentPlate();
+        ArrayList<PlateStore.Plate> entries = plateStore.plates();
+        if (entries.isEmpty()) {
+            saveCurrentPlate();
+            entries = plateStore.plates();
+        }
+        String[] labels = new String[entries.size()];
+        int checked = -1;
+        for (int index = 0; index < entries.size(); index++) {
+            PlateStore.Plate plate = entries.get(index);
+            labels[index] = plate.summary();
+            if (plate.index == activePlateIndex) checked = index;
+        }
+        final ArrayList<PlateStore.Plate> choices = entries;
+        final boolean batchReady = lastBatch != null && !lastBatch.plates.isEmpty();
+        final int populatedPlates = populatedPlateCount(entries);
+        String batchAction = batchReady ? "Export batch" : "Slice all";
+        new AlertDialog.Builder(this)
+                .setTitle("Print plates")
+                .setMessage("Keep separate model sets for boxes, lids, parts, and future assemblies. Alloy stores up to " + PlateStore.MAX_PLATES
+                        + " local plate snapshots. " + populatedPlates + " plate" + (populatedPlates == 1 ? " is" : "s are")
+                        + " populated.")
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    dialog.dismiss();
+                    switchPlate(choices.get(which).index);
+                })
+                .setPositiveButton(batchAction, (dialog, which) -> {
+                    if (batchReady) exportBatchArchive();
+                    else beginBatchSlice();
+                })
+                .setNeutralButton("New plate", (dialog, which) -> createPlate())
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private static int populatedPlateCount(ArrayList<PlateStore.Plate> plates) {
+        int count = 0;
+        if (plates == null) return count;
+        for (PlateStore.Plate plate : plates) {
+            if (plate != null && plate.uris != null && !plate.uris.isEmpty()) count++;
+        }
+        return count;
+    }
+
+    private void beginBatchSlice() {
+        requestNotificationPermissionIfNeeded(this::beginBatchSliceAfterPermission);
+    }
+
+    private void beginBatchSliceAfterPermission() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        saveCurrentPlate();
+        final ArrayList<PlateStore.Plate> plates = plateStore.plates();
+        if (populatedPlateCount(plates) == 0) {
+            Toast.makeText(this, "Add a model to at least one plate first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        lastBatch = null;
+        final String jobId = BatchSliceRequestStore.newJobId();
+        final Slicer.Config recipe = config.copy();
+        final String displayName = currentPlateLabel();
+        final int populated = populatedPlateCount(plates);
+        batchSlicing = true;
+        activeBatchSliceJobId = jobId;
+        status.setText("Batch  Â·  saving an offline requestâ€¦");
+        refreshActions();
+        activeBatchSnapshot = importExecutor.submit(() -> {
+            try {
+                BatchSliceRequestStore.write(getFilesDir(), getContentResolver(), jobId, plates, recipe, displayName);
+                batchSliceJobStore.clear();
+                batchSliceJobStore.begin(jobId, displayName, populated);
+                mainHandler.post(() -> {
+                    if (!jobId.equals(activeBatchSliceJobId) || isFinishing()) return;
+                    activeBatchSnapshot = null;
+                    try {
+                        BatchSliceJobService.start(this, jobId);
+                    } catch (Exception error) {
+                        batchSliceJobStore.fail(jobId, "Could not start batch slice: " + error.getMessage());
+                        activeBatchSliceJobId = null;
+                        batchSlicing = false;
+                        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch slice could not start");
+                        refreshActions();
+                        Toast.makeText(this, "Batch slice could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (!jobId.equals(activeBatchSliceJobId) || isFinishing()) return;
+                    activeBatchSnapshot = null;
+                    activeBatchSliceJobId = null;
+                    batchSlicing = false;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch request could not be saved");
+                    refreshActions();
+                    Toast.makeText(this, "Batch request could not be saved: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void cancelBatchSlice() {
+        if (!batchSlicing) return;
+        String jobId = activeBatchSliceJobId;
+        if (jobId != null && BatchSliceJobService.ownsJob(jobId)) {
+            try {
+                BatchSliceJobService.cancel(this, jobId);
+                status.setText("Batch  Â·  cancellingâ€¦");
+                refreshActions();
+            } catch (Exception error) {
+                Toast.makeText(this, "Batch cancellation failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+        if (activeBatchSnapshot != null) activeBatchSnapshot.cancel(true);
+        if (jobId != null && batchSliceJobStore != null) batchSliceJobStore.cancel(jobId, "Batch slice cancelled");
+        activeBatchSnapshot = null;
+        activeBatchSliceJobId = null;
+        batchSlicing = false;
+        lastBatch = null;
+        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+        refreshActions();
+    }
+
+    private void showBatchSummary(BatchSliceJobController.BatchResult result) {
+        if (result == null || result.plates.isEmpty()) return;
+        StringBuilder message = new StringBuilder("Each plate is an independent validated artifact. Choose one plate in Print plates before sending it to a printer.\n\n");
+        for (BatchSliceJobController.PlateResult plate : result.plates) {
+            Slicer.Result slice = plate.slice;
+            message.append("Plate ").append(plate.plate.index + 1).append("  Â·  ").append(plate.plate.name)
+                    .append("\n").append(slice.layers.size()).append(" layers  Â·  ")
+                    .append(String.format(Locale.US, "%.0f mm", slice.filamentMm));
+            if (slice.printTimeSeconds >= 0f) message.append("  Â·  ").append(formatDuration(slice.printTimeSeconds));
+            message.append("\n");
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("All plates sliced")
+                .setMessage(message.toString().trim())
+                .setNegativeButton("Done", null)
+                .setPositiveButton("Export batch", (dialog, which) -> exportBatchArchive())
+                .show();
+    }
+
+    private void exportBatchArchive() {
+        if (lastBatch == null || lastBatch.plates.isEmpty()) {
+            Toast.makeText(this, "Slice the populated plates first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(BatchArtifactArchive.MIME_TYPE);
+        intent.putExtra(Intent.EXTRA_TITLE, safeName(currentPlateLabel()) + "-plates.alloy-batch.zip");
+        startActivityForResult(intent, REQUEST_BATCH_EXPORT);
+    }
+
+    private void writeBatchArchive(Uri destination) {
+        if (destination == null || batchTransferring || lastBatch == null) return;
+        final BatchSliceJobController.BatchResult batch = lastBatch;
+        final long transferId = batchTransferIds.incrementAndGet();
+        activeBatchTransferId = transferId;
+        batchTransferring = true;
+        status.setText("Batch  Â·  validating portable archiveâ€¦");
+        refreshActions();
+        activeBatchTransfer = importExecutor.submit(() -> {
+            java.io.File temporary = new java.io.File(getCacheDir(), ".alloy-batch-" + transferId + ".part");
+            try {
+                try (java.io.OutputStream output = new java.io.FileOutputStream(temporary)) {
+                    BatchArtifactArchive.write(output, batch);
+                    output.flush();
+                }
+                BatchArtifactArchive.validate(temporary);
+                try (java.io.OutputStream output = getContentResolver().openOutputStream(destination);
+                     java.io.InputStream input = new java.io.FileInputStream(temporary)) {
+                    if (output == null) throw new IOException("The batch destination could not be opened");
+                    byte[] buffer = new byte[32 * 1024];
+                    int read;
+                    while ((read = input.read(buffer)) != -1) if (read > 0) output.write(buffer, 0, read);
+                    output.flush();
+                }
+                mainHandler.post(() -> {
+                    if (transferId != activeBatchTransferId || isFinishing()) return;
+                    batchTransferring = false;
+                    activeBatchTransfer = null;
+                    status.setText("Batch  Â·  portable archive saved");
+                    refreshActions();
+                    Toast.makeText(this, "Exported all plate artifacts", Toast.LENGTH_LONG).show();
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (transferId != activeBatchTransferId || isFinishing()) return;
+                    batchTransferring = false;
+                    activeBatchTransfer = null;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    refreshActions();
+                    Toast.makeText(this, "Batch export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            } finally {
+                if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
+            }
+        });
+    }
+
+    private void createPlate() {
+        if (printerBusy || importing || slicing || batchSlicing || batchTransferring) {
+            Toast.makeText(this, "Finish the current import, slice, or printer job first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            saveCurrentPlate();
+            PlateStore.Plate created = plateStore.createNext();
+            switchPlate(created.index);
+        } catch (Exception error) {
+            Toast.makeText(this, "New plate could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void switchPlate(int index) {
+        if (index < 0 || index >= PlateStore.MAX_PLATES || printerBusy || importing || slicing || batchSlicing || batchTransferring) return;
+        if (index == activePlateIndex && model != null) return;
+        saveCurrentPlate();
+        PlateStore.Plate target = plateStore.plateAt(index);
+        activePlateIndex = index;
+        plateStore.setActiveIndex(index);
+        slice = null;
+        stagedArtifact = null;
+        if (viewport != null) viewport.setResult(null);
+        updatePlateMarker();
+        if (target.uris.isEmpty()) {
+            plateImportInFlight = false;
+            clearLoadedModelForPlate();
+            if (modelHistoryStore != null) {
+                modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "New plate");
+                pruneModelCache();
+            }
+        } else {
+            plateImportInFlight = true;
+            restorePlateCheckpoint(target);
+            loadUris(target.uris, target.names, true);
+        }
+    }
+
+    private void restorePlateCheckpoint(PlateStore.Plate plate) {
+        if (plate == null || plate.uris.isEmpty()) {
+            projectStore.clearModel();
+            return;
+        }
+        projectStore.saveModels(plate.uris, plate.names);
+        projectStore.saveTransform(plate.scale, plate.rotationDegrees, plate.tiltXDegrees, plate.tiltYDegrees);
+        projectStore.saveSelectedPart(plate.selectedPart);
+        projectStore.savePartTransforms(new ArrayList<>(plate.partTransforms));
+        projectStore.saveGeometryRepair(plate.geometryRepairEnabled);
+    }
+
+    private void saveCurrentPlate() {
+        if (plateStore == null || plateImportInFlight) return;
+        ArrayList<String> names = new ArrayList<>();
+        for (int index = 0; index < modelUris.size(); index++) {
+            names.add(index < modelNames.size() ? modelNames.get(index) : "model.stl");
+        }
+        int selectedPart = viewport == null ? -1 : viewport.getSelectedPart();
+        plateStore.save(new PlateStore.Plate(activePlateIndex, currentPlateName(),
+                new ArrayList<>(modelUris), names, modelScale, modelRotationDegrees,
+                modelTiltXDegrees, modelTiltYDegrees, selectedPart, new ArrayList<>(partTransforms),
+                geometryRepairEnabled));
+        plateStore.setActiveIndex(activePlateIndex);
+    }
+
+    private PlateStore.Plate currentPlateSnapshot() {
+        ArrayList<String> names = new ArrayList<>();
+        for (int index = 0; index < modelUris.size(); index++) {
+            names.add(index < modelNames.size() ? modelNames.get(index) : "model.stl");
+        }
+        int selectedPart = viewport == null ? -1 : viewport.getSelectedPart();
+        return new PlateStore.Plate(activePlateIndex, currentPlateName(),
+                new ArrayList<>(modelUris), names, modelScale, modelRotationDegrees,
+                modelTiltXDegrees, modelTiltYDegrees, selectedPart,
+                new ArrayList<>(partTransforms), geometryRepairEnabled);
+    }
+
+    private void pruneModelCache() {
+        if (plateStore == null) return;
+        ArrayList<PlateStore.Plate> history = modelHistoryStore == null
+                ? null : modelHistoryStore.referencedPlates();
+        ArrayList<Uri> recent = new ArrayList<>();
+        if (importedModelStore != null) {
+            for (ImportedModelStore.Entry entry : importedModelStore.entries(getFilesDir())) {
+                if (entry != null && entry.uri != null) recent.add(entry.uri);
+            }
+        }
+        ModelStore.prune(getFilesDir(), plateStore.plates(), history, recent);
+    }
+
+    private void prepareModelMutation(String label) {
+        trustedPilotFixtureAssetPath = null;
+        if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
+        try {
+            modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "Current model");
+            pruneModelCache();
+        } catch (RuntimeException error) {
+            // The edit remains local and visible, but the failure is explicit;
+            // never pretend an edit is undoable when its snapshot did not save.
+            Toast.makeText(this, "Edit history unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void finishModelMutation(String label) {
+        if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
+        try {
+            saveCurrentPlate();
+            modelHistoryStore.append(activePlateIndex, currentPlateSnapshot(), label);
+            pruneModelCache();
+            updateHistoryActions();
+        } catch (RuntimeException error) {
+            Toast.makeText(this, "Edit completed, but history could not be saved: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void resetModelHistory(String label) {
+        if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
+        try {
+            modelHistoryStore.resetDocument(activePlateIndex, currentPlateSnapshot(), label);
+            pruneModelCache();
+        } catch (RuntimeException error) {
+            Toast.makeText(this, "Model history could not be initialized: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void updateHistoryActions() {
+        if (actions != null) refreshActions();
+    }
+
+    private void undoModel() {
+        if (!canMutateModel()) return;
+        PlateStore.Plate target;
+        try { target = modelHistoryStore.undo(activePlateIndex); }
+        catch (RuntimeException error) {
+            Toast.makeText(this, "Undo history is invalid: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (target == null) {
+            Toast.makeText(this, "Nothing to undo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        restoreHistorySnapshot(target, "Undo");
+    }
+
+    private void redoModel() {
+        if (!canMutateModel()) return;
+        PlateStore.Plate target;
+        try { target = modelHistoryStore.redo(activePlateIndex); }
+        catch (RuntimeException error) {
+            Toast.makeText(this, "Redo history is invalid: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (target == null) {
+            Toast.makeText(this, "Nothing to redo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        restoreHistorySnapshot(target, "Redo");
+    }
+
+    private boolean canMutateModel() {
+        if (modelHistoryStore == null || model == null || printerBusy || importing || slicing || batchSlicing
+                || projectTransferring || batchTransferring || visualizing || modeling || repairingGeometry) {
+            Toast.makeText(this, "Finish the current operation before changing model history", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void restoreHistorySnapshot(PlateStore.Plate target, String action) {
+        if (target == null || target.index != activePlateIndex) return;
+        saveCurrentPlate();
+        slice = null;
+        stagedArtifact = null;
+        lastBatch = null;
+        if (viewport != null) viewport.setResult(null);
+        plateStore.save(target);
+        restorePlateCheckpoint(target);
+        if (target.uris.isEmpty()) {
+            clearLoadedModelForPlate();
+            plateStore.save(target);
+            modelHistoryStore.ensureCurrent(activePlateIndex, target, action + " state");
+            status.setText(currentPlateLabel() + "  Â·  " + action.toLowerCase(Locale.US) + " complete");
+            pruneModelCache();
+            return;
+        }
+        plateImportInFlight = true;
+        status.setText(action + "  Â·  restoring modelâ€¦");
+        refreshActions();
+        loadUris(target.uris, target.names, true);
+    }
+
+    private void showModelHistory() {
+        if (modelHistoryStore == null) return;
+        ArrayList<String> labels = modelHistoryStore.labels(activePlateIndex);
+        if (labels.isEmpty()) {
+            new AlertDialog.Builder(this).setTitle("Model edit history")
+                    .setMessage("Edits to this plate will appear here. Undo and redo retain bounded model snapshots locally on this phone.")
+                    .setPositiveButton("Done", null).show();
+            return;
+        }
+        CharSequence[] entries = labels.toArray(new CharSequence[0]);
+        new AlertDialog.Builder(this).setTitle("Model edit history")
+                .setMessage(currentPlateLabel() + "  Â·  " + modelHistoryStore.summary(activePlateIndex))
+                .setItems(entries, null)
+                .setPositiveButton("Done", null)
+                .show();
+    }
+
+    private void clearLoadedModelForPlate() {
+        cancelImport();
+        cancelGeometryRepair();
+        if (sliceJobs != null) sliceJobs.cancel();
+        if (batchSliceJobs != null) batchSliceJobs.cancel();
+        batchSlicing = false;
+        slicing = false;
+        model = null;
+        sourceModel = null;
+        unmodifiedSourceModel = null;
+        geometryRepairEnabled = false;
+        partTransforms.clear();
+        modelUris.clear();
+        modelNames.clear();
+        modelScale = 1f;
+        modelRotationDegrees = 0f;
+        modelTiltXDegrees = 0f;
+        modelTiltYDegrees = 0f;
+        slice = null;
+        stagedArtifact = null;
+        lastBatch = null;
+        if (batchSliceJobStore != null) batchSliceJobStore.clear();
+        activeBatchSliceJobId = null;
+        plateImportInFlight = false;
+        projectStore.clearModel();
+        plateStore.save(PlateStore.Plate.empty(activePlateIndex));
+        pruneModelCache();
+        if (viewport != null) {
+            viewport.setModel(null);
+            viewport.setResult(null);
+        }
+        modelMeta.setText("NEW PLATE\n" + profileShortLabel());
+        status.setText(currentPlateLabel() + "  Â·  Import a model to begin");
+        details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
+        updatePlateMarker();
+        refreshActions();
+    }
+
+    private void saveProjectArchive() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        saveCurrentPlate();
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(ProjectArchive.MIME_TYPE);
+        intent.putExtra(Intent.EXTRA_TITLE, safeName(currentPlateLabel()) + ".alloy.zip");
+        startActivityForResult(intent, REQUEST_PROJECT_EXPORT);
+    }
+
+    private void openProjectArchive() {
+        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(ProjectArchive.MIME_TYPE);
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{ProjectArchive.MIME_TYPE, "application/octet-stream"});
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_PROJECT_OPEN);
+    }
+
+    private void writeProjectArchive(Uri destination) {
+        if (destination == null || projectTransferring || batchTransferring) return;
+        saveCurrentPlate();
+        final ArrayList<PlateStore.Plate> plates = plateStore.plates();
+        final Slicer.Config recipe = config.copy();
+        final int active = activePlateIndex;
+        final String historyName = model == null ? currentPlateLabel() : model.displayName;
+        final int historyModelCount = projectModelCount(plates);
+        final int historyPlateCount = plates.size();
+        final byte[] thumbnail = viewport == null ? null : viewport.thumbnailPng(512);
+        final ArrayList<ModelHistoryStore.Timeline> modelHistory = modelHistoryStore == null
+                ? new ArrayList<>() : modelHistoryStore.exportTimelines();
+        final long transferId = projectTransferIds.incrementAndGet();
+        activeProjectTransferId = transferId;
+        projectTransferring = true;
+        status.setText("Project  Â·  saving portable archiveâ€¦");
+        refreshActions();
+        activeProjectTransfer = importExecutor.submit(() -> {
+            try (java.io.OutputStream output = getContentResolver().openOutputStream(destination)) {
+                if (output == null) throw new IllegalArgumentException("The project destination could not be opened");
+                ProjectArchive.write(output, active, plates, recipe,
+                        uri -> getContentResolver().openInputStream(uri), inventoryStore.snapshot(), thumbnail,
+                        modelHistory);
+                output.flush();
+                mainHandler.post(() -> {
+                    if (transferId != activeProjectTransferId || isFinishing()) return;
+                    projectTransferring = false;
+                    activeProjectTransfer = null;
+                    try {
+                        projectHistoryStore.record(historyName, destination, historyModelCount, historyPlateCount);
+                    } catch (Exception ignored) {
+                        // History is an enhancement; a successfully written archive remains usable.
+                    }
+                    status.setText("Project  Â·  portable archive saved");
+                    refreshActions();
+                    Toast.makeText(this, "Saved .alloy.zip project", Toast.LENGTH_LONG).show();
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (transferId != activeProjectTransferId || isFinishing()) return;
+                    projectTransferring = false;
+                    activeProjectTransfer = null;
+                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
+                    refreshActions();
+                    Toast.makeText(this, "Project save failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void readProjectArchive(Uri source) {
+        if (source == null || printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
+            if (printerBusy || importing || slicing || batchSlicing || batchTransferring)
+                Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final String historyName = displayName(source);
+        final long transferId = projectTransferIds.incrementAndGet();
+        activeProjectTransferId = transferId;
+        projectTransferring = true;
+        status.setText("Project  Â·  opening portable archiveâ€¦");
+        refreshActions();
+        activeProjectTransfer = importExecutor.submit(() -> {
+            try (InputStream input = getContentResolver().openInputStream(source)) {
+                if (input == null) throw new IllegalArgumentException("The project archive could not be opened");
+                ProjectArchive.ImportedProject imported = ProjectArchive.read(input, new java.io.File(getFilesDir(), "projects"));
+                mainHandler.post(() -> {
+                    if (transferId != activeProjectTransferId || isFinishing()) return;
+                    projectTransferring = false;
+                    activeProjectTransfer = null;
+                    try {
+                        applyImportedProject(imported);
+                        ProjectArchive.pruneStoredProjects(new java.io.File(getFilesDir(), "projects"), imported.plates);
+                        projectHistoryStore.record(historyName, source, projectModelCount(imported.plates), imported.plates.size());
+                        Toast.makeText(this, "Opened portable Alloy project", Toast.LENGTH_LONG).show();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Project could not be opened: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                        refreshActions();
+                    }
+                });
+            } catch (Exception error) {
+                mainHandler.post(() -> {
+                    if (transferId != activeProjectTransferId || isFinishing()) return;
                     projectTransferring = false;
                     activeProjectTransfer = null;
                     status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
