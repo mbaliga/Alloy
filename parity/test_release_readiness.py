@@ -1,4 +1,5 @@
 import json
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,15 @@ class ReleaseReadinessTests(unittest.TestCase):
     def _write(self, value):
         directory = tempfile.TemporaryDirectory()
         path = Path(directory.name) / "readiness.json"
+        evidence = {}
+        for gate, status in value.get("gates", {}).items():
+            if status != "PASS":
+                continue
+            name = f"evidence-{gate}.txt"
+            content = f"reviewed evidence for {gate}\n".encode("utf-8")
+            (path.parent / name).write_bytes(content)
+            evidence[gate] = {"path": name, "sha256": hashlib.sha256(content).hexdigest()}
+        value.setdefault("gate_evidence", evidence)
         path.write_text(json.dumps(value), encoding="utf-8")
         return directory, path
 
@@ -91,6 +101,42 @@ class ReleaseReadinessTests(unittest.TestCase):
         directory, path = self._write(value)
         try:
             with self.assertRaises(SystemExit):
+                validate(path)
+        finally:
+            directory.cleanup()
+
+    def test_gate_evidence_must_match_retained_file_digest(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        directory, path = self._write(value)
+        try:
+            evidence_path = path.parent / value["gate_evidence"]["g3_toolpath_parity"]["path"]
+            evidence_path.write_text("altered after review\n", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "SHA-256 does not match"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
+    def test_gate_evidence_cannot_escape_readiness_directory(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        directory, path = self._write(value)
+        try:
+            value["gate_evidence"]["native_engine_source_build"]["path"] = "../outside.txt"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "must stay beside"):
                 validate(path)
         finally:
             directory.cleanup()
