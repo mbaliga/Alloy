@@ -292,7 +292,22 @@ jobs:
         with:
           gradle-version: 8.9
       - name: Build Alloy with the optional native engine
-        run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true -PalloyCiDebugSign=true --no-daemon --stacktrace
+        shell: bash
+        run: |
+          set +e
+          gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true -PalloyCiDebugSign=true --no-daemon --stacktrace 2>&1 | tee native-engine-build.log
+          build_status=${PIPESTATUS[0]}
+          tail -n 250 native-engine-build.log > native-engine-build-tail.log
+          exit "$build_status"
+
+      - name: Upload native compile failure tail
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-engine-build-diagnostic
+          path: native-engine-build-tail.log
+          if-no-files-found: error
+          retention-days: 7
       - name: Compile native instrumentation smoke test
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       # Use hosted KVM where available; some runner pools do not expose it.
