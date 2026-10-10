@@ -17,22 +17,24 @@ fixture in this pilot, and do not mark this evidence as support evidence.
    artifact from [run 37749868229](https://github.com/mbaliga/Alloy/actions/runs/37749868229)
    predates the separate pilot application ID and is not safe to describe as
    side-by-side with an existing Alloy install. Do not use it for a new trial,
-   and do not uninstall an existing app to make it fit. The replacement build
-   is being verified in [native run 37768795482](https://github.com/mbaliga/Alloy/actions/runs/37768795482)
-   for source commit
-   [4c41928](https://github.com/mbaliga/Alloy/commit/4c41928faa645af59185f97966e2a3c6cbc7f76e).
-   Wait for that run to finish successfully and confirm its
+   and do not uninstall an existing app to make it fit. The latest native
+   source/build-contract verification is
+   [run 38026286081](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
+   at source commit
+   [547f2ec](https://github.com/mbaliga/Alloy/commit/547f2ece906af3c74d475683f66b43ef26f344d9).
+   It was still building native dependencies at the last check. **Wait for
+   this run to finish successfully** and confirm its
    `alloy-a1-mini-physical-pilot-ci` artifact is present before downloading
-   or installing it. CI now asserts the app/test package IDs are
-   `com.mbaliga.alloy.pilot` and `com.mbaliga.alloy.pilot.test`. Only that
-   verified replacement build is intended to install alongside regular Alloy.
-   It remains CI-debug-signed, is not a production release, and is not a
-   physical-print qualification. The matching `app-release-androidTest.apk`
-   is optional for the phone-only flow. The artifact's
-   `evidence/run-*/software-pilot-manifest.json` is software evidence only;
-   it must say `software_only: true` and leave
-   `physical_qualification: PENDING` and
-   `direct_send_qualification: PENDING`.
+   or installing anything. The succeeding release-evidence/CI commits change
+   no app or native-engine source. If the run fails, do not fall back to an
+   older APK; resolve the failure and produce a successful artifact for the
+   current native source first. CI asserts the app/test package IDs are
+   `com.mbaliga.alloy.pilot` and `com.mbaliga.alloy.pilot.test`. The artifact
+   must also include `evidence/run-*/software-pilot-manifest.json`; verify it
+   says `software_only: true` and leaves `physical_qualification: PENDING` and
+   `direct_send_qualification: PENDING`. This is a CI-debug-signed pilot build,
+   not a production release or physical-print qualification. The matching
+   `app-release-androidTest.apk` is optional for the phone-only flow.
 2. Confirm the app visibly labels itself **PILOT BUILD**. On the phone, open
    Library and select an untouched bundled fixture. Use only the pinned
    A1 Mini / N1 profile, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
