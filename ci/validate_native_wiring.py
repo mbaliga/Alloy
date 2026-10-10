@@ -349,6 +349,8 @@ def main() -> None:
         require(cmake, token, cmake_path)
     require(cmake, 'COMPILE_OPTIONS "-include;TDF_LabelSequence.hxx"', cmake_path)
     require(cmake, 'COMPILE_OPTIONS "-include;sstream"', cmake_path)
+    require(cmake, '"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"', cmake_path)
+    require(cmake, "target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)", cmake_path)
     for token in (
         'target_compile_definitions(slic3r PRIVATE',
         'SLIC3R_VERSION=${SLIC3R_VERSION}',
