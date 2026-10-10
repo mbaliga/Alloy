@@ -15,5 +15,16 @@
     "signed_install_and_upgrade": "PENDING",
     "interruption_and_recovery": "PENDING"
   },
-  "notes": "Copy to production-readiness.json only after every gate has reviewed evidence. Do not replace PENDING with PASS without attaching the corresponding evidence record."
+  "gate_evidence": {
+    "native_engine_source_build": { "path": "evidence/REPLACE-WITH-NATIVE-BUILD-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "native_smoke_on_arm64_device": { "path": "evidence/REPLACE-WITH-ARM64-SMOKE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "a1_mini_profile_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-G3-PARITY-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-G4-RUNTIME-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "bambu_treesupport3d_parity": { "path": "evidence/REPLACE-WITH-TREESUPPORT3D-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "physical_a1_mini_transport": { "path": "evidence/REPLACE-WITH-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "signed_install_and_upgrade": { "path": "evidence/REPLACE-WITH-SIGNED-UPGRADE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "interruption_and_recovery": { "path": "evidence/REPLACE-WITH-RECOVERY-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" }
+  },
+  "notes": "Copy to production-readiness.json only after every gate has reviewed evidence. A PASS requires a retained file and matching SHA-256 under gate_evidence; never replace PENDING without the corresponding reviewed evidence."
 }

@@ -10,6 +10,8 @@ cannot accidentally bypass those external gates.
 from __future__ import annotations
 
 import json
+import hashlib
+import re
 import sys
 from pathlib import Path
 
@@ -25,10 +27,19 @@ REQUIRED_GATES = (
     "signed_install_and_upgrade",
     "interruption_and_recovery",
 )
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def fail(message: str) -> None:
     raise SystemExit(f"release readiness: {message}")
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def validate(path: Path) -> dict:
@@ -52,6 +63,29 @@ def validate(path: Path) -> dict:
     missing = [gate for gate in REQUIRED_GATES if gates.get(gate) != "PASS"]
     if missing:
         fail("required gates are not PASS: " + ", ".join(missing))
+    gate_evidence = document.get("gate_evidence")
+    if not isinstance(gate_evidence, dict):
+        fail("gate_evidence must map every PASS gate to a retained evidence file")
+    for gate in REQUIRED_GATES:
+        item = gate_evidence.get(gate)
+        if not isinstance(item, dict):
+            fail(f"gate_evidence.{gate} must identify a retained evidence file")
+        evidence_name = item.get("path")
+        expected_sha256 = item.get("sha256")
+        if not isinstance(evidence_name, str) or not evidence_name.strip():
+            fail(f"gate_evidence.{gate}.path must be a non-empty relative path")
+        if Path(evidence_name).is_absolute():
+            fail(f"gate_evidence.{gate}.path must be relative to the readiness record")
+        if not isinstance(expected_sha256, str) or not SHA256_RE.fullmatch(expected_sha256):
+            fail(f"gate_evidence.{gate}.sha256 must be a lowercase SHA-256 digest")
+        evidence_path = (path.parent / evidence_name).resolve()
+        if path.parent.resolve() not in evidence_path.parents:
+            fail(f"gate_evidence.{gate}.path must stay beside the readiness record")
+        if not evidence_path.is_file():
+            fail(f"gate_evidence.{gate} file is missing: {evidence_name}")
+        actual_sha256 = sha256_file(evidence_path)
+        if actual_sha256 != expected_sha256:
+            fail(f"gate_evidence.{gate} SHA-256 does not match: {evidence_name}")
     if gates["physical_a1_mini_transport"] == "PASS":
         evidence_name = document.get("physical_acceptance_evidence")
         if not isinstance(evidence_name, str) or not evidence_name.strip():
