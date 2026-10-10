@@ -9,8 +9,8 @@ cannot accidentally bypass those external gates.
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -83,7 +83,10 @@ def validate(path: Path) -> dict:
             fail(f"gate_evidence.{gate}.path must stay beside the readiness record")
         if not evidence_path.is_file():
             fail(f"gate_evidence.{gate} file is missing: {evidence_name}")
-        actual_sha256 = sha256_file(evidence_path)
+        try:
+            actual_sha256 = sha256_file(evidence_path)
+        except OSError as error:
+            fail(f"gate_evidence.{gate} file cannot be read: {error}")
         if actual_sha256 != expected_sha256:
             fail(f"gate_evidence.{gate} SHA-256 does not match: {evidence_name}")
     if gates["physical_a1_mini_transport"] == "PASS":
