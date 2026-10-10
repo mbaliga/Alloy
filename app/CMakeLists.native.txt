@@ -27,9 +27,6 @@ add_compile_options(-fsigned-char)
 # Suppress all warnings
 add_definitions(-w)
 add_definitions(-DNDEBUG)
-add_definitions(-DSLIC3R_VERSION=${SLIC3R_VERSION})
-add_definitions(-DSLIC3R_BUILD_ID=${SLIC3R_BUILD_ID})
-add_definitions(-DSoftFever_VERSION=${SLIC3R_VERSION})
 
 set(jni_imports ${CMAKE_SOURCE_DIR}/src/main/jniImports)
 set(jni_libs ${CMAKE_SOURCE_DIR}/src/main/jniLibs)
@@ -1237,6 +1234,10 @@ add_library(slic3r
 
 #        $<TARGET_OBJECTS:simd>
 )
+target_compile_definitions(slic3r PRIVATE
+        SLIC3R_VERSION=${SLIC3R_VERSION}
+        SLIC3R_BUILD_ID=${SLIC3R_BUILD_ID}
+        SoftFever_VERSION=${SLIC3R_VERSION})
 target_compile_definitions(slic3r PUBLIC -DUSE_TBB -DTBB_USE_CAPTURED_EXCEPTION=0 -DLIBNEST2D_GEOMETRIES_libslic3r
         -DLIBNEST2D_OPTIMIZER_nlopt -DLIBNEST2D_THREADING_tbb -DLIBNEST2D_STATIC -DENABLE_OPENGL_ES -DSLIC3R_OPENGL_ES
         -DUSE_CPP11_REGEX)
