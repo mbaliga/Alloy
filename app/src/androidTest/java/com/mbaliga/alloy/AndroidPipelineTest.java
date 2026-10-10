@@ -1369,7 +1369,7 @@ public final class AndroidPipelineTest {
     }
 
     @Test
-    public void completedPrintRecordsUseWithoutInventingUnknownRemainingStock() {
+    public void completedPrintRecordsUseWithoutInventingUnknownRemainingStock() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         SharedPreferences preferences = context.getSharedPreferences("alloy-test-inventory-unknown-usage", Context.MODE_PRIVATE);
         preferences.edit().clear().commit();
@@ -1405,6 +1405,16 @@ public final class AndroidPipelineTest {
         InventoryStore.Item checked = findInventoryItem(restored, "pla-basic");
         Assert.assertTrue(checked.quantityConfirmed);
         Assert.assertEquals(730, checked.quantity);
+
+        org.json.JSONArray legacySnapshot = new org.json.JSONArray().put(new org.json.JSONObject()
+                .put("id", "pla-basic").put("name", "Bambu PLA Basic").put("category", "Filament")
+                .put("unit", "g").put("quantity", 2_000).put("minimum", 250)
+                .put("service_interval_days", 0).put("built_in", true));
+        restored.restoreSnapshot(legacySnapshot);
+        InventoryStore.Item legacyPla = findInventoryItem(restored, "pla-basic");
+        Assert.assertEquals(2_000, legacyPla.quantity);
+        Assert.assertFalse("legacy quantity must require physical confirmation", legacyPla.quantityConfirmed);
+        Assert.assertEquals("Not recorded", legacyPla.quantityLabel());
     }
 
     @Test

@@ -160,10 +160,18 @@ Expected: learning is readable offline and is never a gate-bypass path.
 - Open Inventory. Verify ledger rows cover all 14 A1 Mini catalog material
   classes: PLA Basic, PETG, TPU, PVA, Support PLA, Support PETG, ABS, ASA, PC,
   PA/Nylon, PET, PLA-CF, PETG-CF and other CF/GF-filled polymers. The eight
-  A1 Mini not-recommended rows must be zero-stock, say “Track only” and
-  “not recommended on A1 Mini,” and must not create default reorder alerts.
-  Zero stock must not look like a detected loaded spool; the ledger is not a
-  printer sensor or material-compatibility approval.
+  A1 Mini not-recommended rows must say “Track only” and “not recommended on
+  A1 Mini,” and must not create default reorder alerts. Every unmeasured
+  built-in quantity should read **Not recorded**, not zero, stocked, or loaded;
+  unknown quantities must not generate reorder alerts or display an empty
+  gauge that looks like measured zero. Record a physically checked exact
+  quantity (including zero) before using add/use stock actions. Service
+  history should read **not recorded** until an actual service is logged; an
+  interval must not invent a due date from install time. The inventory ledger
+  is not a printer sensor or material-compatibility approval. A completed
+  print may record estimated filament usage while stock is unknown, but it
+  must not fabricate a remaining-stock quantity. Confirm that exact stock
+  remains editable and survives project snapshot export/restore.
 
 Expected: the three-printer catalog is available for planning only; all three
 remain **Not qualified** for Alloy direct send.
