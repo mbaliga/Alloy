@@ -25,15 +25,22 @@ G2 provenance remains **INSUFFICIENT / FAIL**, and G3 semantic parity remains
 open. No software artifact authorizes general direct printing or production
 release promotion.
 
-**Current-source install gate:** that successful baseline is older than the
-current branch. Current native runs [38026286081](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
-and [38027450571](https://github.com/mbaliga/Alloy/actions/runs/38027450571)
-failed before publishing usable APKs. Run [38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382)
-is testing the first compile fix; [38029581758](https://github.com/mbaliga/Alloy/actions/runs/38029581758)
-contains the follow-up macro-scope fix and is queued. **Do not install the
-historical artifacts below as builds of current source.** Refresh the artifact
-IDs, source commit and hashes here only after the complete current native and
-ordinary Android workflows pass.
+**Current-source install gate (checked 2026-10-10 06:25 UTC):** that
+successful baseline is older than the current branch. Ordinary Android v1 run
+[38029581732](https://github.com/mbaliga/Alloy/actions/runs/38029581732), at
+source `dada7c98`, has built its CI-signed APK successfully and is running
+Android pipeline acceptance tests; no artifact has been published yet. Native
+run [38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382)
+is still compiling source dependencies and tests only the first version-header
+fix (`c37bea15`). Native run
+[38029581758](https://github.com/mbaliga/Alloy/actions/runs/38029581758), at
+`dada7c98` with the additional target-scoped macro fix, remains queued behind
+that long-running native job. Neither current native run has produced a usable
+APK. **Do not install the historical artifacts below as builds of current
+source.** Refresh artifact IDs, source commit and hashes only after the current
+ordinary and native workflows finish successfully; native slicing/pilot
+artifacts additionally require their native test and software-pilot steps to
+pass.
 
 ## 1. Install the matching artifacts
 
