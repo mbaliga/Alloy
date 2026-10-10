@@ -350,6 +350,14 @@ def main() -> None:
     require(cmake, 'COMPILE_OPTIONS "-include;TDF_LabelSequence.hxx"', cmake_path)
     require(cmake, 'COMPILE_OPTIONS "-include;sstream"', cmake_path)
     require(cmake, 'COMPILE_OPTIONS "-include;occt_legacy_text_api.hxx"', cmake_path)
+    require(cmake, "official_orca_link_probe SHARED", cmake_path)
+    require(cmake, "--whole-archive", cmake_path)
+    require(cmake, "--no-whole-archive", cmake_path)
+    require(cmake, "OUTPUT_NAME alloy_orca_link_probe", cmake_path)
+    require(cmake, "get_target_property(_legacy_slic3r_link_libraries slic3r LINK_LIBRARIES)", cmake_path)
+    require(cmake, "${_legacy_slic3r_link_libraries}", cmake_path)
+    link_probe = ROOT / "app/src/main/jni/official_orca_link_probe.cpp"
+    require(link_probe.read_text(), "alloy_orca_link_probe", link_probe)
     text_compat = ROOT / "app/src/main/jni/official_orca_compat/occt_legacy_text_api.hxx"
     require(text_compat.read_text(), "using NCollection_Utf8Iter = NCollection_UtfIterator<char>", text_compat)
     require(text_compat.read_text(), "using TColStd_SequenceOfHAsciiString", text_compat)

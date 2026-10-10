@@ -149,7 +149,7 @@ android {
                             '-DSLIC3R_BUILD_ID="1"',
                             "-DALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE=${officialOrcaCompileProbe ? 'ON' : 'OFF'}"
                     if (officialOrcaCompileProbe) {
-                        targets 'slic3r', 'official_orca_compile_probe'
+                        targets 'slic3r', 'official_orca_compile_probe', 'official_orca_link_probe'
                     }
                 }
             }
