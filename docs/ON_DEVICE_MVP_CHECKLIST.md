@@ -25,22 +25,25 @@ G2 provenance remains **INSUFFICIENT / FAIL**, and G3 semantic parity remains
 open. No software artifact authorizes general direct printing or production
 release promotion.
 
-**Current-source install gate (checked 2026-10-10 06:25 UTC):** that
-successful baseline is older than the current branch. Ordinary Android v1 run
-[38029581732](https://github.com/mbaliga/Alloy/actions/runs/38029581732), at
-source `dada7c98`, has built its CI-signed APK successfully and is running
-Android pipeline acceptance tests; no artifact has been published yet. Native
-run [38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382)
-is still compiling source dependencies and tests only the first version-header
-fix (`c37bea15`). Native run
+**Current-source install gate (checked 2026-10-10 06:27 UTC):** ordinary
+Android v1 run
+[38029581732](https://github.com/mbaliga/Alloy/actions/runs/38029581732),
+source `dada7c98`, completed successfully and published artifact
+`alloy-v1-release-ci-apk` (artifact ID `11661663592`, ZIP SHA-256
+`9450158fa4ad153f6fccb3f6249c6ae4c4382f9529924e2de82acea3c047e1b2`). The
+archive contains `app-release.apk` (8,813,118 bytes). This ordinary build has
+`alloyNativeEngine=false`: it is suitable for current-source UI, import,
+planning and conservative fallback-slicer boundary checks, but is not native
+slicer evidence and must keep physical printing blocked. Native run
+[38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382) is
+still building dependencies and tests only the first version-header fix
+(`c37bea15`). Native run
 [38029581758](https://github.com/mbaliga/Alloy/actions/runs/38029581758), at
 `dada7c98` with the additional target-scoped macro fix, remains queued behind
-that long-running native job. Neither current native run has produced a usable
-APK. **Do not install the historical artifacts below as builds of current
-source.** Refresh artifact IDs, source commit and hashes only after the current
-ordinary and native workflows finish successfully; native slicing/pilot
-artifacts additionally require their native test and software-pilot steps to
-pass.
+it. No current-source native APK or pilot artifact is available. Do not use
+historical native artifacts as current native evidence; update their IDs and
+hashes only after the native build, instrumentation, G3 export and software
+pilot steps pass.
 
 ## 1. Install the matching artifacts
 
@@ -52,12 +55,14 @@ five-fixture software-only package checks. Use only for the scope below; it is
 not physical qualification. Do not uninstall a working Alloy installation
 merely to replace it with a CI-debug-signed QA build.
 
-1. The historical `alloy-v1-release-ci-apk` from Android v1 run
-   [37883851602](https://github.com/mbaliga/Alloy/actions/runs/37883851602)
-   (source commit `64fc3503`) is **not** a build of the current branch. Do not
-   use it for a current-source verification run. Once the current branch has a
-   successful Android v1 artifact, extract its `app-release.apk`, install it
-   on an ARM64 Android phone and record the APK's own SHA-256 separately.
+1. For current-source ordinary app checks, download
+   `alloy-v1-release-ci-apk` from run
+   [38029581732](https://github.com/mbaliga/Alloy/actions/runs/38029581732)
+   (source commit `dada7c98`; artifact ZIP SHA-256
+   `9450158fa4ad153f6fccb3f6249c6ae4c4382f9529924e2de82acea3c047e1b2`),
+   extract `app-release.apk`, install it on an ARM64 Android phone and record
+   the APK's own SHA-256 separately. This APK omits the optional native engine;
+   it can verify the ordinary app and conservative fallback behavior only.
    CI-debug signatures can differ between runs, so Android may refuse to update
    an existing Alloy install. Before uninstalling, export projects you need as
    `.alloy.zip` and back up other app data; uninstalling clears app-private
@@ -66,12 +71,15 @@ merely to replace it with a CI-debug-signed QA build.
    A CI-debug QA build verifies the app workflow/Handy package-visibility
    wiring, not native slicing, printer transport, Handy's actual import
    acceptance, or release.
-2. Successful [native run 37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
+2. Historical native run
+   [37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
    produced native QA, instrumentation and G3 evidence, plus five-fixture
-   software-pilot evidence and a package-ID-verified isolated pilot APK pair.
-   CI-debug signing remains
-   non-production; no software artifact establishes successful physical
-   printing or Handy import acceptance.
+   software-pilot evidence and a package-ID-verified isolated pilot APK pair,
+   but it is not the current source. Wait for the queued current-source native
+   run to pass and publish a fresh artifact before testing native slicing or
+   the isolated software pilot. CI-debug signing remains non-production; no
+   software artifact establishes successful physical printing or Handy import
+   acceptance.
    Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
    samples; 314/479 exact common files, 65.55%;
    [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
