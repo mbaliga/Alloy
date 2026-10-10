@@ -18,6 +18,11 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertIn(official_libnest, probe)
         self.assertLess(probe.index(official_libnest), probe.index(legacy_libnest))
 
+    def test_official_orca_step_source_includes_occt_label_sequence_alias(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        step_options = cmake.split("set_source_files_properties(\n            \"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Format/STEP.cpp\"", 1)[1]
+        self.assertIn('COMPILE_OPTIONS "-include;TDF_LabelSequence.hxx"', step_options)
+
     def test_explicit_cmake_sources_exist_with_exact_case(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         pattern = re.compile(r"\bsrc/main/jni/[A-Za-z0-9_./-]+\.(?:c|cc|cpp|cxx|h|hpp)\b")
