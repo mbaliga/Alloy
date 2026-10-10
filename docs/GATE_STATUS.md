@@ -1,6 +1,29 @@
 # Alloy engine gate status
 
-Date: 2026-10-09
+Date: 2026-10-10
+
+2026-10-10 official Orca Android compile-probe failure and repair: native run
+[`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
+completed its source-built dependency closure, then failed while compiling
+`official_orca_libslic3r`. The diagnostic artifact shows that the generated
+`libslic3r_version.h` defined `SLIC3R_VERSION` as `""1.0.0""`; the official
+template supplies the C++ string-literal quotes, while the legacy Gradle
+configuration already passes embedded quotes. The first repair uses plain
+template values and filters the legacy version macros from the official
+target (commit
+[`c37bea15`](https://github.com/mbaliga/Alloy/commit/c37bea15b6e6942f01080bfed9c30aca7be01c8a)).
+Review then identified that directory-wide `add_definitions` could still leak
+those macros into the official target. The follow-up scopes the three version
+definitions to the legacy `slic3r` target and adds regression checks (commit
+[`dada7c98`](https://github.com/mbaliga/Alloy/commit/dada7c98d704118714c319a64700f2670afb000e)).
+`ci/validate_native_wiring.py` and its 11 focused tests pass locally. Native
+run [`38029368382`](https://github.com/mbaliga/Alloy/actions/runs/38029368382)
+is testing the first repair; run
+[`38029581758`](https://github.com/mbaliga/Alloy/actions/runs/38029581758)
+contains both repairs and is queued. Neither rerun has produced Android
+compile, instrumentation, or pilot evidence yet. G2/G3/G4, TreeSupport3D,
+physical-printer acceptance, Bambu Handy import, and production signing remain
+open.
 
 2026-10-09 native integration recovery checkpoint: commit
 `64fc3503a1bb1812f8e6a0870a7a8c765198793c` removes the Android-incompatible
