@@ -29,7 +29,8 @@ class Stage1ScopePatchTests(unittest.TestCase):
                 root / "app/CMakeLists.txt",
                 root / "app/src/main/jni/libslic3r/Model.cpp",
             ))
-            self.assertNotIn("Format/STEP", combined)
+            self.assertNotIn("src/main/jni/libslic3r/Format/STEP", combined)
+            self.assertIn("${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Format/STEP.cpp", combined)
             self.assertNotIn("load_step(", combined)
             self.assertNotIn("OCCT_LIBS", combined)
 
@@ -86,7 +87,7 @@ class Stage1ScopePatchTests(unittest.TestCase):
                 root / "app/src/main/jni/libslic3r/Model.cpp",
                 root / "build_all_deps_android.sh",
             ))
-            self.assertNotIn("Format/STEP", combined)
+            self.assertNotIn("src/main/jni/libslic3r/Format/STEP", combined)
             self.assertNotIn("load_step(", combined)
             self.assertNotIn("OCCT_LIBS", combined)
             # OCCT must remain in the bootstrap: Alloy's own JNI target

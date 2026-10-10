@@ -112,7 +112,10 @@ def patch_cmake(path: Path) -> None:
         "legacy TBB string pipeline type",
         2,
     )
-    if "Format/STEP.cpp" in text or "Format/STEP.hpp" in text or "${OCCT_LIBS}" in text:
+    # The temporary SliceBeam build must drop only its legacy JNI/OCCT STEP
+    # sources. The separate pinned official-Orca compile probe intentionally
+    # keeps its own Format/STEP.cpp source in the shared native CMake file.
+    if "src/main/jni/libslic3r/Format/STEP.cpp" in text or "src/main/jni/libslic3r/Format/STEP.hpp" in text or "${OCCT_LIBS}" in text:
         raise SystemExit("STEP/OCCT CMake references remain after patch")
     if "math_c99" in text or "boost_math_" in text or "test_exec_moinotr" in text:
         raise SystemExit("Unsupported Boost.Math or test monitor CMake references remain after patch")
