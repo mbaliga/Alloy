@@ -381,7 +381,10 @@ public final class InventoryStore {
                 int minimum = boundedQuantity(value.optInt("minimum", 0));
                 int interval = boundedInterval(value.optInt("service_interval_days", 0));
                 quantity = boundedQuantity(preferences.getInt(quantityKey(id), quantity));
-                boolean due = preferences.getBoolean(serviceKey(id), value.optBoolean("service_due", false));
+                boolean serviceHistoryConfirmed = preferences.getBoolean(SERVICE_HISTORY_CONFIRMED + id,
+                        value.optBoolean("service_history_confirmed", interval == 0));
+                boolean due = serviceHistoryConfirmed
+                        && preferences.getBoolean(serviceKey(id), value.optBoolean("service_due", false));
                 long last = preferences.getLong(lastServicedKey(id), value.optLong("last_serviced_at", 0L));
                 long next = preferences.getLong(nextServiceKey(id), value.optLong("next_service_at", 0L));
                 long usage = boundedUsage(preferences.getLong(FILAMENT_USAGE_MM + id,
@@ -391,7 +394,7 @@ public final class InventoryStore {
                 result.add(new Item(id, name, category, unit, quantity, minimum, due, care,
                         last, next, interval, usage, lastUsed, false,
                         preferences.getBoolean(QUANTITY_CONFIRMED + id, true),
-                        preferences.getBoolean(SERVICE_HISTORY_CONFIRMED + id, interval == 0)));
+                        serviceHistoryConfirmed));
             }
         } catch (Exception ignored) {
             return new ArrayList<>();
@@ -424,6 +427,7 @@ public final class InventoryStore {
             long lastUsed = boundedTimestamp(value, "last_used_at", 0L);
             boolean quantityConfirmed = booleanValue(value, "quantity_confirmed", !builtIn);
             boolean serviceHistoryConfirmed = booleanValue(value, "service_history_confirmed", !builtIn && interval == 0);
+            due = due && serviceHistoryConfirmed;
             Item definition = findDefinition(id);
             if (builtIn) {
                 if (definition == null) throw new IllegalArgumentException("unknown built-in inventory item");
@@ -659,14 +663,14 @@ public final class InventoryStore {
         }
 
         public boolean needsServiceAttention() {
-            return serviceDue || serviceSoon();
+            return serviceHistoryConfirmed && (serviceDue || serviceSoon());
         }
 
         /** Lower ranks are more urgent; reorder wins when an item has multiple alerts. */
         public int attentionRank() {
             if (needsReorder()) return 0;
             if (serviceOverdue()) return 1;
-            if (serviceDue) return 2;
+            if (serviceHistoryConfirmed && serviceDue) return 2;
             if (serviceSoon()) return 3;
             return 4;
         }
@@ -674,7 +678,7 @@ public final class InventoryStore {
         public String statusLabel() {
             if (needsReorder()) return "REORDER";
             if (serviceOverdue()) return "SERVICE OVERDUE";
-            if (serviceDue) return "SERVICE";
+            if (serviceHistoryConfirmed && serviceDue) return "SERVICE";
             if (serviceSoon()) return "SERVICE SOON";
             return !quantityConfirmed || !serviceHistoryConfirmed ? "SET UP" : "READY";
         }
