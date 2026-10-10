@@ -1482,20 +1482,27 @@ public final class MainActivity extends Activity {
         int reorder = 0;
         int service = 0;
         int attention = 0;
+        int stockUnknown = 0;
+        int serviceUnknown = 0;
         for (InventoryStore.Item item : inventoryStore.items()) {
             boolean low = item.needsReorder();
             boolean upkeep = item.needsServiceAttention();
             if (low) reorder++;
             if (upkeep) service++;
             if (low || upkeep) attention++;
+            if (!item.quantityConfirmed) stockUnknown++;
+            if (!item.serviceHistoryConfirmed) serviceUnknown++;
         }
-        String summary = attention == 0
-                ? "All stocked  ·  no service due"
-                : attention + " item" + (attention == 1 ? "" : "s") + " need attention  ·  "
-                        + reorder + " reorder  ·  " + service + " service due";
+        String summary = attention > 0
+                ? attention + " item" + (attention == 1 ? "" : "s") + " need attention  ·  "
+                        + reorder + " reorder  ·  " + service + " service due"
+                : stockUnknown > 0 || serviceUnknown > 0
+                        ? stockUnknown + " stock amounts not recorded  ·  " + serviceUnknown + " service histories unknown"
+                        : "Stock recorded  ·  no service due";
         inventorySummary.setText(summary);
         if (inventoryStatusDot != null) {
-            int color = reorder > 0 ? RED : service > 0 ? AMBER : GREEN;
+            int color = reorder > 0 ? RED : service > 0 ? AMBER
+                    : stockUnknown > 0 || serviceUnknown > 0 ? MUTED : GREEN;
             inventoryStatusDot.setTextColor(color);
             inventoryStatusDot.setContentDescription(summary);
         }
@@ -1936,7 +1943,7 @@ public final class MainActivity extends Activity {
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(4, 6, 4, 4);
-        TextView intro = label("A small workshop ledger for consumables, tools and care routines. Status is intentionally conservative: missing stock means reorder, while a due service stays visible until checked off.", 12, MUTED);
+        TextView intro = label("A local workshop ledger for tools, spares and spools. Stock starts as not recorded—not zero and not detected by the printer. Enter a checked amount; record service only after it happens.", 12, MUTED);
         intro.setLineSpacing(3, 1.0f);
         intro.setPadding(4, 0, 4, 14);
         content.addView(intro, new LinearLayout.LayoutParams(-1, -2));
@@ -2035,9 +2042,10 @@ public final class MainActivity extends Activity {
                 this, null, android.R.attr.progressBarStyleHorizontal);
         int gaugeMax = Math.max(1, Math.max(item.quantity, Math.max(1, item.minimum * 4)));
         stock.setMax(gaugeMax);
-        stock.setProgress(Math.max(0, Math.min(gaugeMax, item.quantity)));
+        stock.setProgress(item.quantityConfirmed ? Math.max(0, Math.min(gaugeMax, item.quantity)) : 0);
         stock.setProgressTintList(ColorStateList.valueOf(statusColor));
-        stock.setContentDescription(item.name + " stock level: " + item.quantityLabel());
+        stock.setVisibility(item.quantityConfirmed ? View.VISIBLE : View.GONE);
+        stock.setContentDescription(item.name + " stock: " + item.quantityLabel());
         copy.addView(name);
         copy.addView(meta);
         copy.addView(stock, new LinearLayout.LayoutParams(-1, dp(5)));
@@ -2060,14 +2068,21 @@ public final class MainActivity extends Activity {
     private int inventoryStatusColor(InventoryStore.Item item) {
         if (item.needsReorder()) return RED;
         if (item.needsServiceAttention()) return AMBER;
+        if (!item.quantityConfirmed || !item.serviceHistoryConfirmed) return MUTED;
         return GREEN;
     }
 
     private void showInventoryItem(InventoryStore.Item item) {
         boolean grams = item.usesGrams();
-        String[] actions = item.isCustom()
-                ? new String[]{grams ? "Add 100 g" : "Add one", grams ? "Use 100 g" : "Use one", "Mark serviced", "Remove item"}
-                : new String[]{grams ? "Add 100 g" : "Add one", grams ? "Use 100 g" : "Use one", "Mark serviced"};
+        ArrayList<String> actionList = new ArrayList<>();
+        actionList.add(item.quantityConfirmed ? "Set exact quantity" : "Record current quantity");
+        if (item.quantityConfirmed) {
+            actionList.add(grams ? "Add 100 g" : "Add one");
+            actionList.add(grams ? "Use 100 g" : "Use one");
+        }
+        actionList.add(item.serviceHistoryConfirmed ? "Mark serviced" : "Record service done");
+        if (item.isCustom()) actionList.add("Remove item");
+        String[] actions = actionList.toArray(new String[0]);
         new AlertDialog.Builder(this)
                 .setTitle(item.name)
                 .setMessage(item.category + "\n" + item.quantityLabel()
@@ -2075,14 +2090,18 @@ public final class MainActivity extends Activity {
                         + "\n\n" + item.care + "\n" + item.serviceLabel()
                         + "\n\nCurrent state: " + item.statusLabel())
                 .setItems(actions, (dialog, which) -> {
-                    if (which == 0) {
+                    String selected = actions[which];
+                    if ("Set exact quantity".equals(selected) || "Record current quantity".equals(selected)) {
+                        showSetInventoryQuantity(item, dialog);
+                        return;
+                    }
+                    if (selected.equals(grams ? "Add 100 g" : "Add one")) {
                         if (grams) inventoryStore.addQuantity(item, 100); else inventoryStore.addOne(item);
-                    }
-                    if (which == 1) {
+                    } else if (selected.equals(grams ? "Use 100 g" : "Use one")) {
                         if (grams) inventoryStore.useQuantity(item, 100); else inventoryStore.useOne(item);
-                    }
-                    if (which == 2) inventoryStore.markServiced(item);
-                    if (which == 3 && item.isCustom()) {
+                    } else if ("Mark serviced".equals(selected) || "Record service done".equals(selected)) {
+                        inventoryStore.markServiced(item);
+                    } else if ("Remove item".equals(selected) && item.isCustom()) {
                         new AlertDialog.Builder(this)
                                 .setTitle("Remove " + item.name + "?")
                                 .setMessage("This removes the custom inventory record from this phone.")
@@ -2099,6 +2118,29 @@ public final class MainActivity extends Activity {
                     Toast.makeText(this, item.name + " updated", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void showSetInventoryQuantity(InventoryStore.Item item, android.content.DialogInterface itemDialog) {
+        EditText quantity = field(item.quantityConfirmed ? String.valueOf(item.quantity) : "",
+                item.unit.equalsIgnoreCase("g") ? "Exact current quantity in grams" : "Exact current quantity · " + item.unit);
+        quantity.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        new AlertDialog.Builder(this)
+                .setTitle(item.quantityConfirmed ? "Set exact quantity" : "Record current quantity")
+                .setMessage("Enter the amount you physically checked. Alloy cannot read spool or spare stock from the printer.")
+                .setView(quantity)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save checked amount", (dialog, which) -> {
+                    try {
+                        int amount = Integer.parseInt(quantity.getText().toString().trim());
+                        inventoryStore.setExactQuantity(item, amount);
+                        updateInventorySummary();
+                        itemDialog.dismiss();
+                        showInventory();
+                    } catch (Exception error) {
+                        Toast.makeText(this, "Enter a valid whole-number quantity", Toast.LENGTH_LONG).show();
+                    }
+                })
                 .show();
     }
 
