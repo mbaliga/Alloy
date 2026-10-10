@@ -1418,6 +1418,11 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     set_source_files_properties(
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Format/STEP.cpp"
             PROPERTIES COMPILE_OPTIONS "-include;TDF_LabelSequence.hxx")
+    # LocalesUtils.cpp uses std::stringstream through a transitive include
+    # that is not guaranteed by the Android NDK C++ library headers.
+    set_source_files_properties(
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/LocalesUtils.cpp"
+            PROPERTIES COMPILE_OPTIONS "-include;sstream")
     # Reuse only the legacy target's compile-time include/define surface. Do
     # not link the official archive against the legacy engine or into the APK.
     target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS})
