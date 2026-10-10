@@ -23,6 +23,11 @@ class NativeDependencyWiringTests(unittest.TestCase):
         step_options = cmake.split("set_source_files_properties(\n            \"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Format/STEP.cpp\"", 1)[1]
         self.assertIn('COMPILE_OPTIONS "-include;TDF_LabelSequence.hxx"', step_options)
 
+    def test_official_orca_locales_source_includes_stringstream_header(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        locale_options = cmake.split("set_source_files_properties(\n            \"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/LocalesUtils.cpp\"", 1)[1]
+        self.assertIn('COMPILE_OPTIONS "-include;sstream"', locale_options)
+
     def test_explicit_cmake_sources_exist_with_exact_case(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         pattern = re.compile(r"\bsrc/main/jni/[A-Za-z0-9_./-]+\.(?:c|cc|cpp|cxx|h|hpp)\b")
