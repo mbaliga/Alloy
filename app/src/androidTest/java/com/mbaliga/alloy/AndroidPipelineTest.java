@@ -1236,12 +1236,15 @@ public final class AndroidPipelineTest {
         InventoryStore.Item plate = null;
         for (InventoryStore.Item item : inventory.items()) if ("pei-plate".equals(item.id)) plate = item;
         Assert.assertNotNull(plate);
-        Assert.assertTrue(plate.serviceDue);
+        Assert.assertFalse(plate.serviceDue);
+        Assert.assertFalse(plate.serviceHistoryConfirmed);
+        Assert.assertEquals("Service history not recorded", plate.serviceLabel());
         inventory.markServiced(plate);
         InventoryStore.Item reloaded = null;
         for (InventoryStore.Item item : new InventoryStore(inventoryPreferences).items()) if ("pei-plate".equals(item.id)) reloaded = item;
         Assert.assertNotNull(reloaded);
         Assert.assertFalse(reloaded.serviceDue);
+        Assert.assertTrue(reloaded.serviceHistoryConfirmed);
         Assert.assertTrue(reloaded.lastServicedAt > 0L);
         Assert.assertTrue(reloaded.nextServiceAt > reloaded.lastServicedAt);
     }
@@ -1260,6 +1263,7 @@ public final class AndroidPipelineTest {
         Assert.assertNotNull(reloaded);
         Assert.assertTrue(reloaded.needsReorder());
         Assert.assertFalse(reloaded.serviceDue);
+        Assert.assertFalse(reloaded.serviceHistoryConfirmed);
         store.addOne(reloaded);
         InventoryStore.Item stocked = findInventoryItem(new InventoryStore(preferences), item.id);
         Assert.assertNotNull(stocked);
@@ -1339,6 +1343,10 @@ public final class AndroidPipelineTest {
         InventoryStore.Item before = findInventoryItem(store, "pla-basic");
         Assert.assertNotNull(before);
         Assert.assertEquals("g", before.unit);
+        Assert.assertFalse(before.quantityConfirmed);
+        store.setExactQuantity(before, 2_000);
+        before = findInventoryItem(store, "pla-basic");
+        Assert.assertTrue(before.quantityConfirmed);
         Assert.assertEquals(2_000, before.quantity);
 
         InventoryStore.Usage usage = store.recordCompletedPrint("completed-job-1", "PLA", 600_000f, 1.75f);
@@ -1358,6 +1366,45 @@ public final class AndroidPipelineTest {
         Assert.assertFalse(duplicate.recorded);
         Assert.assertEquals(after.quantity, findInventoryItem(store, "pla-basic").quantity);
         preferences.edit().clear().commit();
+    }
+
+    @Test
+    public void completedPrintRecordsUseWithoutInventingUnknownRemainingStock() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences = context.getSharedPreferences("alloy-test-inventory-unknown-usage", Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        InventoryStore store = new InventoryStore(preferences);
+        InventoryStore.Item before = findInventoryItem(store, "pla-basic");
+        Assert.assertNotNull(before);
+        Assert.assertFalse(before.quantityConfirmed);
+        try {
+            store.addOne(before);
+            Assert.fail("must not do quantity arithmetic against an unknown starting value");
+        } catch (IllegalStateException expected) { }
+        InventoryStore.Usage usage = store.recordCompletedPrint("unknown-stock-job", "PLA", 20_000f, 1.75f);
+        Assert.assertTrue(usage.recorded);
+        Assert.assertFalse(usage.quantityConfirmed);
+        Assert.assertEquals(-1, usage.remainingGrams);
+        InventoryStore.Item after = findInventoryItem(store, "pla-basic");
+        Assert.assertFalse(after.quantityConfirmed);
+        Assert.assertEquals("Not recorded", after.quantityLabel());
+        Assert.assertFalse(after.needsReorder());
+        Assert.assertTrue(after.filamentUsageMm >= 20_000L);
+
+        org.json.JSONArray snapshot = store.snapshot();
+        SharedPreferences restoredPreferences = context.getSharedPreferences(
+                "alloy-test-inventory-unknown-usage-restored", Context.MODE_PRIVATE);
+        restoredPreferences.edit().clear().commit();
+        InventoryStore restored = new InventoryStore(restoredPreferences);
+        restored.restoreSnapshot(snapshot);
+        InventoryStore.Item restoredPla = findInventoryItem(restored, "pla-basic");
+        Assert.assertNotNull(restoredPla);
+        Assert.assertFalse("portable project must preserve unknown stock", restoredPla.quantityConfirmed);
+        Assert.assertEquals("Not recorded", restoredPla.quantityLabel());
+        restored.setExactQuantity(restoredPla, 730);
+        InventoryStore.Item checked = findInventoryItem(restored, "pla-basic");
+        Assert.assertTrue(checked.quantityConfirmed);
+        Assert.assertEquals(730, checked.quantity);
     }
 
     @Test

@@ -27,6 +27,8 @@ public final class InventoryStore {
     private static final long DAY_MILLIS = 24L * 60L * 60L * 1000L;
     private static final long SERVICE_SOON_WINDOW_MILLIS = 14L * DAY_MILLIS;
     private static final String CUSTOM_ITEMS = "custom_items";
+    private static final String QUANTITY_CONFIRMED = "quantity_confirmed.";
+    private static final String SERVICE_HISTORY_CONFIRMED = "service_history_confirmed.";
     private static final String FILAMENT_USAGE_MM = "filament_usage_mm.";
     private static final String LAST_USED = "last_used.";
     private static final String CONSUMED_JOBS = "consumed_jobs";
@@ -53,7 +55,9 @@ public final class InventoryStore {
                     preferences.getLong(nextServiceKey(definition.id), definition.nextServiceAt),
                     definition.serviceIntervalDays,
                     boundedUsage(preferences.getLong(FILAMENT_USAGE_MM + definition.id, definition.filamentUsageMm)),
-                    boundedTimestamp(preferences.getLong(LAST_USED + definition.id, definition.lastUsedAt)), true));
+                    boundedTimestamp(preferences.getLong(LAST_USED + definition.id, definition.lastUsedAt)), true,
+                    preferences.getBoolean(QUANTITY_CONFIRMED + definition.id, definition.quantityConfirmed),
+                    preferences.getBoolean(SERVICE_HISTORY_CONFIRMED + definition.id, definition.serviceHistoryConfirmed)));
         }
         result.addAll(customItems());
         return result;
@@ -99,11 +103,14 @@ public final class InventoryStore {
         for (Item current : items()) {
             editor.remove(quantityKey(current.id)).remove(serviceKey(current.id))
                     .remove(lastServicedKey(current.id)).remove(nextServiceKey(current.id))
+                    .remove(QUANTITY_CONFIRMED + current.id).remove(SERVICE_HISTORY_CONFIRMED + current.id)
                     .remove(FILAMENT_USAGE_MM + current.id).remove(LAST_USED + current.id);
         }
         for (Item item : restored) {
             editor.putInt(quantityKey(item.id), item.quantity)
+                    .putBoolean(QUANTITY_CONFIRMED + item.id, item.quantityConfirmed)
                     .putBoolean(serviceKey(item.id), item.serviceDue)
+                    .putBoolean(SERVICE_HISTORY_CONFIRMED + item.id, item.serviceHistoryConfirmed)
                     .putLong(lastServicedKey(item.id), item.lastServicedAt)
                     .putLong(nextServiceKey(item.id), item.nextServiceAt)
                     .putLong(FILAMENT_USAGE_MM + item.id, item.filamentUsageMm)
@@ -126,9 +133,12 @@ public final class InventoryStore {
         int safeQuantity = boundedQuantity(quantity);
         int safeMinimum = boundedQuantity(minimum);
         int safeInterval = boundedInterval(serviceIntervalDays);
-        long nextService = safeInterval == 0 ? 0L : System.currentTimeMillis() + safeInterval * DAY_MILLIS;
+        // A schedule is not a service record. Start its clock only after the
+        // user records an actual service event.
+        long nextService = 0L;
         Item item = new Item("custom-" + UUID.randomUUID().toString(), itemName, itemCategory, itemUnit,
-                safeQuantity, safeMinimum, false, itemCare, 0L, nextService, safeInterval, false);
+                safeQuantity, safeMinimum, false, itemCare, 0L, nextService, safeInterval,
+                0L, 0L, false, true, safeInterval == 0);
         existing.add(item);
         saveCustomItems(existing);
         return item;
@@ -149,6 +159,7 @@ public final class InventoryStore {
             saveCustomItems(existing);
             preferences.edit().remove(quantityKey(item.id)).remove(serviceKey(item.id))
                     .remove(lastServicedKey(item.id)).remove(nextServiceKey(item.id))
+                    .remove(QUANTITY_CONFIRMED + item.id).remove(SERVICE_HISTORY_CONFIRMED + item.id)
                     .remove(FILAMENT_USAGE_MM + item.id).remove(LAST_USED + item.id).commit();
         }
         return removed;
@@ -165,6 +176,7 @@ public final class InventoryStore {
     public synchronized void addQuantity(Item item, int amount) {
         if (item == null || amount < 0) throw new IllegalArgumentException("inventory quantity is invalid");
         synchronized (preferences) {
+            requireConfirmedQuantity(item);
             long next = Math.min((long) MAX_QUANTITY, (long) currentQuantity(item) + amount);
             setQuantity(item, (int) next);
         }
@@ -173,8 +185,23 @@ public final class InventoryStore {
     public synchronized void useQuantity(Item item, int amount) {
         if (item == null || amount < 0) throw new IllegalArgumentException("inventory quantity is invalid");
         synchronized (preferences) {
+            requireConfirmedQuantity(item);
             setQuantity(item, Math.max(0, currentQuantity(item) - amount));
         }
+    }
+
+    /** Set a checked physical quantity; unconfirmed defaults are never used as an arithmetic baseline. */
+    public synchronized void setExactQuantity(Item item, int quantity) {
+        if (item == null) throw new IllegalArgumentException("inventory item is required");
+        synchronized (preferences) {
+            preferences.edit().putInt(quantityKey(item.id), boundedQuantity(quantity))
+                    .putBoolean(QUANTITY_CONFIRMED + item.id, true).apply();
+        }
+    }
+
+    private static void requireConfirmedQuantity(Item item) {
+        if (!item.quantityConfirmed)
+            throw new IllegalStateException("record the current physical quantity before adding or using stock");
     }
 
     /** Item rows are immutable UI snapshots; never use their stale quantity as the write base. */
@@ -208,7 +235,7 @@ public final class InventoryStore {
         Item filament = matchingFilament(material);
         if (filament == null || !isGramUnit(filament.unit)) return Usage.notTracked();
         int grams = gramsFor(filamentMm, filamentDiameterMm, material);
-        int nextQuantity = Math.max(0, filament.quantity - grams);
+        int nextQuantity = filament.quantityConfirmed ? Math.max(0, filament.quantity - grams) : -1;
         long totalUsage = boundedUsage(filament.filamentUsageMm + filamentMmRounded(filamentMm));
         long now = System.currentTimeMillis();
         ArrayList<String> jobs = consumedJobs();
@@ -216,14 +243,14 @@ public final class InventoryStore {
         while (jobs.size() > MAX_CONSUMED_JOBS) jobs.remove(0);
         JSONArray encodedJobs = new JSONArray();
         for (String job : jobs) encodedJobs.put(job);
-        boolean committed = preferences.edit()
-                .putInt(quantityKey(filament.id), nextQuantity)
-                .putLong(FILAMENT_USAGE_MM + filament.id, totalUsage)
+        SharedPreferences.Editor editor = preferences.edit();
+        if (filament.quantityConfirmed) editor.putInt(quantityKey(filament.id), nextQuantity);
+        boolean committed = editor.putLong(FILAMENT_USAGE_MM + filament.id, totalUsage)
                 .putLong(LAST_USED + filament.id, now)
                 .putString(CONSUMED_JOBS, encodedJobs.toString())
                 .commit();
         if (!committed) throw new IllegalStateException("could not persist completed print usage");
-        return new Usage(true, false, filament.name, grams, nextQuantity, totalUsage);
+        return new Usage(true, false, filament.name, grams, nextQuantity, totalUsage, filament.quantityConfirmed);
     }
 
     public synchronized void markServiced(Item item) {
@@ -231,6 +258,7 @@ public final class InventoryStore {
         long next = item.serviceIntervalDays <= 0 ? 0L : now + item.serviceIntervalDays * DAY_MILLIS;
         if (!preferences.edit()
                 .putBoolean(serviceKey(item.id), false)
+                .putBoolean(SERVICE_HISTORY_CONFIRMED + item.id, true)
                 .putLong(lastServicedKey(item.id), now)
                 .putLong(nextServiceKey(item.id), next)
                 .commit()) {
@@ -325,6 +353,8 @@ public final class InventoryStore {
     }
 
     private boolean serviceDue(Item definition) {
+        if (!preferences.getBoolean(SERVICE_HISTORY_CONFIRMED + definition.id,
+                definition.serviceHistoryConfirmed)) return false;
         boolean explicitDue = preferences.getBoolean(serviceKey(definition.id), definition.serviceDue);
         long next = preferences.getLong(nextServiceKey(definition.id), definition.nextServiceAt);
         return explicitDue || (next > 0L && next <= System.currentTimeMillis());
@@ -359,7 +389,9 @@ public final class InventoryStore {
                 long lastUsed = boundedTimestamp(preferences.getLong(LAST_USED + id,
                         value.optLong("last_used_at", 0L)));
                 result.add(new Item(id, name, category, unit, quantity, minimum, due, care,
-                        last, next, interval, usage, lastUsed, false));
+                        last, next, interval, usage, lastUsed, false,
+                        preferences.getBoolean(QUANTITY_CONFIRMED + id, true),
+                        preferences.getBoolean(SERVICE_HISTORY_CONFIRMED + id, interval == 0)));
             }
         } catch (Exception ignored) {
             return new ArrayList<>();
@@ -390,6 +422,8 @@ public final class InventoryStore {
             long next = boundedTimestamp(value, "next_service_at", 0L);
             long usage = boundedUsage(value, "filament_usage_mm", 0L);
             long lastUsed = boundedTimestamp(value, "last_used_at", 0L);
+            boolean quantityConfirmed = booleanValue(value, "quantity_confirmed", !builtIn);
+            boolean serviceHistoryConfirmed = booleanValue(value, "service_history_confirmed", !builtIn && interval == 0);
             Item definition = findDefinition(id);
             if (builtIn) {
                 if (definition == null) throw new IllegalArgumentException("unknown built-in inventory item");
@@ -402,12 +436,14 @@ public final class InventoryStore {
                 }
                 result.add(new Item(definition.id, definition.name, definition.category, definition.unit,
                         quantity, definition.minimum, due, definition.care, last, next,
-                        definition.serviceIntervalDays, usage, lastUsed, true));
+                        definition.serviceIntervalDays, usage, lastUsed, true,
+                        quantityConfirmed, serviceHistoryConfirmed));
             } else {
                 if (definition != null || !id.matches("custom-[0-9a-fA-F-]{36}"))
                     throw new IllegalArgumentException("custom inventory id is invalid");
                 result.add(new Item(id, name, category, unit, quantity, minimum, due, care,
-                        last, next, interval, usage, lastUsed, false));
+                        last, next, interval, usage, lastUsed, false,
+                        quantityConfirmed, serviceHistoryConfirmed));
             }
         }
         return result;
@@ -428,6 +464,8 @@ public final class InventoryStore {
                 .put("service_interval_days", item.serviceIntervalDays)
                 .put("filament_usage_mm", item.filamentUsageMm)
                 .put("last_used_at", item.lastUsedAt)
+                .put("quantity_confirmed", item.quantityConfirmed)
+                .put("service_history_confirmed", item.serviceHistoryConfirmed)
                 .put("built_in", item.builtIn);
     }
 
@@ -511,25 +549,31 @@ public final class InventoryStore {
 
     private static Item[] definitions() {
         return new Item[]{
-                new Item("nozzle-04", "0.4 mm nozzle", "Consumable", "spare", 1, 1, false, "Replace after wear or a clog", 0),
-                new Item("pei-plate", "Textured PEI plate", "Build surface", "in rotation", 1, 1, true, "Clean and inspect adhesion surface", 30),
-                new Item("ptfe-tube", "PTFE tube", "Feed path", "spare", 0, 1, false, "Add one before the next service", 0),
-                new Item("lubricant", "Silicone lubricant", "Maintenance", "bottle", 1, 1, true, "Motion-system service due soon", 90),
-                new Item("pla-basic", "Bambu PLA Basic", "Filament", "g", 2_000, 250, false, "Two 1 kg spools · dry storage · external spool", 0),
-                new Item("petg-basic", "Bambu PETG", "Filament", "g", 0, 250, false, "Add measured stock · confirm plate, route and dry storage", 0),
-                new Item("tpu", "Bambu TPU", "Filament", "g", 0, 250, false, "Add measured stock · external/direct path only; do not assume AMS lite compatibility", 0),
-                new Item("pva", "Bambu PVA", "Filament", "g", 0, 250, false, "Add measured stock · external/direct path only; keep dry and confirm the exact recipe", 0),
-                new Item("support-pla", "Support material for PLA", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0),
-                new Item("support-petg", "Support material for PETG", "Filament", "g", 0, 250, false, "Add measured stock · confirm the selected support material and feed route", 0),
-                new Item("abs", "ABS · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
-                new Item("asa", "ASA · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
-                new Item("pc", "PC · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
-                new Item("pa", "PA / Nylon · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
-                new Item("pet", "PET · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check the active printer before use", 0),
-                new Item("pla-cf", "PLA-CF · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check nozzle and active printer before use", 0),
-                new Item("petg-cf", "PETG-CF · printer-specific review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; check nozzle and active printer before use", 0),
-                new Item("cf-gf-filled", "Other CF/GF-filled polymer · review", "Filament", "g", 0, 0, false, "Track only · not recommended on A1 Mini; abrasive materials need printer/nozzle review", 0)
+                builtin("nozzle-04", "0.4 mm nozzle", "Consumable", "spare", 1, 0, "Record current spare count; replace after wear or a clog"),
+                builtin("pei-plate", "Textured PEI plate", "Build surface", "in rotation", 1, 30, "Record plate count; clean and inspect adhesion surface"),
+                builtin("ptfe-tube", "PTFE tube", "Feed path", "spare", 1, 0, "Record current spare count"),
+                builtin("lubricant", "Silicone lubricant", "Maintenance", "bottle", 1, 90, "Record bottle count and service history"),
+                builtin("pla-basic", "Bambu PLA Basic", "Filament", "g", 250, 0, "Record measured stock · dry storage · confirm feed route"),
+                builtin("petg-basic", "Bambu PETG", "Filament", "g", 250, 0, "Record measured stock · confirm plate, route and dry storage"),
+                builtin("tpu", "Bambu TPU", "Filament", "g", 250, 0, "Record measured stock · external/direct path only; do not assume AMS lite compatibility"),
+                builtin("pva", "Bambu PVA", "Filament", "g", 250, 0, "Record measured stock · external/direct path only; keep dry and confirm the exact recipe"),
+                builtin("support-pla", "Support material for PLA", "Filament", "g", 250, 0, "Record measured stock · confirm selected support material and feed route"),
+                builtin("support-petg", "Support material for PETG", "Filament", "g", 250, 0, "Record measured stock · confirm selected support material and feed route"),
+                builtin("abs", "ABS · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
+                builtin("asa", "ASA · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
+                builtin("pc", "PC · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
+                builtin("pa", "PA / Nylon · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
+                builtin("pet", "PET · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
+                builtin("pla-cf", "PLA-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check nozzle and active printer before use"),
+                builtin("petg-cf", "PETG-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check nozzle and active printer before use"),
+                builtin("cf-gf-filled", "Other CF/GF-filled polymer · review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; abrasive materials need printer/nozzle review")
         };
+    }
+
+    private static Item builtin(String id, String name, String category, String unit, int minimum,
+                                int serviceIntervalDays, String care) {
+        return new Item(id, name, category, unit, 0, minimum, false, care, 0L, 0L,
+                serviceIntervalDays, 0L, 0L, true, false, serviceIntervalDays == 0);
     }
 
     public static final class Item {
@@ -547,6 +591,8 @@ public final class InventoryStore {
         public final long filamentUsageMm;
         public final long lastUsedAt;
         public final boolean builtIn;
+        public final boolean quantityConfirmed;
+        public final boolean serviceHistoryConfirmed;
 
         Item(String id, String name, String category, String unit, int quantity, int minimum, boolean serviceDue,
              String care, int serviceIntervalDays) {
@@ -567,6 +613,14 @@ public final class InventoryStore {
         Item(String id, String name, String category, String unit, int quantity, int minimum, boolean serviceDue,
              String care, long lastServicedAt, long nextServiceAt, int serviceIntervalDays,
              long filamentUsageMm, long lastUsedAt, boolean builtIn) {
+            this(id, name, category, unit, quantity, minimum, serviceDue, care, lastServicedAt,
+                    nextServiceAt, serviceIntervalDays, filamentUsageMm, lastUsedAt, builtIn, true, true);
+        }
+
+        Item(String id, String name, String category, String unit, int quantity, int minimum, boolean serviceDue,
+             String care, long lastServicedAt, long nextServiceAt, int serviceIntervalDays,
+             long filamentUsageMm, long lastUsedAt, boolean builtIn,
+             boolean quantityConfirmed, boolean serviceHistoryConfirmed) {
             this.id = id;
             this.name = name;
             this.category = category;
@@ -581,6 +635,8 @@ public final class InventoryStore {
             this.filamentUsageMm = boundedUsage(filamentUsageMm);
             this.lastUsedAt = boundedTimestamp(lastUsedAt);
             this.builtIn = builtIn;
+            this.quantityConfirmed = quantityConfirmed;
+            this.serviceHistoryConfirmed = serviceHistoryConfirmed;
         }
 
         public boolean isCustom() { return !builtIn; }
@@ -588,18 +644,18 @@ public final class InventoryStore {
         public boolean usesGrams() { return isGramUnit(unit); }
 
         public boolean needsReorder() {
-            return quantity < minimum;
+            return quantityConfirmed && quantity < minimum;
         }
 
         public boolean serviceOverdue() {
             // The timestamp is authoritative even when an Item was restored
             // from a snapshot whose explicit flag had not been recomputed.
-            return nextServiceAt > 0L && nextServiceAt <= System.currentTimeMillis();
+            return serviceHistoryConfirmed && nextServiceAt > 0L && nextServiceAt <= System.currentTimeMillis();
         }
 
         public boolean serviceSoon() {
             long now = System.currentTimeMillis();
-            return !serviceDue && nextServiceAt > now && nextServiceAt <= now + SERVICE_SOON_WINDOW_MILLIS;
+            return serviceHistoryConfirmed && !serviceDue && nextServiceAt > now && nextServiceAt <= now + SERVICE_SOON_WINDOW_MILLIS;
         }
 
         public boolean needsServiceAttention() {
@@ -620,11 +676,11 @@ public final class InventoryStore {
             if (serviceOverdue()) return "SERVICE OVERDUE";
             if (serviceDue) return "SERVICE";
             if (serviceSoon()) return "SERVICE SOON";
-            return "READY";
+            return !quantityConfirmed || !serviceHistoryConfirmed ? "SET UP" : "READY";
         }
 
         public String quantityLabel() {
-            return quantity + " " + unit;
+            return quantityConfirmed ? quantity + " " + unit : "Not recorded";
         }
 
         public String usageLabel() {
@@ -633,6 +689,7 @@ public final class InventoryStore {
         }
 
         public String serviceLabel() {
+            if (!serviceHistoryConfirmed) return "Service history not recorded";
             if (serviceOverdue()) return "SERVICE OVERDUE";
             if (serviceDue) return "SERVICE DUE";
             if (nextServiceAt <= 0L) return "No service schedule";
@@ -643,6 +700,7 @@ public final class InventoryStore {
         public String glyph() {
             if (needsReorder()) return "!";
             if (needsServiceAttention()) return "⌁";
+            if (!quantityConfirmed || !serviceHistoryConfirmed) return "○";
             return "✓";
         }
     }
@@ -654,15 +712,22 @@ public final class InventoryStore {
         public final int grams;
         public final int remainingGrams;
         public final long totalUsageMm;
+        public final boolean quantityConfirmed;
 
         private Usage(boolean recorded, boolean alreadyRecorded, String itemName, int grams,
                       int remainingGrams, long totalUsageMm) {
+            this(recorded, alreadyRecorded, itemName, grams, remainingGrams, totalUsageMm, false);
+        }
+
+        private Usage(boolean recorded, boolean alreadyRecorded, String itemName, int grams,
+                      int remainingGrams, long totalUsageMm, boolean quantityConfirmed) {
             this.recorded = recorded;
             this.alreadyRecorded = alreadyRecorded;
             this.itemName = itemName;
             this.grams = grams;
             this.remainingGrams = remainingGrams;
             this.totalUsageMm = totalUsageMm;
+            this.quantityConfirmed = quantityConfirmed;
         }
 
         private static Usage alreadyRecorded() {
