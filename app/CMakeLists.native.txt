@@ -1423,3 +1423,4 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS})
     add_custom_target(official_orca_compile_probe
             DEPENDS official_orca_libslic3r)
+endif ()
