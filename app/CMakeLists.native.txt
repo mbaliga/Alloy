@@ -1373,6 +1373,12 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     set(SLIC3R_APP_NAME "Alloy")
     set(SLIC3R_APP_KEY "alloy")
     set(SLIC3R_BUILD_TIME "android-compile-probe")
+    # The official template supplies the C/C++ string-literal quotes itself.
+    # Keep these as plain values even though the legacy Android target's
+    # command-line definitions carry embedded quotes.
+    set(SLIC3R_VERSION "1.0.0")
+    set(SoftFever_VERSION "1.0.0")
+    set(SLIC3R_BUILD_ID "1")
     set(BBL_RELEASE_TO_PUBLIC 0)
     set(BBL_INTERNAL_TESTING 0)
     set(ORCA_CHECK_GCODE_PLACEHOLDERS 0)
@@ -1383,6 +1389,13 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
 
     get_target_property(_legacy_slic3r_include_dirs slic3r INCLUDE_DIRECTORIES)
     get_target_property(_legacy_slic3r_compile_defs slic3r COMPILE_DEFINITIONS)
+    # The legacy target receives these version macros from Gradle with C/C++
+    # string-literal quotes already embedded in the CMake values. The official
+    # header template adds its own quotes, so reusing those definitions would
+    # generate invalid tokens such as `""1.0.0""`. Let the official version
+    # header own these three macros and provide unquoted template values.
+    list(FILTER _legacy_slic3r_compile_defs EXCLUDE REGEX
+            "^(SLIC3R_VERSION|SLIC3R_BUILD_ID|SoftFever_VERSION)=")
     add_library(official_orca_libslic3r STATIC ${OFFICIAL_ORCA_CPP_SOURCES}
             "${_official_orca_binary_dir}/libslic3r_version.h")
     target_compile_features(official_orca_libslic3r PRIVATE cxx_std_17)

@@ -347,6 +347,14 @@ def main() -> None:
         raise SystemExit(f"{cmake_path}: clang-cl system include flags are invalid for Android NDK Clang")
     for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise", "ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE", "official_orca_libslic3r STATIC", "official_orca_compile_probe", "export_official_orca_sources.py", "OFFICIAL_ORCA_CPP_SOURCES"):
         require(cmake, token, cmake_path)
+    for token in (
+        'set(SLIC3R_VERSION "1.0.0")',
+        'set(SoftFever_VERSION "1.0.0")',
+        'set(SLIC3R_BUILD_ID "1")',
+        'list(FILTER _legacy_slic3r_compile_defs EXCLUDE REGEX',
+        '"^(SLIC3R_VERSION|SLIC3R_BUILD_ID|SoftFever_VERSION)="',
+    ):
+        require(cmake, token, cmake_path)
     # CMake accepts paths on case-insensitive developer volumes that fail
     # later on Linux/Android builders. Validate every explicit JNI source and
     # header reference before the expensive source-built native job starts.
