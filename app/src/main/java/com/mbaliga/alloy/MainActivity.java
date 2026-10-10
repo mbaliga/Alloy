@@ -1496,6 +1496,8 @@ public final class MainActivity extends Activity {
         String summary = attention > 0
                 ? attention + " item" + (attention == 1 ? "" : "s") + " need attention  ·  "
                         + reorder + " reorder  ·  " + service + " service due"
+                        + (stockUnknown + serviceUnknown == 0 ? "" : "  ·  "
+                        + stockUnknown + " stock unknown  ·  " + serviceUnknown + " service histories unknown")
                 : stockUnknown > 0 || serviceUnknown > 0
                         ? stockUnknown + " stock amounts not recorded  ·  " + serviceUnknown + " service histories unknown"
                         : "Stock recorded  ·  no service due";
@@ -1976,13 +1978,13 @@ public final class MainActivity extends Activity {
         EditText name = textField("", "Item name");
         EditText category = textField("Tool", "Category (tool, consumable, spare…)");
         EditText unit = textField("each", "Unit (each, spools, bottles…)");
-        EditText quantity = field("0", "Current quantity");
+        EditText quantity = field("", "Current quantity · enter checked amount");
         EditText minimum = field("0", "Reorder below this quantity");
         EditText interval = field("0", "Service interval in days (0 = none)");
         EditText care = textField("Inspect, clean, or replace as needed", "Care notes");
         fields.addView(name); fields.addView(category); fields.addView(unit);
         fields.addView(quantity); fields.addView(minimum); fields.addView(interval); fields.addView(care);
-        TextView note = label("Items are stored only on this phone. A low quantity shows REORDER; a service interval creates a visible upkeep reminder.", 12, MUTED);
+        TextView note = label("Items are stored only on this phone. Add the amount you physically checked. A service interval starts only after you record a completed service.", 12, MUTED);
         note.setPadding(0, 16, 0, 0);
         fields.addView(note);
         new AlertDialog.Builder(this)
