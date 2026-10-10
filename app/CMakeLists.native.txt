@@ -1430,9 +1430,28 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     set_source_files_properties(
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Shape/TextShape.cpp"
             PROPERTIES COMPILE_OPTIONS "-include;occt_legacy_text_api.hxx")
-    # Reuse only the legacy target's compile-time include/define surface. Do
-    # not link the official archive against the legacy engine or into the APK.
+    # Reuse only the legacy target's compile-time include/define surface. The
+    # official archive remains isolated from the legacy slicer target.
     target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)
     add_custom_target(official_orca_compile_probe
             DEPENDS official_orca_libslic3r)
+
+    # Force every official object into a distinct Android .so so unresolved
+    # native dependencies surface at link time. This remains a link probe,
+    # not the shipping JNI engine; its exported anchor does no slicing.
+    add_library(official_orca_link_probe SHARED
+            src/main/jni/official_orca_link_probe.cpp)
+    set_target_properties(official_orca_libslic3r PROPERTIES
+            CXX_VISIBILITY_PRESET hidden
+            VISIBILITY_INLINES_HIDDEN YES)
+    get_target_property(_legacy_slic3r_link_libraries slic3r LINK_LIBRARIES)
+    target_link_libraries(official_orca_link_probe PRIVATE
+            -Wl,--whole-archive
+            official_orca_libslic3r
+            -Wl,--no-whole-archive
+            ${_legacy_slic3r_link_libraries})
+    set_target_properties(official_orca_link_probe PROPERTIES
+            CXX_VISIBILITY_PRESET hidden
+            VISIBILITY_INLINES_HIDDEN YES
+            OUTPUT_NAME alloy_orca_link_probe)
 endif ()
