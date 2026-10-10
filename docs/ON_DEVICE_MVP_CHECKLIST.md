@@ -32,9 +32,11 @@ source `dada7c98`, completed successfully and published artifact
 `alloy-v1-release-ci-apk` (artifact ID `11661663592`, ZIP SHA-256
 `9450158fa4ad153f6fccb3f6249c6ae4c4382f9529924e2de82acea3c047e1b2`). The
 archive contains `app-release.apk` (8,813,118 bytes). This ordinary build has
-`alloyNativeEngine=false`: it is suitable for current-source UI, import,
-planning and conservative fallback-slicer boundary checks, but is not native
-slicer evidence and must keep physical printing blocked. Native run
+`alloyNativeEngine=false`. Its API-35 ARM emulator acceptance step completed
+189 tests with zero failures; nine native-engine and pilot tests were skipped.
+It is suitable for current-source UI, import, planning and conservative
+fallback-slicer boundary checks, but is not native slicer evidence and must
+keep physical printing blocked. Native run
 [38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382) is
 still building dependencies and tests only the first version-header fix
 (`c37bea15`). Native run
