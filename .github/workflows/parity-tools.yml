@@ -5,6 +5,10 @@ on:
     branches: [stage1-gates-prep, 'codex/alloy-phone-first-mvp']
     paths:
       - 'parity/**'
+      - 'ci/validate_release_readiness.py'
+      - 'ci/validate_release_wiring.py'
+      - 'release/production-readiness.template.json'
+      - 'docs/RELEASE.md'
       - '.github/workflows/parity-tools.yml'
   workflow_dispatch:
 
@@ -60,6 +64,12 @@ jobs:
 
       - name: Run native dependency wiring tests
         run: python3 -m unittest -v parity/test_native_dependency_wiring.py
+
+      - name: Run release evidence and promotion guard tests
+        run: |
+          python3 -m unittest -v parity/test_release_readiness.py
+          python3 ci/validate_release_wiring.py
+          python3 -c 'from pathlib import Path; compile(Path("ci/validate_release_readiness.py").read_text(encoding="utf-8"), "ci/validate_release_readiness.py", "exec")'
 
       - name: Generate deterministic geometry fixtures
         run: |

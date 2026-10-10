@@ -141,6 +141,14 @@ class ReleaseReadinessTests(unittest.TestCase):
         finally:
             directory.cleanup()
 
+    def test_checked_in_template_remains_unpromotable(self):
+        template = Path(__file__).resolve().parents[1] / "release/production-readiness.template.json"
+        value = json.loads(template.read_text(encoding="utf-8"))
+        self.assertEqual(set(REQUIRED_GATES), set(value["gates"]))
+        self.assertTrue(all(status == "PENDING" for status in value["gates"].values()))
+        with self.assertRaisesRegex(SystemExit, "still contains a placeholder"):
+            validate(template)
+
 
 if __name__ == "__main__":
     unittest.main()
