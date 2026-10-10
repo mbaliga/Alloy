@@ -25,7 +25,7 @@ G2 provenance remains **INSUFFICIENT / FAIL**, and G3 semantic parity remains
 open. No software artifact authorizes general direct printing or production
 release promotion.
 
-**Current-source install gate (checked 2026-10-10 06:33 UTC):** ordinary
+**Current-source install gate (checked 2026-10-10 06:37 UTC):** ordinary
 Android v1 run
 [38029581732](https://github.com/mbaliga/Alloy/actions/runs/38029581732),
 source `dada7c98`, completed successfully and published artifact
@@ -38,9 +38,10 @@ It is suitable for current-source UI, import, planning and conservative
 fallback-slicer boundary checks, but is not native slicer evidence and must
 keep physical printing blocked. Native run
 [38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382) has
-passed its source-dependency build and generated-input validation and is now
-building pinned GMP/MPFR. It still tests only the first version-header fix
-(`c37bea15`), not the follow-up macro-scope repair. Native run
+passed its source-dependency build, generated-input validation, and
+source-built GMP/MPFR validation; it is now compiling Alloy with the optional
+native engine. It still tests only the first version-header fix (`c37bea15`),
+not the follow-up macro-scope repair. Native run
 [38029581758](https://github.com/mbaliga/Alloy/actions/runs/38029581758), at
 `dada7c98` with the additional target-scoped macro fix, remains queued behind
 it. No current-source native APK or pilot artifact is available. Do not use
