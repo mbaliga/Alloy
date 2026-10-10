@@ -28,6 +28,17 @@ class NativeDependencyWiringTests(unittest.TestCase):
         locale_options = cmake.split("set_source_files_properties(\n            \"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/LocalesUtils.cpp\"", 1)[1]
         self.assertIn('COMPILE_OPTIONS "-include;sstream"', locale_options)
 
+    def test_official_orca_text_shape_maps_removed_occt_7_aliases(self) -> None:
+        cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
+        text_options = cmake.split(
+            'set_source_files_properties(\n            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Shape/TextShape.cpp"',
+            1,
+        )[1]
+        self.assertIn('COMPILE_OPTIONS "-include;occt_legacy_text_api.hxx"', text_options)
+        compat = (ROOT / "app/src/main/jni/official_orca_compat/occt_legacy_text_api.hxx").read_text(encoding="utf-8")
+        self.assertIn("using NCollection_Utf8Iter = NCollection_UtfIterator<char>", compat)
+        self.assertIn("using TColStd_SequenceOfHAsciiString", compat)
+
     def test_official_orca_probe_uses_the_pinned_libnoise_public_target(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         official_probe = cmake.split("add_library(official_orca_libslic3r STATIC", 1)[1]
