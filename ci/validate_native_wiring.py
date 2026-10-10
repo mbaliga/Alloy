@@ -345,7 +345,7 @@ def main() -> None:
     # dependency (such as OpenCV) contributes an include directory.
     if "set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX" in cmake or "set(IS_CLANG_CL TRUE)" in cmake:
         raise SystemExit(f"{cmake_path}: clang-cl system include flags are invalid for Android NDK Clang")
-    for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise", "ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE", "official_orca_libslic3r STATIC", "official_orca_compile_probe", "export_official_orca_sources.py", "OFFICIAL_ORCA_CPP_SOURCES"):
+    for token in ("function(require_native_input", "Missing native build input", "require_native_input(", "test_exec_monitor", "Boost ${NAME}", "OCCT ${NAME}", '"oneTBB"', '"GMP"', '"MPFR"', "ORCA_LIBNOISE_SOURCE_DIR", "pinned Orca libnoise source", "add_subdirectory(\"${ORCA_LIBNOISE_SOURCE_DIR}\"", "noise::noise", "ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE", "official_orca_libslic3r STATIC", "official_orca_compile_probe", "export_official_orca_sources.py", "OFFICIAL_ORCA_CPP_SOURCES", '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libnest2d/include"'):
         require(cmake, token, cmake_path)
     for token in (
         'target_compile_definitions(slic3r PRIVATE',

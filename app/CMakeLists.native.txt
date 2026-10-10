@@ -1406,6 +1406,7 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             TBB_USE_CAPTURED_EXCEPTION=0)
     target_include_directories(official_orca_libslic3r BEFORE PRIVATE
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libnest2d/include"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src"
             "${_official_orca_binary_dir}"
             ${_legacy_slic3r_include_dirs}
