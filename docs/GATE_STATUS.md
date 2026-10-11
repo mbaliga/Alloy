@@ -4,36 +4,45 @@ Date: 2026-10-11
 
 ## Current source checkpoint — 2026-10-11
 
-Current branch snapshot: `codex/alloy-phone-first-mvp` at
-[`4ebe47306f4fe28a8e92e6a6226e5206e5f88482`](https://github.com/mbaliga/Alloy/commit/4ebe47306f4fe28a8e92e6a6226e5206e5f88482).
-The ordinary Android v1 workflow
-([run 38138260048](https://github.com/mbaliga/Alloy/actions/runs/38138260048))
-passed and published `alloy-v1-release-ci-apk` (artifact ID `11702930721`,
-ZIP digest `42dd32dbe18925f525c281c466e438aa2d7990ba2b42d1f5901e02cde3c965c1`).
-This is ordinary app/pipeline evidence, not an optional-native or printer-send
+Current GitHub branch head: `codex/alloy-phone-first-mvp` at
+[`e0034dbc1a5041ecca3f4a9d984ae68b7fd57635`](https://github.com/mbaliga/Alloy/commit/e0034dbc1a5041ecca3f4a9d984ae68b7fd57635).
+This snapshot contains the Qhull, Boost.Locale/ICU, and isolated official Orca
+link-closure repairs. Local regression checks pass (CI Python tests,
+Android-workflow validation, native wiring validation, release-wiring
+validation, and `git diff --check`). **No Android native workflow has yet
+validated this branch head.**
+
+The latest ordinary Android v1 workflow
+([run 38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952))
+passed and published `alloy-v1-release-ci-apk` (artifact ID `11705749665`,
+ZIP digest `905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`).
+This is ordinary app/pipeline evidence, not optional-native or printer-send
 approval.
 
-The corrected optional-native workflow
+The only active native workflow
+([run 38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
+targets older commit `f54e932d3a7509fcc05d2354842b77d59ee567f7`, not the
+current branch head. It remains at “Build native dependencies from source”;
+no compile/link, runtime, G3 export, or pilot result is available. Its job-log
+endpoint has repeatedly failed with a transport error, and no artifact has
+been published. Do not treat that run as validation of the branch repairs.
+
+The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
 completed source dependency setup and compiled the isolated official Orca
-archive, but failed at final link. The diagnostic artifact
-[`native-engine-build-diagnostic`](https://github.com/mbaliga/Alloy/actions/runs/38138260029)
-(artifact ID `11705105774`, SHA-256
-`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`)
-reports unresolved upstream Qhull C/C++ symbols from `TriangleMesh.cpp` and
-Boost.Locale/ICU symbols from `utils.cpp`. The next repair links Orca's own
-pinned Qhull target and source-builds its exact Boost.Locale ICU dependency;
-this has not yet been validated by Android CI. The preceding native attempt
-at `974feec3` failed because the full upstream `MeshBoolean.cpp` requires the
-absent `CGAL/mesh_segmentation.h`. The current probe instead compiles Alloy's
-MCUT compatibility translation unit; its MCUT block was checked
-byte-for-byte against the pinned Orca block. This is still only a compile/link
-probe, not the shipping slicer.
+archive, but failed at final link. Its diagnostic artifact (ID `11705105774`,
+SHA-256 `c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`)
+reported unresolved upstream Qhull C/C++ symbols from `TriangleMesh.cpp` and
+Boost.Locale/ICU symbols from `utils.cpp`. The branch repairs now link Orca's
+pinned Qhull target and source-build the pinned ICU-backed Boost.Locale
+dependency; they remain unverified by Android CI. The current probe compiles
+Alloy's MCUT compatibility translation unit, whose MCUT block was checked
+byte-for-byte against pinned Orca. This is still only a compile/link probe, not
+the shipping slicer.
 
 G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
 and physical A1 Mini acceptance, Bambu Handy import acceptance and production
 signing remain unproven. Keep print and release claims fail-closed.
-
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
 completed its source-built dependency closure, then failed while compiling
