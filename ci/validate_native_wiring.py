@@ -440,6 +440,14 @@ def main() -> None:
     require(workflow, "-PalloyNativeEngine=true", workflow_path)
     require(workflow, "ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26", workflow_path)
     require(workflow, "ci/validate_native_dependency_inputs.py arm64-v8a", workflow_path)
+    for token in (
+        "iconv_root=/tmp/build_android_deps/Boost-for-Android/libiconv-libicu-android/arm64-v8a",
+        '"$iconv_root/lib64/libiconv.a"',
+        '"$iconv_root/lib32/libiconv.a"',
+        '"$iconv_root/lib/libiconv.a"',
+        "app/src/main/jniImports/boost/icu/arm64-v8a/libiconv.a",
+    ):
+        require(workflow, token, workflow_path)
     require(workflow, "ci/validate_native_prebuilts.py arm64-v8a --source-built", workflow_path)
     require(workflow, "-PalloyOfficialOrcaCompileProbe=true", workflow_path)
     require(workflow, "git submodule update --init --depth 1 third_party/orca-official", workflow_path)
