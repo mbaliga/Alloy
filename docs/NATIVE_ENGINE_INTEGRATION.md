@@ -2,19 +2,19 @@
 
 ## Current state
 
-**Current-source qualification (2026-10-11):** the ordinary Android v1 build at
-[`4ebe473`](https://github.com/mbaliga/Alloy/commit/4ebe47306f4fe28a8e92e6a6226e5206e5f88482)
-passed in [run 38138260048](https://github.com/mbaliga/Alloy/actions/runs/38138260048).
-The optional-native run
-([38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
-compiled the isolated official Orca archive but failed at final link on missing
-Qhull and Boost.Locale/ICU dependencies. The current repair wires Orca's pinned
-Qhull target and adds a source-pinned Boost.Locale/ICU build path; it still
-needs a fresh Android CI run. Current-source native instrumentation and pilot
-evidence are unavailable. The official Orca target is a build/link probe, not
-the shipping slicer implementation. Keep native verification, physical print
-and production release gates closed.
-
+**Current-source qualification (2026-10-11):** the ordinary Android v1 build
+passed in [run 38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952),
+but it does not include the optional native engine. The latest native run
+([38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
+targets source commit `f54e932d3a7509fcc05d2354842b77d59ee567f7`; GitHub's
+compare against the current branch finds only status documents changed, so its
+native source/build inputs match the current branch. Dependency bootstrap,
+generated-input checks, GMP/MPFR source builds and Gradle setup passed. The
+optional-native APK build began at 2026-10-11 15:46 UTC and is still running;
+native compile/link, instrumentation, G3 export and software-pilot results are
+not yet available. No run artifact has been published. The official Orca
+target remains an isolated compile/link probe, not the shipping slicer
+implementation. Keep physical-print and production-release gates closed.
 Alloy now carries an Android build of the pinned OrcaSlicer-Mobile native tree
 under the existing Android module's `app/src/main/jni` boundary. It provides
 the current Prusa/Orca-derived `libslic3r` implementation, including Arachne
