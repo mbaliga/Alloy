@@ -356,6 +356,10 @@ def main() -> None:
     require(cmake, "OUTPUT_NAME alloy_orca_link_probe", cmake_path)
     require(cmake, "get_target_property(_legacy_slic3r_link_libraries slic3r LINK_LIBRARIES)", cmake_path)
     require(cmake, "${_legacy_slic3r_link_libraries}", cmake_path)
+    require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/clipper/clipper_z.cpp"', cmake_path)
+    require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c"', cmake_path)
+    require(cmake, "add_library(official_orca_nlopt STATIC ${_official_orca_nlopt_sources})", cmake_path)
+    require(cmake, "official_orca_nlopt", cmake_path)
     link_probe = ROOT / "app/src/main/jni/official_orca_link_probe.cpp"
     require(link_probe.read_text(), "alloy_orca_link_probe", link_probe)
     text_compat = ROOT / "app/src/main/jni/official_orca_compat/occt_legacy_text_api.hxx"
