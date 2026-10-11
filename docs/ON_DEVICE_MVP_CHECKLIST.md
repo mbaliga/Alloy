@@ -9,13 +9,13 @@ physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
 **Latest ordinary Android gate (checked 2026-10-11):** Android v1 run
-[`38148568952`](https://github.com/mbaliga/Alloy/actions/runs/38148568952) at
-source commit `0b52ebcc27df85686f97b45fb21ff269e16697a3` completed
+[`38155370583`](https://github.com/mbaliga/Alloy/actions/runs/38155370583) at
+source commit `18dc1af8a267c0729d0be7319f6828062cc64a57` completed
 successfully, including APK build and pipeline acceptance tests. It published
-`alloy-v1-release-ci-apk` (artifact ID `11705749665`, ZIP SHA-256
-`905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`). The
-optional-native repair is on a later source commit; this ordinary APK does not
-contain that current native build and is not slicing or printer-send evidence.
+`alloy-v1-release-ci-apk` (artifact ID `11708468665`, ZIP SHA-256
+`388ab81eaf2e43713ad3e5fa3bd29dc6c117f6c450e65301feea3810fbb32133`). This
+ordinary APK does not contain the optional native engine and is not slicing or
+printer-send evidence.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
