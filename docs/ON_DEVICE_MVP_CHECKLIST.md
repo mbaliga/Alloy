@@ -25,29 +25,26 @@ G2 provenance remains **INSUFFICIENT / FAIL**, and G3 semantic parity remains
 open. No software artifact authorizes general direct printing or production
 release promotion.
 
-**Current-source install gate (checked 2026-10-10 06:37 UTC):** ordinary
-Android v1 run
-[38029581732](https://github.com/mbaliga/Alloy/actions/runs/38029581732),
-source `dada7c98`, completed successfully and published artifact
-`alloy-v1-release-ci-apk` (artifact ID `11661663592`, ZIP SHA-256
-`9450158fa4ad153f6fccb3f6249c6ae4c4382f9529924e2de82acea3c047e1b2`). The
-archive contains `app-release.apk` (8,813,118 bytes). This ordinary build has
-`alloyNativeEngine=false`. Its API-35 ARM emulator acceptance step completed
-189 tests with zero failures; nine native-engine and pilot tests were skipped.
-It is suitable for current-source UI, import, planning and conservative
-fallback-slicer boundary checks, but is not native slicer evidence and must
-keep physical printing blocked. Native run
-[38029368382](https://github.com/mbaliga/Alloy/actions/runs/38029368382) has
-passed its source-dependency build, generated-input validation, and
-source-built GMP/MPFR validation; it is now compiling Alloy with the optional
-native engine. It still tests only the first version-header fix (`c37bea15`),
-not the follow-up macro-scope repair. Native run
-[38029581758](https://github.com/mbaliga/Alloy/actions/runs/38029581758), at
-`dada7c98` with the additional target-scoped macro fix, remains queued behind
-it. No current-source native APK or pilot artifact is available. Do not use
-historical native artifacts as current native evidence; update their IDs and
-hashes only after the native build, instrumentation, G3 export and software
-pilot steps pass.
+**Current-source install gate (checked 2026-10-11):** ordinary Android v1 run
+[38138260048](https://github.com/mbaliga/Alloy/actions/runs/38138260048), at
+source commit `4ebe47306f4fe28a8e92e6a6226e5206e5f88482`, passed and published
+`alloy-v1-release-ci-apk` (artifact ID `11702930721`, ZIP SHA-256
+`42dd32dbe18925f525c281c466e438aa2d7990ba2b42d1f5901e02cde3c965c1`). This
+ordinary APK is for current-source UI, import, planning and conservative
+fallback-slicer checks; it is not native slicer evidence and must keep
+physical printing blocked.
+
+Corrected native run
+[38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
+also at `4ebe473`, has passed source-dependency bootstrap and is currently
+building Alloy with the optional native engine. It has not yet produced a
+native APK, link pass, instrumentation report, G3 export or current-source
+software-pilot artifact. The preceding native attempt failed on the unavailable
+CGAL `mesh_segmentation.h`; the corrected probe uses the byte-checked MCUT
+compatibility implementation. Wait for the current run to pass and publish a
+fresh artifact before testing native slicing or the isolated software pilot.
+Never use the historical native artifacts as current evidence. No software
+artifact authorizes general direct printing or production-release promotion.
 
 ## 1. Install the matching artifacts
 
