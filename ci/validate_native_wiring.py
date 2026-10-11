@@ -358,6 +358,16 @@ def main() -> None:
     require(cmake, "${_legacy_slic3r_link_libraries}", cmake_path)
     require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/clipper/clipper_z.cpp"', cmake_path)
     require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c"', cmake_path)
+    for official_dependency_source in (
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/slic3r/Utils/ColorSpaceConvert.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/miniz/miniz.c"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlparse.c"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlrole.c"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmltok.c"',
+    ):
+        require(cmake, official_dependency_source, cmake_path)
     require(cmake, "add_library(official_orca_nlopt STATIC ${_official_orca_nlopt_sources})", cmake_path)
     require(cmake, "official_orca_nlopt", cmake_path)
     link_probe = ROOT / "app/src/main/jni/official_orca_link_probe.cpp"

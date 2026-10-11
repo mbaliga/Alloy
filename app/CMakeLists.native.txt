@@ -1404,13 +1404,22 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     # not from the co-loaded legacy slicer library.
     target_sources(official_orca_libslic3r PRIVATE
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/clipper/clipper_z.cpp"
-            "${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c")
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/slic3r/Utils/ColorSpaceConvert.cpp"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/miniz/miniz.c"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlparse.c"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlrole.c"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmltok.c")
     target_compile_features(official_orca_libslic3r PRIVATE cxx_std_17)
     target_compile_definitions(official_orca_libslic3r PRIVATE
             ${_legacy_slic3r_compile_defs}
             USE_TBB
             TBB_USE_CAPTURED_EXCEPTION=0)
     target_include_directories(official_orca_libslic3r BEFORE PRIVATE
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/expat"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/miniz"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libnest2d/include"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src"
