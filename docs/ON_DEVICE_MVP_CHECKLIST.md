@@ -8,24 +8,28 @@ historical and do not represent the current source snapshot or prove a
 physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
-**Current-source install gate (checked 2026-10-11):** ordinary Android v1 run
-[`38138260048`](https://github.com/mbaliga/Alloy/actions/runs/38138260048) at
-source commit `4ebe47306f4fe28a8e92e6a6226e5206e5f88482` completed successfully
-and published `alloy-v1-release-ci-apk` (artifact ID `11702930721`, ZIP
-SHA-256 `42dd32dbe18925f525c281c466e438aa2d7990ba2b42d1f5901e02cde3c965c1`).
-This ordinary APK is for current-source UI, import, planning and conservative
-fallback-slicer checks; it is not native slicer evidence and must keep
-physical printing blocked.
+**Latest ordinary Android gate (checked 2026-10-11):** Android v1 run
+[`38148568952`](https://github.com/mbaliga/Alloy/actions/runs/38148568952) at
+source commit `0b52ebcc27df85686f97b45fb21ff269e16697a3` completed
+successfully, including APK build and pipeline acceptance tests. It published
+`alloy-v1-release-ci-apk` (artifact ID `11705749665`, ZIP SHA-256
+`905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`). The
+optional-native repair is on a later source commit; this ordinary APK does not
+contain that current native build and is not slicing or printer-send evidence.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
-also at `4ebe473`, completed dependency bootstrap and compiled the official
-Orca archive, but failed final linking with unresolved upstream Qhull and
+at `4ebe473`, completed dependency bootstrap and compiled the official Orca
+archive, but failed final linking with unresolved upstream Qhull and
 Boost.Locale/ICU symbols. Its diagnostic artifact is ID `11705105774`, SHA-256
-`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`. The next
-source change links Orca's pinned Qhull and builds its pinned Boost.Locale/ICU
-dependencies; wait for a fresh current-source native run to pass build,
-instrumentation, G3 export and software pilot before testing native slicing.
+`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`. The
+current repair pins Orca's Qhull target and builds its Boost.Locale/ICU
+dependencies. Current-source native run
+[`38148657384`](https://github.com/mbaliga/Alloy/actions/runs/38148657384),
+commit `f54e932d3a7509fcc05d2354842b77d59ee567f7`, is still building native
+dependencies; no compile/link or runtime result is available yet. Wait for this
+run to pass build, instrumentation, G3 export and software pilot before testing
+native slicing.
 The preceding attempt failed on the unavailable CGAL `mesh_segmentation.h`;
 the corrected probe uses the byte-checked MCUT compatibility implementation.
 Never use historical native artifacts as current evidence. No software
@@ -41,12 +45,11 @@ five-fixture software-only package checks. Use only for the scope below; it is
 not physical qualification. Do not uninstall a working Alloy installation
 merely to replace it with a CI-debug-signed QA build.
 
-1. For current-source ordinary app checks, download
-   `alloy-v1-release-ci-apk` from run
-   [38138260048](https://github.com/mbaliga/Alloy/actions/runs/38138260048)
-   (source commit `4ebe47306f4fe28a8e92e6a6226e5206e5f88482`; artifact ID
-   `11702930721`, ZIP SHA-256
-   `42dd32dbe18925f525c281c466e438aa2d7990ba2b42d1f5901e02cde3c965c1`),
+1. For ordinary app checks, download `alloy-v1-release-ci-apk` from run
+   [38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952)
+   (source snapshot `0b52ebcc27df85686f97b45fb21ff269e16697a3`; artifact ID
+   `11705749665`, ZIP SHA-256
+   `905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`),
    extract `app-release.apk`, install it on an ARM64 Android phone and record
    the APK's own SHA-256 separately. This APK omits the optional native engine;
    it can verify the ordinary app and conservative fallback behavior only.
