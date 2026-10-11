@@ -1,6 +1,32 @@
 # Alloy engine gate status
 
-Date: 2026-10-10
+Date: 2026-10-11
+
+## Current source checkpoint — 2026-10-11
+
+Current branch snapshot: `codex/alloy-phone-first-mvp` at
+[`4ebe47306f4fe28a8e92e6a6226e5206e5f88482`](https://github.com/mbaliga/Alloy/commit/4ebe47306f4fe28a8e92e6a6226e5206e5f88482).
+The ordinary Android v1 workflow
+([run 38138260048](https://github.com/mbaliga/Alloy/actions/runs/38138260048))
+passed and published `alloy-v1-release-ci-apk` (artifact ID `11702930721`,
+ZIP digest `42dd32dbe18925f525c281c466e438aa2d7990ba2b42d1f5901e02cde3c965c1`).
+This is ordinary app/pipeline evidence, not an optional-native or printer-send
+approval.
+
+The corrected optional-native workflow
+([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
+has built the source dependencies and is compiling Alloy's optional Orca
+probe. Its job is still active; no native compile, link, instrumentation,
+current-source pilot, physical-print or release result is available yet. The
+preceding native attempt at `974feec3` failed because the full upstream
+`MeshBoolean.cpp` requires the absent `CGAL/mesh_segmentation.h`. The current
+probe instead compiles Alloy's MCUT compatibility translation unit; its MCUT
+block was checked byte-for-byte against the pinned Orca block. This remains a
+compile/link probe and is not wired into the shipping slicer.
+
+G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
+and physical A1 Mini acceptance, Bambu Handy import acceptance and production
+signing remain unproven. Keep print and release claims fail-closed.
 
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
