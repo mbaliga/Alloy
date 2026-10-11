@@ -28,6 +28,9 @@ on:
       - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
       - 'app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/**'
       - 'ci/patch_orca_mobile_bootstrap.py'
+      - 'ci/patch_boost_android_locale.py'
+      - 'ci/test_patch_boost_android_locale.py'
+      - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
@@ -70,6 +73,9 @@ on:
       - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
       - 'app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/**'
       - 'ci/patch_orca_mobile_bootstrap.py'
+      - 'ci/patch_boost_android_locale.py'
+      - 'ci/test_patch_boost_android_locale.py'
+      - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
@@ -136,7 +142,7 @@ jobs:
           python3 ci/validate_official_orca_snapshot.py \
             --source-root third_party/orca-official \
             --libnoise-source-root third_party/orca-deps-libnoise
-          python3 -m unittest -v ci.test_export_official_orca_sources
+          python3 -m unittest -v ci.test_export_official_orca_sources ci.test_patch_boost_android_locale ci.test_patch_orca_mobile_bootstrap
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
       - name: Verify pinned Orca profile snapshot
@@ -261,7 +267,7 @@ jobs:
           git clone --filter=blob:none --no-checkout "$ORCA_MOBILE_REPO" bootstrap-source
           git -C bootstrap-source checkout --detach "$ORCA_MOBILE_SHA"
           cp bootstrap-source/scripts/build_all_deps_android.sh slicebeam/build_all_deps_android.sh
-          python3 ci/patch_orca_mobile_bootstrap.py slicebeam/build_all_deps_android.sh "$ANDROID_SDK_ROOT" "$ANDROID_NDK_ROOT"
+          python3 ci/patch_orca_mobile_bootstrap.py slicebeam/build_all_deps_android.sh "$ANDROID_SDK_ROOT" "$ANDROID_NDK_ROOT" --boost-locale
           python3 ci/patch_slicebeam_stage1_no_step.py slicebeam
       - name: Build native dependencies from source
         working-directory: slicebeam
@@ -275,6 +281,10 @@ jobs:
           set -euxo pipefail
           mkdir -p app/src/main/jniImports/boost app/src/main/jniImports/oneTBB
           cp -a slicebeam/app/src/main/jniImports/boost/. app/src/main/jniImports/boost/
+          mkdir -p app/src/main/jniImports/boost/icu/arm64-v8a
+          for library in libicui18n.a libicuuc.a libicudata.a; do
+            cp "/tmp/build_android_deps/Boost-for-Android/libiconv-libicu-android/arm64-v8a/$library" app/src/main/jniImports/boost/icu/arm64-v8a/
+          done
           cp -a slicebeam/app/src/main/jniImports/oneTBB/. app/src/main/jniImports/oneTBB/
           mkdir -p app/src/main/occt/include app/src/main/occt/jniLibs
           cp -a slicebeam/app/src/main/occt/include/. app/src/main/occt/include/
@@ -283,7 +293,7 @@ jobs:
           cp -a slicebeam/app/src/main/occt/src/. app/src/main/occt/src/
           python3 ci/normalize_occt_headers.py app/src/main/occt
       - name: Validate generated Alloy native inputs
-        run: python3 ci/validate_native_dependency_inputs.py arm64-v8a
+        run: python3 ci/validate_native_dependency_inputs.py arm64-v8a --official-orca
       - name: Build GMP and MPFR from pinned official sources
         run: bash ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26
       - name: Validate source-built GMP and MPFR inputs
