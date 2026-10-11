@@ -23,15 +23,17 @@ at `4ebe473`, completed dependency bootstrap and compiled the official Orca
 archive, but failed final linking with unresolved upstream Qhull and
 Boost.Locale/ICU symbols. Its diagnostic artifact is ID `11705105774`, SHA-256
 `c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`. The
-The latest branch contains the Qhull and Boost.Locale/ICU dependency
-repairs. A GitHub compare confirms that only status documents changed
-afterward, so the active native run exercises the same native source and build
-inputs. That run is
+The current branch contains the Qhull and Boost.Locale/ICU dependency
+repairs. A GitHub compare confirms only status documents changed afterward,
+so the active native run exercises the same native source and build inputs.
+That run is
 [`38148657384`](https://github.com/mbaliga/Alloy/actions/runs/38148657384)
-at source commit `f54e932d3a7509fcc05d2354842b77d59ee567f7`; it remains in the
-dependency-build step and has no compile/link or runtime result. Wait for this
-run to pass build, instrumentation, G3 export and software pilot before
-testing native slicing.
+at source commit `f54e932d3a7509fcc05d2354842b77d59ee567f7`. Dependency
+bootstrap, generated-input checks, GMP/MPFR source builds, and Gradle setup
+passed; the native APK build is now running. Instrumentation, G3 export and the
+software pilot are still pending, and no artifact is available. Wait for those
+gates to pass before testing native slicing.
+
 The preceding attempt failed on the unavailable CGAL `mesh_segmentation.h`;
 the corrected probe uses the byte-checked MCUT compatibility implementation.
 Never use historical native artifacts as current evidence. No software
