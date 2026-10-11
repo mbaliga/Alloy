@@ -1472,6 +1472,35 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"
             ${_legacy_slic3r_include_dirs}
             ${OpenCV_INCLUDE_DIRS})
+    # The official source's TriangleMesh.cpp uses the C++ Qhull wrappers.
+    # Build the Qhull snapshot shipped by this exact Orca commit rather than
+    # silently reusing Alloy's older mobile fork or a host/system package.
+    set(LIBDIR "${OFFICIAL_ORCA_SOURCE_DIR}/src")
+    set(CMAKE_DISABLE_FIND_PACKAGE_Qhull TRUE)
+    add_subdirectory("${OFFICIAL_ORCA_SOURCE_DIR}/src/qhull"
+            "${_official_orca_binary_dir}/qhull")
+    unset(CMAKE_DISABLE_FIND_PACKAGE_Qhull)
+
+    # Official utils.cpp uses Boost.Locale's ICU backend for NFC normalization.
+    # These archives are built from pinned sources only for this isolated
+    # official-source probe; the legacy shipping target remains unchanged.
+    set(_official_boost_icu_dir
+            "${jni_imports}/boost/icu/${ANDROID_ABI}")
+    foreach (_icu_library icui18n icuuc icudata)
+        require_native_input(
+                "${_official_boost_icu_dir}/lib${_icu_library}.a"
+                "official Orca Boost.Locale ICU ${_icu_library}")
+        add_library(official_${_icu_library} STATIC IMPORTED)
+        set_target_properties(official_${_icu_library} PROPERTIES
+                IMPORTED_LOCATION "${_official_boost_icu_dir}/lib${_icu_library}.a")
+    endforeach ()
+    require_native_input(
+            "${jni_imports}/boost/lib/${ANDROID_ABI}/lib/libboost_locale-clang-mt-${BOOST_ARCH}-${BOOST_VERSION}.a"
+            "official Orca Boost.Locale")
+    add_library(official_boost_locale STATIC IMPORTED)
+    set_target_properties(official_boost_locale PROPERTIES
+            IMPORTED_LOCATION
+            "${jni_imports}/boost/lib/${ANDROID_ABI}/lib/libboost_locale-clang-mt-${BOOST_ARCH}-${BOOST_VERSION}.a")
     # This pinned Orca STEP.cpp relies on a transitive OCCT alias declaration
     # that its Android source build does not provide. The matching legacy
     # translation unit includes the alias explicitly; force-include it only
@@ -1492,7 +1521,14 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             PROPERTIES COMPILE_OPTIONS "-include;occt_legacy_text_api.hxx")
     # Reuse only the legacy target's compile-time include/define surface. The
     # official archive remains isolated from the legacy slicer target.
-    target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)
+    target_link_libraries(official_orca_libslic3r PRIVATE
+            ${OpenCV_LIBS}
+            noise::noise
+            qhullstatic
+            official_boost_locale
+            official_icui18n
+            official_icuuc
+            official_icudata)
     add_custom_target(official_orca_compile_probe
             DEPENDS official_orca_libslic3r)
 
