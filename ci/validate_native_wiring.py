@@ -386,6 +386,8 @@ def main() -> None:
         "official_icui18n",
         "official_icuuc",
         "official_icudata",
+        '"${_official_boost_icu_dir}/libiconv.a"',
+        "official_iconv",
         'libboost_locale-clang-mt-${BOOST_ARCH}-${BOOST_VERSION}.a',
     ):
         require(cmake, token, cmake_path)
