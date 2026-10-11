@@ -361,7 +361,7 @@ def main() -> None:
     for official_dependency_source in (
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"',
-        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/slic3r/Utils/ColorSpaceConvert.cpp"',
+        '"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat/ColorSpaceConvert.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/miniz/miniz.c"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlparse.c"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlrole.c"',
@@ -372,6 +372,8 @@ def main() -> None:
     require(cmake, "official_orca_nlopt", cmake_path)
     link_probe = ROOT / "app/src/main/jni/official_orca_link_probe.cpp"
     require(link_probe.read_text(), "alloy_orca_link_probe", link_probe)
+    color_compat = ROOT / "app/src/main/jni/official_orca_compat/ColorSpaceConvert.cpp"
+    require(color_compat.read_text(), "void RGB2HSV(", color_compat)
     text_compat = ROOT / "app/src/main/jni/official_orca_compat/occt_legacy_text_api.hxx"
     require(text_compat.read_text(), "using NCollection_Utf8Iter = NCollection_UtfIterator<char>", text_compat)
     require(text_compat.read_text(), "using TColStd_SequenceOfHAsciiString", text_compat)
