@@ -1495,6 +1495,12 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
                 IMPORTED_LOCATION "${_official_boost_icu_dir}/lib${_icu_library}.a")
     endforeach ()
     require_native_input(
+            "${_official_boost_icu_dir}/libiconv.a"
+            "official Orca Boost.Locale libiconv")
+    add_library(official_iconv STATIC IMPORTED)
+    set_target_properties(official_iconv PROPERTIES
+            IMPORTED_LOCATION "${_official_boost_icu_dir}/libiconv.a")
+    require_native_input(
             "${jni_imports}/boost/lib/${ANDROID_ABI}/lib/libboost_locale-clang-mt-${BOOST_ARCH}-${BOOST_VERSION}.a"
             "official Orca Boost.Locale")
     add_library(official_boost_locale STATIC IMPORTED)
@@ -1528,7 +1534,8 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             official_boost_locale
             official_icui18n
             official_icuuc
-            official_icudata)
+            official_icudata
+            official_iconv)
     add_custom_target(official_orca_compile_probe
             DEPENDS official_orca_libslic3r)
 

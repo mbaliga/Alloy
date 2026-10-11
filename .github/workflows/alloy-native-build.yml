@@ -285,6 +285,16 @@ jobs:
           for library in libicui18n.a libicuuc.a libicudata.a; do
             cp "/tmp/build_android_deps/Boost-for-Android/libiconv-libicu-android/arm64-v8a/$library" app/src/main/jniImports/boost/icu/arm64-v8a/
           done
+          iconv_root=/tmp/build_android_deps/Boost-for-Android/libiconv-libicu-android/arm64-v8a
+          iconv_archive=""
+          for candidate in "$iconv_root/lib/libiconv.a" "$iconv_root/lib32/libiconv.a" "$iconv_root/lib64/libiconv.a" "$iconv_root/libiconv-1.15/lib/.libs/libiconv.a"; do
+            if [[ -s "$candidate" ]]; then
+              iconv_archive="$candidate"
+              break
+            fi
+          done
+          test -n "$iconv_archive"
+          cp "$iconv_archive" app/src/main/jniImports/boost/icu/arm64-v8a/libiconv.a
           cp -a slicebeam/app/src/main/jniImports/oneTBB/. app/src/main/jniImports/oneTBB/
           mkdir -p app/src/main/occt/include app/src/main/occt/jniLibs
           cp -a slicebeam/app/src/main/occt/include/. app/src/main/occt/include/

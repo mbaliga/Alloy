@@ -74,6 +74,7 @@ def main() -> None:
             icu_root = boost_root / "icu" / abi
             for name in ("icui18n", "icuuc", "icudata"):
                 require_file(icu_root / f"lib{name}.a", f"ICU {name} archive for official Orca")
+            require_file(icu_root / "libiconv.a", "libiconv archive for official Orca Boost.Locale")
 
         tbb_root = ROOT / "app/src/main/jniImports/oneTBB"
         require_file(tbb_root / "include/tbb/scalable_allocator.h", "oneTBB headers")
