@@ -57,6 +57,21 @@ submodule gitlinks. A build is reproducible only when the script pins and
 validates these inputs; a passing hosted build remains distinct from G2 engine
 lineage and device qualification.
 
+The isolated official-Orca link probe has an additional dependency closure
+that the legacy Android target does not use: official `utils.cpp` requires
+Boost.Locale's ICU backend, and official `TriangleMesh.cpp` requires the Qhull
+C/C++ wrappers. Only the native probe lane opts into
+`--with-libraries=locale`; `ci/patch_boost_android_locale.py` pins the nested
+`pelya/libiconv-libicu-android` bootstrap to
+`1d9e3e389de92818bafbca061d454ec917af9ec0`, which builds ICU 62.1 from the
+source archive embedded in that revision. The three required static ICU
+archives and Boost.Locale are copied to the Android dependency tree and
+checked by `ci/validate_native_dependency_inputs.py --official-orca`. Qhull is
+built from the same pinned official Orca source snapshot via its own
+`src/qhull` CMake target, never from a host Qhull package. This closes compile
+dependencies only; it does not promote the current shipping engine or satisfy
+G2–G4, runtime, physical-printer or release gates.
+
 Pinned source archives:
 
 - GMP 6.2.1 — `https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.bz2` — SHA-256
