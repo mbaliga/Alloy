@@ -4,13 +4,13 @@ Date: 2026-10-11
 
 ## Current source checkpoint — 2026-10-11
 
-Current GitHub branch head: `codex/alloy-phone-first-mvp` at
-[`e0034dbc1a5041ecca3f4a9d984ae68b7fd57635`](https://github.com/mbaliga/Alloy/commit/e0034dbc1a5041ecca3f4a9d984ae68b7fd57635).
-This snapshot contains the Qhull, Boost.Locale/ICU, and isolated official Orca
-link-closure repairs. Local regression checks pass (CI Python tests,
-Android-workflow validation, native wiring validation, release-wiring
-validation, and `git diff --check`). **No Android native workflow has yet
-validated this branch head.**
+Current branch snapshot: `codex/alloy-phone-first-mvp` includes the Qhull,
+Boost.Locale/ICU, and isolated official Orca link-closure repairs. Local
+regression checks pass (CI Python tests, Android-workflow validation, native
+wiring validation, release-wiring validation, and `git diff --check`). The
+GitHub compare between this branch and active native-run source commit
+`f54e932d3a7509fcc05d2354842b77d59ee567f7` finds only status documents
+changed; native source and build inputs are identical.
 
 The latest ordinary Android v1 workflow
 ([run 38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952))
@@ -19,13 +19,13 @@ ZIP digest `905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`).
 This is ordinary app/pipeline evidence, not optional-native or printer-send
 approval.
 
-The only active native workflow
+The active native workflow
 ([run 38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
-targets older commit `f54e932d3a7509fcc05d2354842b77d59ee567f7`, not the
-current branch head. It remains at “Build native dependencies from source”;
-no compile/link, runtime, G3 export, or pilot result is available. Its job-log
-endpoint has repeatedly failed with a transport error, and no artifact has
-been published. Do not treat that run as validation of the branch repairs.
+targets `f54e932d3a7509fcc05d2354842b77d59ee567f7` and therefore exercises the
+same native source and build inputs as the current branch. It remains at “Build
+native dependencies from source”; no compile/link, runtime, G3 export, or
+pilot result is available. Its job-log endpoint has repeatedly failed with a
+transport error, and no artifact has been published.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
