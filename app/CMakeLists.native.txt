@@ -1399,6 +1399,12 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             "^(SLIC3R_VERSION|SLIC3R_BUILD_ID|SoftFever_VERSION)=")
     add_library(official_orca_libslic3r STATIC ${OFFICIAL_ORCA_CPP_SOURCES}
             "${_official_orca_binary_dir}/libslic3r_version.h")
+    # These are official Orca source dependencies outside libslic3r's own
+    # generated source list. Compile them from the pinned upstream snapshot,
+    # not from the co-loaded legacy slicer library.
+    target_sources(official_orca_libslic3r PRIVATE
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/clipper/clipper_z.cpp"
+            "${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c")
     target_compile_features(official_orca_libslic3r PRIVATE cxx_std_17)
     target_compile_definitions(official_orca_libslic3r PRIVATE
             ${_legacy_slic3r_compile_defs}
@@ -1444,11 +1450,27 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
     set_target_properties(official_orca_libslic3r PROPERTIES
             CXX_VISIBILITY_PRESET hidden
             VISIBILITY_INLINES_HIDDEN YES)
+    # Orca's pinned FindNLopt expects 2.5.0. The checked-in mobile dependency
+    # is that same version; build its C sources into a separate hidden static
+    # target so the probe has no runtime dependency on the legacy shared .so.
+    get_target_property(_legacy_slic3r_sources slic3r SOURCES)
+    set(_official_orca_nlopt_sources ${_legacy_slic3r_sources})
+    list(FILTER _official_orca_nlopt_sources INCLUDE REGEX
+            "src/main/jni/nlopt/.*\\.c$")
+    if (NOT _official_orca_nlopt_sources)
+        message(FATAL_ERROR "Could not locate the pinned NLopt 2.5.0 C sources")
+    endif ()
+    add_library(official_orca_nlopt STATIC ${_official_orca_nlopt_sources})
+    target_include_directories(official_orca_nlopt PRIVATE ${_legacy_slic3r_include_dirs})
+    set_target_properties(official_orca_nlopt PROPERTIES
+            C_VISIBILITY_PRESET hidden
+            VISIBILITY_INLINES_HIDDEN YES)
     get_target_property(_legacy_slic3r_link_libraries slic3r LINK_LIBRARIES)
     target_link_libraries(official_orca_link_probe PRIVATE
             -Wl,--whole-archive
             official_orca_libslic3r
             -Wl,--no-whole-archive
+            official_orca_nlopt
             ${_legacy_slic3r_link_libraries})
     set_target_properties(official_orca_link_probe PROPERTIES
             CXX_VISIBILITY_PRESET hidden
