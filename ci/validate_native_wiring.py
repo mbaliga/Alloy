@@ -361,7 +361,7 @@ def main() -> None:
     for official_dependency_source in (
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"',
-        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/MeshBoolean.cpp"',
+        '"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/libslic3r/MeshBoolean.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/OpenVDBUtils.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/admesh/stlinit.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/glu-libtess/src/tess.c"',
