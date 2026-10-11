@@ -36,7 +36,13 @@ def cmake_list(text: str, name: str) -> list[str]:
 
 
 def main() -> None:
-    requested = sys.argv[1:] or ["arm64-v8a"]
+    arguments = list(sys.argv[1:])
+    official_orca = "--official-orca" in arguments
+    unknown_flags = [argument for argument in arguments if argument.startswith("--") and argument != "--official-orca"]
+    if unknown_flags:
+        raise SystemExit(f"unknown option(s): {unknown_flags}")
+    requested = [argument for argument in arguments if not argument.startswith("--")]
+    requested = requested or ["arm64-v8a"]
     unknown = [abi for abi in requested if abi not in ABIS]
     if unknown:
         raise SystemExit(f"unsupported ABI: {unknown}")
@@ -60,6 +66,14 @@ def main() -> None:
                 boost_lib_root / f"libboost_{name}-clang-mt-{ABIS[abi]}-{boost_version}.a",
                 f"Boost {name} archive",
             )
+        if official_orca:
+            require_file(
+                boost_lib_root / f"libboost_locale-clang-mt-{ABIS[abi]}-{boost_version}.a",
+                "Boost.Locale archive for official Orca",
+            )
+            icu_root = boost_root / "icu" / abi
+            for name in ("icui18n", "icuuc", "icudata"):
+                require_file(icu_root / f"lib{name}.a", f"ICU {name} archive for official Orca")
 
         tbb_root = ROOT / "app/src/main/jniImports/oneTBB"
         require_file(tbb_root / "include/tbb/scalable_allocator.h", "oneTBB headers")
@@ -76,7 +90,8 @@ def main() -> None:
                 raise ValueError(f"{header}: generated OCCT header still contains an absolute source path")
         for name in occt_names:
             require_file(occt_root / "jniLibs" / abi / f"lib{name}.so", f"OCCT {name} shared library")
-        print(f"validated Alloy native dependency inputs for {abi}: {len(boost_names)} Boost, {len(occt_names)} OCCT libraries")
+        extra = ", Boost.Locale and ICU" if official_orca else ""
+        print(f"validated Alloy native dependency inputs for {abi}: {len(boost_names)} Boost{extra}, {len(occt_names)} OCCT libraries")
 
 
 if __name__ == "__main__":
