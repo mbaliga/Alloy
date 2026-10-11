@@ -36,10 +36,10 @@ dependency-build step; run
 targets the repaired source commit `18dc1af` and is queued behind it. The latest
 live job-step API reports the older run at 15/36 steps and the repaired run
 pending; neither has produced link, instrumentation, G3 export, or pilot
-evidence yet. The ordinary Android run for commit `18dc1af` has now passed;
-the earlier ordinary run on `84b5a8f` remains at pipeline acceptance tests.
-The job-log endpoint is unavailable, so native status is based on GitHub's
-run/job-step API.
+evidence yet. Both ordinary Android runs on commits `84b5a8f` and `18dc1af`
+have now passed; the latest artifact details are recorded above. The job-log
+endpoint is unavailable, so native status is based on GitHub's run/job-step
+API.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
