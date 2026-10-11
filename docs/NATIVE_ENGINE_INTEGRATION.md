@@ -2,6 +2,21 @@
 
 ## Current state
 
+**Current-source qualification (2026-10-11):** a historical optional-native build,
+instrumentation and five-fixture software pilot passed on an earlier source
+checkpoint (run [37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)).
+That does not qualify the current source. The ordinary Android v1 build at
+[`4ebe473`](https://github.com/mbaliga/Alloy/commit/4ebe47306f4fe28a8e92e6a6226e5206e5f88482)
+passed in [run 38138260048](https://github.com/mbaliga/Alloy/actions/runs/38138260048).
+The current optional-native workflow
+([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
+is still compiling the current source; current-source native compile/link,
+instrumentation and pilot evidence are not yet available. Its isolated official
+Orca target is a build/link probe, not the shipping slicer implementation.
+Keep `NATIVE_ENGINE_VERIFIED` false and physical-print/release claims blocked
+until the current-source native evidence, G2/G3/G4 gates and human device
+acceptance are complete.
+
 Alloy now carries an Android build of the pinned OrcaSlicer-Mobile native tree
 under the existing Android module's `app/src/main/jni` boundary. It provides
 the current Prusa/Orca-derived `libslic3r` implementation, including Arachne
