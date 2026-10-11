@@ -1407,7 +1407,7 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"
-            "${OFFICIAL_ORCA_SOURCE_DIR}/src/slic3r/Utils/ColorSpaceConvert.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat/ColorSpaceConvert.cpp"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/miniz/miniz.c"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlparse.c"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlrole.c"
