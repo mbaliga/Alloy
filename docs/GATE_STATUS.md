@@ -15,14 +15,20 @@ approval.
 
 The corrected optional-native workflow
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
-has built the source dependencies and is compiling Alloy's optional Orca
-probe. Its job is still active; no native compile, link, instrumentation,
-current-source pilot, physical-print or release result is available yet. The
-preceding native attempt at `974feec3` failed because the full upstream
-`MeshBoolean.cpp` requires the absent `CGAL/mesh_segmentation.h`. The current
-probe instead compiles Alloy's MCUT compatibility translation unit; its MCUT
-block was checked byte-for-byte against the pinned Orca block. This remains a
-compile/link probe and is not wired into the shipping slicer.
+completed source dependency setup and compiled the isolated official Orca
+archive, but failed at final link. The diagnostic artifact
+[`native-engine-build-diagnostic`](https://github.com/mbaliga/Alloy/actions/runs/38138260029)
+(artifact ID `11705105774`, SHA-256
+`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`)
+reports unresolved upstream Qhull C/C++ symbols from `TriangleMesh.cpp` and
+Boost.Locale/ICU symbols from `utils.cpp`. The next repair links Orca's own
+pinned Qhull target and source-builds its exact Boost.Locale ICU dependency;
+this has not yet been validated by Android CI. The preceding native attempt
+at `974feec3` failed because the full upstream `MeshBoolean.cpp` requires the
+absent `CGAL/mesh_segmentation.h`. The current probe instead compiles Alloy's
+MCUT compatibility translation unit; its MCUT block was checked
+byte-for-byte against the pinned Orca block. This is still only a compile/link
+probe, not the shipping slicer.
 
 G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
 and physical A1 Mini acceptance, Bambu Handy import acceptance and production
