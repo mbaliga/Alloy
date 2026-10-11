@@ -377,6 +377,18 @@ def main() -> None:
     require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/nanosvg/nanosvgrast.h"', cmake_path)
     require(cmake, "NANOSVG_IMPLEMENTATION", cmake_path)
     require(cmake, "NANOSVGRAST_IMPLEMENTATION", cmake_path)
+    for token in (
+        'add_subdirectory("${OFFICIAL_ORCA_SOURCE_DIR}/src/qhull"',
+        "CMAKE_DISABLE_FIND_PACKAGE_Qhull TRUE",
+        "qhullstatic",
+        '"${jni_imports}/boost/icu/${ANDROID_ABI}"',
+        "official_boost_locale",
+        "official_icui18n",
+        "official_icuuc",
+        "official_icudata",
+        'libboost_locale-clang-mt-${BOOST_ARCH}-${BOOST_VERSION}.a',
+    ):
+        require(cmake, token, cmake_path)
     require(cmake, "add_library(official_orca_nlopt STATIC ${_official_orca_nlopt_sources})", cmake_path)
     require(cmake, "official_orca_nlopt", cmake_path)
     link_probe = ROOT / "app/src/main/jni/official_orca_link_probe.cpp"
@@ -387,7 +399,9 @@ def main() -> None:
     require(text_compat.read_text(), "using NCollection_Utf8Iter = NCollection_UtfIterator<char>", text_compat)
     require(text_compat.read_text(), "using TColStd_SequenceOfHAsciiString", text_compat)
     require(cmake, '"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"', cmake_path)
-    require(cmake, "target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)", cmake_path)
+    require(cmake, "target_link_libraries(official_orca_libslic3r PRIVATE", cmake_path)
+    require(cmake, "${OpenCV_LIBS}", cmake_path)
+    require(cmake, "noise::noise", cmake_path)
     for token in (
         'target_compile_definitions(slic3r PRIVATE',
         'SLIC3R_VERSION=${SLIC3R_VERSION}',
