@@ -1407,7 +1407,13 @@ if (ALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE)
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/semver/semver.c"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"
-            "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/MeshBoolean.cpp"
+            # The MCUT implementation in Alloy's legacy MeshBoolean.cpp is
+            # byte-for-byte identical to the pinned Orca MCUT block. Reuse it
+            # as an Android compatibility translation unit: the remainder of
+            # Orca's MeshBoolean.cpp requires CGAL mesh segmentation, which is
+            # not present in Alloy's pinned CGAL subset and is unrelated to
+            # the make_boolean symbol required by the compile/link probe.
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/libslic3r/MeshBoolean.cpp"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/OpenVDBUtils.cpp"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/admesh/connect.cpp"
             "${OFFICIAL_ORCA_SOURCE_DIR}/src/admesh/normals.cpp"
