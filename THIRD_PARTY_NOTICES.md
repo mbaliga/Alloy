@@ -51,6 +51,13 @@ source-build workflow. A native-enabled distribution must ship the applicable
 GMP/MPFR license texts and corresponding source offer alongside the complete
 SliceBeam and Orca/Prusa-derived source offers.
 
+The isolated official-Orca Android compile/link probe also builds Boost.Locale
+with its pinned ICU 62.1 backend. Its Android source bootstrap is pinned to
+`pelya/libiconv-libicu-android@1d9e3e389de92818bafbca061d454ec917af9ec0`;
+the Unicode License V3 text is retained at
+`third_party/licenses/UNICODE-LICENSE-V3.txt`. This compile-probe dependency
+does not qualify the legacy shipping engine or production release.
+
 ## libnoise
 
 The optional native target builds the pinned
