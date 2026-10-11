@@ -4,13 +4,13 @@ Date: 2026-10-11
 
 ## Current source checkpoint — 2026-10-11
 
-Current branch snapshot: `codex/alloy-phone-first-mvp` includes the Qhull,
+Current branch source snapshot (`codex/alloy-phone-first-mvp`) contains the Qhull,
 Boost.Locale/ICU, and isolated official Orca link-closure repairs. Local
 regression checks pass (CI Python tests, Android-workflow validation, native
-wiring validation, release-wiring validation, and `git diff --check`). The
-GitHub compare between this branch and active native-run source commit
-`f54e932d3a7509fcc05d2354842b77d59ee567f7` finds only status documents
-changed; native source and build inputs are identical.
+wiring validation, release-wiring validation, and `git diff --check`). A
+GitHub compare shows only the status documents changed after the active native
+run's commit, so its source and build inputs are identical to the current
+branch.
 
 The latest ordinary Android v1 workflow
 ([run 38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952))
@@ -22,10 +22,12 @@ approval.
 The active native workflow
 ([run 38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
 targets `f54e932d3a7509fcc05d2354842b77d59ee567f7` and therefore exercises the
-same native source and build inputs as the current branch. It remains at “Build
-native dependencies from source”; no compile/link, runtime, G3 export, or
-pilot result is available. Its job-log endpoint has repeatedly failed with a
-transport error, and no artifact has been published.
+same native source and build inputs as the current branch. Dependency
+bootstrap, generated-input validation, GMP/MPFR source builds, and Gradle setup
+have passed. It is now building Alloy with the optional native engine.
+Instrumentation, G3 export, and the five-fixture software pilot are pending;
+no artifact is available. The job-log endpoint is unavailable, so this status
+comes from the live Actions job-step API.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
