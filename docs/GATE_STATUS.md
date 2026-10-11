@@ -14,11 +14,11 @@ validation, and `git diff --check`). Current source commit is
 [`18dc1af`](https://github.com/mbaliga/Alloy/commit/18dc1af8a267c0729d0be7319f6828062cc64a57).
 
 The latest ordinary Android v1 workflow
-([run 38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952))
-passed and published `alloy-v1-release-ci-apk` (artifact ID `11705749665`,
-ZIP digest `905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`).
-This is ordinary app/pipeline evidence, not optional-native or printer-send
-approval.
+([run 38155370583](https://github.com/mbaliga/Alloy/actions/runs/38155370583))
+passed for source commit `18dc1af` and published
+`alloy-v1-release-ci-apk` (artifact ID `11708468665`, ZIP digest
+`388ab81eaf2e43713ad3e5fa3bd29dc6c117f6c450e65301feea3810fbb32133`). This is
+ordinary app/pipeline evidence, not optional-native or printer-send approval.
 
 Native run
 ([38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
@@ -36,8 +36,10 @@ dependency-build step; run
 targets the repaired source commit `18dc1af` and is queued behind it. The latest
 live job-step API reports the older run at 15/36 steps and the repaired run
 pending; neither has produced link, instrumentation, G3 export, or pilot
-evidence yet. The job-log endpoint is unavailable, so active status is based
-on GitHub's run/job-step API.
+evidence yet. The ordinary Android run for commit `18dc1af` has now passed;
+the earlier ordinary run on `84b5a8f` remains at pipeline acceptance tests.
+The job-log endpoint is unavailable, so native status is based on GitHub's
+run/job-step API.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
