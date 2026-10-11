@@ -361,6 +361,11 @@ def main() -> None:
     for official_dependency_source in (
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/IntersectionPoints.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/Triangulation.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/MeshBoolean.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/libslic3r/OpenVDBUtils.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/admesh/stlinit.cpp"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/glu-libtess/src/tess.c"',
+        '"${OFFICIAL_ORCA_SOURCE_DIR}/src/qoi/qoilib.c"',
         '"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat/ColorSpaceConvert.cpp"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/miniz/miniz.c"',
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmlparse.c"',
@@ -368,6 +373,10 @@ def main() -> None:
         '"${OFFICIAL_ORCA_SOURCE_DIR}/src/expat/xmltok.c"',
     ):
         require(cmake, official_dependency_source, cmake_path)
+    require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/nanosvg/nanosvg.h"', cmake_path)
+    require(cmake, '"${OFFICIAL_ORCA_SOURCE_DIR}/src/nanosvg/nanosvgrast.h"', cmake_path)
+    require(cmake, "NANOSVG_IMPLEMENTATION", cmake_path)
+    require(cmake, "NANOSVGRAST_IMPLEMENTATION", cmake_path)
     require(cmake, "add_library(official_orca_nlopt STATIC ${_official_orca_nlopt_sources})", cmake_path)
     require(cmake, "official_orca_nlopt", cmake_path)
     link_probe = ROOT / "app/src/main/jni/official_orca_link_probe.cpp"
