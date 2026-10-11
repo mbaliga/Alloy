@@ -4,13 +4,14 @@ Date: 2026-10-11
 
 ## Current source checkpoint — 2026-10-11
 
-Current branch source snapshot (`codex/alloy-phone-first-mvp`) contains the Qhull,
-Boost.Locale/ICU, and isolated official Orca link-closure repairs. Local
-regression checks pass (CI Python tests, Android-workflow validation, native
-wiring validation, release-wiring validation, and `git diff --check`). A
-GitHub compare shows only the status documents changed after the active native
-run's commit, so its source and build inputs are identical to the current
-branch.
+Current GitHub branch source snapshot (`codex/alloy-phone-first-mvp`) contains
+the Qhull, Boost.Locale/ICU, isolated official Orca link-closure repairs, and
+the follow-up libiconv link repair. The repair stages the pinned static
+libiconv archive, requires it in the generated-input validator, and links it
+into the official Orca probe. Local regression checks pass (CI Python tests,
+Android-workflow validation, native wiring validation, release-wiring
+validation, and `git diff --check`). Current source commit is
+[`18dc1af`](https://github.com/mbaliga/Alloy/commit/18dc1af8a267c0729d0be7319f6828062cc64a57).
 
 The latest ordinary Android v1 workflow
 ([run 38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952))
@@ -19,15 +20,24 @@ ZIP digest `905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`).
 This is ordinary app/pipeline evidence, not optional-native or printer-send
 approval.
 
-The active native workflow
-([run 38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
-targets `f54e932d3a7509fcc05d2354842b77d59ee567f7` and therefore exercises the
-same native source and build inputs as the current branch. Dependency
-bootstrap, generated-input validation, GMP/MPFR source builds, and Gradle setup
-have passed. It is now building Alloy with the optional native engine.
-Instrumentation, G3 export, and the five-fixture software pilot are pending;
-no artifact is available. The job-log endpoint is unavailable, so this status
-comes from the live Actions job-step API.
+Native run
+([38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
+completed with a final-link failure. Its diagnostic artifact (ID `11708051380`,
+SHA-256 `dce172419ba1785e7336538a44ede7a471adbb59a51e9ec756ce451704e4a062`)
+identifies unresolved Boost.Locale references to `libiconv_open`, `libiconv`,
+and `libiconv_close`. The follow-up fix is in commit `84b5a8f` and is guarded by
+the additional source/wiring validation in `18dc1af`.
+
+Two native runs on earlier source snapshots are not evidence for that fix:
+run [38154230042](https://github.com/mbaliga/Alloy/actions/runs/38154230042)
+targets `b602ac0` (before libiconv was staged) and remains in the source
+dependency-build step; run
+[38155370545](https://github.com/mbaliga/Alloy/actions/runs/38155370545)
+targets the repaired source commit `18dc1af` and is queued behind it. The latest
+live job-step API reports the older run at 15/36 steps and the repaired run
+pending; neither has produced link, instrumentation, G3 export, or pilot
+evidence yet. The job-log endpoint is unavailable, so active status is based
+on GitHub's run/job-step API.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
@@ -44,7 +54,10 @@ the shipping slicer.
 
 G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
 and physical A1 Mini acceptance, Bambu Handy import acceptance and production
-signing remain unproven. Keep print and release claims fail-closed.
+signing remain unproven. The ordinary Android v1 runs on commits `84b5a8f` and
+`18dc1af` are still at pipeline acceptance tests. Keep print and release claims
+fail-closed.
+
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
 completed its source-built dependency closure, then failed while compiling
