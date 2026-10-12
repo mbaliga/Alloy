@@ -28,18 +28,22 @@ identifies unresolved Boost.Locale references to `libiconv_open`, `libiconv`,
 and `libiconv_close`. The follow-up fix is in commit `84b5a8f` and is guarded by
 the additional source/wiring validation in `18dc1af`.
 
-Two native runs on earlier source snapshots are not evidence for that fix:
-run [38154230042](https://github.com/mbaliga/Alloy/actions/runs/38154230042)
-targets `b602ac0` (before libiconv was staged) and remains in the source
-dependency-build step; run
+The pre-libiconv run
+[38154230042](https://github.com/mbaliga/Alloy/actions/runs/38154230042)
+failed in the native APK link step, as expected from its older source snapshot.
+The repaired run
 [38155370545](https://github.com/mbaliga/Alloy/actions/runs/38155370545)
-targets the repaired source commit `18dc1af` and is queued behind it. The latest
-live job-step API reports the older run at 15/36 steps and the repaired run
-pending; neither has produced link, instrumentation, G3 export, or pilot
-evidence yet. Both ordinary Android runs on commits `84b5a8f` and `18dc1af`
-have now passed; the latest artifact details are recorded above. The job-log
-endpoint is unavailable, so native status is based on GitHub's run/job-step
-API.
+successfully built the optional-native APK and instrumentation APK, proving the
+libiconv link repair. It then failed before executing tests because the hosted
+Linux API-35 emulator timed out during boot; the run annotation is “Timeout
+waiting for emulator to boot.” No G3 or pilot artifact was produced, and the
+instrumentation report upload found no report files, confirming tests never
+started. The current follow-up extends emulator startup allowance from the
+action's 600-second default to 1800 seconds and uploads both compiled APKs
+before emulator startup so build evidence survives a boot failure. Both
+ordinary Android runs on commits `84b5a8f` and `18dc1af` passed; latest
+artifact details are recorded above. Native runtime, G3 export, and pilot
+evidence remain open.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
