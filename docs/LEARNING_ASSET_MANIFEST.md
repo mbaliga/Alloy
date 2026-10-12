@@ -116,3 +116,41 @@ boundary, but it never proves a printer state, material condition, or print.
   material and recipe, and it never qualifies a profile or predicts success.
 - Do not depict touching a hot plate/nozzle or prescribe temperature changes.
 - Any replacement must be versioned, re-reviewed, and re-hashed.
+
+
+## `learn/support-styles-v1.jpg`
+
+- **Asset ID:** `scene-support-styles-v1`
+- **Used by:** `concept-supports` and `symptom-bridge-droop`
+- **Type:** original generated explanatory illustration, offline JPEG
+- **Source/master:** built-in Image Generation output, generated 2026-10-13;
+  original master remains in the Codex generated-image store
+- **SHA-256:** `35be1228fe45ca850224e751da9bcf39f6e41faaf84f4f1029232f4a3c1103aa`
+- **Size:** 512 × 512 px, RGB JPEG, 38,407 bytes
+- **Alt text:** “A simple orange overhang shown on two plates, held up by gray
+  straight-grid supports on one and a branched tree support on the other.”
+- **Review status:** visually inspected; technical/source review remains
+  pending a named human reviewer. This is a conceptual comparison, not a
+  claim that either support mode is available or qualified in Alloy.
+- **Light/dark treatment:** warm ivory field, charcoal plates, orange model,
+  muted gray supports; preserve native aspect ratio in both themes
+- **Reduced motion:** static
+- **Rights/provenance:** Alloy-owned generated artwork; no third-party brand,
+  logo, UI, or reference image was used
+
+### Generation brief
+
+> Square 3D educational render comparing two support styles beneath an orange
+> FDM overhang: neat gray straight support pillars with a sparse lattice on
+> one fully visible charcoal PEI plate, and one smooth gray branched tree
+> support under the same orange part on a second fully visible plate. Warm
+> near-white background, subtle grid, soft shadows, generous margin, no text,
+> labels, logos, UI, watermark, hands, tools, or printer parts.
+
+### Acceptance constraints
+
+- The accompanying article must state that the image explains a concept; it
+  is not a slicer output or compatibility/qualification indicator.
+- Never infer that Alloy can produce either support type or that a pictured
+  style will work for a specific model, material, plate, or printer.
+- Any replacement must be versioned, re-reviewed, and re-hashed.
