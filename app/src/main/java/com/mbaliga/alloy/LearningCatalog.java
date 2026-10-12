@@ -44,7 +44,7 @@ public final class LearningCatalog {
             if (title.length() > 120 || summary.length() > 800 || scope.length() > 1000
                     || source.length() > 1000 || safety.length() > 80)
                 throw new IllegalArgumentException("Learning article text exceeds offline UI limits: " + id);
-            if (artwork.length() > 0 && !artwork.matches("learn/[a-z0-9][a-z0-9-]{0,63}\\.png"))
+            if (artwork.length() > 0 && !artwork.matches("learn/[a-z0-9][a-z0-9-]{0,63}\\.(?:png|jpe?g)"))
                 throw new IllegalArgumentException("Invalid learning artwork path: " + artwork);
             keywords = strings(value.optJSONArray("keywords"));
             steps = strings(value.optJSONArray("steps"));
