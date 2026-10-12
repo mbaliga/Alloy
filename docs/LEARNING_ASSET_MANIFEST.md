@@ -1,9 +1,42 @@
 # Alloy learning-asset manifest
 
+## `learn/first-layer-hotend-v1.png`
+
+- **Asset ID:** `scene-first-layer-hotend-v1`
+- **Used by:** `start-inspect`, `first-layer`,
+  `symptom-first-layer-bunched`, `symptom-plate-residue`, and
+  `faq-slicing`
+- **Type:** existing bundled explanatory illustration, offline PNG
+- **SHA-256:** `3dcb86cdf1fc9479588622d25fae1d7c5744c74ebbe9cb381037f00fc041c646`
+- **Size:** 1211 × 1299 px, RGBA PNG, 1,099,588 bytes
+- **Alt text:** “A generic hotend lays a single orange filament line on a dark
+  build plate.”
+- **Review status:** visually inspected; image is illustrative, not a slice,
+  safety check, diagnosis, or print-success prediction
+- **Rights/provenance:** source/master and usage-rights record are not present
+  in the repository; confirm before release claims about ownership
+
+## `learn/material-feed-route-v1.png`
+
+- **Asset ID:** `scene-material-feed-route-v1`
+- **Used by:** `start-recipe`, `start-material`, `materials-basics`,
+  `symptom-feed-route`, `symptom-runout`, `symptom-moisture`, and
+  `faq-spools`
+- **Type:** existing bundled explanatory illustration, offline PNG
+- **SHA-256:** `4e089649afc6c23711d089fa64858ebde4bab9f89e6987ce6462c9ea4a6db3b2`
+- **Size:** 1145 × 1374 px, RGB PNG, 1,516,744 bytes
+- **Alt text:** “An orange filament spool feeds a generic hotend above a
+  dark grid.”
+- **Review status:** visually inspected; illustration cannot prove spool
+  compatibility, material condition, feed route, or printer readiness
+- **Rights/provenance:** source/master and usage-rights record are not present
+  in the repository; confirm before release claims about ownership
+
 ## `learn/build-plate-boundary-v1.png`
 
 - **Asset ID:** `scene-build-plate-boundary-v1`
-- **Used by:** `start-place` and `concept-model`
+- **Used by:** `start-place`, `concept-model`, `faq-import-printable`, and
+  `faq-printer-profile`
 - **Type:** original generated explanatory illustration, offline PNG
 - **Source/master:** built-in Image Generation output, generated 2026-10-07;
   original retained in the Codex generated-image store
@@ -41,7 +74,8 @@ boundary, but it never proves a printer state, material condition, or print.
 
 - **Asset ID:** `scene-printer-phone-recovery-v1`
 - **Used by:** `connection-not-confirmed`, `symptom-export-rejected`,
-  `symptom-printer-busy`, and `symptom-app-interrupted`
+  `symptom-printer-busy`, `symptom-app-interrupted`, `faq-send-share`, and
+  `faq-unsafe`
 - **Type:** original generated explanatory illustration, offline PNG
 - **Source/master:** built-in Image Generation output, generated 2026-09-29;
   non-project exploratory master remains in the Codex generated-image store
@@ -121,7 +155,7 @@ boundary, but it never proves a printer state, material condition, or print.
 ## `learn/support-styles-v1.jpg`
 
 - **Asset ID:** `scene-support-styles-v1`
-- **Used by:** `concept-supports` and `symptom-bridge-droop`
+- **Used by:** `concept-supports`, `symptom-bridge-droop`, and `faq-supports`
 - **Type:** original generated explanatory illustration, offline JPEG
 - **Source/master:** built-in Image Generation output, generated 2026-10-13;
   original master remains in the Codex generated-image store
