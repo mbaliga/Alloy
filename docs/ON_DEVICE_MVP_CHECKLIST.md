@@ -8,20 +8,26 @@ historical and do not represent the current source snapshot or prove a
 physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
-**Latest successful ordinary Android gate (checked 2026-10-13):** Android v1 run
-[`38155370583`](https://github.com/mbaliga/Alloy/actions/runs/38155370583) at
-source commit `18dc1af8a267c0729d0be7319f6828062cc64a57` completed
-successfully, including APK build and pipeline acceptance tests. It published
-`alloy-v1-release-ci-apk` (artifact ID `11708468665`, ZIP SHA-256
-`388ab81eaf2e43713ad3e5fa3bd29dc6c117f6c450e65301feea3810fbb32133`). This
+**Latest ordinary Android gate (2026-10-13):** Android v1 run
+[`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955) on
+commit `f6a843d5da10ea11e99f6566319104c4abe6ed54` passed and published
+`alloy-v1-release-ci-apk` (artifact ID `11769315598`, ZIP SHA-256
+`08be6004fa8ffa9e100accb5d69e8a4c202dc8f265057e0f0b6589ad26f929a6`). This
 ordinary APK does not contain the optional native engine and is not slicing or
-printer-send evidence. The follow-up source revision
-[`f6a843d`](https://github.com/mbaliga/Alloy/commit/f6a843d5da10ea11e99f6566319104c4abe6ed54)
-extends emulator boot allowance to 1800 seconds and publishes the native APK
-pair before emulator startup. Native run
+printer-send evidence.
+
+Native run
 [`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
-is currently running; the previous native-enabled APK build passed but did not
-reach instrumentation because the emulator timed out.
+built and published both native-enabled APKs, then failed during UTP install
+commit with `ShellCommandUnresponsiveException`; the instrumentation report
+shows 0 tests ran. G3 evidence export and the software pilot were skipped.
+Artifacts `11769314506` (release APK) and `11769354664` (instrumentation
+APK) are compile/package evidence only. The report is artifact
+`11771334432` (ZIP SHA-256
+`b3fd8659c75b7d781e877a404d2f490fca58b675131737d54a17969426a44445`).
+The next native run applies a 900000 ms ADB operation timeout (15 minutes)
+only to connected instrumentation; no general print or release claim is
+promoted.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),

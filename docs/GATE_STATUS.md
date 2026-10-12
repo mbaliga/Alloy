@@ -4,28 +4,27 @@ Date: 2026-10-13
 
 ## Current source checkpoint — 2026-10-13
 
-Current GitHub branch source snapshot (`codex/alloy-phone-first-mvp`) contains
-the Qhull, Boost.Locale/ICU, isolated official Orca link-closure repairs, and
-the follow-up libiconv link repair. The repair stages the pinned static
-libiconv archive, requires it in the generated-input validator, and links it
-into the official Orca probe. Local regression checks pass (CI Python tests,
-Android-workflow validation, native wiring validation, release-wiring
-validation, and `git diff --check`) passed on the preceding native-source
-revision. Current source commit
+The current branch contains the Qhull, Boost.Locale/ICU, isolated
+official Orca link-closure and libiconv repairs. Its native source commit
 [`f6a843d`](https://github.com/mbaliga/Alloy/commit/f6a843d5da10ea11e99f6566319104c4abe6ed54)
-extends the native emulator boot timeout to 1800 seconds and uploads the
-native-enabled APK pair before emulator startup. Its native run
+built the ARM64 native-enabled release APK and instrumentation APK from
+pinned sources. Native Actions run
 [`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
-is in progress at official Orca source initialization; the matching ordinary
-Android run
-[`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955)
-is in progress at pinned profile verification.
+then failed before tests began: UTP raised
+`ShellCommandUnresponsiveException` while committing the native release APK
+install to the API-35 x86_64/ARM-translation emulator. The retained report
+artifact `alloy-native-instrumentation-report` (ID `11771334432`, ZIP
+SHA-256 `b3fd8659c75b7d781e877a404d2f490fca58b675131737d54a17969426a44445`)
+records **0 tests, 0 failures** and the install error. G3 export and the
+software pilot were skipped. The release and test APK artifacts (IDs
+`11769314506` and `11769354664`) prove compilation/packaging only, not
+native runtime or slicing.
 
 The latest ordinary Android v1 workflow
-([run 38155370583](https://github.com/mbaliga/Alloy/actions/runs/38155370583))
-passed for source commit `18dc1af` and published
-`alloy-v1-release-ci-apk` (artifact ID `11708468665`, ZIP digest
-`388ab81eaf2e43713ad3e5fa3bd29dc6c117f6c450e65301feea3810fbb32133`). This is
+([`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955))
+passed at source commit `f6a843d` and published
+`alloy-v1-release-ci-apk` (artifact ID `11769315598`, ZIP digest
+`08be6004fa8ffa9e100accb5d69e8a4c202dc8f265057e0f0b6589ad26f929a6`). This is
 ordinary app/pipeline evidence, not optional-native or printer-send approval.
 
 Native run
@@ -41,17 +40,13 @@ The pre-libiconv run
 failed in the native APK link step, as expected from its older source snapshot.
 The repaired run
 [38155370545](https://github.com/mbaliga/Alloy/actions/runs/38155370545)
-successfully built the optional-native APK and instrumentation APK, proving the
-libiconv link repair. It then failed before executing tests because the hosted
-Linux API-35 emulator timed out during boot; the run annotation is “Timeout
-waiting for emulator to boot.” No G3 or pilot artifact was produced, and the
-instrumentation report upload found no report files, confirming tests never
-started. The current follow-up extends emulator startup allowance from the
-action's 600-second default to 1800 seconds and uploads both compiled APKs
-before emulator startup so build evidence survives a boot failure. Both
-ordinary Android runs on commits `84b5a8f` and `18dc1af` passed; latest
-artifact details are recorded above. Native runtime, G3 export, and pilot
-evidence remain open.
+successfully built the optional-native APK and instrumentation APK, then failed
+before tests because the hosted API-35 emulator timed out during boot. Run
+`38295517040` extended boot allowance to 1800 seconds and reached APK install,
+but UTP failed on install commit with `ShellCommandUnresponsiveException` before
+tests began. The follow-up applies a scoped 900000 ms ADB operation timeout to
+native connected instrumentation and protects it with the Android workflow
+validator. Native runtime, G3 export, and pilot evidence remain open.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
