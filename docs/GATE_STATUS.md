@@ -32,19 +32,25 @@ clarifies A1 Mini PVA routing: direct feed remains the default, with AMS Lite
 considered only for confirmed-dry PVA and an exact material profile that
 permits the route. At last check, Android run
 [`38319130553`](https://github.com/mbaliga/Alloy/actions/runs/38319130553)
-was still building the CI-signed APK; the revised catalog copy is not yet
-verified by that run.
+has completed APK build and is currently running Android acceptance tests.
+The revised catalog copy is not yet verified by that run.
 
 ### Native engine, slicing and release evidence
 
 Native run
 [`38315395721`](https://github.com/mbaliga/Alloy/actions/runs/38315395721)
-has completed its pinned source dependency, OpenCV, GMP and MPFR steps and is
-still building the optional native engine. Follow-up
+has completed its pinned source dependency, OpenCV, GMP, MPFR and
+optional-engine release APK build. It published release APK artifact
+`11778506239` (ZIP SHA-256
+`18816864c35c702de6a190c1a2fd57f4fb3e7f3aa8fe509bbd4277b16b9c9161`) and
+instrumentation APK artifact `11778541204` (ZIP SHA-256
+`000575528ecf9ba015c10aa124fa725ba259d815b3f37dbc3fffaf01cedd76c2`). At
+last check, API-35 ARM-translation instrumentation was still running; these
+packages prove compilation/packaging, not native runtime or slicing.
+Follow-up
 [`38316210206`](https://github.com/mbaliga/Alloy/actions/runs/38316210206)
-is pending and includes a 180-second allowance for the first ARM-translated
-native load. Neither run has yet proven native runtime, slicing, G3 export or
-the software pilot.
+is pending and includes a 180-second allowance for first native load. Neither
+run has yet proven native behavior, G3 export or the software pilot.
 
 The prior native run
 [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
