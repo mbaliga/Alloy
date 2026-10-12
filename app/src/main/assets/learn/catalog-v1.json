@@ -111,7 +111,7 @@
         "safety": "Review",
         "scope": "Treat import, slicing, export and physical-print approval as separate stages.",
         "source": "Alloy first-release workflow contract v1",
-        "artwork": "",
+        "artwork": "learn/build-plate-boundary-v1.png",
         "keywords": [
           "faq",
           "beginner"
@@ -149,7 +149,7 @@
         "safety": "Inspect",
         "scope": "Native engine and profile parity are still being qualified; a generated preview is not a print guarantee.",
         "source": "Alloy slice-review boundary v1",
-        "artwork": "",
+        "artwork": "learn/first-layer-hotend-v1.png",
         "keywords": [
           "faq",
           "beginner"
@@ -187,7 +187,7 @@
         "safety": "Inspect",
         "scope": "Support generation and Bambu-specific parity are not yet qualified for physical production use.",
         "source": "Alloy support-planning boundary v1",
-        "artwork": "",
+        "artwork": "learn/support-styles-v1.jpg",
         "keywords": [
           "faq",
           "beginner"
@@ -206,7 +206,7 @@
         "safety": "Review",
         "scope": "A loaded profile is not proof of the printer’s firmware, configuration or physical condition.",
         "source": "Alloy initial Bambu profile contract v1",
-        "artwork": "",
+        "artwork": "learn/build-plate-boundary-v1.png",
         "keywords": [
           "faq",
           "beginner"
@@ -225,7 +225,7 @@
         "safety": "Review",
         "scope": "A1 mini material/spool records are planning guidance; unknown fit or feed routes must stay blocked.",
         "source": "Alloy capability-catalog safety contract v1",
-        "artwork": "",
+        "artwork": "learn/material-feed-route-v1.png",
         "keywords": [
           "faq",
           "beginner"
@@ -244,7 +244,7 @@
         "safety": "Hard stop",
         "scope": "Direct-send, validated Bambu-ready export and Bambu Handy import require separate completed evidence gates.",
         "source": "Alloy release gate status v1",
-        "artwork": "",
+        "artwork": "learn/printer-phone-recovery-v1.png",
         "keywords": [
           "faq",
           "beginner"
@@ -263,7 +263,7 @@
         "safety": "Hard stop",
         "scope": "Alloy learning content is not a remote diagnosis or a repair guide for hot, moving or electrical parts.",
         "source": "Alloy universal safety boundary v1",
-        "artwork": "",
+        "artwork": "learn/printer-phone-recovery-v1.png",
         "keywords": [
           "faq",
           "beginner"
