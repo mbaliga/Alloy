@@ -74,3 +74,45 @@ boundary, but it never proves a printer state, material condition, or print.
 - The blank phone is intentional. It must not acquire generated or baked UI.
 - A future dark asset may replace this file only as a new version with its own
   checksum, review record, and explicit contrast check.
+
+
+## `learn/first-layer-adhesion-v1.jpg`
+
+- **Asset ID:** `scene-first-layer-adhesion-v1`
+- **Used by:** `symptom-not-sticking`, `symptom-first-layer-gaps`, and
+  `symptom-warping`
+- **Type:** original generated explanatory illustration, offline JPEG
+- **Source/master:** built-in Image Generation output, generated 2026-10-13;
+  original master remains in the Codex generated-image store
+- **SHA-256:** `6f759139a6e0f9719b5b71172a9648ce4c1fbbfcd51fd529ebc8795d2507fa33`
+- **Size:** 512 × 512 px, RGB JPEG, 70,965 bytes
+- **Alt text:** “Two orange first-layer test patches on a dark textured plate:
+  one continuous and evenly spaced, the other separated and lifting at an edge.”
+- **Review status:** generated artwork visually inspected; technical/source
+  review remains pending a named human reviewer. The image illustrates
+  symptoms, not a remote diagnosis or guaranteed cause.
+- **Light/dark treatment:** warm ivory field with dark plate and orange
+  filament; keep the image at native aspect ratio and maintain surrounding
+  text contrast in both app themes
+- **Reduced motion:** static
+- **Rights/provenance:** Alloy-owned generated artwork; no third-party brand,
+  logo, UI, or reference image was used
+
+### Generation brief
+
+> Square 3D educational render comparing a successful first layer and an
+> early failed first layer on one dark charcoal PEI plate. On the left, bright
+> orange extrusion lines are continuous, gently flattened, evenly spaced and
+> fully adhered. On the right, lines are visibly separated and one edge curls
+> slightly upward. Warm near-white studio background, subtle plate grid,
+> soft shadow, crisp phone-card composition. No words, labels, logos, UI,
+> watermark, hands, printer parts, or extra objects.
+
+### Acceptance constraints
+
+- Article copy must say that the illustration shows possible symptoms, not a
+  cause Alloy can diagnose remotely.
+- The illustration cannot replace inspection of the selected printer, plate,
+  material and recipe, and it never qualifies a profile or predicts success.
+- Do not depict touching a hot plate/nozzle or prescribe temperature changes.
+- Any replacement must be versioned, re-reviewed, and re-hashed.
