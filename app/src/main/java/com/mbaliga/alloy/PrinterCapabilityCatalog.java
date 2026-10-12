@@ -21,11 +21,13 @@ public final class PrinterCapabilityCatalog {
     private static final String ASSET = "capabilities/bambu-initial-v1.json";
 
     public static final class Material {
-        public final String id, name, bambuStatus, directSendState, note, sourceUrl;
+        public final String id, name, bambuStatus, directSendState, note, sourceUrl, amsLiteStatus, amsLiteSourceUrl;
         Material(JSONObject o) {
             id = need(o, "id"); name = need(o, "name"); bambuStatus = need(o, "bambu_status");
             directSendState = need(o, "alloy_direct_send"); note = need(o, "note");
             sourceUrl = officialSourceUrl(o, "source_url");
+            amsLiteStatus = o.optString("ams_lite_status", "").trim();
+            amsLiteSourceUrl = amsLiteStatus.isEmpty() ? "" : officialSourceUrl(o, "ams_lite_source_url");
         }
     }
     public static final class FeedRoute {
@@ -99,9 +101,31 @@ public final class PrinterCapabilityCatalog {
         }
         Printer mini = null;
         for (Printer printer : printers) if ("a1-mini".equals(printer.id)) mini = printer;
-        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"))
+        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled", "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe"))
                 || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool")))
             throw new IOException("A1 mini capability coverage is incomplete");
+        for (Material material : mini.materials) {
+            if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
+                throw new IOException("A1 mini material " + material.id + " lacks sourced AMS Lite route status");
+            if (!unavailable(material.directSendState))
+                throw new IOException("A1 mini material " + material.id + " cannot qualify direct send");
+        }
+        Material pva = null, bvoh = null, genericTpu = null, tpu95a = null, supportPla = null, genericFiber = null;
+        for (Material material : mini.materials) {
+            if ("pva".equals(material.id)) pva = material;
+            else if ("bvoh".equals(material.id)) bvoh = material;
+            else if ("tpu".equals(material.id)) genericTpu = material;
+            else if ("tpu-95a".equals(material.id)) tpu95a = material;
+            else if ("support-pla".equals(material.id)) supportPla = material;
+            else if ("cf-gf-filled".equals(material.id)) genericFiber = material;
+        }
+        if (pva == null || !pva.amsLiteStatus.toLowerCase(Locale.US).contains("dry pva only")
+                || bvoh == null || !bvoh.amsLiteStatus.toLowerCase(Locale.US).contains("dry bvoh only")
+                || genericTpu == null || !genericTpu.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
+                || tpu95a == null || !tpu95a.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
+                || supportPla == null || !supportPla.amsLiteStatus.toLowerCase(Locale.US).contains("not listed")
+                || genericFiber == null || !genericFiber.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported"))
+            throw new IOException("A1 mini AMS Lite exceptions are incomplete");
     }
     private static boolean unavailable(String state) {
         String normalized = state.toLowerCase(Locale.US);
