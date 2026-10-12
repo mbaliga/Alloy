@@ -21,10 +21,10 @@ software pilot were skipped. The release and test APK artifacts (IDs
 native runtime or slicing.
 
 The latest ordinary Android v1 workflow
-([`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955))
-passed at source commit `f6a843d` and published
-`alloy-v1-release-ci-apk` (artifact ID `11769315598`, ZIP digest
-`08be6004fa8ffa9e100accb5d69e8a4c202dc8f265057e0f0b6589ad26f929a6`). This is
+([`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077))
+passed on source commit `12ac53a` and published
+`alloy-v1-release-ci-apk` (artifact ID `11772578516`, ZIP digest
+`ac27fdf5596dbaf0682049be101c9d5039911b1a91d637843b7ae329b3c641bc`). This is
 ordinary app/pipeline evidence, not optional-native or printer-send approval.
 
 Native run
@@ -44,9 +44,7 @@ successfully built the optional-native APK and instrumentation APK, then failed
 before tests because the hosted API-35 emulator timed out during boot. Run
 `38295517040` extended boot allowance to 1800 seconds and reached APK install,
 but UTP failed on install commit with `ShellCommandUnresponsiveException` before
-tests began. The follow-up applies a scoped 900000 ms ADB operation timeout to
-native connected instrumentation and protects it with the Android workflow
-validator. Native runtime, G3 export, and pilot evidence remain open.
+tests began. Commit [`12ac53a`](https://github.com/mbaliga/Alloy/commit/12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b) applies a scoped 900000 ms ADB operation timeout to native connected instrumentation and protects it with the workflow validator. Follow-up native run [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147) is still building source dependencies; native runtime, G3 export, and pilot evidence remain open.
 
 The previous corrected run
 ([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
@@ -56,14 +54,13 @@ SHA-256 `c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`)
 reported unresolved upstream Qhull C/C++ symbols from `TriangleMesh.cpp` and
 Boost.Locale/ICU symbols from `utils.cpp`. The branch repairs now link Orca's
 pinned Qhull target and source-build the pinned ICU-backed Boost.Locale
-dependency; they remain unverified by Android CI. The current probe compiles
-Alloy's MCUT compatibility translation unit, whose MCUT block was checked
+dependency. The native CI build on run `38295517040` now compiles and links the isolated official Orca probe, but the run fails before JNI instrumentation, so this still proves no native runtime or slicer behavior. The probe compiles Alloy's MCUT compatibility translation unit, whose MCUT block was checked
 byte-for-byte against pinned Orca. This is still only a compile/link probe, not
 the shipping slicer.
 
 G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
 and physical A1 Mini acceptance, Bambu Handy import acceptance and production
-signing remain unproven. Ordinary Android v1 run [`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955) passed on `f6a843d`; this does not include native slicing or printer-send evidence. Keep print and release claims fail-closed.
+signing remain unproven. Ordinary Android v1 run [`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) passed on `12ac53a`; this does not include native slicing or printer-send evidence. The matching native run `38305679147` remains in progress. Keep print and release claims fail-closed.
 
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
