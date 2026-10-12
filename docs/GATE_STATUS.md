@@ -42,13 +42,28 @@ optional-engine release APK build. It published release APK artifact
 `11778506239` (ZIP SHA-256
 `18816864c35c702de6a190c1a2fd57f4fb3e7f3aa8fe509bbd4277b16b9c9161`) and
 instrumentation APK artifact `11778541204` (ZIP SHA-256
-`000575528ecf9ba015c10aa124fa725ba259d815b3f37dbc3fffaf01cedd76c2`). At
-last check, API-35 ARM-translation instrumentation was still running; these
-packages prove compilation/packaging, not native runtime or slicing.
-Follow-up
+`000575528ecf9ba015c10aa124fa725ba259d815b3f37dbc3fffaf01cedd76c2`). Run `38315395721` ultimately concluded **failure** at its API-35 emulator
+instrumentation workflow step. The uploaded diagnostic report artifact
+`11778129246` contains Gradle output ending in `BUILD SUCCESSFUL` for
+`:app:connectedReleaseAndroidTest` (13m22s) and JUnit XML with 190 tests, 0
+failures, 2 skips; the reported native cube, assembly, arc and pilot-fixture
+smokes passed. This conflicts with the enclosing GitHub step's failed
+conclusion, so it is evidence of test execution but not a passing native
+workflow. The action-level failure still needs diagnosis. Follow-up
 [`38316210206`](https://github.com/mbaliga/Alloy/actions/runs/38316210206)
-is cancelled, not pending; it had extended the first native-load test timeout
-to 180 seconds.
+was cancelled after extending the first native-load test timeout to 180 seconds.
+
+Commit
+[`f36f67b`](https://github.com/mbaliga/Alloy/commit/f36f67b75ed346fff1d34f1ea030159acc417427)
+adds native review-only slicing and package staging for the initial A1 Mini,
+A1 and P1S profiles. It asserts each configuration reaches Orca and each
+result produces safe G-code and a valid `.gcode.3mf`, while explicitly keeping
+the profiles unverified for physical sending. Android v1 run
+[`38320988598`](https://github.com/mbaliga/Alloy/actions/runs/38320988598)
+is in progress; matching native run
+[`38320985893`](https://github.com/mbaliga/Alloy/actions/runs/38320985893)
+is now running behind the earlier native job. Neither new run has yet
+validated this added test.
 
 Commit
 [`f36f67b`](https://github.com/mbaliga/Alloy/commit/f36f67b75ed346fff1d34f1ea030159acc417427)
