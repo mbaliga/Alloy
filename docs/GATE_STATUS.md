@@ -63,9 +63,7 @@ the shipping slicer.
 
 G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
 and physical A1 Mini acceptance, Bambu Handy import acceptance and production
-signing remain unproven. The ordinary Android v1 runs on commits `84b5a8f` and
-`18dc1af` are still at pipeline acceptance tests. Keep print and release claims
-fail-closed.
+signing remain unproven. Ordinary Android v1 run [`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955) passed on `f6a843d`; this does not include native slicing or printer-send evidence. Keep print and release claims fail-closed.
 
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)

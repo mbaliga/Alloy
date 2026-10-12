@@ -25,9 +25,7 @@ Artifacts `11769314506` (release APK) and `11769354664` (instrumentation
 APK) are compile/package evidence only. The report is artifact
 `11771334432` (ZIP SHA-256
 `b3fd8659c75b7d781e877a404d2f490fca58b675131737d54a17969426a44445`).
-The next native run applies a 900000 ms ADB operation timeout (15 minutes)
-only to connected instrumentation; no general print or release claim is
-promoted.
+Commit [`12ac53a`](https://github.com/mbaliga/Alloy/commit/12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b) now applies a 900000 ms ADB operation timeout (15 minutes) only to connected instrumentation. Follow-up native run [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147) and Android v1 run [`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) are in progress. No general print or release claim is promoted.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
