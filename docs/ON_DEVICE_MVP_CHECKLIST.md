@@ -8,14 +8,20 @@ historical and do not represent the current source snapshot or prove a
 physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
-**Latest ordinary Android gate (checked 2026-10-11):** Android v1 run
+**Latest successful ordinary Android gate (checked 2026-10-13):** Android v1 run
 [`38155370583`](https://github.com/mbaliga/Alloy/actions/runs/38155370583) at
 source commit `18dc1af8a267c0729d0be7319f6828062cc64a57` completed
 successfully, including APK build and pipeline acceptance tests. It published
 `alloy-v1-release-ci-apk` (artifact ID `11708468665`, ZIP SHA-256
 `388ab81eaf2e43713ad3e5fa3bd29dc6c117f6c450e65301feea3810fbb32133`). This
 ordinary APK does not contain the optional native engine and is not slicing or
-printer-send evidence.
+printer-send evidence. The follow-up source revision
+[`f6a843d`](https://github.com/mbaliga/Alloy/commit/f6a843d5da10ea11e99f6566319104c4abe6ed54)
+extends emulator boot allowance to 1800 seconds and publishes the native APK
+pair before emulator startup. Native run
+[`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
+is currently running; the previous native-enabled APK build passed but did not
+reach instrumentation because the emulator timed out.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),

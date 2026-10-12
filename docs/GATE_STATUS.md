@@ -1,8 +1,8 @@
 # Alloy engine gate status
 
-Date: 2026-10-11
+Date: 2026-10-13
 
-## Current source checkpoint — 2026-10-11
+## Current source checkpoint — 2026-10-13
 
 Current GitHub branch source snapshot (`codex/alloy-phone-first-mvp`) contains
 the Qhull, Boost.Locale/ICU, isolated official Orca link-closure repairs, and
@@ -10,8 +10,16 @@ the follow-up libiconv link repair. The repair stages the pinned static
 libiconv archive, requires it in the generated-input validator, and links it
 into the official Orca probe. Local regression checks pass (CI Python tests,
 Android-workflow validation, native wiring validation, release-wiring
-validation, and `git diff --check`). Current source commit is
-[`18dc1af`](https://github.com/mbaliga/Alloy/commit/18dc1af8a267c0729d0be7319f6828062cc64a57).
+validation, and `git diff --check`) passed on the preceding native-source
+revision. Current source commit
+[`f6a843d`](https://github.com/mbaliga/Alloy/commit/f6a843d5da10ea11e99f6566319104c4abe6ed54)
+extends the native emulator boot timeout to 1800 seconds and uploads the
+native-enabled APK pair before emulator startup. Its native run
+[`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
+is in progress at official Orca source initialization; the matching ordinary
+Android run
+[`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955)
+is in progress at pinned profile verification.
 
 The latest ordinary Android v1 workflow
 ([run 38155370583](https://github.com/mbaliga/Alloy/actions/runs/38155370583))
