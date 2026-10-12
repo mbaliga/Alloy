@@ -160,6 +160,13 @@ def main() -> None:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must use the stable avdmanager profile id pixel_6")
     if native_text.count("disable-animations: false") != 3:
         raise SystemExit(f"{native}: both translated-ARM emulator jobs must avoid optional post-boot animation writes")
+    if native_text.count('emulator-boot-timeout: "1800"') != 3:
+        raise SystemExit(f"{native}: each API-35 ARM-translation emulator boot must allow the extended hosted-runner window")
+    native_runtime = native_text.find("name: Run native release instrumentation through API-35 ARM translation")
+    for artifact in ("alloy-native-release-ci-apk", "alloy-native-instrumentation-apk"):
+        artifact_position = native_text.find(f"name: {artifact}")
+        if artifact_position < 0 or artifact_position > native_runtime:
+            raise SystemExit(f"{native}: {artifact} must upload before emulator startup so build evidence survives boot failures")
     if native_text.count("target: google_apis") != 3 or native_text.count("arch: x86_64") != 3:
         raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
     if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 3:

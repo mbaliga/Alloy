@@ -330,6 +330,22 @@ jobs:
           retention-days: 7
       - name: Compile native instrumentation smoke test
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true -PalloyCiDebugSign=true --no-daemon --stacktrace
+      # Publish the exact APK pair before emulator startup so a runner boot
+      # failure does not discard the source-built native binary evidence.
+      - name: Upload native release APK before emulator validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-release-ci-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload native instrumentation APK before emulator validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-instrumentation-apk
+          path: app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
+          if-no-files-found: error
+          retention-days: 7
       # Use hosted KVM where available; some runner pools do not expose it.
       # In that case keep the test runnable with QEMU's software fallback.
       - name: Configure Android emulator acceleration
@@ -359,6 +375,9 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          # The last API-35 x86_64/ARM-translation boot exceeded the action's
+          # 600-second default on a hosted Linux runner without usable KVM.
+          emulator-boot-timeout: "1800"
           # Do not let the runner's optional post-boot animation settings
           # writes mask the native test result on slow hosted API-35 boots.
           disable-animations: false
@@ -371,6 +390,9 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          # The last API-35 x86_64/ARM-translation boot exceeded the action's
+          # 600-second default on a hosted Linux runner without usable KVM.
+          emulator-boot-timeout: "1800"
           # Keep this independent emulator boot free of optional ADB settings
           # mutations; the evidence harness is not animation-sensitive.
           disable-animations: false
@@ -392,16 +414,6 @@ jobs:
         with:
           name: alloy-native-g3-evidence
           path: path-b-g3-evidence
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
-          name: alloy-native-release-ci-apk
-          path: app/build/outputs/apk/release/app-release.apk
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
-          name: alloy-native-instrumentation-apk
-          path: app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
           if-no-files-found: error
       # A native test failure is the moment its JUnit XML is most valuable.
       # Keep it even when later success-only evidence artifacts are skipped.
@@ -439,6 +451,9 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          # The last API-35 x86_64/ARM-translation boot exceeded the action's
+          # 600-second default on a hosted Linux runner without usable KVM.
+          emulator-boot-timeout: "1800"
           disable-animations: false
           disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: |
