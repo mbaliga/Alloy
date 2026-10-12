@@ -9,16 +9,14 @@ physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
 **Latest completed ordinary Android gate (2026-10-13):** Android v1 run
-[`38318024075`](https://github.com/mbaliga/Alloy/actions/runs/38318024075) on
-commit `0b2db876d3829236f18680082333df00387cb5f3` passed the acceptance suite:
+[`38319130553`](https://github.com/mbaliga/Alloy/actions/runs/38319130553) on
+commit `a2fdb5f7d2a5817fc57e305431ea77a318e710ca` passed the acceptance suite:
 190 tests, 1 skipped, 0 failed. It published `alloy-v1-release-ci-apk`
-(artifact ID `11777119918`, ZIP SHA-256
-`6197473796efef88c42eeb5bda3b3a302edfda6e5625c782daa848932667e1b0`). This
-ordinary APK includes JPEG learning-artwork support, but does not contain the
-optional native engine and is not slicing or printer-send evidence. Newer
-source commit `a2fdb5f7d2a5817fc57e305431ea77a318e710ca` adds a dry-PVA/AMS Lite
-clarification; its Android run `38319130553` is still in progress, so use that
-newer artifact only after its run passes.
+(artifact ID `11778127759`, ZIP SHA-256
+`ff278c4be5abd7c84a5aa55223addd4176ef3dfd10355694065c26cc956826d2`). This
+ordinary APK includes the JPEG learning-artwork support and updated A1 Mini
+PVA/AMS Lite route guidance, but does not contain the optional native engine
+and is not slicing or printer-send evidence.
 
 Native run
 [`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
@@ -68,15 +66,13 @@ not physical qualification. Do not uninstall a working Alloy installation
 merely to replace it with a CI-debug-signed QA build.
 
 1. For ordinary app checks, download `alloy-v1-release-ci-apk` from run
-   [38318024075](https://github.com/mbaliga/Alloy/actions/runs/38318024075)
-   (source commit `0b2db876d3829236f18680082333df00387cb5f3`; artifact ID
-   `11777119918`, ZIP SHA-256
-   `6197473796efef88c42eeb5bda3b3a302edfda6e5625c782daa848932667e1b0`),
+   [38319130553](https://github.com/mbaliga/Alloy/actions/runs/38319130553)
+   (source commit `a2fdb5f7d2a5817fc57e305431ea77a318e710ca`; artifact ID
+   `11778127759`, ZIP SHA-256
+   `ff278c4be5abd7c84a5aa55223addd4176ef3dfd10355694065c26cc956826d2`),
    extract `app-release.apk`, install it on an ARM64 Android phone and record
    the APK's own SHA-256 separately. This APK omits the optional native engine;
-   it can verify the ordinary app and conservative fallback behavior only.
-   For the current PVA/AMS Lite copy change, wait for run `38319130553` to pass
-   and use its matching artifact instead.
+   it verifies the ordinary app and conservative fallback behavior only.
 2. Historical native run
    [37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
    produced native QA, instrumentation and G3 evidence, plus five-fixture
