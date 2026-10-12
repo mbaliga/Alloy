@@ -330,7 +330,10 @@ public final class BambuLanTransportFakePrinterTest {
         }
     }
 
-    @Test(timeout = 30_000)
+    // ARM64 library startup under the hosted API-35 x86_64 translation layer can exceed 30 s.
+    // Keep the transaction assertions and their own bounded waits unchanged; only allow the
+    // one-time native initialization/slice call a realistic CI ceiling.
+    @Test(timeout = 180_000)
     public void nativeArtifactTravelsThroughFakePrinterTransaction() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
