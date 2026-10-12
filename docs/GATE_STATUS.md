@@ -56,14 +56,23 @@ was cancelled after extending the first native-load test timeout to 180 seconds.
 
 Commit
 [`f36f67b`](https://github.com/mbaliga/Alloy/commit/f36f67b75ed346fff1d34f1ea030159acc417427)
-adds native review-only slicing and package staging for the initial A1 Mini,
-A1 and P1S profiles. It asserts each configuration reaches Orca and each
-result produces safe G-code and a valid `.gcode.3mf`, while explicitly keeping
-the profiles unverified for physical sending. Android v1 run
+adds review-only native slicing and package staging for all three initial
+Bambu profiles, asserting that each remains unverified for physical sending.
+Commit
+[`a2ef790`](https://github.com/mbaliga/Alloy/commit/a2ef790b7a6415c17c31342df894e0986fa96876)
+adds a differentiating envelope fixture: a 200 mm part must be rejected for
+the A1 Mini and sliced/package-validated under A1 and P1S profiles. This is
+designed to catch profile wiring that merely loads the right names while the
+native path keeps the wrong bed size. The earlier f36 Android run
 [`38320988598`](https://github.com/mbaliga/Alloy/actions/runs/38320988598)
-is in progress; matching native run
+is in progress; its native run
 [`38320985893`](https://github.com/mbaliga/Alloy/actions/runs/38320985893)
-is in progress. Neither new run has yet validated this added test.
+is also in progress but does not contain the added envelope fixture. Runs for
+a2ef790 are Android
+[`38321723583`](https://github.com/mbaliga/Alloy/actions/runs/38321723583)
+(queued) and native
+[`38321723592`](https://github.com/mbaliga/Alloy/actions/runs/38321723592)
+(pending). Neither commit's new cross-profile tests are yet green.
 The prior native run
 [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
 failed 2 of 162 tests: ARM translation exceeded a 30-second
