@@ -42,8 +42,7 @@ Corrected native run
 at `4ebe473`, completed dependency bootstrap and compiled the official Orca
 archive, but failed final linking with unresolved upstream Qhull and
 Boost.Locale/ICU symbols. Its diagnostic artifact is ID `11705105774`, SHA-256
-`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`. The
-The current branch contains the Qhull, Boost.Locale/ICU and libiconv
+`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`. The current branch contains the Qhull, Boost.Locale/ICU and libiconv
 link repairs. Native run
 [`38155370545`](https://github.com/mbaliga/Alloy/actions/runs/38155370545)
 successfully built both native-enabled APKs, then failed before instrumentation
@@ -82,11 +81,14 @@ merely to replace it with a CI-debug-signed QA build.
    [37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
    produced native QA, instrumentation and G3 evidence, plus five-fixture
    software-pilot evidence and a package-ID-verified isolated pilot APK pair,
-   but it is not the current source. Wait for the queued current-source native
-   run to pass and publish a fresh artifact before testing native slicing or
-   the isolated software pilot. CI-debug signing remains non-production; no
-   software artifact establishes successful physical printing or Handy import
-   acceptance.
+   but it is not the current source. At this checklist revision, native run
+   `38315395721` (diagnostics-enabled source, before the later 180-second JNI
+   initialization timeout change) is still building the native APK; follow-up
+   `38316210206` with that timeout change is pending. Do not use any native
+   artifact until a matching current-source run completes instrumentation, G3
+   evidence export and software pilot successfully. CI-debug signing remains
+   non-production; no software artifact establishes successful physical
+   printing or Handy import acceptance.
    Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
    samples; 314/479 exact common files, 65.55%;
    [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
