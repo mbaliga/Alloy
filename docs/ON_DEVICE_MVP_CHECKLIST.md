@@ -9,10 +9,10 @@ physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
 **Latest ordinary Android gate (2026-10-13):** Android v1 run
-[`38295516955`](https://github.com/mbaliga/Alloy/actions/runs/38295516955) on
-commit `f6a843d5da10ea11e99f6566319104c4abe6ed54` passed and published
-`alloy-v1-release-ci-apk` (artifact ID `11769315598`, ZIP SHA-256
-`08be6004fa8ffa9e100accb5d69e8a4c202dc8f265057e0f0b6589ad26f929a6`). This
+[`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) on
+commit `12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b` passed and published
+`alloy-v1-release-ci-apk` (artifact ID `11772578516`, ZIP SHA-256
+`ac27fdf5596dbaf0682049be101c9d5039911b1a91d637843b7ae329b3c641bc`). This
 ordinary APK does not contain the optional native engine and is not slicing or
 printer-send evidence.
 
@@ -25,7 +25,7 @@ Artifacts `11769314506` (release APK) and `11769354664` (instrumentation
 APK) are compile/package evidence only. The report is artifact
 `11771334432` (ZIP SHA-256
 `b3fd8659c75b7d781e877a404d2f490fca58b675131737d54a17969426a44445`).
-Commit [`12ac53a`](https://github.com/mbaliga/Alloy/commit/12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b) now applies a 900000 ms ADB operation timeout (15 minutes) only to connected instrumentation. Follow-up native run [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147) and Android v1 run [`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) are in progress. No general print or release claim is promoted.
+Commit [`12ac53a`](https://github.com/mbaliga/Alloy/commit/12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b) now applies a 900000 ms ADB operation timeout (15 minutes) only to connected instrumentation. Follow-up native run [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147) remains in progress at source dependency build; Android v1 run [`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) has passed. No general print or release claim is promoted.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
