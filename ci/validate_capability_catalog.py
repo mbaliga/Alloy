@@ -26,7 +26,8 @@ SPOOL_FIELDS = {"id", "title", "form", "compatible_routes", "geometry", "state",
 # classes the user needs to review.
 A1_MINI_MATERIAL_IDS = {
     "pla", "petg", "tpu", "pva", "support-pla", "support-petg",
-    "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled",
+    "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled",
+    "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe",
 }
 
 
@@ -95,6 +96,9 @@ def validate_catalog(path):
         for material in printer["materials"]:
             require_fields(material, MATERIAL_FIELDS, f"{identifier}.material")
             official_bambu_url(material["source_url"], f"{identifier}.material.source_url")
+            if "ams_lite_status" in material or "ams_lite_source_url" in material:
+                require_fields(material, {"ams_lite_status", "ams_lite_source_url"}, f"{identifier}.material AMS Lite route")
+                official_bambu_url(material["ams_lite_source_url"], f"{identifier}.material.ams_lite_source_url")
             if not material["alloy_direct_send"].lower().startswith(("not qualified", "blocked")):
                 raise ValueError(f"{identifier}.material must stay unavailable for Alloy direct send")
         if not isinstance(printer["feed_routes"], list) or not printer["feed_routes"]:
@@ -122,6 +126,25 @@ def validate_catalog(path):
     for material in support_materials.values():
         if material["alloy_direct_send"] != "Not qualified" or "does not imply AMS lite compatibility" not in material["note"]:
             raise ValueError("A1 mini support-filament families must stay unqualified and route-caveated")
+    mini_materials = {material["id"]: material for material in mini["materials"]}
+    for material in mini["materials"]:
+        if not material.get("ams_lite_status", "").strip():
+            raise ValueError(f"A1 mini material {material['id']} is missing its AMS Lite status")
+        if not material.get("ams_lite_source_url", "").strip():
+            raise ValueError(f"A1 mini material {material['id']} is missing its AMS Lite source")
+        official_bambu_url(material["ams_lite_source_url"], f"a1-mini.{material['id']}.ams_lite_source_url")
+        if not material["alloy_direct_send"].lower().startswith(("not qualified", "blocked")):
+            raise ValueError(f"A1 mini material {material['id']} must stay unavailable for Alloy direct send")
+    for material_id, expected_text in {
+        "pva": "dry pva only", "bvoh": "dry bvoh only", "tpu": "unsupported",
+        "tpu-95a": "unsupported", "support-pla": "not listed",
+        "support-petg": "not listed", "cf-gf-filled": "unsupported",
+        "pla-glow": "not recommended", "petg-cf": "not recommended",
+    }.items():
+        if expected_text not in mini_materials[material_id]["ams_lite_status"].lower():
+            raise ValueError(f"A1 mini AMS Lite exception is missing for {material_id}")
+    if not any("40–68 mm" in item and "53–58 mm" in item for item in mini["spool_guidance"]):
+        raise ValueError("A1 mini must retain the documented AMS Lite spool-fit dimensions")
     if {form["id"] for form in mini["spool_forms"]} != {
         "bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"
     }:
