@@ -53,17 +53,6 @@ workflow. The action-level failure still needs diagnosis. Follow-up
 [`38316210206`](https://github.com/mbaliga/Alloy/actions/runs/38316210206)
 was cancelled after extending the first native-load test timeout to 180 seconds.
 
-Commit
-[`f36f67b`](https://github.com/mbaliga/Alloy/commit/f36f67b75ed346fff1d34f1ea030159acc417427)
-adds native review-only slicing and package staging for the initial A1 Mini,
-A1 and P1S profiles. It asserts each configuration reaches Orca and each
-result produces safe G-code and a valid `.gcode.3mf`, while explicitly keeping
-the profiles unverified for physical sending. Android v1 run
-[`38320988598`](https://github.com/mbaliga/Alloy/actions/runs/38320988598)
-is in progress; matching native run
-[`38320985893`](https://github.com/mbaliga/Alloy/actions/runs/38320985893)
-is now running behind the earlier native job. Neither new run has yet
-validated this added test.
 
 Commit
 [`f36f67b`](https://github.com/mbaliga/Alloy/commit/f36f67b75ed346fff1d34f1ea030159acc417427)
@@ -74,9 +63,7 @@ the profiles unverified for physical sending. Android v1 run
 [`38320988598`](https://github.com/mbaliga/Alloy/actions/runs/38320988598)
 is in progress; matching native run
 [`38320985893`](https://github.com/mbaliga/Alloy/actions/runs/38320985893)
-is queued behind the existing native job. Neither run has yet validated this
-test, and no native behavior, G3 export or software pilot is promoted.
-
+is in progress. Neither new run has yet validated this added test.
 The prior native run
 [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
 failed 2 of 162 tests: ARM translation exceeded a 30-second
