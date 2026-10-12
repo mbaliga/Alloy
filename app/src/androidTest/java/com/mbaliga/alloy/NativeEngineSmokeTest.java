@@ -87,6 +87,54 @@ public final class NativeEngineSmokeTest {
         }
     }
 
+    @Test(timeout = 240_000)
+    public void nativeBedEnvelopeRejectsA1MiniSpanButAcceptsA1AndP1S() throws Exception {
+        Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        MeshModel widePart = ModelWorkbench.create(ModelWorkbench.Primitive.BOX,
+                "200mm-profile-envelope-check", 200f, 10f, 10f);
+        NativeSlicerEngine engine = new NativeSlicerEngine(context.getCacheDir(), false);
+
+        ProfileCatalog.Profile mini = ProfileCatalog.loadInitialByPrinterId(
+                context.getAssets(), "bambu.a1-mini");
+        Slicer.Config miniConfig = new Slicer.Config();
+        mini.applyTo(miniConfig);
+        Assert.assertEquals(180f, miniConfig.bedX, 0.001f);
+        try {
+            engine.slice(widePart, miniConfig, null);
+            Assert.fail("a 200 mm part must not fit the A1 Mini's 180 mm build envelope");
+        } catch (IllegalArgumentException expected) {
+            Assert.assertTrue(expected.getMessage().contains("does not fit the configured build volume"));
+        }
+
+        for (String printerId : new String[]{"bambu.a1", "bambu.p1s"}) {
+            ProfileCatalog.Profile profile = ProfileCatalog.loadInitialByPrinterId(
+                    context.getAssets(), printerId);
+            Slicer.Config config = new Slicer.Config();
+            profile.applyTo(config);
+            Assert.assertTrue(printerId + " must expose at least a 200 mm X span", config.bedX >= 200f);
+            Slicer.Result result = engine.slice(widePart, config, null);
+            Assert.assertEquals(NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
+            Assert.assertFalse(result.engineVerified);
+            GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
+            Assert.assertTrue(printerId + ": " + safety.summary(), safety.isValid());
+            Assert.assertTrue(safety.hasPrintableMotion);
+
+            File storage = new File(context.getCacheDir(), "native-envelope-" + printerId
+                    + "-" + System.nanoTime());
+            PrinterTransport.Artifact artifact = null;
+            try {
+                artifact = ArtifactStore.stage(storage, widePart, result, config,
+                        "native-envelope-" + printerId);
+                GcodePackageValidator.validate(artifact.sourceFile, config);
+            } finally {
+                if (artifact != null && artifact.sourceFile.exists())
+                    Assert.assertTrue(artifact.sourceFile.delete());
+                if (storage.exists()) Assert.assertTrue(storage.delete());
+            }
+        }
+    }
+
     @Test
     public void slicesBundledAssemblyAndWorkshopPart() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
