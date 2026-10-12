@@ -94,6 +94,16 @@ android {
     // release validation must not silently run against a debug-only APK.
     testBuildType 'release'
 
+    // ARM translation on hosted x86_64 emulators can make APK session commit
+    // much slower than a physical device. Keep the normal timeout unchanged;
+    // native CI opts into a longer ADB operation timeout explicitly.
+    def adbTimeoutInMs = project.findProperty('alloyAdbTimeoutMs')
+    if (adbTimeoutInMs != null) {
+        adbOptions {
+            timeOutInMs = adbTimeoutInMs.toString().toInteger()
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }

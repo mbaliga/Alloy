@@ -100,10 +100,13 @@ def main() -> None:
     app_build_text = app_build.read_text(encoding="utf-8")
     require(app_build_text, "if (physicalPilot)", app_build)
     require(app_build_text, "applicationIdSuffix '.pilot'", app_build)
+    require(app_build_text, "project.findProperty('alloyAdbTimeoutMs')", app_build)
+    require(app_build_text, 'timeOutInMs = adbTimeoutInMs.toString().toInteger()', app_build)
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true",
+        "-PalloyAdbTimeoutMs=900000",
         "app/build/outputs/apk/release/app-release.apk",
         "app/build/outputs/apk/androidTest/release/app-release-androidTest.apk",
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
