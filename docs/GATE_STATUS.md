@@ -6,34 +6,32 @@ Date: 2026-10-13
 
 ### Ordinary Android v1
 
-Run [`38318024075`](https://github.com/mbaliga/Alloy/actions/runs/38318024075)
-on commit `0b2db876d3829236f18680082333df00387cb5f3` passed the acceptance
+Run [`38319130553`](https://github.com/mbaliga/Alloy/actions/runs/38319130553)
+on commit `a2fdb5f7d2a5817fc57e305431ea77a318e710ca` passed the acceptance
 suite: **190 tests, 1 skipped, 0 failures**. It published
-`alloy-v1-release-ci-apk`, artifact `11777119918`, ZIP SHA-256
-`6197473796efef88c42eeb5bda3b3a302edfda6e5625c782daa848932667e1b0`.
-This is ordinary pipeline/packaging evidence only; it does not include the
-optional native engine and proves no slicing or printer send.
+`alloy-v1-release-ci-apk`, artifact `11778127759`, ZIP SHA-256
+`ff278c4be5abd7c84a5aa55223addd4176ef3dfd10355694065c26cc956826d2`.
+This current ordinary APK includes the JPEG learning artwork and the dry-PVA
+AMS Lite routing clarification. It is not a native-enabled slicer build and
+proves no slicing or printer send.
 
-The generated first-layer and support illustrations exposed an Android runtime
-catalog bug: `LearningCatalog.Article` accepted only PNG artwork paths, while
-the new catalog referenced JPEGs. Runs
+The preceding Android run
+[`38318024075`](https://github.com/mbaliga/Alloy/actions/runs/38318024075)
+verified the JPEG path correction with the same 190-test suite (1 skipped,
+0 failed). The original learning-artwork runs
 [`38317656996`](https://github.com/mbaliga/Alloy/actions/runs/38317656996)
 and
 [`38317880788`](https://github.com/mbaliga/Alloy/actions/runs/38317880788)
-failed two instrumentation tests each for that reason. Commit
+each failed two tests because `LearningCatalog.Article` accepted PNG paths
+only. Commit
 [`0b2db87`](https://github.com/mbaliga/Alloy/commit/0b2db876d3829236f18680082333df00387cb5f3)
-allows PNG/JPG/JPEG names only under the bounded `learn/` path; the catalog
-loader continues to open and validate every referenced image. The matching
-run `38318024075` passed, verifying both JPEG assets.
+allows PNG/JPG/JPEG names under the bounded `learn/` path; catalog loading
+still opens and validates every referenced image.
 
-Commit
-[`a2fdb5f`](https://github.com/mbaliga/Alloy/commit/a2fdb5f7d2a5817fc57e305431ea77a318e710ca)
-clarifies A1 Mini PVA routing: direct feed remains the default, with AMS Lite
-considered only for confirmed-dry PVA and an exact material profile that
-permits the route. At last check, Android run
-[`38319130553`](https://github.com/mbaliga/Alloy/actions/runs/38319130553)
-has completed APK build and is currently running Android acceptance tests.
-The revised catalog copy is not yet verified by that run.
+The capability copy on A1 Mini spools also retains its fail-closed states:
+direct feed is the default for TPU/PVA, and AMS Lite consideration for PVA
+requires a confirmed-dry spool and an exact route-compatible profile. This
+copy is planning guidance, not material qualification.
 
 ### Native engine, slicing and release evidence
 
