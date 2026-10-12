@@ -82,13 +82,18 @@ merely to replace it with a CI-debug-signed QA build.
    produced native QA, instrumentation and G3 evidence, plus five-fixture
    software-pilot evidence and a package-ID-verified isolated pilot APK pair,
    but it is not the current source. At this checklist revision, native run
-   `38315395721` (diagnostics-enabled source, before the later 180-second JNI
-   initialization timeout change) is still building the native APK; follow-up
-   `38316210206` with that timeout change is pending. Do not use any native
-   artifact until a matching current-source run completes instrumentation, G3
-   evidence export and software pilot successfully. CI-debug signing remains
-   non-production; no software artifact establishes successful physical
-   printing or Handy import acceptance.
+   `38315395721` built its optional-native APK pair and is running API-35
+   ARM-translation instrumentation. Release APK artifact `11778506239`
+   (ZIP SHA-256 `18816864c35c702de6a190c1a2fd57f4fb3e7f3aa8fe509bbd4277b16b9c9161`)
+   and instrumentation APK artifact `11778541204` (ZIP SHA-256
+   `000575528ecf9ba015c10aa124fa725ba259d815b3f37dbc3fffaf01cedd76c2`) are
+   compile/package evidence only—do not use them as native-runtime evidence.
+   Follow-up `38316210206` with the 180-second native-load test timeout is
+   pending. Do not use a native artifact for slicing checks until a matching
+   current-source run completes instrumentation, G3 evidence export and
+   software pilot successfully. CI-debug signing remains non-production; no
+   software artifact establishes successful physical printing or Handy import
+   acceptance.
    Fresh G2 provenance remains **INSUFFICIENT / FAIL** (66/72 exact-history
    samples; 314/479 exact common files, 65.55%;
    [run 37741025557](https://github.com/mbaliga/Alloy/actions/runs/37741025557)).
