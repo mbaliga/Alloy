@@ -8,24 +8,34 @@ historical and do not represent the current source snapshot or prove a
 physical print, Bambu Handy acceptance or production signing. Fresh G2
 provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
 
-**Latest ordinary Android gate (2026-10-13):** Android v1 run
-[`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) on
-commit `12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b` passed and published
-`alloy-v1-release-ci-apk` (artifact ID `11772578516`, ZIP SHA-256
-`ac27fdf5596dbaf0682049be101c9d5039911b1a91d637843b7ae329b3c641bc`). This
-ordinary APK does not contain the optional native engine and is not slicing or
-printer-send evidence.
+**Latest completed ordinary Android gate (2026-10-13):** Android v1 run
+[`38318024075`](https://github.com/mbaliga/Alloy/actions/runs/38318024075) on
+commit `0b2db876d3829236f18680082333df00387cb5f3` passed the acceptance suite:
+190 tests, 1 skipped, 0 failed. It published `alloy-v1-release-ci-apk`
+(artifact ID `11777119918`, ZIP SHA-256
+`6197473796efef88c42eeb5bda3b3a302edfda6e5625c782daa848932667e1b0`). This
+ordinary APK includes JPEG learning-artwork support, but does not contain the
+optional native engine and is not slicing or printer-send evidence. Newer
+source commit `a2fdb5f7d2a5817fc57e305431ea77a318e710ca` adds a dry-PVA/AMS Lite
+clarification; its Android run `38319130553` is still in progress, so use that
+newer artifact only after its run passes.
 
 Native run
 [`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
 built and published both native-enabled APKs, then failed during UTP install
 commit with `ShellCommandUnresponsiveException`; the instrumentation report
-shows 0 tests ran. G3 evidence export and the software pilot were skipped.
-Artifacts `11769314506` (release APK) and `11769354664` (instrumentation
-APK) are compile/package evidence only. The report is artifact
-`11771334432` (ZIP SHA-256
-`b3fd8659c75b7d781e877a404d2f490fca58b675131737d54a17969426a44445`).
-Commit [`12ac53a`](https://github.com/mbaliga/Alloy/commit/12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b) now applies a 900000 ms ADB operation timeout (15 minutes) only to connected instrumentation. Follow-up native run [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147) remains in progress at source dependency build; Android v1 run [`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) has passed. No general print or release claim is promoted.
+shows 0 tests ran. Follow-up run
+[`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
+reached instrumentation and failed 2 of 162 tests: ARM-translated
+`System.loadLibrary` exceeded a 30-second test timeout, and the typed-recipe
+test produced an empty failure trace. Commit
+[`6e01a9b`](https://github.com/mbaliga/Alloy/commit/6e01a9b83fc93ce8a9b3bbafec51efb279a37ae3)
+adds captured logcat/test-result diagnostics, and
+[`50520eb`](https://github.com/mbaliga/Alloy/commit/50520eb52b67cc54bb0116502b28ca18cf15b5d9)
+extends only that native initialization test’s timeout to 180 seconds. Native
+run `38315395721` is currently building the optional engine; follow-up
+`38316210206` is pending. Neither has yet proven native runtime or slicing.
+No general print or release claim is promoted.
 
 Corrected native run
 [`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
@@ -59,21 +69,15 @@ not physical qualification. Do not uninstall a working Alloy installation
 merely to replace it with a CI-debug-signed QA build.
 
 1. For ordinary app checks, download `alloy-v1-release-ci-apk` from run
-   [38148568952](https://github.com/mbaliga/Alloy/actions/runs/38148568952)
-   (source snapshot `0b52ebcc27df85686f97b45fb21ff269e16697a3`; artifact ID
-   `11705749665`, ZIP SHA-256
-   `905c77c8dd71463f516b1fcbc88b6ba26c535b660aa92718c5bf61154729d57b`),
+   [38318024075](https://github.com/mbaliga/Alloy/actions/runs/38318024075)
+   (source commit `0b2db876d3829236f18680082333df00387cb5f3`; artifact ID
+   `11777119918`, ZIP SHA-256
+   `6197473796efef88c42eeb5bda3b3a302edfda6e5625c782daa848932667e1b0`),
    extract `app-release.apk`, install it on an ARM64 Android phone and record
    the APK's own SHA-256 separately. This APK omits the optional native engine;
    it can verify the ordinary app and conservative fallback behavior only.
-   CI-debug signatures can differ between runs, so Android may refuse to update
-   an existing Alloy install. Before uninstalling, export projects you need as
-   `.alloy.zip` and back up other app data; uninstalling clears app-private
-   data and saved printer credentials. Use a separate Android user/work profile
-   or stop if you cannot back up safely.
-   A CI-debug QA build verifies the app workflow/Handy package-visibility
-   wiring, not native slicing, printer transport, Handy's actual import
-   acceptance, or release.
+   For the current PVA/AMS Lite copy change, wait for run `38319130553` to pass
+   and use its matching artifact instead.
 2. Historical native run
    [37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
    produced native QA, instrumentation and G3 evidence, plus five-fixture
