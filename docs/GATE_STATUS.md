@@ -4,63 +4,64 @@ Date: 2026-10-13
 
 ## Current source checkpoint — 2026-10-13
 
-The current branch contains the Qhull, Boost.Locale/ICU, isolated
-official Orca link-closure and libiconv repairs. Its native source commit
-[`f6a843d`](https://github.com/mbaliga/Alloy/commit/f6a843d5da10ea11e99f6566319104c4abe6ed54)
-built the ARM64 native-enabled release APK and instrumentation APK from
-pinned sources. Native Actions run
-[`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
-then failed before tests began: UTP raised
-`ShellCommandUnresponsiveException` while committing the native release APK
-install to the API-35 x86_64/ARM-translation emulator. The retained report
-artifact `alloy-native-instrumentation-report` (ID `11771334432`, ZIP
-SHA-256 `b3fd8659c75b7d781e877a404d2f490fca58b675131737d54a17969426a44445`)
-records **0 tests, 0 failures** and the install error. G3 export and the
-software pilot were skipped. The release and test APK artifacts (IDs
-`11769314506` and `11769354664`) prove compilation/packaging only, not
-native runtime or slicing.
+### Ordinary Android v1
 
-The latest ordinary Android v1 workflow
-([`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077))
-passed on source commit `12ac53a` and published
-`alloy-v1-release-ci-apk` (artifact ID `11772578516`, ZIP digest
-`ac27fdf5596dbaf0682049be101c9d5039911b1a91d637843b7ae329b3c641bc`). This is
-ordinary app/pipeline evidence, not optional-native or printer-send approval.
+Run [`38318024075`](https://github.com/mbaliga/Alloy/actions/runs/38318024075)
+on commit `0b2db876d3829236f18680082333df00387cb5f3` passed the acceptance
+suite: **190 tests, 1 skipped, 0 failures**. It published
+`alloy-v1-release-ci-apk`, artifact `11777119918`, ZIP SHA-256
+`6197473796efef88c42eeb5bda3b3a302edfda6e5625c782daa848932667e1b0`.
+This is ordinary pipeline/packaging evidence only; it does not include the
+optional native engine and proves no slicing or printer send.
+
+The generated first-layer and support illustrations exposed an Android runtime
+catalog bug: `LearningCatalog.Article` accepted only PNG artwork paths, while
+the new catalog referenced JPEGs. Runs
+[`38317656996`](https://github.com/mbaliga/Alloy/actions/runs/38317656996)
+and
+[`38317880788`](https://github.com/mbaliga/Alloy/actions/runs/38317880788)
+failed two instrumentation tests each for that reason. Commit
+[`0b2db87`](https://github.com/mbaliga/Alloy/commit/0b2db876d3829236f18680082333df00387cb5f3)
+allows PNG/JPG/JPEG names only under the bounded `learn/` path; the catalog
+loader continues to open and validate every referenced image. The matching
+run `38318024075` passed, verifying both JPEG assets.
+
+Commit
+[`a2fdb5f`](https://github.com/mbaliga/Alloy/commit/a2fdb5f7d2a5817fc57e305431ea77a318e710ca)
+clarifies A1 Mini PVA routing: direct feed remains the default, with AMS Lite
+considered only for confirmed-dry PVA and an exact material profile that
+permits the route. At last check, Android run
+[`38319130553`](https://github.com/mbaliga/Alloy/actions/runs/38319130553)
+was still building the CI-signed APK; the revised catalog copy is not yet
+verified by that run.
+
+### Native engine, slicing and release evidence
 
 Native run
-([38148657384](https://github.com/mbaliga/Alloy/actions/runs/38148657384))
-completed with a final-link failure. Its diagnostic artifact (ID `11708051380`,
-SHA-256 `dce172419ba1785e7336538a44ede7a471adbb59a51e9ec756ce451704e4a062`)
-identifies unresolved Boost.Locale references to `libiconv_open`, `libiconv`,
-and `libiconv_close`. The follow-up fix is in commit `84b5a8f` and is guarded by
-the additional source/wiring validation in `18dc1af`.
+[`38315395721`](https://github.com/mbaliga/Alloy/actions/runs/38315395721)
+has completed its pinned source dependency, OpenCV, GMP and MPFR steps and is
+still building the optional native engine. Follow-up
+[`38316210206`](https://github.com/mbaliga/Alloy/actions/runs/38316210206)
+is pending and includes a 180-second allowance for the first ARM-translated
+native load. Neither run has yet proven native runtime, slicing, G3 export or
+the software pilot.
 
-The pre-libiconv run
-[38154230042](https://github.com/mbaliga/Alloy/actions/runs/38154230042)
-failed in the native APK link step, as expected from its older source snapshot.
-The repaired run
-[38155370545](https://github.com/mbaliga/Alloy/actions/runs/38155370545)
-successfully built the optional-native APK and instrumentation APK, then failed
-before tests because the hosted API-35 emulator timed out during boot. Run
-`38295517040` extended boot allowance to 1800 seconds and reached APK install,
-but UTP failed on install commit with `ShellCommandUnresponsiveException` before
-tests began. Commit [`12ac53a`](https://github.com/mbaliga/Alloy/commit/12ac53a1a25f8fbc4d54d989ab4a4a052a42e99b) applies a scoped 900000 ms ADB operation timeout to native connected instrumentation and protects it with the workflow validator. Follow-up native run [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147) is still building source dependencies; native runtime, G3 export, and pilot evidence remain open.
+The prior native run
+[`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
+failed 2 of 162 tests: ARM translation exceeded a 30-second
+`System.loadLibrary` timeout, and the typed-recipe test failed with an empty
+trace after 94.6 seconds. Commit
+[`6e01a9b`](https://github.com/mbaliga/Alloy/commit/6e01a9b83fc93ce8a9b3bbafec51efb279a37ae3)
+adds logcat and raw test-result capture; commit
+[`50520eb`](https://github.com/mbaliga/Alloy/commit/50520eb52b67cc54bb0116502b28ca18cf15b5d9)
+extends only the native-load test timeout. The typed-recipe failure still
+needs actionable diagnostics if it recurs.
 
-The previous corrected run
-([run 38138260029](https://github.com/mbaliga/Alloy/actions/runs/38138260029))
-completed source dependency setup and compiled the isolated official Orca
-archive, but failed at final link. Its diagnostic artifact (ID `11705105774`,
-SHA-256 `c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`)
-reported unresolved upstream Qhull C/C++ symbols from `TriangleMesh.cpp` and
-Boost.Locale/ICU symbols from `utils.cpp`. The branch repairs now link Orca's
-pinned Qhull target and source-build the pinned ICU-backed Boost.Locale
-dependency. The native CI build on run `38295517040` now compiles and links the isolated official Orca probe, but the run fails before JNI instrumentation, so this still proves no native runtime or slicer behavior. The probe compiles Alloy's MCUT compatibility translation unit, whose MCUT block was checked
-byte-for-byte against pinned Orca. This is still only a compile/link probe, not
-the shipping slicer.
-
-G2 Orca provenance remains **FAIL / NO-GO**, G3 semantic parity remains open,
-and physical A1 Mini acceptance, Bambu Handy import acceptance and production
-signing remain unproven. Ordinary Android v1 run [`38305679077`](https://github.com/mbaliga/Alloy/actions/runs/38305679077) passed on `12ac53a`; this does not include native slicing or printer-send evidence. The matching native run `38305679147` remains in progress. Keep print and release claims fail-closed.
+Fresh G2 Orca provenance remains **FAIL / NO-GO** (66/72 exact-history
+samples; 314/479 exact common files, 65.55%). G3 semantic parity, G4 profile
+runtime parity, Bambu TreeSupport3D parity, physical A1 Mini acceptance,
+Bambu Handy import acceptance and production signing remain open. Keep every
+print and release claim fail-closed until its matching evidence passes.
 
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
