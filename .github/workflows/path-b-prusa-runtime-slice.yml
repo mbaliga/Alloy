@@ -155,7 +155,11 @@ jobs:
           Path("runtime/profiles-support/process.json").write_text(json.dumps(process, indent=2) + chr(10))
           PY
           python3 parity/build_path_b_prusa_config.py runtime/profiles-support slicebeam runtime/path-b/a1mini-support.ini --report runtime/path-b/translation-support-report.json
-          grep -q '^support_material = 1        shell: bash
+          grep -q '^support_material = 1$' runtime/path-b/a1mini-support.ini
+          grep -q '^support_material_style = organic$' runtime/path-b/a1mini-support.ini
+
+      - name: Install AppImage host OpenGL runtime
+        shell: bash
         run: |
           set -euxo pipefail
           sudo apt-get update
