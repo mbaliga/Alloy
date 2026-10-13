@@ -264,6 +264,20 @@ public final class LearningAndCapabilityCatalogTest {
             Assert.assertTrue(material.amsLiteSourceUrl.startsWith("https://")
                     && material.amsLiteSourceUrl.contains("bambulab.com"));
         }
+        boolean originalAms = false, ams2Pro = false, amsHt = false, hubSpool = false;
+        for (PrinterCapabilityCatalog.FeedRoute route : a1.feedRoutes) {
+            if (route.id.equals("regular-ams") || route.id.equals("ams-2-pro") || route.id.equals("ams-ht")) {
+                Assert.assertEquals("Requires A1 Series AMS Hub", route.state);
+                Assert.assertTrue(route.sourceUrl.startsWith("https://forum.bambulab.com/"));
+                Assert.assertTrue(route.note.contains("01.06.10.33") && route.note.contains("Do not mix AMS Lite")
+                        && route.note.contains("Alloy send remains unqualified"));
+            }
+            originalAms |= route.id.equals("regular-ams"); ams2Pro |= route.id.equals("ams-2-pro"); amsHt |= route.id.equals("ams-ht");
+        }
+        for (PrinterCapabilityCatalog.SpoolForm form : a1.spoolForms)
+            hubSpool |= form.id.equals("ams-hub-spool") && form.state.equals("Manual review required");
+        Assert.assertTrue("A1 must disclose every A1-series AMS with conservative spool-fit review",
+                originalAms && ams2Pro && amsHt && hubSpool);
         Assert.assertEquals("Ideal", materialById(a1, "pla").bambuStatus);
         Assert.assertEquals("Not recommended", materialById(a1, "asa").bambuStatus);
         Assert.assertTrue(materialById(a1, "tpu").amsLiteStatus.startsWith("Unsupported"));
