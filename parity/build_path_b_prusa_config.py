@@ -135,8 +135,8 @@ def rewrite_template(value: str) -> str:
     )
     out = re.sub(r"\[initial_no_support_extruder\]", "0", out)
     # Translate Orca boolean operators to Prusa macro-language syntax.
-    out = re.sub(r"\\s*&&\\s*", " and ", out)
-    out = re.sub(r"\\s*\\|\\|\\s*", " or ", out)
+    out = re.sub(r"\s*&&\s*", " and ", out)
+    out = re.sub(r"\s*\|\|\s*", " or ", out)
     out = re.sub(r"(?<![=!<>])!\s*([A-Za-z_][A-Za-z0-9_]*)", r"\1 == 0", out)
     # Orca exposes the first-layer object-footprint center. Prusa exposes the
     # footprint bounds; with this single-extruder profile (no wipe tower), their
