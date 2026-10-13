@@ -66,6 +66,23 @@ jobs:
           sha256sum runtime/path-b/a1mini.ini runtime/path-b/translation-report.json | tee runtime/path-b/SHA256SUMS
           head -n 80 runtime/path-b/a1mini.ini
 
+      - name: Assert explicit tree-support translation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          config = Path("runtime/path-b/a1mini.ini").read_text()
+          report = json.loads(Path("runtime/path-b/translation-report.json").read_text())
+          assert "support_material_style = organic" in config
+          assert any(
+              entry.get("source_value") == "tree(auto)"
+              and entry.get("target_value") == "organic"
+              for entry in report["mapped_values"]
+          ), "tree(auto) must be explicitly recorded as Prusa organic supports"
+          PY
+
       - name: Install AppImage host OpenGL runtime
         shell: bash
         run: |
