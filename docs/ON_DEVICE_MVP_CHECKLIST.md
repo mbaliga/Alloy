@@ -8,6 +8,8 @@ The corrected optional-native run [38355476630](https://github.com/mbaliga/Alloy
 
 The latest desktop Orca-to-Prusa comparison, run [38359783217](https://github.com/mbaliga/Alloy/actions/runs/38359783217), passed both slicer runtime jobs but failed semantic parity's strict 2% gate: time deltas are +6.31%, +6.35%, and +28.36%; summary filament deltas are +13.21%, +28.57%, and +22.42% for cube, supported overhang, and thin-wall. Parsed positive-E deltas differ from those summary estimates and are also not within gate. The translation is not parity-qualified or printer-ready.
 
+**Material-coverage integration note:** A1 Mini catalog expansion and sourced AMS Lite exception handling are tracked separately in [PR #12](https://github.com/mbaliga/Alloy/pull/12), branch `codex/a1mini-filament-route-matrix`. That change is not in the source snapshot for the APK above. Until the catalog work is integrated into the tested app branch, do not treat the APK's initial 14 material classes as complete coverage of Bambu's A1 Mini material/spool routes. Re-verify the integrated catalog and all route screens on a new source-matched build.
+
 ## 1. Install the matching artifact for ordinary app checks
 
 1. Download alloy-v1-release-ci-apk from current ordinary run [38355476587](https://github.com/mbaliga/Alloy/actions/runs/38355476587). Check the artifact ID and archive digest above, extract app-release.apk, and record the APK's own SHA-256 and Android version/build number.
