@@ -1,59 +1,25 @@
 # Alloy on-device MVP verification
 
-Use the exact build lane named in each section. Historical native baseline
-[`37883851621`](https://github.com/mbaliga/Alloy/actions/runs/37883851621) at
-`64fc3503` passed its ARM64 source build, API-35 emulator instrumentation, G3
-evidence export and isolated five-fixture software pilot. Those artifacts are
-historical and do not represent the current source snapshot or prove a
-physical print, Bambu Handy acceptance or production signing. Fresh G2
-provenance remains **FAIL / NO-GO** and G3 semantic parity remains open.
+This is a verification protocol, not a print-readiness claim. A CI pass proves
+only the software checks that ran; it does not establish slicer parity, physical
+printer safety, Bambu Handy acceptance, or production signing.
 
-**Latest completed ordinary Android gate (2026-10-13):** Android v1 run
-[`38319130553`](https://github.com/mbaliga/Alloy/actions/runs/38319130553) on
-commit `a2fdb5f7d2a5817fc57e305431ea77a318e710ca` passed the acceptance suite:
-190 tests, 1 skipped, 0 failed. It published `alloy-v1-release-ci-apk`
-(artifact ID `11778127759`, ZIP SHA-256
-`ff278c4be5abd7c84a5aa55223addd4176ef3dfd10355694065c26cc956826d2`). This
-ordinary APK includes the JPEG learning-artwork support and updated A1 Mini
-PVA/AMS Lite route guidance, but does not contain the optional native engine
-and is not slicing or printer-send evidence.
+**Current combined candidate (2026-10-13):** PR #12 head
+[`f009282dd50a2485fab5e071abad406709314373`](https://github.com/mbaliga/Alloy/commit/f009282dd50a2485fab5e071abad406709314373),
+stacked on the native instrumentation fix in PR #13. The combined ordinary
+Android run [38365197015](https://github.com/mbaliga/Alloy/actions/runs/38365197015)
+passed (194 tests, 0 failures; Android-lane skips are not native evidence).
+The combined native run
+[38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013)
+passed native build, API-35 ARM-translation instrumentation, G3 export and the
+five-fixture software pilot. Current artifact IDs and archive digests are in
+the install and evidence sections below.
 
-Native run
-[`38295517040`](https://github.com/mbaliga/Alloy/actions/runs/38295517040)
-built and published both native-enabled APKs, then failed during UTP install
-commit with `ShellCommandUnresponsiveException`; the instrumentation report
-shows 0 tests ran. Follow-up run
-[`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
-reached instrumentation and failed 2 of 162 tests: ARM-translated
-`System.loadLibrary` exceeded a 30-second test timeout, and the typed-recipe
-test produced an empty failure trace. Commit
-[`6e01a9b`](https://github.com/mbaliga/Alloy/commit/6e01a9b83fc93ce8a9b3bbafec51efb279a37ae3)
-adds captured logcat/test-result diagnostics, and
-[`50520eb`](https://github.com/mbaliga/Alloy/commit/50520eb52b67cc54bb0116502b28ca18cf15b5d9)
-extends only that native initialization test’s timeout to 180 seconds. Native
-run `38315395721` is currently building the optional engine; follow-up
-`38316210206` is pending. Neither has yet proven native runtime or slicing.
-No general print or release claim is promoted.
-
-Corrected native run
-[`38138260029`](https://github.com/mbaliga/Alloy/actions/runs/38138260029),
-at `4ebe473`, completed dependency bootstrap and compiled the official Orca
-archive, but failed final linking with unresolved upstream Qhull and
-Boost.Locale/ICU symbols. Its diagnostic artifact is ID `11705105774`, SHA-256
-`c1266e12ed3848ec9087129fe59acd576d1a77c43af1da0fc7c1dc6b1a79483a`. The current branch contains the Qhull, Boost.Locale/ICU and libiconv
-link repairs. Native run
-[`38155370545`](https://github.com/mbaliga/Alloy/actions/runs/38155370545)
-successfully built both native-enabled APKs, then failed before instrumentation
-because the API-35 emulator timed out during boot. This confirms native build
-and packaging, but not JNI runtime loading or slicer behavior. The follow-up
-allows 1800 seconds for emulator boot and uploads the APK pair before starting
-the emulator. Install only the exact native CI APK artifact from a successful
-matching run, and do not treat an APK build as slicing, G3, or printer-send
-evidence.
-The preceding attempt failed on the unavailable CGAL `mesh_segmentation.h`;
-the corrected probe uses the byte-checked MCUT compatibility implementation.
-Never use historical native artifacts as current evidence. No software
-artifact authorizes general direct printing or production-release promotion.
+The five-fixture manifest is explicitly software-only; physical and direct-send
+qualification remain pending. The desktop Orca-to-Prusa strict semantic-parity
+gate remains failed, and fresh G2 provenance remains FAIL / NO-GO. Do not
+upload a print job or treat these artifacts as printer-ready evidence. Bambu
+Handy acceptance and production signing are also unverified.
 
 ## 1. Install the matching artifacts
 
@@ -244,39 +210,32 @@ part of the first physical pilot.
 Expected: a structurally validated, inspectable package can be exported; no
 unverified physical dispatch or Bambu Handy compatibility claim is made.
 
-## 6. Narrow A1 Mini evidence run (do not broaden the scope)
+## 6. Narrow A1 Mini physical pilot — currently blocked
 
-Only after sections 1–5 pass, follow
-[`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) exactly:
+Do not upload or start a physical job from Alloy yet. The current CI pilot
+artifact is software evidence only and leaves `physical_qualification=PENDING`
+and `direct_send_qualification=PENDING`; desktop slicer semantic parity and
+fresh G2 provenance also remain unresolved.
 
-- Scope: A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
-  external/direct feed, no AMS and no supports.
-- The package-ID-verified pilot artifact from
-  [native run 37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
-  is an historical successful baseline; its app/test package-ID assertions
-  passed, but it does not represent the current branch. Wait for a fresh
-  successful native run, then install only that run's `app-release.apk`; its
-  `.pilot` ID should coexist with regular Alloy. The matching
-  instrumentation APK is optional for ADB diagnostics. Keep the included
-  `evidence/run-*/software-pilot-manifest.json` as software evidence; it must
-  remain software-only and does not itself authorize upload or start.
-- In Alloy, open each of the five untouched bundled fixtures from Library,
-  verify the pinned A1 Mini / PLA Basic / 0.4 mm recipe and supports off, then
-  slice and inspect the toolpath and preflight. Pair the actual printer, verify
-  model N1, save its leaf-certificate pin, and use the two separate upload and
-  start confirmations for each fixture. No arbitrary imported model, changed
-  recipe, support setting, AMS route, or ordinary build may reach this pilot
-  transport path.
-- For every physical fixture retain the artifact hash, first-layer and
+When those gates are independently cleared and a reviewed, source-matched
+physical pilot is authorized, use the exact scope and evidence protocol in
+[`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md):
+
+- Scope is limited to A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI,
+  one colour, external/direct feed, no AMS and no supports.
+- Use only a newly reviewed source-matched pilot APK pair whose app/test
+  package IDs are verified to coexist with the normal Alloy installation.
+  Keep the run's software manifest; it is not physical evidence and does not
+  authorize upload or start by itself.
+- Before any print, verify the profile, recipe, first layer, clear motion path,
+  temperature and printer state. Stop if anything differs or if Alloy cannot
+  show the required confirmations. Never auto-retry a printer command.
+- For every authorized fixture retain the package hash, first-layer and
   completed-part photos, measurements where relevant, redacted printer
-  telemetry, and each check result in `release/no-support-pla-pilot.json`.
-  The in-app route and physical prints can be performed from the phone; ADB is
-  optional for rerunning the software-only instrumentation export. Do not
-  automatically retry a printer command. Stop and investigate any unexpected
-  motion, temperature, routing, adhesion or printer state.
+  telemetry and each check result in
+  `release/no-support-pla-pilot.json`. Review all evidence before running
+  `ci/validate_no_support_pla_pilot.py`.
 
-Review all physical evidence before running
-`ci/validate_no_support_pla_pilot.py`; that validator is a release-evidence
-review step and need not run on the phone. A passing narrow pilot is not
-support parity, A1/P1S qualification, Bambu Handy validation, or production
-release approval.
+A passing narrow pilot would not establish support parity, A1/P1S
+qualification, Bambu Handy acceptance or production release approval.
+
