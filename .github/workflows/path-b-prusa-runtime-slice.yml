@@ -18,6 +18,7 @@ on:
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
       - 'parity/check_rendered_gcode_templates.py'
+      - 'parity/compare_gcode.py'
   workflow_dispatch:
 
 permissions:
