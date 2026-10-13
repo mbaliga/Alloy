@@ -66,6 +66,17 @@ jobs:
           set -euxo pipefail
           mkdir -p runtime/path-b
           python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
+          mkdir -p runtime/profiles-support
+          cp runtime/profiles/machine.json runtime/profiles-support/machine.json
+          cp runtime/profiles/filament.json runtime/profiles-support/filament.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          process = json.loads(Path("runtime/profiles/process.json").read_text())
+          process["enable_support"] = "1"
+          process["support_type"] = "tree(auto)"
+          Path("runtime/profiles-support/process.json").write_text(json.dumps(process, indent=2) + chr(10))
+          PY
           python3 parity/build_path_b_prusa_config.py runtime/profiles slicebeam runtime/path-b/a1mini.ini --report runtime/path-b/translation-report.json
           sha256sum runtime/path-b/a1mini.ini runtime/path-b/translation-report.json | tee runtime/path-b/SHA256SUMS
           head -n 80 runtime/path-b/a1mini.ini
@@ -139,7 +150,7 @@ jobs:
           process = json.loads(Path("runtime/profiles/process.json").read_text())
           process["enable_support"] = "1"
           process["support_type"] = "tree(auto)"
-          Path("runtime/profiles-support/process.json").write_text(json.dumps(process, indent=2) + "\\n")
+          Path("runtime/profiles-support/process.json").write_text(json.dumps(process, indent=2) + chr(10))
           PY
           python3 parity/build_path_b_prusa_config.py runtime/profiles-support slicebeam runtime/path-b/a1mini-support.ini --report runtime/path-b/translation-support-report.json
           grep -q '^support_material = 1        shell: bash
@@ -259,22 +270,6 @@ jobs:
           set -euxo pipefail
           python3 parity/generate_fixtures.py --out runtime/fixtures
           sha256sum runtime/fixtures/*.stl | tee runtime/fixtures/SHA256SUMS
-
-      - name: Create matched support-enabled Orca process profile
-        shell: bash
-        run: |
-          set -euxo pipefail
-          mkdir -p runtime/profiles-support
-          cp runtime/profiles/machine.json runtime/profiles-support/machine.json
-          cp runtime/profiles/filament.json runtime/profiles-support/filament.json
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          process = json.loads(Path("runtime/profiles/process.json").read_text())
-          process["enable_support"] = "1"
-          process["support_type"] = "tree(auto)"
-          Path("runtime/profiles-support/process.json").write_text(json.dumps(process, indent=2) + "\\n")
-          PY
 
       - name: Clone pinned Orca profile snapshot
         shell: bash
