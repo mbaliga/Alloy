@@ -91,3 +91,22 @@ The earlier semantic run `38350223253` is superseded by run `38355683497` on PR 
 Native workflow repair is tracked separately in PR #13 (`codex/fix-native-test-status`, head `ae48c42c313246815e2236f133f0bf96fb51e811`). The earlier API-35 run completed its instrumentation tests (196 reported, zero failures, two skipped) but failed afterward in shell status handling; the G3 export and five-fixture pilot were not executed. Corrected checks are running. Until they produce the expected native artifacts, Android G3/pilot evidence remains absent.
 
 No physical A1 Mini print, transfer/telemetry confirmation, or Bambu Handy round-trip is evidenced. Direct send, exported-job handoff, and production readiness remain unqualified.
+
+
+## Superseding evidence (2026-10-13, run 38359783217)
+
+This section supersedes earlier Path B semantic metrics above. PR #5 head is `311667722c09998162eec6db499b2a1298a631d5`.
+
+- Both pinned Orca 2.4.2 reference slicing and translated PrusaSlicer 2.8.0 runtime slicing completed for all three fixtures. The translated-profile job confirmed explicit support-enabled profiles and found no unresolved template directives in executable G-code.
+- The semantic-parity job confirmed support toolpaths in both overhang outputs and reported matching extrusion-layer counts and feature classes, but **failed** the strict 2% threshold:
+
+| Fixture | Time delta | Summary filament delta | Positive-E length delta |
+| --- | ---: | ---: | ---: |
+| 20 mm cube | +6.31% | +13.21% | +4.48% |
+| Overhang with supports | +6.35% | +28.57% | +11.67% |
+| Thin-wall frame | +28.36% | +22.42% | +4.05% |
+
+- The reported summary filament estimate and parsed positive extrusion length still disagree materially, particularly on the supported overhang. Neither metric is waived; this needs a validated like-for-like measurement definition before parity can pass.
+- Crosshatch translation to Prusa Grid remains explicitly approximate, not equivalent. The desktop profile translation is **not parity-qualified**, not printer-ready, and must not be presented as approved for export/send.
+
+Native Android evidence remains tracked separately in PR #13 (`ae48c42c313246815e2236f133f0bf96fb51e811`). Its ordinary Android workflow passed (run 38355476587). The corrected optional native-engine run 38355476630 is still active at the native-engine build step; instrumentation, native G3 export and the five-fixture pilot remain pending. No physical A1 Mini print, successful printer telemetry confirmation, or Bambu Handy round-trip is evidenced. Direct send, validated Bambu-ready handoff and production readiness remain unqualified.
