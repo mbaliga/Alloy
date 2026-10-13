@@ -5,6 +5,7 @@ Fixtures:
 - cube_20mm.stl: baseline geometry and timing/material sanity check.
 - overhang_support.stl: connected cantilever geometry that should exercise support generation.
 - thin_wall_frame.stl: keyboard-case-like rectangular shell for Arachne/thin-wall behavior.
+- travel_obstacle.stl: separated towers that force inter-island travel and Z-hop decisions.
 
 No randomness is used. Units are millimetres.
 """
@@ -15,6 +16,7 @@ from dataclasses import dataclass
 from math import sqrt
 from pathlib import Path
 import argparse
+import shutil
 
 Vec3 = tuple[float, float, float]
 Vec2 = tuple[float, float]
@@ -155,6 +157,25 @@ def thin_wall_frame(outer_w: float = 80.0, outer_d: float = 40.0,
     return m
 
 
+def translated(mesh: Mesh, dx: float, dy: float) -> Mesh:
+    """Return a deterministic XY translation without changing triangle order."""
+    return Mesh([
+        tuple((x + dx, y + dy, z) for x, y, z in triangle)  # type: ignore[arg-type]
+        for triangle in mesh.triangles
+    ])
+
+
+def travel_obstacle_fixture() -> Mesh:
+    """Three separated solids with different heights for travel-path evidence."""
+    result = Mesh([])
+    for dx, height in ((-34.0, 8.0), (0.0, 20.0), (34.0, 12.0)):
+        result.triangles.extend(translated(box(16.0, 16.0, height), dx, 0.0).triangles)
+    # A narrow rear fin creates a second obstacle crossing at a different Z
+    # without becoming a support or overhang fixture.
+    result.triangles.extend(translated(box(8.0, 8.0, 28.0), 0.0, 32.0).triangles)
+    return result
+
+
 def write_ascii_stl(path: Path, name: str, mesh: Mesh) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [f"solid {name}"]
@@ -171,26 +192,22 @@ def write_ascii_stl(path: Path, name: str, mesh: Mesh) -> None:
 
 
 def generate(out: Path) -> None:
-    write_ascii_stl(out / "cube_20mm.stl", "cube_20mm", box(20.0, 20.0, 20.0))
-
-    # X/Z side profile: 20x5 base, 6 mm central stem, then a 28 mm cantilever.
-    # The long underside at Z=30 is intentionally unsupported beyond the stem.
-    overhang_profile = [
-        (-10.0, 0.0), (10.0, 0.0), (10.0, 5.0),
-        (3.0, 5.0), (3.0, 30.0), (25.0, 30.0),
-        (25.0, 34.0), (-3.0, 34.0), (-3.0, 5.0), (-10.0, 5.0),
-    ]
-    write_ascii_stl(
-        out / "overhang_support.stl",
-        "overhang_support",
-        extrude_xz_polygon(overhang_profile, depth=8.0),
-    )
-
-    write_ascii_stl(
-        out / "thin_wall_frame.stl",
-        "thin_wall_frame",
-        thin_wall_frame(),
-    )
+    # Slice exact copies of the meshes the Android native evidence harness
+    # consumes. Independent regeneration caused origin and triangulation drift
+    # in the cube fixture.
+    assets = Path(__file__).resolve().parents[1] / "app/src/main/assets/models"
+    sources = {
+        "cube_20mm.stl": "box-20mm.stl",
+        "overhang_support.stl": "overhang-support-fixture.stl",
+        "thin_wall_frame.stl": "thin-wall-frame-fixture.stl",
+        "travel_obstacle.stl": "travel_obstacle.stl",
+    }
+    out.mkdir(parents=True, exist_ok=True)
+    for destination, source in sources.items():
+        source_path = assets / source
+        if not source_path.is_file():
+            raise FileNotFoundError(f"Android parity mesh is missing: {source_path}")
+        shutil.copyfile(source_path, out / destination)
 
 
 if __name__ == "__main__":
