@@ -173,7 +173,7 @@ def rewrite_template(value: str, derived_values: dict[str, float | str] | None =
         )
         pattern = rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])"
         out = re.sub(
-            r"\\{([^{}]*)\\}",
+            r"\{([^{}]*)\}",
             lambda macro: "{" + re.sub(pattern, replacement, macro.group(1)) + "}",
             out,
         )
