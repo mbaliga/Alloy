@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 
@@ -9,6 +10,13 @@ WORKFLOW = Path(__file__).parents[1] / ".github/workflows/desktop-orca-reference
 
 
 class G3OrcaRecipeTests(unittest.TestCase):
+    def test_checked_in_recipe_uses_explicit_cross_engine_tree_wall_count(self):
+        root = Path(__file__).parents[1]
+        project = json.loads((root / "app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json").read_text())
+        filament = json.loads((root / "parity/g3-bambu-filament-overlay.json").read_text())
+        self.assertEqual("0", project["tree_support_wall_count"])
+        self.assertEqual(["10"], filament["slow_down_min_speed"])
+
     def test_composition_preserves_base_and_applies_explicit_overlay(self):
         result = compose(
             {"type": "process", "name": "base", "layer_height": "0.2", "inherits": "parent"},

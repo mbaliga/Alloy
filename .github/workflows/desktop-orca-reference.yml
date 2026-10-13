@@ -145,6 +145,7 @@ jobs:
             echo "Machine: Bambu Lab A1 mini 0.4 nozzle"
             echo "Process: pinned Orca standard profile + checked-in Alloy G3 project overlay"
             echo "Filament: pinned Orca PLA Basic profile + checked-in Alloy G3 PLA overlay"
+            echo "Tree support wall count: 0 (auto; normalizes Bambu's -1 auto sentinel to Orca's accepted auto value)"
             echo
             sha256sum runtime/orca-reference/*/*.gcode.3mf
           } > runtime/evidence/reference-manifest.txt
