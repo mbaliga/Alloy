@@ -157,8 +157,19 @@ def validate_catalog(path):
     p1s = next(printer for printer in printers if printer["id"] == "p1s")
     if {material["id"] for material in p1s["materials"]} != P1S_MATERIAL_IDS:
         raise ValueError("P1S must disclose its sourced ideal, capable and not-recommended classes separately")
-    if {route["id"] for route in p1s["feed_routes"]} != {"external-direct", "ams"}:
-        raise ValueError("P1S must keep external feed and AMS as distinct routes")
+    expected_p1s_routes = {"external-direct", "ams", "ams-2-pro", "ams-ht"}
+    if {route["id"] for route in p1s["feed_routes"]} != expected_p1s_routes:
+        raise ValueError("P1S must disclose Original AMS, AMS 2 Pro and AMS HT separately")
+    for route in p1s["feed_routes"]:
+        if route["id"] in {"ams", "ams-2-pro", "ams-ht"}:
+            note = route["note"].lower()
+            if not route.get("source_url", "").strip() or "p1 series" not in note:
+                raise ValueError(f"P1S {route['id']} must have a sourced model compatibility route")
+            if route["id"] in {"ams-2-pro", "ams-ht"} and (
+                "before connecting" not in note or "four ams units" not in note
+                or "alloy multi-material send remain separately unqualified" not in note
+            ):
+                raise ValueError(f"P1S {route['id']} must retain firmware, capacity and Alloy qualification caveats")
     p1s_materials = {material["id"]: material for material in p1s["materials"]}
     for material_id in ("pla", "petg", "tpu", "pva", "pet", "abs", "asa"):
         if p1s_materials[material_id]["bambu_status"] != "Ideal":
