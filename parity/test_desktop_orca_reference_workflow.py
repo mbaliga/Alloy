@@ -38,6 +38,12 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("parity/test_generate_fixtures.py", pull_request)
         self.assertIn("app/src/main/assets/models/**", pull_request)
 
+    def test_export_3mf_uses_filename_relative_to_output_directory(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn('--outputdir "$out"', text)
+        self.assertIn('--export-3mf "$name.gcode.3mf"', text)
+        self.assertNotIn('--export-3mf "$out/$name.gcode.3mf"', text)
+
 
 if __name__ == "__main__":
     unittest.main()
