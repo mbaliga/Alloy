@@ -108,6 +108,7 @@ jobs:
           from build_path_b_prusa_config import normalize_value, rewrite_template
           config = Path("runtime/path-b/a1mini.ini").read_text()
           for expected in (
+              "fill_pattern = grid",
               "default_acceleration = 6000",
               "travel_acceleration = 10000",
               "first_layer_acceleration = 500",
@@ -218,6 +219,10 @@ jobs:
               exit 1
             fi
             test -s "$out/$name.gcode"
+            if grep -q 'configuration values were substituted' "$out/prusa.log"; then
+              cat "$out/prusa.log"
+              exit 1
+            fi
           done
 
       - name: Reject unresolved template directives in executable G-code
