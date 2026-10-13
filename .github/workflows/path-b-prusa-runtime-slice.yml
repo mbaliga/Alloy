@@ -279,6 +279,17 @@ jobs:
           git -C orca-profiles checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profiles rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
+          mkdir -p runtime/profiles-support
+          cp runtime/profiles/machine.json runtime/profiles-support/machine.json
+          cp runtime/profiles/filament.json runtime/profiles-support/filament.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          process = json.loads(Path("runtime/profiles/process.json").read_text())
+          process["enable_support"] = "1"
+          process["support_type"] = "tree(auto)"
+          Path("runtime/profiles-support/process.json").write_text(json.dumps(process, indent=2) + chr(10))
+          PY
 
       - name: Install Orca AppImage runtime
         shell: bash
