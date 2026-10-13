@@ -247,8 +247,15 @@ public final class LearningAndCapabilityCatalogTest {
                         material.sourceUrl.startsWith("https://") && material.sourceUrl.contains("bambulab.com"));
             }
         }
+        for (PrinterCapabilityCatalog.Material material : a1.materials) {
+            Assert.assertFalse("A1 AMS Lite route status must be individually sourced", material.amsLiteStatus.isEmpty());
+            Assert.assertTrue(material.amsLiteSourceUrl.startsWith("https://")
+                    && material.amsLiteSourceUrl.contains("bambulab.com"));
+        }
         Assert.assertEquals("Ideal", materialById(a1, "pla").bambuStatus);
         Assert.assertEquals("Not recommended", materialById(a1, "asa").bambuStatus);
+        Assert.assertTrue(materialById(a1, "tpu").amsLiteStatus.startsWith("Unsupported"));
+        Assert.assertTrue(materialById(a1, "pva").amsLiteStatus.contains("dry PVA only"));
         Assert.assertEquals("Ideal", materialById(p1s, "abs").bambuStatus);
         Assert.assertEquals("Capable", materialById(p1s, "pa").bambuStatus);
         Assert.assertEquals("Not recommended", materialById(p1s, "cf-gf-filled").bambuStatus);

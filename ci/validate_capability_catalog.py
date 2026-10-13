@@ -130,6 +130,17 @@ def validate_catalog(path):
     for material_id in ("abs", "asa", "pc", "pa", "pet", "cf-gf-filled"):
         if a1_materials[material_id]["bambu_status"] != "Not recommended":
             raise ValueError(f"A1 Bambu guidance must identify {material_id} as not recommended")
+    for material in a1["materials"]:
+        if not material.get("ams_lite_status", "").strip() or not material.get("ams_lite_source_url", "").strip():
+            raise ValueError(f"A1 material {material['id']} is missing its AMS Lite route status or source")
+        official_bambu_url(material["ams_lite_source_url"], f"a1.{material['id']}.ams_lite_source_url")
+    for material_id, expected_text in {
+        "tpu": "unsupported", "pva": "dry pva only", "asa": "does not override",
+        "pc": "does not override", "pa": "does not override", "pet": "does not override",
+        "cf-gf-filled": "unsupported",
+    }.items():
+        if expected_text not in a1_materials[material_id]["ams_lite_status"].lower():
+            raise ValueError(f"A1 AMS Lite exception is missing for {material_id}")
     p1s = next(printer for printer in printers if printer["id"] == "p1s")
     if {material["id"] for material in p1s["materials"]} != P1S_MATERIAL_IDS:
         raise ValueError("P1S must disclose its sourced ideal, capable and not-recommended classes separately")

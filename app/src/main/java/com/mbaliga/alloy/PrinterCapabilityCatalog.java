@@ -110,6 +110,8 @@ public final class PrinterCapabilityCatalog {
         if (a1 == null || !ids(a1.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"))
                 || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite")))
             throw new IOException("A1 capability coverage must disclose each sourced material class separately");
+        for (Material material : a1.materials) if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
+            throw new IOException("A1 material " + material.id + " lacks sourced AMS Lite route status");
         if (p1s == null || !ids(p1s.materials).equals(setOf("pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"))
                 || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams")))
             throw new IOException("P1S capability coverage must disclose each sourced material class separately");
