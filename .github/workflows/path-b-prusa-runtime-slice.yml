@@ -10,6 +10,7 @@ on:
       - 'parity/generate_fixtures.py'
       - 'parity/check_rendered_gcode_templates.py'
       - 'parity/compare_gcode.py'
+      - 'parity/verify_gcode_3mf.py'
   pull_request:
     branches: [stage1-runtime-parity]
     paths:
@@ -19,6 +20,7 @@ on:
       - 'parity/generate_fixtures.py'
       - 'parity/check_rendered_gcode_templates.py'
       - 'parity/compare_gcode.py'
+      - 'parity/verify_gcode_3mf.py'
   workflow_dispatch:
 
 permissions:
