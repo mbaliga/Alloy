@@ -276,18 +276,29 @@ jobs:
           name: path-b-orca-comparison-inputs
           path: runtime/orca-artifact
 
+      - name: Test semantic comparison metrics
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/test_compare_gcode.py
+
       - name: Compare semantic toolpaths, layers, time, and filament
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p runtime/parity
+          failed=0
           for name in cube_20mm overhang_support thin_wall_frame; do
-            python3 parity/compare_gcode.py \
+            if ! python3 parity/compare_gcode.py \
               "runtime/orca-artifact/orca-reference/$name/$name.gcode.3mf" \
               "runtime/prusa-artifact/prusa-reference/$name/$name.gcode" \
               --tolerance 0.02 \
-              --json-out "runtime/parity/$name.json"
+              --json-out "runtime/parity/$name.json" \
+              --summary-only; then
+              failed=1
+            fi
           done
+          exit "$failed"
 
       - name: Upload semantic parity reports
         if: always()
