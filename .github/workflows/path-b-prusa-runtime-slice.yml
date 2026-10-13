@@ -108,6 +108,7 @@ jobs:
           assert "outer_wall_volumetric_speed" not in " ".join(report["gcode_template_keys"].values())
           assert normalize_value("support_material_style", "tree(auto)") == "organic"
           assert normalize_value("support_material_style", "tree(manual)") == "organic"
+          assert normalize_value("fill_pattern", "crosshatch") == "grid"
           assert rewrite_template("G1 Y{first_layer_center_no_wipe_tower[1]}") == "G1 Y{(first_layer_print_min[1] + first_layer_print_max[1]) / 2}"
           assert rewrite_template("{filament_type[initial_no_support_extruder]}") == "{filament_type[0]}"
           assert rewrite_template("M620 S[initial_no_support_extruder]A") == "M620 S0A"
