@@ -54,7 +54,7 @@ def main() -> None:
     model = model_path.read_text()
     model = model.replace('#include "Format/STEP.hpp"\n', "")
     model = require_sub(
-        r"\n    else if \(boost::algorithm::iends_with\(input_file, \"\\\.step\"\) \|\| boost::algorithm::iends_with\(input_file, \"\\\.stp\"\)\)\n        result = load_step\(input_file\.c_str\(\), &model\);",
+        r"\n    else if \(boost::algorithm::iends_with\(input_file, \"\.step\"\) \|\| boost::algorithm::iends_with\(input_file, \"\.stp\"\)\)\n        result = load_step\(input_file\.c_str\(\), &model\);",
         "",
         model,
         "STEP model dispatch branch",
