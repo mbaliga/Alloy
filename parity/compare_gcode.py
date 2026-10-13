@@ -40,9 +40,9 @@ FEATURE_PATTERNS = [
 ]
 
 TIME_PATTERNS = [
-    re.compile(r"estimated printing time.*?=\s*([^;]+)", re.I),
-    re.compile(r"total estimated time.*?=\s*([^;]+)", re.I),
-    re.compile(r"model printing time.*?=\s*([^;]+)", re.I),
+    re.compile(r"estimated printing time.*?(?:=|:)\s*([^;]+)", re.I),
+    re.compile(r"total estimated time.*?(?:=|:)\s*([^;]+)", re.I),
+    re.compile(r"model printing time.*?(?:=|:)\s*([^;]+)", re.I),
 ]
 FILAMENT_MM_PATTERNS = [
     re.compile(r"filament used \[mm\]\s*=\s*(.+)", re.I),
@@ -119,8 +119,13 @@ def parse_duration(value: str) -> float | None:
 
 
 def parse_number_list(value: str) -> float | None:
-    nums = re.findall(FLOAT, value)
-    return sum(float(x) for x in nums) if nums else None
+    nums = [float(x) for x in re.findall(FLOAT, value)]
+    # Some slicers emit a zero mass placeholder when density-derived weight is
+    # unavailable. Treat an all-zero estimate as unavailable, not as a real
+    # zero-gram print; filament length remains a usable independent metric.
+    if not nums or all(number == 0 for number in nums):
+        return None
+    return sum(nums)
 
 
 def last_matching(lines: Iterable[str], patterns: list[re.Pattern[str]], parser) -> float | None:
@@ -148,7 +153,9 @@ def canonical_feature(raw: str) -> str:
         "internal solid infill": "solid_infill",
         "top surface": "top_surface",
         "top solid infill": "top_surface",
-        "bottom surface": "bottom_surface",
+        "bottom surface": "solid_infill",
+        "internal bridge": "bridge",
+        "bridge infill": "bridge",
         "support": "support",
         "support interface": "support_interface",
         "bridge": "bridge",
@@ -233,10 +240,6 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
 
         if "Z" in vals:
             new_z = vals["Z"] if absolute_xyz else xyz["Z"] + vals["Z"]
-            rounded = round(new_z, 5)
-            if rounded not in seen_z:
-                seen_z.add(rounded)
-                z_levels.append(rounded)
             xyz["Z"] = new_z
         for axis in "XY":
             if axis in vals:
@@ -256,6 +259,12 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
 
         if positive_e > 0:
             extrusion_moves += 1
+            # Layer count is based on Z heights that actually extrude material,
+            # not purge/start/end travel positions or homing moves.
+            rounded = round(xyz["Z"], 5)
+            if rounded not in seen_z:
+                seen_z.add(rounded)
+                z_levels.append(rounded)
         elif moved_xyz:
             travel_moves += 1
 
@@ -298,7 +307,7 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
     add(
         "major_feature_classes",
         "pass" if not missing else "fail",
-        "none missing" if not missing else "missing on Android: " + ", ".join(missing),
+        "none missing" if not missing else "missing on candidate: " + ", ".join(missing),
     )
 
     # Exact transition order is useful evidence but overly strict across harmless emitter changes.
@@ -309,7 +318,7 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
         add(
             "feature_transition_sequence",
             "warn",
-            f"desktop transitions={len(desktop.feature_transitions)}, Android={len(android.feature_transitions)}; inspect visual diff",
+            f"desktop transitions={len(desktop.feature_transitions)}, candidate={len(android.feature_transitions)}; inspect visual diff",
         )
 
     layer_diff = abs(desktop.layer_count - android.layer_count)
@@ -367,6 +376,7 @@ def main() -> None:
     p.add_argument("--plate-member")
     p.add_argument("--tolerance", type=float, default=0.02)
     p.add_argument("--json-out", type=Path)
+    p.add_argument("--summary-only", action="store_true", help="Print compact check results while still writing full JSON.")
     args = p.parse_args()
 
     desktop = parse_metrics(args.desktop, args.plate_member)
@@ -382,7 +392,13 @@ def main() -> None:
     if args.json_out:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
         args.json_out.write_text(rendered + "\n")
-    print(rendered)
+    if args.summary_only:
+        print(f"Result: {comparison['result']} (tolerance {args.tolerance:.2%})")
+        for check in comparison["checks"]:
+            print(f"{check['status'].upper():11} {check['name']}: {check['detail']}")
+        print(f"Evidence complete: {comparison['evidence_complete']}")
+    else:
+        print(rendered)
     raise SystemExit(0 if comparison["result"] == "pass" else 2)
 
 
