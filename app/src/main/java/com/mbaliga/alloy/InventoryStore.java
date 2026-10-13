@@ -284,12 +284,31 @@ public final class InventoryStore {
 
     private Item matchingFilament(String material) {
         String wanted = material == null ? "" : material.trim().toLowerCase(Locale.US);
+        if (wanted.length() == 0) return null;
+        Item substringFallback = null;
         for (Item item : items()) {
             if (!"filament".equalsIgnoreCase(item.category)) continue;
             String candidate = item.name.toLowerCase(Locale.US);
-            if (wanted.length() > 0 && (candidate.contains(wanted) || wanted.contains(candidate))) return item;
+            if (candidate.equals(wanted)) return item;
+            // Prefer whole material tokens: "PET" must not consume the PETG spool.
+            if (containsAllMaterialTokens(candidate, wanted)) return item;
+            if (substringFallback == null && (candidate.contains(wanted) || wanted.contains(candidate)))
+                substringFallback = item;
         }
-        return null;
+        return substringFallback;
+    }
+
+    private static boolean containsAllMaterialTokens(String candidate, String wanted) {
+        ArrayList<String> candidateTokens = new ArrayList<>();
+        for (String token : candidate.split("[^a-z0-9]+")) if (!token.isEmpty()) candidateTokens.add(token);
+        String[] wantedTokens = wanted.split("[^a-z0-9]+");
+        boolean found = false;
+        for (String token : wantedTokens) {
+            if (token.isEmpty()) continue;
+            found = true;
+            if (!candidateTokens.contains(token)) return false;
+        }
+        return found;
     }
 
     private static boolean isGramUnit(String unit) {
