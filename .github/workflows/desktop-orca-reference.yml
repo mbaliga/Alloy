@@ -6,14 +6,26 @@ on:
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/compose_g3_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/verify_g3_profile.py'
+      - 'parity/verify_g3_orca_recipe.py'
+      - 'parity/test_g3_orca_recipe.py'
+      - 'parity/g3-bambu-filament-overlay.json'
+      - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
   pull_request:
     branches: [stage1-gates-prep]
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/compose_g3_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/verify_g3_profile.py'
+      - 'parity/verify_g3_orca_recipe.py'
+      - 'parity/test_g3_orca_recipe.py'
+      - 'parity/g3-bambu-filament-overlay.json'
+      - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
   workflow_dispatch:
 
@@ -56,6 +68,17 @@ jobs:
           python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
           sha256sum runtime/profiles/*.json | tee runtime/profiles/SHA256SUMS
 
+      - name: Compose and verify Alloy G3 profile overlays
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/compose_g3_orca_profiles.py \
+            runtime/profiles \
+            app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json \
+            parity/g3-bambu-filament-overlay.json \
+            runtime/g3-profiles
+          sha256sum runtime/g3-profiles/*.json | tee runtime/g3-profiles/SHA256SUMS
+
       - name: Install AppImage host OpenGL runtime
         shell: bash
         run: |
@@ -92,9 +115,9 @@ jobs:
         run: |
           set -euxo pipefail
           ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
-          MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"
-          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/process.json"
-          FILAMENT="$GITHUB_WORKSPACE/runtime/profiles/filament.json"
+          MACHINE="$GITHUB_WORKSPACE/runtime/g3-profiles/machine.json"
+          PROCESS="$GITHUB_WORKSPACE/runtime/g3-profiles/process.json"
+          FILAMENT="$GITHUB_WORKSPACE/runtime/g3-profiles/filament.json"
           mkdir -p runtime/orca-reference
 
           for stl in runtime/fixtures/*.stl; do
@@ -107,6 +130,9 @@ jobs:
             fi
 
             python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
+            python3 parity/verify_g3_orca_recipe.py \
+              "$out/$name.gcode.3mf" "$PROCESS" "$FILAMENT" \
+              --json-out "$out/recipe-verification.json"
           done
 
       - name: Record authoritative baseline manifest
@@ -117,8 +143,8 @@ jobs:
             echo "OrcaSlicer release: v${ORCA_VERSION}"
             echo "Orca profile source: ${ORCA_PROFILE_SHA}"
             echo "Machine: Bambu Lab A1 mini 0.4 nozzle"
-            echo "Process: 0.20mm Standard @BBL A1M"
-            echo "Filament: Bambu PLA Basic @BBL A1M"
+            echo "Process: pinned Orca standard profile + checked-in Alloy G3 project overlay"
+            echo "Filament: pinned Orca PLA Basic profile + checked-in Alloy G3 PLA overlay"
             echo
             sha256sum runtime/orca-reference/*/*.gcode.3mf
           } > runtime/evidence/reference-manifest.txt
@@ -132,6 +158,7 @@ jobs:
           path: |
             runtime/orca-reference
             runtime/profiles
+            runtime/g3-profiles
             runtime/fixtures/SHA256SUMS
             runtime/orca/SHA256SUMS
             runtime/evidence
