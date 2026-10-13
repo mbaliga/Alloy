@@ -134,10 +134,14 @@ def rewrite_template(value: str) -> str:
         out,
     )
     out = re.sub(r"\[initial_no_support_extruder\]", "0", out)
-    # Translate Orca boolean operators to Prusa macro-language syntax.
-    out = re.sub(r"\s*&&\s*", " and ", out)
-    out = re.sub(r"\s*\|\|\s*", " or ", out)
+    # Prusa's expression parser keeps the C-style &&/|| operators used by Orca,
+    # but does not accept Orca's unary ! spelling.
     out = re.sub(r"(?<![=!<>])!\s*([A-Za-z_][A-Za-z0-9_]*)", r"\1 == 0", out)
+    # Bambu/Orca exposes per-tool flush arrays. This Path B profile is the
+    # single-extruder A1 Mini PLA Basic route: its flush-specific settings are
+    # unset, so Orca falls back to the selected filament max flow and print temp.
+    out = re.sub(r"flush_volumetric_speeds\[[^\]]+\]", "max_volumetric_speed", out)
+    out = re.sub(r"flush_temperatures\[[^\]]+\]", "temperature[0]", out)
     # Orca exposes the first-layer object-footprint center. Prusa exposes the
     # footprint bounds; with this single-extruder profile (no wipe tower), their
     # midpoint is the same point.
