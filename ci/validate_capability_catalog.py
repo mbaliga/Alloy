@@ -123,8 +123,19 @@ def validate_catalog(path):
     a1 = next(printer for printer in printers if printer["id"] == "a1")
     if {material["id"] for material in a1["materials"]} != A1_MATERIAL_IDS:
         raise ValueError("A1 must disclose its sourced ideal and not-recommended material classes separately")
-    if {route["id"] for route in a1["feed_routes"]} != {"external-direct", "ams-lite"}:
-        raise ValueError("A1 must keep external feed and AMS Lite as distinct routes")
+    expected_a1_routes = {"external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht"}
+    if {route["id"] for route in a1["feed_routes"]} != expected_a1_routes:
+        raise ValueError("A1 must disclose AMS Lite and each A1 Series AMS Hub route separately")
+    for route in a1["feed_routes"]:
+        if route["id"] in {"regular-ams", "ams-2-pro", "ams-ht"}:
+            note = route["note"].lower()
+            if route["state"] != "Requires A1 Series AMS Hub" or not route.get("source_url", "").strip():
+                raise ValueError(f"A1 {route['id']} must have a sourced hub requirement")
+            if "01.06.10.33" not in note or "do not mix ams lite" not in note or "alloy send remains unqualified" not in note:
+                raise ValueError(f"A1 {route['id']} must retain firmware, AMS Lite separation and Alloy qualification caveats")
+    a1_ams_spool = next((form for form in a1["spool_forms"] if form["id"] == "ams-hub-spool"), None)
+    if a1_ams_spool is None or a1_ams_spool["state"] != "Manual review required":
+        raise ValueError("A1 must disclose hub-enabled AMS spool fit as manual review only")
     a1_materials = {material["id"]: material for material in a1["materials"]}
     for material_id in ("pla", "petg", "tpu", "pva"):
         if a1_materials[material_id]["bambu_status"] != "Ideal":
