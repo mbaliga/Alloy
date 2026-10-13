@@ -7,6 +7,8 @@ on:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/test_generate_fixtures.py'
+      - 'app/src/main/assets/models/**'
       - 'parity/test_desktop_orca_reference_workflow.py'
       - 'parity/g3-bambu-filament-overlay.json'
       - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
@@ -45,6 +47,7 @@ jobs:
         run: |
           set -euxo pipefail
           python3 parity/generate_fixtures.py --out runtime/fixtures
+          python3 -m unittest discover -s parity -p 'test_generate_fixtures.py' -v
           sha256sum runtime/fixtures/*.stl | tee runtime/fixtures/SHA256SUMS
 
       - name: Clone pinned Orca profile snapshot
