@@ -2,6 +2,37 @@
 
 Date: 2026-10-14
 
+## 2026-10-14 G3 Orca reference export and validation
+
+PR #12 source checkpoint `baa36d95c1224706ca6bd983293a04a07fb3c76d` passed the
+parity tooling run [38486520421](https://github.com/mbaliga/Alloy/actions/runs/38486520421),
+official Orca source snapshot [38486520339](https://github.com/mbaliga/Alloy/actions/runs/38486520339),
+and desktop Orca reference-slice run
+[38486520525](https://github.com/mbaliga/Alloy/actions/runs/38486520525).
+The desktop run successfully sliced all four checked-in Android mesh fixtures
+with OrcaSlicer 2.4.2 and pinned A1 Mini profiles. Artifact
+[11860102035](https://github.com/mbaliga/Alloy/actions/runs/38486520525/artifacts/11860102035)
+has ZIP SHA-256
+`d5946e9fad66fd698592c95f5807ea8dafb87a49db9636da338d3cc99b57a8fd`.
+The parity suite passed locally with 101 tests and no failures.
+
+The preceding desktop run [38486269262](https://github.com/mbaliga/Alloy/actions/runs/38486269262)
+failed after slicing because the workflow supplied an absolute path to
+`--export-3mf` while also specifying `--outputdir`, causing Orca to prefix
+the output directory twice. The artifact log established the exact failure.
+The workflow now passes a filename relative to the selected output directory,
+and a regression test guards the CLI contract.
+
+For checkpoint `baa36d9`, Android run
+[38486520487](https://github.com/mbaliga/Alloy/actions/runs/38486520487)
+was queued and native run
+[38486520405](https://github.com/mbaliga/Alloy/actions/runs/38486520405)
+was pending at the last check. The successful desktop reference is not an
+Android/native semantic comparison. G2 provenance, G3 parity, physical A1
+Mini acceptance, Bambu Handy acceptance, signed install/upgrade, production
+signing, and release approval remain open. Keep direct-send and physical-print
+claims fail-closed.
+
 ## 2026-10-14 A1/P1S catalog test correction and desktop baseline
 
 PR #12 head [`a7ceb6bc444d2c139bac732048c05e9eb00c80ed`](https://github.com/mbaliga/Alloy/commit/a7ceb6bc444d2c139bac732048c05e9eb00c80ed) fixes the sole failure reported by the preceding ordinary Android acceptance run: the A1/P1S material catalog test looked for lowercase `dry PVA only` in Bambu's title-case “Dry PVA only” guidance. The assertion now normalizes case and includes a diagnostic message. The fresh Android run [38479632636](https://github.com/mbaliga/Alloy/actions/runs/38479632636) completed successfully: APK build and emulator acceptance suite passed, and artifact `alloy-v1-release-ci-apk` (ID `11856349296`) has ZIP SHA-256 `96ae24f2a9e75c603e9b13e40502922163e340db3a8fd559bb3517b8e923e11e`. The hosted test output reached 131/195 invocations with 1 skipped and 0 failed before Gradle reported BUILD SUCCESSFUL.
