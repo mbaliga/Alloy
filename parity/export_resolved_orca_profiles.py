@@ -48,6 +48,14 @@ def resolve(name: str, profiles: dict[str, dict], stack: tuple[str, ...] = ()) -
     for item in parents:
         if item:
             result.update(resolve(str(item), profiles, (*stack, name)))
+    # Orca stores machine-wide defaults such as default_bed_type on the model
+    # record, while nozzle presets reference it through printer_model rather
+    # than inherits. Apply model defaults only when a parent/leaf did not set
+    # the field; the selected nozzle preset remains authoritative.
+    model_name = data.get("printer_model")
+    if isinstance(model_name, str) and model_name in profiles and model_name != name:
+        for key, value in resolve(model_name, profiles, (*stack, name)).items():
+            result.setdefault(key, value)
     result.update({k: v for k, v in data.items() if k != "inherits"})
     # Preserve the selected leaf identity even when a base profile supplied a name.
     result["name"] = name
