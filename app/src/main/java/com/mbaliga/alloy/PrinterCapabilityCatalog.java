@@ -123,7 +123,7 @@ public final class PrinterCapabilityCatalog {
                 || bvoh == null || !bvoh.amsLiteStatus.toLowerCase(Locale.US).contains("dry bvoh only")
                 || genericTpu == null || !genericTpu.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
                 || tpu95a == null || !tpu95a.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
-                || supportPla == null || !supportPla.amsLiteStatus.toLowerCase(Locale.US).contains("not listed")
+                || supportPla == null || !supportPla.amsLiteStatus.toLowerCase(Locale.US).contains("snap-away or dissolvable support")
                 || genericFiber == null || !genericFiber.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported"))
             throw new IOException("A1 mini AMS Lite exceptions are incomplete");
     }
