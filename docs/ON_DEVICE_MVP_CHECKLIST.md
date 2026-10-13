@@ -120,6 +120,14 @@ Expected: learning is readable offline and is never a gate-bypass path.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.
+- Confirm the A1 capability list shows PLA, PETG, TPU and PVA individually as
+  ideal, and ABS, ASA, PC, PA, PET and CF/GF-filled classes individually as
+  not recommended. Its AMS Lite route must remain separate from printer
+  suitability.
+- Confirm P1S lists PLA, PETG, TPU, PVA, PET, ABS and ASA individually as
+  ideal; PA and PC as capable; and CF/GF-filled polymer as not recommended
+  for the supplied stainless nozzle. Its external feed and AMS routes must
+  remain separate, and AMS Lite must not appear as a P1S route.
 - Open Inventory. Verify ledger rows cover all 24 A1 Mini catalog material
   classes: PLA, PETG, TPU, PVA, Support for PLA, Support for PETG, ABS, ASA,
   PC, PA/Nylon, PET, Bambu PLA-CF, PETG-CF, other CF/GF-filled polymers,

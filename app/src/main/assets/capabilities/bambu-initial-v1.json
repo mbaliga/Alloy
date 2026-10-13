@@ -336,25 +336,89 @@
       "build_volume": "256 × 256 × 256 mm",
       "nozzle": "0.4 mm supplied; nozzle/profile must be selected exactly",
       "bed": "up to 100 °C",
-      "reviewed": "2026-09-28",
+      "reviewed": "2026-10-13",
       "alloy_direct_send": "Not qualified — physical acceptance gates remain incomplete",
       "source": "Bambu Lab A1 specifications and material cautions",
       "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
       "materials": [
         {
-          "id": "ideal-family",
-          "name": "PLA · PETG · TPU · PVA",
+          "id": "pla",
+          "name": "PLA",
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
-          "note": "Open-frame material cautions still apply; material is profile-specific.",
+          "note": "A1-series printer guidance marks PLA ideal. This is not an Alloy recipe or send qualification.",
           "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
         },
         {
-          "id": "high-temp-fibre",
-          "name": "High-temperature / fibre-filled material classes",
-          "bambu_status": "Review manufacturer guidance",
+          "id": "petg",
+          "name": "PETG",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "A1-series printer guidance marks PETG ideal. AMS Lite loading is a separate compatibility check.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "tpu",
+          "name": "TPU",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "A1-series printer guidance marks TPU ideal; do not infer AMS Lite compatibility.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "pva",
+          "name": "PVA",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "A1-series printer guidance marks PVA ideal; AMS Lite lists dry PVA only and route must be reviewed.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "abs",
+          "name": "ABS",
+          "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
-          "note": "Do not transfer A1 mini or P1S qualification to A1.",
+          "note": "Bambu does not recommend ABS for the open-frame A1; Alloy blocks direct-send preparation.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "asa",
+          "name": "ASA",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend ASA for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "pc",
+          "name": "PC",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend PC for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "pa",
+          "name": "PA / Nylon",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend PA for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "pet",
+          "name": "PET",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend PET for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "cf-gf-filled",
+          "name": "Carbon / glass fiber reinforced polymer",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend carbon/glass-fiber reinforced polymers for the A1; no nozzle or feeder exception is implied.",
           "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
         }
       ],
@@ -418,25 +482,89 @@
       "build_volume": "256 × 256 × 256 mm",
       "nozzle": "0.4 mm supplied; nozzle/profile must be selected exactly",
       "bed": "up to 100 °C",
-      "reviewed": "2026-09-28",
+      "reviewed": "2026-10-13",
       "alloy_direct_send": "Not qualified — physical acceptance gates remain incomplete",
       "source": "Bambu Lab P1S specifications",
       "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213",
       "materials": [
         {
-          "id": "pla-petg-tpu",
-          "name": "PLA · PETG · TPU",
-          "bambu_status": "Profile-dependent",
+          "id": "pla",
+          "name": "PLA",
+          "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
-          "note": "Check the exact plate, nozzle, enclosure and material recipe.",
+          "note": "Bambu lists PLA as ideal for P1S. The exact plate, nozzle and recipe remain profile-specific.",
           "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
         },
         {
-          "id": "abs-asa-engineering",
-          "name": "ABS · ASA and engineering materials",
-          "bambu_status": "Profile-dependent",
-          "alloy_direct_send": "Blocked until qualified",
-          "note": "An enclosed printer is not a blanket compatibility or direct-send claim.",
+          "id": "petg",
+          "name": "PETG",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PETG as ideal for P1S. AMS compatibility remains a separate material/feeder check.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "tpu",
+          "name": "TPU",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists TPU as ideal for P1S; do not infer compatibility with a powered AMS feed route.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pva",
+          "name": "PVA",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PVA as ideal for P1S. Keep material dryness and exact feeder-route checks explicit.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pet",
+          "name": "PET",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PET as ideal for P1S; AMS Lite is not compatible with the P1 series.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "abs",
+          "name": "ABS",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists ABS as ideal for P1S. Enclosure, ventilation, plate and exact profile remain user-critical checks.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "asa",
+          "name": "ASA",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists ASA as ideal for P1S. Enclosure, ventilation, plate and exact profile remain user-critical checks.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pa",
+          "name": "PA / Nylon",
+          "bambu_status": "Capable",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PA as capable for P1S; exact grade, drying, build surface and profile require review.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pc",
+          "name": "PC",
+          "bambu_status": "Capable",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PC as capable for P1S; exact grade, drying, build surface and profile require review.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "cf-gf-filled",
+          "name": "Carbon / glass fiber reinforced polymer",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu lists carbon/glass-fiber reinforced polymers as not recommended for the supplied stainless nozzle; do not imply that a hardened-nozzle option qualifies an Alloy profile or send.",
           "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
         }
       ],

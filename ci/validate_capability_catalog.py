@@ -29,6 +29,8 @@ A1_MINI_MATERIAL_IDS = {
     "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled",
     "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe",
 }
+A1_MATERIAL_IDS = {"pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"}
+P1S_MATERIAL_IDS = {"pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"}
 
 
 def require_fields(value, fields, label):
@@ -116,6 +118,32 @@ def validate_catalog(path):
             raise ValueError(f"{identifier}.spool_guidance must be non-empty text entries")
     if ids != EXPECTED_PRINTERS:
         raise ValueError("initial catalog printer ids must be A1 mini, A1 and P1S")
+    a1 = next(printer for printer in printers if printer["id"] == "a1")
+    if {material["id"] for material in a1["materials"]} != A1_MATERIAL_IDS:
+        raise ValueError("A1 must disclose its sourced ideal and not-recommended material classes separately")
+    if {route["id"] for route in a1["feed_routes"]} != {"external-direct", "ams-lite"}:
+        raise ValueError("A1 must keep external feed and AMS Lite as distinct routes")
+    a1_materials = {material["id"]: material for material in a1["materials"]}
+    for material_id in ("pla", "petg", "tpu", "pva"):
+        if a1_materials[material_id]["bambu_status"] != "Ideal":
+            raise ValueError(f"A1 Bambu guidance must identify {material_id} as ideal")
+    for material_id in ("abs", "asa", "pc", "pa", "pet", "cf-gf-filled"):
+        if a1_materials[material_id]["bambu_status"] != "Not recommended":
+            raise ValueError(f"A1 Bambu guidance must identify {material_id} as not recommended")
+    p1s = next(printer for printer in printers if printer["id"] == "p1s")
+    if {material["id"] for material in p1s["materials"]} != P1S_MATERIAL_IDS:
+        raise ValueError("P1S must disclose its sourced ideal, capable and not-recommended classes separately")
+    if {route["id"] for route in p1s["feed_routes"]} != {"external-direct", "ams"}:
+        raise ValueError("P1S must keep external feed and AMS as distinct routes")
+    p1s_materials = {material["id"]: material for material in p1s["materials"]}
+    for material_id in ("pla", "petg", "tpu", "pva", "pet", "abs", "asa"):
+        if p1s_materials[material_id]["bambu_status"] != "Ideal":
+            raise ValueError(f"P1S Bambu guidance must identify {material_id} as ideal")
+    for material_id in ("pa", "pc"):
+        if p1s_materials[material_id]["bambu_status"] != "Capable":
+            raise ValueError(f"P1S Bambu guidance must identify {material_id} as capable")
+    if p1s_materials["cf-gf-filled"]["bambu_status"] != "Not recommended":
+        raise ValueError("P1S carbon/glass fiber guidance must remain not recommended")
     mini = next(printer for printer in printers if printer["id"] == "a1-mini")
     if {material["id"] for material in mini["materials"]} != A1_MINI_MATERIAL_IDS:
         raise ValueError("A1 mini must disclose each ideal and not-recommended material class separately")
