@@ -14,12 +14,10 @@ That candidate's Android run [38365197015](https://github.com/mbaliga/Alloy/acti
 passed (194 tests, 0 failures; Android-lane skips are not native evidence);
 native run [38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013)
 passed native build, API-35 ARM-translation instrumentation, G3 export and the
-five-fixture software pilot. Fresh current-head Android run
-[38377269496](https://github.com/mbaliga/Alloy/actions/runs/38377269496) and
-native run [38377269525](https://github.com/mbaliga/Alloy/actions/runs/38377269525)
-are still running; the official-source snapshot check
-[38377269485](https://github.com/mbaliga/Alloy/actions/runs/38377269485) passed.
-Use prior artifacts only for software verification while fresh checks run; they
+five-fixture software pilot. The source candidate's commit-scoped Android/native checks and the
+official-source snapshot run are recorded in PR #12's Checks tab; consult that
+live view for current status instead of relying on a status that can go stale
+in this checklist. The source blobs match the tested baseline, but CI artifacts
 do not qualify printing. Artifact IDs and digests are listed below.
 
 The five-fixture manifest is explicitly software-only; physical and direct-send
