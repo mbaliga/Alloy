@@ -71,7 +71,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y libopengl0 libglu1-mesa
+          sudo apt-get install -y libopengl0 libglu1-mesa libsoup-2.4-1
 
       - name: Download and extract PrusaSlicer 2.8.0
         shell: bash
