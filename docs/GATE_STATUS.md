@@ -2,6 +2,28 @@
 
 Date: 2026-10-13
 
+## 2026-10-13 latest Android and G2 recheck
+
+Android run
+[`38321723583`](https://github.com/mbaliga/Alloy/actions/runs/38321723583)
+on `a2ef790b7a6415c17c31342df894e0986fa96876` completed successfully. The
+hosted log reports 203 test invocations, 11 skipped and 0 failures; the skipped
+set includes the native engine smoke and bed-envelope tests because this was
+the ordinary Android build without the optional native library. It published
+artifact `11779906126`, ZIP SHA-256
+`4df92ce3642d00c9a890bb849c60b70154c3425731dbfe6751e0c8f6eb1aa5f7`. This
+does not prove native slicing or A1 Mini/A1/P1S envelope behavior.
+
+A local G2 diagnostic used the exact pinned mobile source
+`CodeMasterCody3D/OrcaSlicer-Mobile@d996a9cadb65b354997f2d5d8734b46bb9ea4efd`
+and the then-current official Orca `main`,
+`a28c9c3a827bbae9a2fcfe0434bdfabaecdb91e4`. It found 66/72 exact-history
+sample intervals and 288/477 (60.38%) exact common engine files, below the 85%
+threshold. The separate BBL.ini anchor still has no exact official history.
+This local reproduction is diagnostic, not a hosted G2 workflow result; G2
+remains **FAIL / NO-GO** pending refreshed hosted evidence and a valid profile
+anchor. It authorizes no engine promotion or print claim.
+
 ## Current source checkpoint — 2026-10-13
 
 ### Ordinary Android v1
@@ -65,14 +87,14 @@ the A1 Mini and sliced/package-validated under A1 and P1S profiles. This is
 designed to catch profile wiring that merely loads the right names while the
 native path keeps the wrong bed size. The earlier f36 Android run
 [`38320988598`](https://github.com/mbaliga/Alloy/actions/runs/38320988598)
-is in progress; its native run
+completed successfully for the ordinary Android suite; see the
+2026-10-13 checkpoint above. Native run
 [`38320985893`](https://github.com/mbaliga/Alloy/actions/runs/38320985893)
-is also in progress but does not contain the added envelope fixture. Runs for
-a2ef790 are Android
-[`38321723583`](https://github.com/mbaliga/Alloy/actions/runs/38321723583)
-(queued) and native
+remains in progress and does not contain the added envelope fixture. Native
+run
 [`38321723592`](https://github.com/mbaliga/Alloy/actions/runs/38321723592)
-(pending). Neither commit's new cross-profile tests are yet green.
+is pending. The a2ef790 cross-profile native tests remain unverified until
+that optional-native run completes successfully.
 The prior native run
 [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
 failed 2 of 162 tests: ARM translation exceeded a 30-second
@@ -84,11 +106,13 @@ adds logcat and raw test-result capture; commit
 extends only the native-load test timeout. The typed-recipe failure still
 needs actionable diagnostics if it recurs.
 
-Fresh G2 Orca provenance remains **FAIL / NO-GO** (66/72 exact-history
-samples; 314/479 exact common files, 65.55%). G3 semantic parity, G4 profile
-runtime parity, Bambu TreeSupport3D parity, physical A1 Mini acceptance,
-Bambu Handy import acceptance and production signing remain open. Keep every
-print and release claim fail-closed until its matching evidence passes.
+G2 Orca provenance remains **FAIL / NO-GO**; the latest local
+diagnostic is documented in the 2026-10-13 checkpoint above. The prior hosted
+measurement (66/72 sample intervals; 314/479 exact common files, 65.55%) has
+not yet been refreshed by a hosted run. G3 semantic parity, G4 profile runtime
+parity, Bambu TreeSupport3D parity, physical A1 Mini acceptance, Bambu Handy
+import acceptance and production signing remain open. Keep every print and
+release claim fail-closed until its matching evidence passes.
 
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)
