@@ -469,6 +469,27 @@
           "title": "AMS lite",
           "state": "Capability-specific",
           "note": "Route and material compatibility must be explicit."
+        },
+        {
+          "id": "regular-ams",
+          "title": "Original AMS (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu lists Original AMS support on the A1 series with the A1 Series AMS Hub. Minimum A1 firmware: 01.06.10.33; use Bambu Studio 2.3.0 or later and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-2-pro",
+          "title": "AMS 2 Pro (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu lists AMS 2 Pro support on the A1 series with the A1 Series AMS Hub. Minimum A1 firmware: 01.06.10.33; use Bambu Studio 2.3.0 or later and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-ht",
+          "title": "AMS HT (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu lists AMS HT support on the A1 series with the A1 Series AMS Hub. Minimum A1 firmware: 01.06.10.33; use Bambu Studio 2.3.0 or later and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
         }
       ],
       "spool_forms": [
@@ -504,11 +525,23 @@
           "note": "Diameter alone is not a feed-route approval.",
           "source": "Alloy safety policy; manufacturer spool dimensions required",
           "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "ams-hub-spool",
+          "title": "Original AMS / AMS 2 Pro / AMS HT spool",
+          "form": "AMS feeder-compatible spool",
+          "compatible_routes": "Original AMS, AMS 2 Pro or AMS HT only with the A1 Series AMS Hub and compatible printer firmware; not AMS Lite",
+          "geometry": "Check the exact spool against the selected AMS unit. AMS Lite dimensions do not apply to these enclosed AMS systems.",
+          "state": "Manual review required",
+          "note": "Hardware route availability does not confirm spool fit or material compatibility. Do not mix AMS Lite with this AMS family.",
+          "source": "Bambu A1 Series firmware compatibility note; physical spool fit remains unit-specific",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
         }
       ],
       "spool_guidance": [
         "Use the documented 1.75 mm material and route for the exact recipe.",
-        "AMS lite compatibility is material- and spool-specific; never infer it from a material family alone."
+        "AMS lite compatibility is material- and spool-specific; never infer it from a material family alone.",
+        "Original AMS, AMS 2 Pro and AMS HT are supported on A1 only with the A1 Series AMS Hub and compatible firmware; do not mix them with AMS Lite. Verify exact spool and material compatibility."
       ]
     },
     {
