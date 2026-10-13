@@ -3783,7 +3783,17 @@ public final class MainActivity extends Activity {
             LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); card.addView(sourceButton, sourceLp);
         }
         TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
-        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) { TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT); row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
+            TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT);
+            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
+            if (!route.sourceUrl.isEmpty()) {
+                final String routeSourceUrl = route.sourceUrl;
+                Button routeSourceButton = dialogButton("Open official " + route.title + " compatibility guidance",
+                        v -> openCapabilitySource(routeSourceUrl));
+                LinearLayout.LayoutParams routeSourceLp = new LinearLayout.LayoutParams(-1, dp(40));
+                routeSourceLp.topMargin = dp(4); card.addView(routeSourceButton, routeSourceLp);
+            }
+        }
         TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
         for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
             TextView row = label(form.title + " · " + form.state + "\n"
