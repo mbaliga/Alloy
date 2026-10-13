@@ -100,13 +100,13 @@ This section supersedes earlier Path B semantic metrics above. PR #5 head is `31
 - Both pinned Orca 2.4.2 reference slicing and translated PrusaSlicer 2.8.0 runtime slicing completed for all three fixtures. The translated-profile job confirmed explicit support-enabled profiles and found no unresolved template directives in executable G-code.
 - The semantic-parity job confirmed support toolpaths in both overhang outputs and reported matching extrusion-layer counts and feature classes, but **failed** the strict 2% threshold:
 
-| Fixture | Time delta | Summary filament delta | Positive-E length delta |
+| Fixture | Time delta (strict) | Summary filament delta (strict) | Positive-E length delta (diagnostic only) |
 | --- | ---: | ---: | ---: |
 | 20 mm cube | +6.31% | +13.21% | +4.48% |
 | Overhang with supports | +6.35% | +28.57% | +11.67% |
 | Thin-wall frame | +28.36% | +22.42% | +4.05% |
 
-- The reported summary filament estimate and parsed positive extrusion length still disagree materially, particularly on the supported overhang. Neither metric is waived; this needs a validated like-for-like measurement definition before parity can pass.
+- The current comparator's strict 2% checks use reported time and summary filament estimates; parsed positive-E length is diagnostic only. Its 4.05–11.67% deltas independently flag toolpath-extrusion differences but are not currently a pass/fail criterion. The estimate-vs-positive-E disagreement, especially on the supported overhang, still needs a validated like-for-like measurement definition.
 - Crosshatch translation to Prusa Grid remains explicitly approximate, not equivalent. The desktop profile translation is **not parity-qualified**, not printer-ready, and must not be presented as approved for export/send.
 
 Native Android evidence remains tracked separately in PR #13 (`ae48c42c313246815e2236f133f0bf96fb51e811`). Its ordinary Android workflow passed (run 38355476587). The corrected optional native-engine run 38355476630 is still active at the native-engine build step; instrumentation, native G3 export and the five-fixture pilot remain pending. No physical A1 Mini print, successful printer telemetry confirmation, or Bambu Handy round-trip is evidenced. Direct send, validated Bambu-ready handoff and production readiness remain unqualified.
