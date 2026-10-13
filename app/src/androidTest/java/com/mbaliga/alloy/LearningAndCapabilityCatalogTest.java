@@ -259,6 +259,20 @@ public final class LearningAndCapabilityCatalogTest {
                         material.sourceUrl.startsWith("https://") && material.sourceUrl.contains("bambulab.com"));
             }
         }
+        boolean p1sAms = false, p1sAms2Pro = false, p1sAmsHt = false;
+        for (PrinterCapabilityCatalog.FeedRoute route : p1s.feedRoutes) {
+            if (route.id.equals("ams") || route.id.equals("ams-2-pro") || route.id.equals("ams-ht")) {
+                Assert.assertTrue("P1S AMS family routes must link to official guidance",
+                        route.sourceUrl.startsWith("https://forum.bambulab.com/"));
+                Assert.assertTrue(route.note.contains("P1 Series"));
+            }
+            p1sAms |= route.id.equals("ams");
+            p1sAms2Pro |= route.id.equals("ams-2-pro") && route.note.contains("before connecting")
+                    && route.note.contains("four AMS units");
+            p1sAmsHt |= route.id.equals("ams-ht") && route.note.contains("before connecting")
+                    && route.note.contains("four AMS units");
+        }
+        Assert.assertTrue("P1S must disclose supported AMS types separately", p1sAms && p1sAms2Pro && p1sAmsHt);
         for (PrinterCapabilityCatalog.Material material : a1.materials) {
             Assert.assertFalse("A1 AMS Lite route status must be individually sourced", material.amsLiteStatus.isEmpty());
             Assert.assertTrue(material.amsLiteSourceUrl.startsWith("https://")
