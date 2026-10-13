@@ -3773,7 +3773,15 @@ public final class MainActivity extends Activity {
         TextView name = label(printer.name, 18, TEXT); name.setTypeface(null, android.graphics.Typeface.BOLD); card.addView(name);
         TextView facts = label(printer.buildVolume + " · " + printer.nozzle + " · Bed " + printer.bed, 12, MUTED); facts.setPadding(0, dp(3), 0, 0); card.addView(facts);
         TextView direct = label("ALLOY DIRECT SEND · " + printer.directSendState, 10, RED); direct.setLetterSpacing(0.07f); direct.setPadding(0, dp(10), 0, dp(4)); card.addView(direct);
-        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu: " + material.bambuStatus + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus + (material.amsLiteStatus.isEmpty() ? "" : " · AMS Lite: " + material.amsLiteStatus) + " · Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
+        if (!amsLiteSourceUrl.isEmpty()) {
+            final String sourceUrl = amsLiteSourceUrl;
+            TextView feedSource = label("AMS Lite handling is feeder guidance only; it does not override this printer's material rating.", 11, MUTED);
+            feedSource.setPadding(0, dp(8), 0, 0); card.addView(feedSource);
+            Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
+            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); card.addView(sourceButton, sourceLp);
+        }
         TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
         for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) { TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT); row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
         TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
@@ -5748,9 +5756,16 @@ public final class MainActivity extends Activity {
             TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
             materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
             for (PrinterCapabilityCatalog.Material material : printer.materials) {
-                TextView row = label(material.name + "\nBambu: " + material.bambuStatus
-                        + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT);
+                TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus
+                        + (material.amsLiteStatus.isEmpty() ? "" : " · AMS Lite: " + material.amsLiteStatus)
+                        + " · Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT);
                 row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
+            if (!amsLiteSourceUrl.isEmpty()) {
+                final String sourceUrl = amsLiteSourceUrl;
+                Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
+                LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); page.addView(sourceButton, sourceLp);
             }
             TextView routes = label("FEED ROUTES", 10, GOLD); routes.setLetterSpacing(0.08f);
             routes.setPadding(0, dp(12), 0, 0); page.addView(routes);

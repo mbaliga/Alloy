@@ -77,12 +77,14 @@ Expected: learning is readable offline and is never a gate-bypass path.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.
-- Open Inventory. Verify ledger rows cover all 14 A1 Mini catalog material
-  classes: PLA Basic, PETG, TPU, PVA, Support PLA, Support PETG, ABS, ASA, PC,
-  PA/Nylon, PET, PLA-CF, PETG-CF and other CF/GF-filled polymers. The eight
-  A1 Mini not-recommended rows must say “Track only” and “not recommended on
-  A1 Mini,” and must not create default reorder alerts. Every unmeasured
-  built-in quantity should read **Not recorded**, not zero, stocked, or loaded;
+- Open Inventory. Verify ledger rows cover all 24 A1 Mini catalog material
+  classes: PLA, PETG, TPU, PVA, Support for PLA, Support for PETG, ABS, ASA,
+  PC, PA/Nylon, PET, Bambu PLA-CF, PETG-CF, other CF/GF-filled polymers,
+  BVOH, PP, POM, HIPS, Bambu PAHT-CF, PLA Glow, PET-CF, PA6-CF, TPU 95A and
+  TPE. Every row marked not recommended for A1 Mini must say **Track only**,
+  and unrated rows must remain explicitly review-required; none may create
+  default reorder alerts. Every unmeasured built-in quantity should read
+  **Not recorded**, not zero, stocked, or loaded;
   unknown quantities must not generate reorder alerts or display an empty
   gauge that looks like measured zero. Record a physically checked exact
   quantity (including zero) before using add/use stock actions. Service
