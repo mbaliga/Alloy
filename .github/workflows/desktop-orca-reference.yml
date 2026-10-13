@@ -61,7 +61,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y libopengl0 libglu1-mesa
+          sudo apt-get install -y libopengl0 libglu1-mesa libwebkit2gtk-4.1-0
 
       - name: Download and extract OrcaSlicer 2.4.2 AppImage
         shell: bash
