@@ -150,7 +150,7 @@ def rewrite_template(value: str) -> str:
     out = re.sub(r"flush_temperatures\[[^\]]+\]", "temperature[0]", out)
     # Prusa recognizes only configured tool ids; on this one-tool profile, the
     # Bambu unload sentinel means the sole tool rather than a second extruder.
-    out = re.sub(r"(?m)^\\s*T255(?=\\s*(?:;.*)?$)", "T0", out)
+    out = re.sub(r"(?m)^\s*T255(?=\s*(?:;.*)?$)", "T0", out)
     # Orca exposes the first-layer object-footprint center. Prusa exposes the
     # footprint bounds; with this single-extruder profile (no wipe tower), their
     # midpoint is the same point.
