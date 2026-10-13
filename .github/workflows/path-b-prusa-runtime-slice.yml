@@ -10,6 +10,7 @@ on:
       - 'parity/generate_fixtures.py'
       - 'parity/check_rendered_gcode_templates.py'
       - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
       - 'parity/verify_gcode_3mf.py'
   pull_request:
     branches: [stage1-runtime-parity]
@@ -20,6 +21,7 @@ on:
       - 'parity/generate_fixtures.py'
       - 'parity/check_rendered_gcode_templates.py'
       - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
       - 'parity/verify_gcode_3mf.py'
   workflow_dispatch:
 
@@ -253,6 +255,7 @@ jobs:
           path: |
             runtime/path-b
             runtime/profiles
+            runtime/profiles-support
             runtime/prusa-reference
             runtime/prusa/SHA256SUMS
             runtime/evidence
