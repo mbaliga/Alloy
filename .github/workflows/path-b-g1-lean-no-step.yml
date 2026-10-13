@@ -98,6 +98,19 @@ jobs:
           bash build_all_deps_android.sh 2>&1 | tee "$GITHUB_WORKSPACE/lean-g1-evidence/native-dependency-build.log"
           python3 check-native-prebuilts.py arm64-v8a 2>&1 | tee -a "$GITHUB_WORKSPACE/lean-g1-evidence/native-dependency-build.log"
 
+      - name: Summarize dependency build failure
+        if: failure()
+        working-directory: slicebeam
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [ -f "$GITHUB_WORKSPACE/lean-g1-evidence/native-dependency-build.log" ]; then
+            echo "Last 120 lines of the pinned native dependency build:"
+            tail -n 120 "$GITHUB_WORKSPACE/lean-g1-evidence/native-dependency-build.log"
+          else
+            echo "Native dependency log was not created."
+          fi
+
       - name: Build lean native debug APK
         working-directory: slicebeam
         shell: bash
