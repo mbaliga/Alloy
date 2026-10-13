@@ -1,6 +1,6 @@
 # Alloy engine gate status
 
-Date: 2026-08-23
+Date: 2026-10-13
 
 ## Primary candidate: OrcaSlicer-Mobile
 
@@ -36,22 +36,16 @@ This is not merely a small Android portability patch set around one identifiable
 Pinned Android candidate:
 `utkabobr/SliceBeam@12b370ce305acc2caa59b7e4e78e04069db2f7e3`
 
-Path B must now pass the same discipline:
+Current evidence (2026-10-13):
 
-1. **G1:** reproducible arm64 Android source build.
-2. **G2:** identify the closest exact PrusaSlicer engine revision by Git-blob provenance.
-3. **G3:** slice the 20 mm cube, overhang/support fixture and thin-wall keyboard-case-like fixture; compare semantic toolpaths plus time/filament estimates.
-4. **G4:** prove A1 Mini profile import/resolution fidelity. Because SliceBeam's native profile format is Prusa-oriented and Orca import is experimental, this is likely the hardest Path B gate.
+- **G1 reproducible arm64 Android source build — IN PROGRESS / NOT PASSED.** The no-STEP lean build is running from source (run `38345683544`); the earlier run `38344141994` failed during dependency compilation. A separate optional native build on the A1 Mini profile PR remains in dependency compilation. Neither produced a verified native APK yet.
+- **G2 Prusa engine provenance — NOT VERIFIED.** Do not infer a pass from the profile translator or desktop CLI.
+- **G3 slicing/parity — REFERENCE BASELINE PRODUCED; PATH B PARITY NOT PASSED.** The pinned OrcaSlicer 2.4.2 AppImage successfully exported and validated `.gcode.3mf` for all three deterministic A1 Mini fixtures (run `38345407762`). The translated Prusa 2.8 runtime proof is still failing while resolving Bambu A1 Mini start/end G-code placeholders (latest at this edit: run `38345915581`). This is a parser/runtime precondition only, not Android parity or print approval.
+- **G4 profile audit — STATIC AUDIT PASSED; RUNTIME FIDELITY NOT COMPLETE.** The pinned Orca machine/process/filament inheritance and field mapping audit passed (run `38345407728`). Engine acceptance, estimates/toolpaths, and physical behavior remain unproven.
 
-Prepared automation on `stage1-gates-prep`:
-
-- `.github/workflows/path-b-g1-slicebeam-source-build.yml`
-- `.github/workflows/path-b-g2-prusa-provenance.yml`
-- `ci/identify_slicebeam_prusa_engine.py`
-- `parity/generate_fixtures.py`
-- `parity/compare_gcode.py`
-- `parity/profile_resolver.py`
+The parser work is restricted to explicit mappings for the pinned single-extruder A1 Mini PLA Basic route. Each unsupported vendor template feature must remain visible in the translation report; a green template parser check alone cannot qualify direct send, multi-material behavior, other materials, or physical printing.
 
 ## Product/UI gate
 
 Unchanged: **no Alloy Compose product screens until Stage 1 IA receives explicit sign-off.**
+
