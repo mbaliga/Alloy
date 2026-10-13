@@ -347,7 +347,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "A1-series printer guidance marks PLA ideal. This is not an Alloy recipe or send qualification.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Listed as AMS Lite compatible; exact PLA grade and spool fit still require review.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "petg",
@@ -355,7 +357,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "A1-series printer guidance marks PETG ideal. AMS Lite loading is a separate compatibility check.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Bambu PETG is listed as AMS Lite compatible; exact grade and spool fit still require review.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "tpu",
@@ -363,7 +367,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "A1-series printer guidance marks TPU ideal; do not infer AMS Lite compatibility.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Unsupported for AMS Lite; use external/direct feed only after exact grade and recipe review.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pva",
@@ -371,7 +377,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "A1-series printer guidance marks PVA ideal; AMS Lite lists dry PVA only and route must be reviewed.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Dry PVA only is listed for AMS Lite; wet/absorbent PVA is unsupported.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "abs",
@@ -379,7 +387,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Bambu does not recommend ABS for the open-frame A1; Alloy blocks direct-send preparation.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "ABS is not listed in Bambu's AMS Lite material table; do not infer feeder compatibility.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "asa",
@@ -387,7 +397,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Bambu does not recommend ASA for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "ASA is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pc",
@@ -395,7 +407,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Bambu does not recommend PC for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "PC is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pa",
@@ -403,7 +417,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Bambu does not recommend PA for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "PA is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pet",
@@ -411,7 +427,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Bambu does not recommend PET for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "PET is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "cf-gf-filled",
@@ -419,7 +437,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Bambu does not recommend carbon/glass-fiber reinforced polymers for the A1; no nozzle or feeder exception is implied.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Generic third-party CF/GF is unsupported; Bambu has brand-specific exceptions and warnings that do not override A1 printer suitability.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         }
       ],
       "feed_routes": [
