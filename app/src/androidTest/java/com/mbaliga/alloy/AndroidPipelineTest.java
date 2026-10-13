@@ -1222,6 +1222,34 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void completedPetAndPetgPrintsDebitTheirOwnInventoryRows() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences = context.getSharedPreferences("alloy-test-pet-material-match", Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        InventoryStore inventory = new InventoryStore(preferences);
+        InventoryStore.Item pet = findInventoryItem(inventory, "pet");
+        InventoryStore.Item petg = findInventoryItem(inventory, "petg-basic");
+        Assert.assertNotNull(pet);
+        Assert.assertNotNull(petg);
+        inventory.setExactQuantity(pet, 1_000);
+        inventory.setExactQuantity(petg, 1_000);
+
+        InventoryStore.Usage petUsage = inventory.recordCompletedPrint("pet-only-job", "PET", 1_000f, 1.75f);
+        Assert.assertTrue(petUsage.recorded);
+        Assert.assertEquals(pet.name, petUsage.itemName);
+        int petAfter = findInventoryItem(inventory, "pet").quantity;
+        Assert.assertTrue(petAfter < 1_000);
+        Assert.assertEquals(1_000, findInventoryItem(inventory, "petg-basic").quantity);
+
+        InventoryStore.Usage petgUsage = inventory.recordCompletedPrint("petg-only-job", "PETG", 1_000f, 1.75f);
+        Assert.assertTrue(petgUsage.recorded);
+        Assert.assertEquals(petg.name, petgUsage.itemName);
+        Assert.assertEquals(petAfter, findInventoryItem(inventory, "pet").quantity);
+        Assert.assertTrue(findInventoryItem(inventory, "petg-basic").quantity < 1_000);
+        preferences.edit().clear().commit();
+    }
+
+    @Test
     public void projectAndInventoryCheckpointsSurviveReload() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
