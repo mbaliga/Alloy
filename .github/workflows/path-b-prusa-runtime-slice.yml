@@ -116,6 +116,9 @@ jobs:
               "external_perimeter_acceleration = 5000",
               "infill_acceleration = 6000",
               "top_solid_infill_acceleration = 2000",
+              "gap_fill_speed = 250",
+              "support_material_speed = 150",
+              "support_material_interface_speed = 80",
           ):
               assert expected in config, expected
           report = json.loads(Path("runtime/path-b/translation-report.json").read_text())
