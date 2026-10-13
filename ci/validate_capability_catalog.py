@@ -137,8 +137,8 @@ def validate_catalog(path):
             raise ValueError(f"A1 mini material {material['id']} must stay unavailable for Alloy direct send")
     for material_id, expected_text in {
         "pva": "dry pva only", "bvoh": "dry bvoh only", "tpu": "unsupported",
-        "tpu-95a": "unsupported", "support-pla": "not listed",
-        "support-petg": "not listed", "cf-gf-filled": "unsupported",
+        "tpu-95a": "unsupported", "support-pla": "snap-away or dissolvable support",
+        "support-petg": "snap-away or dissolvable support", "cf-gf-filled": "unsupported",
         "pla-glow": "not recommended", "petg-cf": "not recommended",
     }.items():
         if expected_text not in mini_materials[material_id]["ams_lite_status"].lower():
