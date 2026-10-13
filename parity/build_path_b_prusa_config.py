@@ -223,6 +223,23 @@ def rewrite_template(value: str, derived_values: dict[str, float | str] | None =
 
 
 def normalize_value(key: str, value: str) -> str:
+    # Orca exposes Crosshatch, but PrusaSlicer 2.8.0 does not. Leaving it
+    # untouched makes Prusa silently substitute its default (Stars), so use
+    # Grid as the closest supported cross-layer line infill. This is an
+    # explicitly lossy profile translation and still has to pass G3 parity.
+    if key == "fill_pattern":
+        normalized = value.strip().lower()
+        if normalized == "crosshatch":
+            return "grid"
+        supported = {
+            "rectilinear", "alignedrectilinear", "grid", "triangles", "stars",
+            "cubic", "line", "concentric", "honeycomb", "3dhoneycomb",
+            "gyroid", "hilbertcurve", "archimedeanchords", "octagramspiral",
+            "adaptivecubic", "supportcubic", "lightning", "zigzag",
+        }
+        if normalized not in supported:
+            raise ValueError(f"unsupported Prusa fill pattern after Orca translation: {value}")
+        return normalized
     # Known enumeration aliases between Orca and Prusa.
     if key == "support_material_style":
         aliases = {
