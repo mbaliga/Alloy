@@ -58,9 +58,9 @@
           "name": "Support for PLA",
           "bambu_status": "Supported as support filament (product/profile-specific)",
           "alloy_direct_send": "Not qualified",
-          "note": "A1 mini materials guidance mentions support filament generally. Confirm exact support product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
+          "note": "A1 mini guidance includes support-filament families, and Bambu describes AMS Lite support for snap-away or dissolvable support. Confirm the exact product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
           "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
-          "ams_lite_status": "Not listed in the AMS Lite material support table; confirm the exact support product and route with Bambu.",
+          "ams_lite_status": "AMS Lite is described for snap-away or dissolvable support; the exact Support for PLA/PETG product, profile and route are not identified in the compatibility table—confirm with Bambu.",
           "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
@@ -68,9 +68,9 @@
           "name": "Support for PETG",
           "bambu_status": "Supported as support filament (product/profile-specific)",
           "alloy_direct_send": "Not qualified",
-          "note": "A1 mini materials guidance mentions support filament generally. Confirm exact support product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
+          "note": "A1 mini guidance includes support-filament families, and Bambu describes AMS Lite support for snap-away or dissolvable support. Confirm the exact product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
           "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
-          "ams_lite_status": "Not listed in the AMS Lite material support table; confirm the exact support product and route with Bambu.",
+          "ams_lite_status": "AMS Lite is described for snap-away or dissolvable support; the exact Support for PLA/PETG product, profile and route are not identified in the compatibility table—confirm with Bambu.",
           "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
