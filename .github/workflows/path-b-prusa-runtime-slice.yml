@@ -32,8 +32,7 @@ env:
 
 jobs:
   translated-profile-runtime:
-    runs-on: ubuntu-24.04
-    container: ubuntu:22.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
 
     steps:
@@ -71,8 +70,8 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          apt-get update
-          apt-get install -y ca-certificates curl libopengl0 libglu1-mesa libsoup2.4-1 libwebkit2gtk-4.0-37
+          sudo apt-get update
+          sudo apt-get install -y libopengl0 libglu1-mesa libsoup2.4-1 libwebkit2gtk-4.0-37
 
       - name: Download and extract PrusaSlicer 2.8.0
         shell: bash
