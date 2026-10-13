@@ -210,25 +210,6 @@ jobs:
             test -s "$out/$name.gcode"
           done
 
-      - name: Assert support toolpaths exist in both overhang slices
-        shell: bash
-        run: |
-          set -euxo pipefail
-          python3 - <<'PY'
-          import sys
-          from pathlib import Path
-          sys.path.insert(0, "parity")
-          from compare_gcode import parse_metrics
-          paths = [
-              Path("runtime/prusa-reference/overhang_support/overhang_support.gcode"),
-              Path("runtime/orca-reference/overhang_support/overhang_support.gcode.3mf"),
-          ]
-          for path in paths:
-              features = parse_metrics(path, None).feature_counts
-              assert "support" in features or "support_interface" in features, (str(path), features)
-              print(f"Verified support toolpath in {path}")
-          PY
-
       - name: Reject unresolved template directives in executable G-code
         shell: bash
         run: |
@@ -366,6 +347,25 @@ jobs:
         with:
           name: path-b-orca-comparison-inputs
           path: runtime/orca-artifact
+
+      - name: Assert support toolpaths exist in both overhang slices
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "parity")
+          from compare_gcode import parse_metrics
+          paths = [
+              Path("runtime/prusa-reference/overhang_support/overhang_support.gcode"),
+              Path("runtime/orca-reference/overhang_support/overhang_support.gcode.3mf"),
+          ]
+          for path in paths:
+              features = parse_metrics(path, None).feature_counts
+              assert "support" in features or "support_interface" in features, (str(path), features)
+              print(f"Verified support toolpath in {path}")
+          PY
 
       - name: Test semantic comparison metrics
         shell: bash
