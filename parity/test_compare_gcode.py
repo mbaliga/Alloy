@@ -85,6 +85,35 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertAlmostEqual(a.positive_e_mm, 4.0)
             self.assertAlmostEqual(b.positive_e_mm, 4.0)
 
+    def test_estimate_tolerance_is_measured_from_desktop_reference(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_A), None)
+            android_text = GCODE_B.replace("1m 41s", "1m 42.04s")
+            android_text = android_text.replace("1008.0", "1020.4").replace("3.02", "3.0612")
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+
+            result = compare(desktop, android, tolerance=0.02)
+
+            self.assertEqual("fail", result["result"])
+            time_check = next(c for c in result["checks"] if c["name"] == "print_time_seconds")
+            self.assertEqual("fail", time_check["status"])
+            self.assertIn("delta=2.04%", time_check["detail"])
+
+    def test_zero_desktop_estimate_cannot_hide_nonzero_android_estimate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop_text = GCODE_A.replace("filament used [mm] = 1000.0", "filament used [mm] = 0")
+            android_text = GCODE_B.replace("filament used [mm] = 1008.0", "filament used [mm] = 1")
+            desktop = parse_metrics(self.write(root, "desktop.gcode", desktop_text), None)
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+
+            result = compare(desktop, android, tolerance=0.02)
+
+            filament_check = next(c for c in result["checks"] if c["name"] == "filament_mm")
+            self.assertEqual("fail", filament_check["status"])
+            self.assertIn("delta=inf%", filament_check["detail"])
+
     def test_missing_feature_is_hard_failure(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

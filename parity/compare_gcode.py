@@ -395,9 +395,18 @@ def first_feature_mismatch(desktop: list[str], android: list[str]) -> str:
     return "none"
 
 
-def relative_diff(a: float, b: float) -> float:
-    denom = max(abs(a), abs(b), 1e-12)
-    return abs(a - b) / denom
+def relative_diff(reference: float, candidate: float) -> float:
+    """Return candidate error relative to the desktop reference baseline.
+
+    G3's estimate tolerance is defined against the desktop slice. Using the
+    larger value as the denominator made positive Android drift look smaller
+    than the same-sized negative drift and could accept a value above the
+    stated tolerance.
+    """
+    denominator = abs(reference)
+    if denominator == 0:
+        return 0.0 if candidate == 0 else float("inf")
+    return abs(candidate - reference) / denominator
 
 
 def compare(desktop: Metrics, android: Metrics, tolerance: float,
