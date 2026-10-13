@@ -86,7 +86,7 @@ jobs:
           assert rewrite_template("T255") == "T0"
           assert rewrite_template("M620.1 E F{flush_volumetric_speeds[initial_extruder]/2.4053*60} T{flush_temperatures[initial_extruder]}") == "M620.1 E F{max_volumetric_speed/2.4053*60} T{temperature[0]}"
           assert rewrite_template('{if !spiral_mode && print_sequence != "by object"}\nM971 S11\n{endif}') == '; Alloy omitted Bambu-only timelapse macro block (not portable to Prusa)\n'
-          assert rewrite_template('M109 S{nozzle_temperature[initial_extruder]}') == 'M109 S{nozzle_temperature[0]}'
+          assert rewrite_template('M109 S{nozzle_temperature[initial_extruder]}') == 'M109 S{temperature[0]}'
           assert rewrite_template('M109 S{nozzle_temperature_initial_layer[initial_extruder]-20}') == 'M109 S{first_layer_temperature[0]-20}'
           assert all(
               entry.get("target_value") == "organic"
