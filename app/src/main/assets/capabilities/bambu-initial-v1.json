@@ -8,7 +8,7 @@
       "build_volume": "180 × 180 × 180 mm",
       "nozzle": "0.4 mm stainless supplied; 0.2 / 0.6 / 0.8 mm options",
       "bed": "up to 80 °C",
-      "reviewed": "2026-10-12",
+      "reviewed": "2026-10-14",
       "alloy_direct_send": "Not qualified — physical acceptance gates remain incomplete",
       "source": "Bambu Lab A1 mini specifications and material guidance",
       "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
@@ -269,9 +269,24 @@
         },
         {
           "id": "regular-ams",
-          "title": "Regular AMS",
-          "state": "Unsupported",
-          "note": "Do not select this route for A1 mini."
+          "title": "Original AMS (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu lists Original AMS support on the A1 series with the A1 Series AMS Hub. Minimum A1 mini firmware: 01.06.10.33; use Bambu Studio 2.3.0 or later and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-2-pro",
+          "title": "AMS 2 Pro (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu lists AMS 2 Pro support on the A1 series with the A1 Series AMS Hub. Minimum A1 mini firmware: 01.06.10.33; use Bambu Studio 2.3.0 or later and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-ht",
+          "title": "AMS HT (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu lists AMS HT support on the A1 series with the A1 Series AMS Hub. Minimum A1 mini firmware: 01.06.10.33; use Bambu Studio 2.3.0 or later and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
         }
       ],
       "spool_forms": [
@@ -312,10 +327,10 @@
           "id": "regular-ams-spool",
           "title": "Regular AMS-compatible spool",
           "form": "AMS spool",
-          "compatible_routes": "Not available on A1 mini",
-          "geometry": "Do not treat a regular AMS-compatible label as A1 mini compatibility.",
-          "state": "Unsupported route",
-          "note": "A1 mini uses AMS lite for multi-colour, not regular AMS.",
+          "compatible_routes": "Original AMS, AMS 2 Pro or AMS HT only with the A1 Series AMS Hub and compatible printer firmware; not AMS Lite",
+          "geometry": "Check the exact spool against the selected AMS unit. AMS Lite dimensions do not apply to these enclosed AMS systems.",
+          "state": "Manual review required",
+          "note": "Hardware route availability does not confirm spool fit or material compatibility. Do not mix AMS Lite with this AMS family.",
           "source": "Bambu A1 mini FAQ; reviewed 2026-09-29",
           "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
         }
@@ -325,7 +340,7 @@
         "External/direct feed is the initial route for every material trial; check the spool state, tangles, dryness and remaining material.",
         "AMS lite physical-spool range: 40–68 mm width and 53–58 mm inner diameter.",
         "Use external/direct feed as the default for TPU and PVA. Bambu lists dry PVA as AMS lite-compatible but warns against wet/absorbent PVA; consider AMS lite only when the exact spool is known dry and its material profile explicitly permits that route.",
-        "Regular AMS is unsupported on A1 mini.",
+        "Original AMS, AMS 2 Pro and AMS HT are supported on A1 mini only with the A1 Series AMS Hub and compatible firmware; do not mix them with AMS Lite. Verify exact spool and material compatibility.",
         "AMS Lite material routing is a separate check: Bambu lists PLA, PETG, ASA, PET, PA, PC, dry PVA/BVOH, PP, POM, HIPS and Bambu PLA-CF/PAHT-CF; specific materials are not recommended or unsupported as listed below.",
         "AMS Lite spool size: 40–68 mm width and 53–58 mm inner diameter; this physical range does not qualify a material, printer profile or Alloy send."
       ]
