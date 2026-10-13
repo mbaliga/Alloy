@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare a desktop reference and candidate slicer G-code semantically for Alloy G3.
+"""Compare a reference reference and candidate slicer G-code semantically for Alloy G3.
 
 Inputs may be plain .gcode or Bambu/Orca .gcode.3mf archives. For archives the
 first Metadata/plate_*.gcode member is used unless --plate-member is supplied.
@@ -294,15 +294,15 @@ def relative_diff(a: float, b: float) -> float:
     return abs(a - b) / denom
 
 
-def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
+def compare(reference: Metrics, candidate: Metrics, tolerance: float) -> dict:
     checks: list[dict] = []
 
     def add(name: str, status: str, detail: str) -> None:
         checks.append({"name": name, "status": status, "detail": detail})
 
-    # Major feature classes: The candidate must not omit anything the desktop reference reports.
-    desktop_features = set(desktop.feature_counts)
-    android_features = set(android.feature_counts)
+    # Major feature classes: The candidate must not omit anything the reference reference reports.
+    desktop_features = set(reference.feature_counts)
+    android_features = set(candidate.feature_counts)
     missing = sorted(desktop_features - android_features)
     add(
         "major_feature_classes",
@@ -312,45 +312,45 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
 
     # Exact transition order is useful evidence but overly strict across harmless emitter changes.
     # Record it as pass/warn, while missing feature classes is the hard failure above.
-    if desktop.feature_transitions == android.feature_transitions:
+    if reference.feature_transitions == candidate.feature_transitions:
         add("feature_transition_sequence", "pass", "exact canonical transition sequence match")
     else:
         add(
             "feature_transition_sequence",
             "warn",
-            f"desktop transitions={len(desktop.feature_transitions)}, candidate={len(android.feature_transitions)}; inspect visual diff",
+            f"reference transitions={len(reference.feature_transitions)}, candidate={len(candidate.feature_transitions)}; inspect visual diff",
         )
 
-    layer_diff = abs(desktop.layer_count - android.layer_count)
+    layer_diff = abs(reference.layer_count - candidate.layer_count)
     add(
         "layer_count",
         "pass" if layer_diff == 0 else "fail",
-        f"desktop={desktop.layer_count}, candidate={android.layer_count}",
+        f"reference={reference.layer_count}, candidate={candidate.layer_count}",
     )
 
     for name in ("print_time_seconds", "filament_mm", "filament_g"):
-        a = getattr(desktop, name)
-        b = getattr(android, name)
+        a = getattr(reference, name)
+        b = getattr(candidate, name)
         if a is None or b is None:
-            add(name, "unavailable", f"desktop={a}, candidate={b}")
+            add(name, "unavailable", f"reference={a}, candidate={b}")
             continue
         diff = relative_diff(a, b)
         add(
             name,
             "pass" if diff <= tolerance else "fail",
-            f"desktop={a:.6g}, candidate={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
+            f"reference={a:.6g}, candidate={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
         )
 
     # Motion/extrusion metrics are diagnostics. A slight emitter variation is allowed, but
     # large divergence is a hard warning requiring toolpath inspection.
     for name in ("extrusion_moves", "travel_moves", "positive_e_mm"):
-        a = float(getattr(desktop, name))
-        b = float(getattr(android, name))
+        a = float(getattr(reference, name))
+        b = float(getattr(candidate, name))
         diff = relative_diff(a, b)
         add(
             name,
             "pass" if diff <= 0.05 else "warn",
-            f"desktop={a:.6g}, candidate={b:.6g}, delta={diff:.2%}",
+            f"reference={a:.6g}, candidate={b:.6g}, delta={diff:.2%}",
         )
 
     hard_fail = any(c["status"] == "fail" for c in checks)
@@ -371,20 +371,20 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("desktop", type=Path)
-    p.add_argument("android", type=Path)
+    p.add_argument("reference", type=Path)
+    p.add_argument("candidate", type=Path)
     p.add_argument("--plate-member")
     p.add_argument("--tolerance", type=float, default=0.02)
     p.add_argument("--json-out", type=Path)
     p.add_argument("--summary-only", action="store_true", help="Print compact check results while still writing full JSON.")
     args = p.parse_args()
 
-    desktop = parse_metrics(args.desktop, args.plate_member)
-    android = parse_metrics(args.android, args.plate_member)
-    comparison = compare(desktop, android, args.tolerance)
+    reference = parse_metrics(args.reference, args.plate_member)
+    candidate = parse_metrics(args.candidate, args.plate_member)
+    comparison = compare(reference, candidate, args.tolerance)
     report = {
-        "desktop": asdict(desktop),
-        "android": asdict(android),
+        "reference": asdict(reference),
+        "candidate": asdict(candidate),
         "comparison": comparison,
     }
 
@@ -394,8 +394,8 @@ def main() -> None:
         args.json_out.write_text(rendered + "\n")
     if args.summary_only:
         print(f"Result: {comparison['result']} (tolerance {args.tolerance:.2%})")
-        print("Desktop feature classes: " + ", ".join(sorted(desktop.feature_counts)))
-        print("Candidate feature classes: " + ", ".join(sorted(android.feature_counts)))
+        print("Reference feature classes: " + ", ".join(sorted(reference.feature_counts)))
+        print("Candidate feature classes: " + ", ".join(sorted(candidate.feature_counts)))
         for check in comparison["checks"]:
             print(f"{check['status'].upper():11} {check['name']}: {check['detail']}")
         print(f"Evidence complete: {comparison['evidence_complete']}")
