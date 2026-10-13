@@ -382,16 +382,7 @@ jobs:
           # writes mask the native test result on slow hosted API-35 boots.
           disable-animations: false
           disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
-          script: |
-            set -eu
-            mkdir -p native-instrumentation-diagnostics
-            adb logcat -c || true
-            trap 'adb logcat -b all -d -v threadtime > native-instrumentation-diagnostics/logcat.txt 2>&1 || true; adb shell getprop > native-instrumentation-diagnostics/getprop.txt 2>&1 || true; adb shell dumpsys package com.mbaliga.alloy > native-instrumentation-diagnostics/package.txt 2>&1 || true' EXIT
-            set +e
-            gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true -PalloyAdbTimeoutMs=900000 --no-daemon --stacktrace > native-instrumentation-diagnostics/gradle-connected-test.log 2>&1
-            test_status=$?
-            cat native-instrumentation-diagnostics/gradle-connected-test.log
-            exit "$test_status"
+          script: bash ci/run_native_release_instrumentation.sh
       - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
         with:
