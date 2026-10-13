@@ -31,6 +31,13 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("name: a1mini-orca-2.4.2-reference-slices", text)
         self.assertIn("runtime/orca-reference", text)
 
+    def test_current_pull_request_and_fixture_changes_trigger_reference_slices(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        pull_request = text.split("  pull_request:", 1)[1].split("  workflow_dispatch:", 1)[0]
+        self.assertIn("codex/fix-native-test-status", pull_request)
+        self.assertIn("parity/test_generate_fixtures.py", pull_request)
+        self.assertIn("app/src/main/assets/models/**", pull_request)
+
 
 if __name__ == "__main__":
     unittest.main()
