@@ -79,4 +79,15 @@ Unchanged: **no Alloy Compose product screens until Stage 1 IA receives explicit
 
 - A1 Mini material/AMS Lite route matrix Android acceptance passed in run `38343351024`; it does not establish slice, export, or physical-print correctness.
 - A1, P1S, multi-model real-file slicing, Android G3 parity, printer transfer, interruption/recovery, onboarding/troubleshooting content, and release/device testing remain open. No production release claim is warranted.
+## Superseding evidence (2026-10-13)
 
+The earlier semantic run `38350223253` is superseded by run `38355683497` on PR #5 head `5940ef170b1a1fa2f574eac1eb668e9581234141`.
+
+- Both Orca reference and translated Prusa 2.8.0 runtime slices succeeded for all three deterministic fixtures.
+- Feature-class aliases are now normalized correctly: the report finds no missing major feature classes for cube, overhang/support, or thin-wall fixtures. This corrects the earlier label-only reports (`Overhang perimeter` vs `Overhang wall`; `Gap fill` vs `Gap infill`).
+- The parity gate still **fails** on real reported estimate deltas (2% tolerance): cube time +6.10%, filament +10.09%; overhang time +18.45%, filament +35.44%; thin-wall time +56.84%, filament +22.66%. The annotation correction does not resolve or waive these numeric mismatches.
+- Consequently the translated desktop profile is still **not parity-qualified** and must not be treated as printer-ready or sent to hardware.
+
+Native workflow repair is tracked separately in PR #13 (`codex/fix-native-test-status`, head `ae48c42c313246815e2236f133f0bf96fb51e811`). The earlier API-35 run completed its instrumentation tests (196 reported, zero failures, two skipped) but failed afterward in shell status handling; the G3 export and five-fixture pilot were not executed. Corrected checks are running. Until they produce the expected native artifacts, Android G3/pilot evidence remains absent.
+
+No physical A1 Mini print, transfer/telemetry confirmation, or Bambu Handy round-trip is evidenced. Direct send, exported-job handoff, and production readiness remain unqualified.
