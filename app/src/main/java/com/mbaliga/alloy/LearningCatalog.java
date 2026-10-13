@@ -27,6 +27,7 @@ public final class LearningCatalog {
     private static final int MIN_CHEATSHEET_ARTICLES = 12;
     private static final int MIN_TROUBLESHOOT_ARTICLES = 24;
     private static final int MIN_HARD_STOP_ARTICLES = 5;
+    private static final int MIN_FAQ_ARTICLES = 9;
     private static final Set<String> KINDS = kinds();
 
     public static final class Article {
@@ -160,6 +161,7 @@ public final class LearningCatalog {
         result.add("start");
         result.add("cheatsheet");
         result.add("troubleshoot");
+        result.add("faq");
         return Collections.unmodifiableSet(result);
     }
 
@@ -170,15 +172,17 @@ public final class LearningCatalog {
      */
     private static void validateReleaseContract(List<Article> articles, Set<String> ids)
             throws IOException {
-        int starts = 0, cheatsheets = 0, troubleshooting = 0, hardStops = 0;
+        int starts = 0, cheatsheets = 0, troubleshooting = 0, hardStops = 0, faqs = 0;
         for (Article article : articles) {
             if ("start".equals(article.kind)) starts++;
             if ("cheatsheet".equals(article.kind)) cheatsheets++;
             if ("troubleshoot".equals(article.kind)) troubleshooting++;
+            if ("faq".equals(article.kind)) faqs++;
             if ("Hard stop".equals(article.safety)) hardStops++;
         }
         if (starts < MIN_START_ARTICLES || cheatsheets < MIN_CHEATSHEET_ARTICLES
                 || troubleshooting < MIN_TROUBLESHOOT_ARTICLES || hardStops < MIN_HARD_STOP_ARTICLES
+                || faqs < MIN_FAQ_ARTICLES
                 || !ids.contains("universal-hard-stop") || !ids.contains("connection-not-confirmed")) {
             throw new IOException("Learning catalog does not meet the v1 safety coverage contract");
         }

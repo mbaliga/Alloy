@@ -102,6 +102,177 @@
     {"id":"symptom-plate-residue","kind":"troubleshoot","title":"The plate has residue or an uncertain surface","summary":"Symptom: the build surface looks marked, oily or unknown. A plate label alone does not prove it is ready for the selected recipe.","safety":"Review","scope":"Use only current printer-maker cleaning guidance after the printer is cool and idle.","source":"Alloy first-layer safety contract v1 · reviewed 2026-09-29","artwork":"learn/first-layer-hotend-v1.png","keywords":["dirty plate","residue","oil","plate surface"],"steps":["Wait until the machine is cool and idle.","Compare the physical plate with the selected plate label.","Follow current manufacturer-approved preparation guidance."]},
     {"id":"symptom-export-rejected","kind":"troubleshoot","title":"An exported job is rejected","summary":"Symptom: a receiving app or tool does not accept an exported artifact. Generic sharing is not Bambu Handy compatibility evidence.","safety":"Hard stop","scope":"Do not rename, modify or force an unknown printer package into a send flow.","source":"Alloy artifact boundary v1 · reviewed 2026-09-29","artwork":"learn/printer-phone-recovery-v1.png","keywords":["export rejected","share","gcode 3mf","bambu handy"],"steps":["Keep the original artifact and its hash.","Review package validation and recipient requirements.","Do not claim recipient acceptance until it is independently verified."]},
     {"id":"symptom-printer-busy","kind":"troubleshoot","title":"The printer is busy or state is unclear","summary":"Symptom: the printer reports a current job, preparation state or stale status. The app must not start a second job from a local assumption.","safety":"Hard stop","scope":"Fresh authenticated telemetry is required before any future send path can proceed.","source":"Alloy transport safety contract v1 · reviewed 2026-09-29","artwork":"learn/printer-phone-recovery-v1.png","keywords":["printer busy","already printing","state unknown","telemetry"],"steps":["Check the printer's physical panel first.","Wait for fresh state through the normal pairing path.","Do not retry a start request while state is unconfirmed."]},
-    {"id":"symptom-app-interrupted","kind":"troubleshoot","title":"Alloy closed during a slice or job","summary":"Symptom: the app was interrupted while preparing or observing a job. A restart must surface recovery review, never silently continue.","safety":"Hard stop","scope":"Recovery is review-only until fresh state and artifact identity are available.","source":"Alloy recovery safety contract v1 · reviewed 2026-09-29","artwork":"learn/printer-phone-recovery-v1.png","keywords":["app closed","interrupted","recovery required","restart"],"steps":["Reopen Alloy and read the recovery record.","Check the physical printer state before any further action.","Do not accept automatic retry or resume for an unknown transaction."]}
+    {"id":"symptom-app-interrupted","kind":"troubleshoot","title":"Alloy closed during a slice or job","summary":"Symptom: the app was interrupted while preparing or observing a job. A restart must surface recovery review, never silently continue.","safety":"Hard stop","scope":"Recovery is review-only until fresh state and artifact identity are available.","source":"Alloy recovery safety contract v1 · reviewed 2026-09-29","artwork":"learn/printer-phone-recovery-v1.png","keywords":["app closed","interrupted","recovery required","restart"],"steps":["Reopen Alloy and read the recovery record.","Check the physical printer state before any further action.","Do not accept automatic retry or resume for an unknown transaction."]},
+    {
+        "id": "faq-import-printable",
+        "kind": "faq",
+        "title": "Can I print it just because it imported?",
+        "summary": "No. Import confirms Alloy could read enough geometry to display the model; it does not establish that the model is manifold, correctly scaled, within the selected printer’s envelope, or safe to print.",
+        "safety": "Review",
+        "scope": "Treat import, slicing, export and physical-print approval as separate stages.",
+        "source": "Alloy first-release workflow contract v1",
+        "artwork": "learn/build-plate-boundary-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Review dimensions and mesh warnings.",
+          "Choose the exact printer and plate before arranging.",
+          "Inspect the slice and any warnings before export."
+        ]
+      },
+    {
+        "id": "faq-stl-3mf",
+        "kind": "faq",
+        "title": "What is the difference between STL and 3MF?",
+        "summary": "STL generally carries surface geometry. 3MF can carry richer project information such as multiple objects or settings, depending on how it was authored. Neither extension proves that its contents or embedded settings are correct.",
+        "safety": "Inspect",
+        "scope": "Imported project data may be incomplete or incompatible; the selected Alloy setup remains the source for planning.",
+        "source": "Alloy supported-import guidance v1",
+        "artwork": "",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Confirm the object count and dimensions after import.",
+          "Review 3MF plates and settings instead of assuming they transferred correctly.",
+          "Keep the original file for revisions."
+        ]
+      },
+    {
+        "id": "faq-slicing",
+        "kind": "faq",
+        "title": "What does slicing do?",
+        "summary": "A slicer converts the arranged model and selected recipe into layer-by-layer toolpaths. Preview helps you inspect those paths; it cannot predict every machine, material or environment failure.",
+        "safety": "Inspect",
+        "scope": "Native engine and profile parity are still being qualified; a generated preview is not a print guarantee.",
+        "source": "Alloy slice-review boundary v1",
+        "artwork": "learn/first-layer-hotend-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Check the first layer and later layers in preview.",
+          "Review supports, thin features, warnings and estimates.",
+          "Do not send a job while its qualification gate is closed."
+        ]
+      },
+    {
+        "id": "faq-estimates",
+        "kind": "faq",
+        "title": "How accurate are time and filament estimates?",
+        "summary": "Treat them as planning estimates. Real use can differ because of purge and cleaning, supports, calibration, motion limits, temperature behavior and the actual profile. Unknown values should remain unknown, not be presented as measured facts.",
+        "safety": "Review",
+        "scope": "Do not use estimates alone to decide that a spool or printer is ready.",
+        "source": "Alloy estimate disclosure v1",
+        "artwork": "",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Check whether supports and purge are included in the reported value.",
+          "Leave margin for waste and failed starts.",
+          "Compare estimates with observed results only after a supervised print."
+        ]
+      },
+    {
+        "id": "faq-supports",
+        "kind": "faq",
+        "title": "When should I use supports?",
+        "summary": "Supports hold up geometry that cannot be printed reliably over open space. They consume material and time and may affect surface quality; tree and standard supports behave differently.",
+        "safety": "Inspect",
+        "scope": "Support generation and Bambu-specific parity are not yet qualified for physical production use.",
+        "source": "Alloy support-planning boundary v1",
+        "artwork": "learn/support-styles-v1.jpg",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Inspect unsupported overhangs in the preview.",
+          "Compare supported and support-free orientations.",
+          "Keep generated supports review-only until the support gate passes."
+        ]
+      },
+    {
+        "id": "faq-printer-profile",
+        "kind": "faq",
+        "title": "How do I choose between A1 mini, A1 and P1S?",
+        "summary": "Choose the model that is physically in front of you, then confirm its plate, nozzle and feed route. A1 mini has the smaller build area; never select another printer just to make an oversized object appear to fit.",
+        "safety": "Review",
+        "scope": "A loaded profile is not proof of the printer’s firmware, configuration or physical condition.",
+        "source": "Alloy initial Bambu profile contract v1",
+        "artwork": "learn/build-plate-boundary-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Read the printer label in the app and compare it with the machine.",
+          "Check the selected plate and build-envelope warnings.",
+          "If the model does not fit, scale or split it only when that change is intended."
+        ]
+      },
+    {
+        "id": "faq-spools",
+        "kind": "faq",
+        "title": "Which spool and material should I use?",
+        "summary": "Use the printer’s Materials & compatibility guide to review Bambu-listed material capability, spool form and feed-route notes. A material being listed does not prove that a particular spool fits, is dry, or is qualified for Alloy direct-send.",
+        "safety": "Review",
+        "scope": "A1 mini material/spool records are planning guidance; unknown fit or feed routes must stay blocked.",
+        "source": "Alloy capability-catalog safety contract v1",
+        "artwork": "learn/material-feed-route-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Identify the exact material and spool form.",
+          "Confirm the feed route and any drying requirement.",
+          "Do not force a spool or route that is not listed for the selected setup."
+        ]
+      },
+    {
+        "id": "faq-send-share",
+        "kind": "faq",
+        "title": "Can Alloy send this directly or open it in Bambu Handy?",
+        "summary": "Not yet as a validated production handoff. Alloy’s direct-send path remains fail-closed while native slicing, job packaging and printer acceptance are being qualified. An export or share action must not be mistaken for Bambu Handy acceptance.",
+        "safety": "Hard stop",
+        "scope": "Direct-send, validated Bambu-ready export and Bambu Handy import require separate completed evidence gates.",
+        "source": "Alloy release gate status v1",
+        "artwork": "learn/printer-phone-recovery-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Use only the currently available review/export actions.",
+          "Check the current release gate status before relying on an output file.",
+          "Do not bypass the send lock or treat a generic 3MF as a validated printer job."
+        ]
+      },
+    {
+        "id": "faq-unsafe",
+        "kind": "faq",
+        "title": "What should I do if the printer behaves unexpectedly?",
+        "summary": "Stop and supervise if it is safe to do so. Smoke, unusual odor, collisions, damaged cables, leaking material, or unknown motion state are not problems to solve by blindly changing slicer settings.",
+        "safety": "Hard stop",
+        "scope": "Alloy learning content is not a remote diagnosis or a repair guide for hot, moving or electrical parts.",
+        "source": "Alloy universal safety boundary v1",
+        "artwork": "learn/printer-phone-recovery-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Use the printer’s physical controls if safe.",
+          "Keep clear of hot and moving parts.",
+          "Follow current manufacturer support guidance."
+        ]
+      }
   ]
 }
