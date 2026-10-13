@@ -1201,6 +1201,27 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void inventoryIncludesEveryA1MiniMaterialClassWithoutInventingStock() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences = context.getSharedPreferences("alloy-test-material-inventory", Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        InventoryStore inventory = new InventoryStore(preferences);
+        String[] ids = {"pla-basic", "petg-basic", "tpu", "pva", "support-pla", "support-petg",
+                "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled",
+                "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf",
+                "tpu-95a", "tpe"};
+        for (String id : ids) {
+            InventoryStore.Item found = null;
+            for (InventoryStore.Item item : inventory.items()) if (id.equals(item.id)) found = item;
+            Assert.assertNotNull("missing filament inventory class " + id, found);
+            Assert.assertEquals("Filament", found.category);
+            Assert.assertFalse("built-in stock must start unmeasured: " + id, found.quantityConfirmed);
+            Assert.assertFalse("unmeasured stock must not raise reorder: " + id, found.needsReorder());
+        }
+        preferences.edit().clear().commit();
+    }
+
+    @Test
     public void projectAndInventoryCheckpointsSurviveReload() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
