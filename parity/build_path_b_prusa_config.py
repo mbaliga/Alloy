@@ -155,12 +155,12 @@ def derive_outer_wall_volumetric_speed(profiles: dict[str, dict]) -> float:
     return min(outer_wall_speed * flow_area, max_volumetric_speed)
 
 
-def rewrite_template(value: str, derived_values: dict[str, float] | None = None) -> str:
+def rewrite_template(value: str, derived_values: dict[str, float | str] | None = None) -> str:
     out = value
     for name, numeric_value in (derived_values or {}).items():
         out = re.sub(
             rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])",
-            format(numeric_value, ".9g"),
+            format(numeric_value, ".9g") if isinstance(numeric_value, (int, float)) else str(numeric_value),
             out,
         )
     # This A1 Mini route intentionally omits Bambu's timelapse-only macro
@@ -246,8 +246,12 @@ def main() -> None:
         kind: json.loads((args.resolved_profile_dir / f"{kind}.json").read_text())
         for kind in ("machine", "process", "filament")
     }
-    derived_template_values = {
-        "outer_wall_volumetric_speed": derive_outer_wall_volumetric_speed(profile_data)
+    default_bed_type = profile_data["machine"].get("default_bed_type")
+    if not isinstance(default_bed_type, str) or not default_bed_type:
+        raise ValueError("A1 Mini profile is missing its explicit default_bed_type")
+    derived_template_values: dict[str, float | str] = {
+        "outer_wall_volumetric_speed": derive_outer_wall_volumetric_speed(profile_data),
+        "curr_bed_type": json.dumps(default_bed_type),
     }
     merged: OrderedDict[str, str] = OrderedDict()
     unsupported: list[dict] = []
