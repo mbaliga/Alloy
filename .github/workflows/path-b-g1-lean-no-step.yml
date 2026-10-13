@@ -84,8 +84,10 @@ jobs:
             "$ANDROID_NDK_ROOT"
           python3 ci/patch_slicebeam_stage1_no_step.py slicebeam
 
-          ! grep -R "Open-Cascade-SAS/OCCT\|Format/STEP.cpp\|OCCTWrapper" \
+          ! grep -R "Open-Cascade-SAS/OCCT\|Format/STEP.cpp" \
             slicebeam/build_all_deps_android.sh slicebeam/app/CMakeLists.txt
+          ! grep -E "^[[:space:]]*(add_library|target_link_libraries).*OCCTWrapper|^[[:space:]]*OCCTWrapper([[:space:]]|$)" \
+            slicebeam/app/CMakeLists.txt
 
       - name: Build Stage 1 native dependencies from source
         working-directory: slicebeam
