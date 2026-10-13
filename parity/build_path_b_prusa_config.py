@@ -125,6 +125,18 @@ def stringify(value) -> str:
 
 def rewrite_template(value: str) -> str:
     out = value
+    # The pinned Bambu A1 Mini is single-extruder. Orca's selected non-support
+    # tool is therefore Prusa's tool 0; translate only the bracketed selector,
+    # not arbitrary identifiers in firmware commands.
+    out = re.sub(r"\\[initial_no_support_extruder\\]", "[0]", out)
+    # Orca exposes the first-layer object-footprint center. Prusa exposes the
+    # footprint bounds; with this single-extruder profile (no wipe tower), their
+    # midpoint is the same point.
+    out = re.sub(
+        r"first_layer_center_no_wipe_tower\\[([01])\\]",
+        lambda match: f"(first_layer_print_min[{match.group(1)}] + first_layer_print_max[{match.group(1)}]) / 2",
+        out,
+    )
     for old, new in TEMPLATE_ALIASES.items():
         # Replace identifiers only; preserve Orca/Prusa braces, brackets and indexes.
         out = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(old)}(?![A-Za-z0-9_])", new, out)
