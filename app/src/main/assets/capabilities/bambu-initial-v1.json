@@ -645,9 +645,24 @@
         },
         {
           "id": "ams",
-          "title": "AMS",
+          "title": "Original AMS",
           "state": "Capability-specific",
-          "note": "Multi-material is a separate future Alloy qualification gate."
+          "note": "Original AMS is supported on P1 Series printers. One AMS can use the supplied buffer; multiple units require the AMS Hub. Check exact spool and material fit; Alloy multi-material jobs remain unqualified.",
+          "source_url": "https://forum.bambulab.com/t/the-ams-filament-drying-feature-is-now-available/165280"
+        },
+        {
+          "id": "ams-2-pro",
+          "title": "AMS 2 Pro",
+          "state": "Requires compatible P1 Series firmware",
+          "note": "Bambu adds AMS 2 Pro support for P1 Series with compatible printer and feeder firmware; update the printer before connecting. P1 Series supports up to four AMS units total across models. Exact spool/material fit and Alloy multi-material send remain separately unqualified.",
+          "source_url": "https://forum.bambulab.com/t/the-ams-filament-drying-feature-is-now-available/165280"
+        },
+        {
+          "id": "ams-ht",
+          "title": "AMS HT",
+          "state": "Requires compatible P1 Series firmware",
+          "note": "Bambu adds AMS HT support for P1 Series with compatible printer and feeder firmware; update the printer before connecting. P1 Series supports up to four AMS units total across models. Exact spool/material fit and Alloy multi-material send remain separately unqualified.",
+          "source_url": "https://forum.bambulab.com/t/the-ams-filament-drying-feature-is-now-available/165280"
         }
       ],
       "spool_forms": [
@@ -655,7 +670,7 @@
           "id": "bambu-spooled",
           "title": "Bambu filament on reusable spool",
           "form": "Complete spool",
-          "compatible_routes": "External/direct; AMS only when material and physical fit permit",
+          "compatible_routes": "External/direct; Original AMS, AMS 2 Pro or AMS HT only when exact material and spool fit permit",
           "geometry": "1.75 mm filament; inspect exact spool fit before loading.",
           "state": "Capability-specific",
           "note": "A physical fit does not qualify a direct send or material recipe.",
@@ -666,7 +681,7 @@
           "id": "bambu-refill",
           "title": "Bambu filament refill",
           "form": "Refill; no spool supplied",
-          "compatible_routes": "External/direct or AMS only after a compatible reusable spool is assembled and checked",
+          "compatible_routes": "External/direct or Original AMS / AMS 2 Pro / AMS HT only after assembly on a compatible spool and route review",
           "geometry": "Refill must be installed on a reusable spool.",
           "state": "Manual preparation required",
           "note": "Do not load a loose refill.",
@@ -677,7 +692,7 @@
           "id": "third-party-ams",
           "title": "Third-party 1.75 mm spool",
           "form": "Manufacturer spool",
-          "compatible_routes": "External/direct pending manual fit; AMS needs an explicit measured compatibility decision",
+          "compatible_routes": "External/direct pending manual fit; AMS, AMS 2 Pro and AMS HT require a unit-specific measured compatibility decision",
           "geometry": "Inspect width, hub, flange clearance, winding and free rotation.",
           "state": "Manual review required",
           "note": "Diameter alone is not an AMS or direct-send approval.",
@@ -687,7 +702,8 @@
       ],
       "spool_guidance": [
         "Use the documented 1.75 mm material and route for the exact recipe.",
-        "AMS capability does not qualify an Alloy multi-material job; purge, mapping and recovery are separate gates."
+        "AMS capability does not qualify an Alloy multi-material job; purge, mapping and recovery are separate gates.",
+        "P1 Series can use Original AMS, AMS 2 Pro and AMS HT; update firmware before connecting AMS 2 Pro/HT and keep the total to four AMS units. AMS Lite is not compatible with P1S."
       ]
     }
   ]
