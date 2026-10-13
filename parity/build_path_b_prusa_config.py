@@ -74,6 +74,11 @@ KEY_MAP = {
     "internal_solid_infill_line_width": "solid_infill_extrusion_width",
     "top_surface_line_width": "top_infill_extrusion_width",
     "initial_layer_line_width": "first_layer_extrusion_width",
+    "initial_layer_acceleration": "first_layer_acceleration",
+    "inner_wall_acceleration": "perimeter_acceleration",
+    "outer_wall_acceleration": "external_perimeter_acceleration",
+    "sparse_infill_acceleration": "infill_acceleration",
+    "top_surface_acceleration": "top_solid_infill_acceleration",
 }
 
 META_KEYS = {
@@ -122,6 +127,18 @@ def stringify(value) -> str:
     if isinstance(value, (dict, tuple)):
         return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
     return str(value)
+
+
+def normalize_acceleration(value: str, default_acceleration: float) -> str:
+    """Resolve Orca's percent-of-default acceleration values for Prusa's numeric options."""
+    normalized = value.strip()
+    if not normalized.endswith("%"):
+        return normalized
+    try:
+        fraction = float(normalized[:-1]) / 100.0
+    except ValueError as error:
+        raise ValueError(f"invalid percentage acceleration: {value}") from error
+    return f"{default_acceleration * fraction:.9g}"
 
 
 def derive_outer_wall_volumetric_speed(profiles: dict[str, dict]) -> float:
@@ -306,6 +323,11 @@ def main() -> None:
                 continue
             value = stringify(raw)
             source_value = value
+            if target.endswith("_acceleration") and value.strip().endswith("%"):
+                default_acceleration = profile_data["process"].get("default_acceleration")
+                if default_acceleration is None:
+                    raise ValueError(f"cannot resolve percent acceleration without default_acceleration: {source_key}")
+                value = normalize_acceleration(value, float(stringify(default_acceleration)))
             if target in GCODE_KEYS:
                 value = rewrite_template(value, derived_template_values)
             value = normalize_value(target, value)
