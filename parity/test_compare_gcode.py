@@ -114,6 +114,23 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertEqual("fail", filament_check["status"])
             self.assertIn("delta=inf%", filament_check["detail"])
 
+    def test_emitted_extrusion_distance_is_a_hard_check_even_if_headers_match(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_A), None)
+            # Preserve the desktop-looking estimates and all feature labels,
+            # but remove half the physical extrusion from the emitted path.
+            android_text = GCODE_B.replace("E1.0", "E0.5").replace("E2.0", "E1.0")
+            android_text = android_text.replace("E3.0", "E1.5").replace("E4.0", "E2.0")
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+
+            result = compare(desktop, android, tolerance=0.02)
+
+            extrusion = next(c for c in result["checks"] if c["name"] == "positive_e_mm")
+            self.assertEqual("fail", extrusion["status"])
+            self.assertEqual("fail", result["result"])
+            self.assertIn("delta=50.00%", extrusion["detail"])
+
     def test_missing_feature_is_hard_failure(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

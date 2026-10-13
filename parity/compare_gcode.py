@@ -486,9 +486,12 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
         )
 
-    # Motion/extrusion metrics are diagnostics. A slight emitter variation is allowed, but
-    # large divergence is a hard warning requiring toolpath inspection.
-    for name in ("extrusion_moves", "travel_moves", "positive_e_mm"):
+    # Move counts are diagnostics because slicers can segment identical paths
+    # differently. Total positive extrusion distance is not: a large mismatch
+    # can reveal missing or extra deposited material even when exported header
+    # estimates happen to match, so keep it fail-closed at the 5% geometry
+    # tolerance.
+    for name in ("extrusion_moves", "travel_moves"):
         a = float(getattr(desktop, name))
         b = float(getattr(android, name))
         diff = relative_diff(a, b)
@@ -497,6 +500,16 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             "pass" if diff <= 0.05 else "warn",
             f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}",
         )
+
+    desktop_e = desktop.positive_e_mm
+    android_e = android.positive_e_mm
+    extrusion_diff = relative_diff(desktop_e, android_e)
+    add(
+        "positive_e_mm",
+        "pass" if extrusion_diff <= 0.05 else "fail",
+        f"desktop={desktop_e:.6g}, Android={android_e:.6g}, "
+        f"delta={extrusion_diff:.2%}, tolerance=5.00%",
+    )
 
     desktop_acceleration = acceleration_signature(Path(desktop.source), desktop.archive_member)
     android_acceleration = acceleration_signature(Path(android.source), android.archive_member)
