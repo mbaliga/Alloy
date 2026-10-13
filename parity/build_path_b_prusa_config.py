@@ -160,12 +160,12 @@ def rewrite_template(value: str, derived_values: dict[str, float | str] | None =
     if derived_values and "curr_bed_type" in derived_values:
         selected_bed_type = str(derived_values["curr_bed_type"])
         out = re.sub(
-            r"(?m)^\\s*;curr_bed_type=\\{curr_bed_type\\}\\s*$",
+            r"(?m)^\s*;curr_bed_type=\{curr_bed_type\}\s*$",
             f"; Alloy selected plate: {selected_bed_type}",
             out,
         )
         out = re.sub(
-            r'\\{if\\s+curr_bed_type\\s*==\\s*"([^"]+)"\\}(.*?)\\{endif\\}',
+            r'\{if\s+curr_bed_type\s*==\s*"([^"]+)"\}(.*?)\{endif\}',
             lambda match: match.group(2) if selected_bed_type == match.group(1) else "",
             out,
             flags=re.DOTALL,
