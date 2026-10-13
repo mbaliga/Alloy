@@ -55,7 +55,7 @@ jobs:
         run: |
           set -euxo pipefail
           python3 parity/generate_fixtures.py --out runtime/fixtures
-          python3 -m unittest -v parity/test_generate_fixtures.py
+          python3 -m unittest discover -s parity -p 'test_generate_fixtures.py' -v
           sha256sum runtime/fixtures/*.stl | tee runtime/fixtures/SHA256SUMS
 
       - name: Clone pinned Orca profile snapshot
