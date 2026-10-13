@@ -2,6 +2,35 @@
 
 Date: 2026-10-13
 
+## 2026-10-13 combined-source software verification
+
+PR #12 candidate commit
+[`f009282dd50a2485fab5e071abad406709314373`](https://github.com/mbaliga/Alloy/commit/f009282dd50a2485fab5e071abad406709314373),
+stacked on the native instrumentation fix in PR #13, has now passed both
+combined Android lanes:
+
+- Ordinary Android run
+  [38365197015](https://github.com/mbaliga/Alloy/actions/runs/38365197015)
+  passed 194 tests with 0 failures. Its CI APK artifact is
+  `11797078339` (SHA-256
+  `f8cd3e896c934f8074a0c279701e45cce31dfda0f84b057eb6498273f1f78da0`).
+- Native run
+  [38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013)
+  passed the ARM64 native build, isolated official Orca libslic3r Android
+  compile/link probe, API-35 ARM-translation instrumentation, G3 export and
+  five-fixture software pilot. Artifact IDs and SHA-256 digests are recorded
+  in the PR description and
+  [on-device checklist](ON_DEVICE_MVP_CHECKLIST.md).
+
+These are software/build/export gates only. The isolated official Orca probe is
+not wired to the shipping JNI slicer. The five-fixture pilot manifest is
+software-only and leaves physical and direct-send qualification pending.
+Fresh G2 provenance remains **FAIL / NO-GO**; desktop semantic slicer parity,
+G4 profile runtime parity, Bambu TreeSupport3D parity, physical A1 Mini
+qualification, Bambu Handy acceptance, signed install/upgrade and recovery
+qualification remain open. Do not promote print-ready or release claims.
+
+
 ## Current source checkpoint — 2026-10-13
 
 ### Ordinary Android v1
