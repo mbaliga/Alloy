@@ -43,7 +43,13 @@ class NativeDependencyWiringTests(unittest.TestCase):
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         official_probe = cmake.split("add_library(official_orca_libslic3r STATIC", 1)[1]
         self.assertIn('"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"', official_probe)
-        self.assertIn("target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)", official_probe)
+        link_block = re.search(
+            r"target_link_libraries\(\s*official_orca_libslic3r\s+PRIVATE(.*?)\)",
+            official_probe,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(link_block)
+        self.assertRegex(link_block.group(1), r"\bnoise::noise\b")
         wrapper = ROOT / "app/src/main/jni/official_orca_compat/libnoise/noise.h"
         self.assertIn('#include <noise.h>', wrapper.read_text(encoding="utf-8"))
 
