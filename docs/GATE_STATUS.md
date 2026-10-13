@@ -1,6 +1,14 @@
 # Alloy engine gate status
 
-Date: 2026-10-13
+Date: 2026-10-14
+
+## 2026-10-14 A1/P1S catalog test correction and desktop baseline
+
+PR #12 head [`a7ceb6bc444d2c139bac732048c05e9eb00c80ed`](https://github.com/mbaliga/Alloy/commit/a7ceb6bc444d2c139bac732048c05e9eb00c80ed) fixes the sole failure reported by the preceding ordinary Android acceptance run: the A1/P1S material catalog test looked for lowercase `dry PVA only` in Bambu's title-case “Dry PVA only” guidance. The assertion now normalizes case and includes a diagnostic message. The fresh Android run [38479632636](https://github.com/mbaliga/Alloy/actions/runs/38479632636) completed successfully: APK build and emulator acceptance suite passed, and artifact `alloy-v1-release-ci-apk` (ID `11856349296`) has ZIP SHA-256 `96ae24f2a9e75c603e9b13e40502922163e340db3a8fd559bb3517b8e923e11e`. The hosted test output reached 131/195 invocations with 1 skipped and 0 failed before Gradle reported BUILD SUCCESSFUL.
+
+The separate native-engine build for the same source, run [38479632639](https://github.com/mbaliga/Alloy/actions/runs/38479632639), is queued and has not passed. The ordinary APK does not contain the optional native engine and proves no native slicing or printer send.
+
+Desktop run [38478213726](https://github.com/mbaliga/Alloy/actions/runs/38478213726) passed the pinned Orca 2.4.2 G3 profile checks and sliced four mesh inputs copied from Android assets. This is a successful desktop reference/recipe check only; a same-source native-vs-desktop semantic comparison is still required. G2 provenance and G3 semantic parity remain open, as do physical A1 Mini acceptance, Bambu Handy acceptance, signed install/upgrade, production signing, and release approval. Keep direct-send and physical-print claims fail-closed.
 
 ## 2026-10-13 combined-source software verification
 
