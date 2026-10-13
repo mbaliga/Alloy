@@ -138,7 +138,7 @@ def rewrite_template(value: str) -> str:
     # therefore Prusa's tool 0. Convert indexed selectors before scalar-only
     # aliases so temperature and filament arrays resolve to the actual nozzle.
     out = re.sub(
-        r"([A-Za-z_][A-Za-z0-9_]*)\[(?:initial_no_support_extruder|initial_extruder)\]",
+        r"(?:nozzle_temperature|filament_type|filament_max_volumetric_speed)\[(?:initial_no_support_extruder|initial_extruder)\]",
         r"\1[0]",
         out,
     )
