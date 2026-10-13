@@ -568,9 +568,19 @@ public final class InventoryStore {
                 builtin("pc", "PC · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
                 builtin("pa", "PA / Nylon · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
                 builtin("pet", "PET · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
-                builtin("pla-cf", "PLA-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check nozzle and active printer before use"),
+                builtin("pla-cf", "Bambu PLA-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · A1 mini fiber-filled class is not recommended; check active printer and nozzle before use"),
                 builtin("petg-cf", "PETG-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check nozzle and active printer before use"),
-                builtin("cf-gf-filled", "Other CF/GF-filled polymer · review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; abrasive materials need printer/nozzle review")
+                builtin("cf-gf-filled", "Other CF/GF-filled polymer · review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; abrasive materials need printer/nozzle review"),
+                builtin("bvoh", "BVOH", "Filament", "g", 0, 0, "Track only · AMS Lite only lists dry BVOH; confirm exact A1 mini profile and route"),
+                builtin("pp", "PP · printer-specific review", "Filament", "g", 0, 0, "Track only · not listed in A1 mini printer material table; confirm exact profile and route"),
+                builtin("pom", "POM · printer-specific review", "Filament", "g", 0, 0, "Track only · not listed in A1 mini printer material table; confirm exact profile and route"),
+                builtin("hips", "HIPS · printer-specific review", "Filament", "g", 0, 0, "Track only · not listed in A1 mini printer material table; confirm exact profile and route"),
+                builtin("bambu-paht-cf", "Bambu PAHT-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · A1 mini fiber-filled class is not recommended; check active printer and nozzle"),
+                builtin("pla-glow", "PLA Glow · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended for AMS Lite; confirm exact A1 mini product/profile route"),
+                builtin("pet-cf", "PET-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; AMS Lite unsupported"),
+                builtin("pa6-cf", "PA6-CF · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; AMS Lite unsupported"),
+                builtin("tpu-95a", "TPU 95A · printer-specific review", "Filament", "g", 0, 0, "Track only · AMS Lite unsupported; confirm exact TPU grade and printer route"),
+                builtin("tpe", "TPE · printer-specific review", "Filament", "g", 0, 0, "Track only · AMS Lite unsupported; not rated for A1 mini; confirm exact product")
         };
     }
 
