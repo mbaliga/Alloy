@@ -40,6 +40,12 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value["printers"][0]["alloy_direct_send"] = "Qualified"
         self.assert_rejected(value, "must stay not qualified")
 
+    def test_rejects_p1s_ams2pro_route_without_firmware_and_capacity_caveats(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][2]["feed_routes"] if route["id"] == "ams-2-pro")
+        route["note"] = "Bambu supports this on P1 Series."
+        self.assert_rejected(value, "must retain firmware, capacity and Alloy qualification caveats")
+
     def test_rejects_a1_ams_route_without_hub_requirement(self):
         value = self.current_catalog()
         route = next(route for route in value["printers"][1]["feed_routes"] if route["id"] == "ams-2-pro")
