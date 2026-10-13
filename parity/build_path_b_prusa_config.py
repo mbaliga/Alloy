@@ -129,7 +129,7 @@ def rewrite_template(value: str) -> str:
     # tool is therefore Prusa's tool 0. Array expressions keep the selector in
     # brackets; standalone Bambu command parameters need the literal 0.
     out = re.sub(
-        r"([A-Za-z_][A-Za-z0-9_]*)\[initial_no_support_extruder\]",
+        r"([A-Za-z_][A-Za-z0-9_]+)\[initial_no_support_extruder\]",
         r"\1[0]",
         out,
     )
