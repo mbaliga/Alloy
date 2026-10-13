@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from math import sqrt
 from pathlib import Path
 import argparse
+import shutil
 
 Vec3 = tuple[float, float, float]
 Vec2 = tuple[float, float]
@@ -191,31 +192,22 @@ def write_ascii_stl(path: Path, name: str, mesh: Mesh) -> None:
 
 
 def generate(out: Path) -> None:
-    write_ascii_stl(out / "cube_20mm.stl", "cube_20mm", box(20.0, 20.0, 20.0))
-
-    # X/Z side profile: 20x5 base, 6 mm central stem, then a 28 mm cantilever.
-    # The long underside at Z=30 is intentionally unsupported beyond the stem.
-    overhang_profile = [
-        (-10.0, 0.0), (10.0, 0.0), (10.0, 5.0),
-        (3.0, 5.0), (3.0, 30.0), (25.0, 30.0),
-        (25.0, 34.0), (-3.0, 34.0), (-3.0, 5.0), (-10.0, 5.0),
-    ]
-    write_ascii_stl(
-        out / "overhang_support.stl",
-        "overhang_support",
-        extrude_xz_polygon(overhang_profile, depth=8.0),
-    )
-
-    write_ascii_stl(
-        out / "thin_wall_frame.stl",
-        "thin_wall_frame",
-        thin_wall_frame(),
-    )
-    write_ascii_stl(
-        out / "travel_obstacle.stl",
-        "travel_obstacle",
-        travel_obstacle_fixture(),
-    )
+    # Slice exact copies of the meshes the Android native evidence harness
+    # consumes. Independent regeneration caused origin and triangulation drift
+    # in the cube fixture.
+    assets = Path(__file__).resolve().parents[1] / "app/src/main/assets/models"
+    sources = {
+        "cube_20mm.stl": "box-20mm.stl",
+        "overhang_support.stl": "overhang-support-fixture.stl",
+        "thin_wall_frame.stl": "thin-wall-frame-fixture.stl",
+        "travel_obstacle.stl": "travel_obstacle.stl",
+    }
+    out.mkdir(parents=True, exist_ok=True)
+    for destination, source in sources.items():
+        source_path = assets / source
+        if not source_path.is_file():
+            raise FileNotFoundError(f"Android parity mesh is missing: {source_path}")
+        shutil.copyfile(source_path, out / destination)
 
 
 if __name__ == "__main__":
