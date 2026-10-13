@@ -3596,6 +3596,7 @@ public final class MainActivity extends Activity {
             addLearnButton(page, "Replay welcome", "A short, skippable tour of the safe phone-first route", v -> { dialog.dismiss(); showFirstRunOnboarding(0); });
             addLearnButton(page, "Start here", "A first-print checklist with no hidden promises", v -> showLearnArticles(dialog, catalog.ofKind("start"), "Start here"));
             addLearnButton(page, "Quick cheat sheet", "Plain-language layers, materials, supports and first-layer basics", v -> showLearnArticles(dialog, catalog.ofKind("cheatsheet"), "Quick cheat sheet"));
+            addLearnButton(page, "FAQ · Common questions", "Clear answers about files, slicing, materials and sending", v -> showLearnArticles(dialog, catalog.ofKind("faq"), "FAQ"));
             addLearnButton(page, "Materials & compatibility", "A1 mini, A1 and P1S records; Bambu capability is separate from Alloy send approval", v -> showMaterials(dialog));
             addLearnButton(page, "Fix a symptom", "Search by what you see. Hard-stop guidance comes first.", v -> showTroubleshooting(dialog, catalog));
             TextView boundary = label("Safety boundary · Never remove a certificate, readiness gate or physical safeguard to continue. Use the printer and current manufacturer guidance as the source of truth during a fault.", 11, RED);
