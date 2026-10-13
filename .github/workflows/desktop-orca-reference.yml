@@ -124,7 +124,7 @@ jobs:
               --load-filaments "$FILAMENT" \
               --allow-newer-file \
               --outputdir "$out" \
-              --export-3mf "$out/$name.gcode.3mf" \
+              --export-3mf "$name.gcode.3mf" \
               "$GITHUB_WORKSPACE/$stl" \
               > "$out/orca.log" 2>&1
 
