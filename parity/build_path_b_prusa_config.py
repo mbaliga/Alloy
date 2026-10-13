@@ -157,6 +157,14 @@ def derive_outer_wall_volumetric_speed(profiles: dict[str, dict]) -> float:
 
 def rewrite_template(value: str, derived_values: dict[str, float | str] | None = None) -> str:
     out = value
+    if derived_values and "curr_bed_type" in derived_values:
+        selected_bed_type = str(derived_values["curr_bed_type"])
+        out = re.sub(
+            r'\\{if\\s+curr_bed_type\\s*==\\s*"([^"]+)"\\}(.*?)\\{endif\\}',
+            lambda match: match.group(2) if selected_bed_type == match.group(1) else "",
+            out,
+            flags=re.DOTALL,
+        )
     for name, numeric_value in (derived_values or {}).items():
         out = re.sub(
             rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])",
@@ -251,7 +259,7 @@ def main() -> None:
         raise ValueError("A1 Mini profile is missing its explicit default_bed_type")
     derived_template_values: dict[str, float | str] = {
         "outer_wall_volumetric_speed": derive_outer_wall_volumetric_speed(profile_data),
-        "curr_bed_type": json.dumps(default_bed_type),
+        "curr_bed_type": default_bed_type,
     }
     merged: OrderedDict[str, str] = OrderedDict()
     unsupported: list[dict] = []
