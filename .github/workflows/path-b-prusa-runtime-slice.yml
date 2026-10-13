@@ -358,8 +358,8 @@ jobs:
           sys.path.insert(0, "parity")
           from compare_gcode import parse_metrics
           paths = [
-              Path("runtime/prusa-reference/overhang_support/overhang_support.gcode"),
-              Path("runtime/orca-reference/overhang_support/overhang_support.gcode.3mf"),
+              Path("runtime/prusa-artifact/prusa-reference/overhang_support/overhang_support.gcode"),
+              Path("runtime/orca-artifact/orca-reference/overhang_support/overhang_support.gcode.3mf"),
           ]
           for path in paths:
               features = parse_metrics(path, None).feature_counts
