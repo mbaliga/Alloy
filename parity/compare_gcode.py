@@ -158,6 +158,7 @@ def canonical_feature(raw: str) -> str:
         "bridge infill": "bridge",
         "gap fill": "gap_infill",
         "support": "support",
+        "support material": "support",
         "support interface": "support_interface",
         "bridge": "bridge",
         "overhang wall": "overhang_wall",
