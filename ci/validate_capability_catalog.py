@@ -108,6 +108,8 @@ def validate_catalog(path):
         unique_ids(printer["feed_routes"], f"{identifier}.feed_routes")
         for route in printer["feed_routes"]:
             require_fields(route, ROUTE_FIELDS, f"{identifier}.feed_route")
+            if "source_url" in route:
+                official_bambu_url(route["source_url"], f"{identifier}.{route['id']}.source_url")
         if not isinstance(printer["spool_forms"], list) or not printer["spool_forms"]:
             raise ValueError(f"{identifier}.spool_forms must be a non-empty list")
         unique_ids(printer["spool_forms"], f"{identifier}.spool_forms")
@@ -188,8 +190,21 @@ def validate_catalog(path):
         "bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"
     }:
         raise ValueError("A1 mini must disclose complete, refill, third-party and regular-AMS spool forms")
-    if not any(route["id"] == "regular-ams" and route["state"] == "Unsupported" for route in mini["feed_routes"]):
-        raise ValueError("A1 mini must label regular AMS unsupported")
+    expected_mini_routes = {"external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht"}
+    if {route["id"] for route in mini["feed_routes"]} != expected_mini_routes:
+        raise ValueError("A1 mini must disclose external feed, AMS Lite, AMS, AMS 2 Pro and AMS HT routes separately")
+    for route in mini["feed_routes"]:
+        if route["id"] in {"regular-ams", "ams-2-pro", "ams-ht"}:
+            note = route["note"].lower()
+            if route["state"] != "Requires A1 Series AMS Hub" or not route.get("source_url", "").strip():
+                raise ValueError(f"A1 mini {route['id']} must have a sourced hub requirement")
+            if "01.06.10.33" not in note or "do not mix ams lite" not in note or "alloy send remains unqualified" not in note:
+                raise ValueError(f"A1 mini {route['id']} must retain firmware, AMS Lite separation and Alloy qualification caveats")
+    regular_ams_spool = next(form for form in mini["spool_forms"] if form["id"] == "regular-ams-spool")
+    if regular_ams_spool["state"] != "Manual review required" or not all(
+        name in regular_ams_spool["compatible_routes"] for name in ("Original AMS", "AMS 2 Pro", "AMS HT")
+    ):
+        raise ValueError("A1 mini AMS spool form must list the hub-enabled AMS families without implying spool-fit approval")
     print(f"validated {path}")
 
 
