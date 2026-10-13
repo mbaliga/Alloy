@@ -101,17 +101,10 @@ jobs:
             name="$(basename "$stl" .stl)"
             out="$GITHUB_WORKSPACE/runtime/orca-reference/$name"
             mkdir -p "$out"
-            "$ORCA" \
-              --debug 2 \
-              --arrange 1 \
-              --slice 0 \
-              --load-settings "$MACHINE;$PROCESS" \
-              --load-filaments "$FILAMENT" \
-              --allow-newer-file \
-              --outputdir "$out" \
-              --export-3mf "$out/$name.gcode.3mf" \
-              "$GITHUB_WORKSPACE/$stl" \
-              > "$out/orca.log" 2>&1
+            if ! "$ORCA" --debug 2 --arrange 1 --slice 0 --load-settings "$MACHINE;$PROCESS" --load-filaments "$FILAMENT" --allow-newer-file --outputdir "$out" --export-3mf "$out/$name.gcode.3mf" "$GITHUB_WORKSPACE/$stl" > "$out/orca.log" 2>&1; then
+              cat "$out/orca.log"
+              exit 1
+            fi
 
             python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
           done
