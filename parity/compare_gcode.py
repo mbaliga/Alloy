@@ -318,7 +318,7 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
         add(
             "feature_transition_sequence",
             "warn",
-            f"desktop transitions={len(desktop.feature_transitions)}, Android={len(android.feature_transitions)}; inspect visual diff",
+            f"desktop transitions={len(desktop.feature_transitions)}, candidate={len(android.feature_transitions)}; inspect visual diff",
         )
 
     layer_diff = abs(desktop.layer_count - android.layer_count)
