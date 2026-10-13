@@ -10,6 +10,14 @@ on:
       - 'release/production-readiness.template.json'
       - 'docs/RELEASE.md'
       - '.github/workflows/parity-tools.yml'
+  pull_request:
+    paths:
+      - 'parity/**'
+      - 'ci/validate_release_readiness.py'
+      - 'ci/validate_release_wiring.py'
+      - 'release/production-readiness.template.json'
+      - 'docs/RELEASE.md'
+      - '.github/workflows/parity-tools.yml'
   workflow_dispatch:
 
 permissions:
