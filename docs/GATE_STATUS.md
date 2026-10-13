@@ -4,32 +4,47 @@ Date: 2026-10-13
 
 ## 2026-10-13 combined-source software verification
 
-PR #12 candidate commit
-[`f009282dd50a2485fab5e071abad406709314373`](https://github.com/mbaliga/Alloy/commit/f009282dd50a2485fab5e071abad406709314373),
-stacked on the native instrumentation fix in PR #13, has now passed both
-combined Android lanes:
+PR #12 candidate source
+[`f009282dd50a2485fab5e071abad406709314373`](https://github.com/mbaliga/Alloy/commit/f009282dd50a2485fab5e071abad406709314373)
+was tested against the PR #13 base
+[`5e52089c6c31c0390a2e4bc93bf480b4c7f1195b`](https://github.com/mbaliga/Alloy/commit/5e52089c6c31c0390a2e4bc93bf480b4c7f1195b).
+The combined Android run
+[38365197015](https://github.com/mbaliga/Alloy/actions/runs/38365197015)
+passed 194 tests with 0 failures. The combined native run
+[38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013)
+passed the ARM64 legacy native build, isolated official Orca libslic3r
+compile/link probe, API-35 ARM-translation instrumentation, G3 export and
+five-fixture software pilot. The five-fixture manifest is software-only.
 
-- Ordinary Android run
-  [38365197015](https://github.com/mbaliga/Alloy/actions/runs/38365197015)
-  passed 194 tests with 0 failures. Its CI APK artifact is
-  `11797078339` (SHA-256
-  `f8cd3e896c934f8074a0c279701e45cce31dfda0f84b057eb6498273f1f78da0`).
-- Native run
-  [38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013)
-  passed the ARM64 native build, isolated official Orca libslic3r Android
-  compile/link probe, API-35 ARM-translation instrumentation, G3 export and
-  five-fixture software pilot. Artifact IDs and SHA-256 digests are recorded
-  in the PR description and
-  [on-device checklist](ON_DEVICE_MVP_CHECKLIST.md).
+This does not wire the official Orca compile probe into the shipping JNI
+slicer, pass G2 provenance, or establish G3 semantic parity. Fresh G2
+provenance remains **FAIL / NO-GO**; desktop slicer parity, G4 profile runtime
+parity, Bambu TreeSupport3D parity, physical A1 Mini qualification, Bambu
+Handy acceptance, signed install/upgrade and interruption/recovery remain
+open. Physical and direct-send qualification remain pending. Do not promote
+print-ready or release claims.
 
-These are software/build/export gates only. The isolated official Orca probe is
-not wired to the shipping JNI slicer. The five-fixture pilot manifest is
-software-only and leaves physical and direct-send qualification pending.
-Fresh G2 provenance remains **FAIL / NO-GO**; desktop semantic slicer parity,
-G4 profile runtime parity, Bambu TreeSupport3D parity, physical A1 Mini
-qualification, Bambu Handy acceptance, signed install/upgrade and recovery
-qualification remain open. Do not promote print-ready or release claims.
+## 2026-10-13 latest Android and G2 recheck
 
+Android run
+[`38321723583`](https://github.com/mbaliga/Alloy/actions/runs/38321723583)
+on `a2ef790b7a6415c17c31342df894e0986fa96876` completed successfully. The
+hosted log reports 203 test invocations, 11 skipped and 0 failures; the skipped
+set includes the native engine smoke and bed-envelope tests because this was
+the ordinary Android build without the optional native library. It published
+artifact `11779906126`, ZIP SHA-256
+`4df92ce3642d00c9a890bb849c60b70154c3425731dbfe6751e0c8f6eb1aa5f7`. This
+does not prove native slicing or A1 Mini/A1/P1S envelope behavior.
+
+A local G2 diagnostic used the exact pinned mobile source
+`CodeMasterCody3D/OrcaSlicer-Mobile@d996a9cadb65b354997f2d5d8734b46bb9ea4efd`
+and the then-current official Orca `main`,
+`a28c9c3a827bbae9a2fcfe0434bdfabaecdb91e4`. It found 66/72 exact-history
+sample intervals and 288/477 (60.38%) exact common engine files, below the 85%
+threshold. The separate BBL.ini anchor still has no exact official history.
+This local reproduction is diagnostic, not a hosted G2 workflow result; G2
+remains **FAIL / NO-GO** pending refreshed hosted evidence and a valid profile
+anchor. It authorizes no engine promotion or print claim.
 
 ## Current source checkpoint — 2026-10-13
 
@@ -94,14 +109,14 @@ the A1 Mini and sliced/package-validated under A1 and P1S profiles. This is
 designed to catch profile wiring that merely loads the right names while the
 native path keeps the wrong bed size. The earlier f36 Android run
 [`38320988598`](https://github.com/mbaliga/Alloy/actions/runs/38320988598)
-is in progress; its native run
+completed successfully for the ordinary Android suite; see the
+2026-10-13 checkpoint above. Native run
 [`38320985893`](https://github.com/mbaliga/Alloy/actions/runs/38320985893)
-is also in progress but does not contain the added envelope fixture. Runs for
-a2ef790 are Android
-[`38321723583`](https://github.com/mbaliga/Alloy/actions/runs/38321723583)
-(queued) and native
+remains in progress and does not contain the added envelope fixture. Native
+run
 [`38321723592`](https://github.com/mbaliga/Alloy/actions/runs/38321723592)
-(pending). Neither commit's new cross-profile tests are yet green.
+is pending. The a2ef790 cross-profile native tests remain unverified until
+that optional-native run completes successfully.
 The prior native run
 [`38305679147`](https://github.com/mbaliga/Alloy/actions/runs/38305679147)
 failed 2 of 162 tests: ARM translation exceeded a 30-second
@@ -113,11 +128,13 @@ adds logcat and raw test-result capture; commit
 extends only the native-load test timeout. The typed-recipe failure still
 needs actionable diagnostics if it recurs.
 
-Fresh G2 Orca provenance remains **FAIL / NO-GO** (66/72 exact-history
-samples; 314/479 exact common files, 65.55%). G3 semantic parity, G4 profile
-runtime parity, Bambu TreeSupport3D parity, physical A1 Mini acceptance,
-Bambu Handy import acceptance and production signing remain open. Keep every
-print and release claim fail-closed until its matching evidence passes.
+G2 Orca provenance remains **FAIL / NO-GO**; the latest local
+diagnostic is documented in the 2026-10-13 checkpoint above. The prior hosted
+measurement (66/72 sample intervals; 314/479 exact common files, 65.55%) has
+not yet been refreshed by a hosted run. G3 semantic parity, G4 profile runtime
+parity, Bambu TreeSupport3D parity, physical A1 Mini acceptance, Bambu Handy
+import acceptance and production signing remain open. Keep every print and
+release claim fail-closed until its matching evidence passes.
 
 2026-10-10 official Orca Android compile-probe failure and repair: native run
 [`38026286081`](https://github.com/mbaliga/Alloy/actions/runs/38026286081)

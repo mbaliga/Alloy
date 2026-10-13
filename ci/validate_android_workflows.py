@@ -96,6 +96,14 @@ def main() -> None:
         raise SystemExit(f"{ordinary}: macOS Android acceptance must not carry Linux-only KVM configuration")
 
     native_text = native.read_text(encoding="utf-8")
+    native_instrumentation = ROOT / "ci/run_native_release_instrumentation.sh"
+    native_instrumentation_text = native_instrumentation.read_text(encoding="utf-8")
+    for token in (
+        "gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true",
+        "-PalloyAdbTimeoutMs=900000",
+        "test_status=$?",
+    ):
+        require(native_instrumentation_text, token, native_instrumentation)
     app_build = ROOT / "app/build.gradle"
     app_build_text = app_build.read_text(encoding="utf-8")
     require(app_build_text, "if (physicalPilot)", app_build)
@@ -105,8 +113,8 @@ def main() -> None:
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
-        "gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true",
-        "-PalloyAdbTimeoutMs=900000",
+        "script: bash ci/run_native_release_instrumentation.sh",
+        
         "app/build/outputs/apk/release/app-release.apk",
         "app/build/outputs/apk/androidTest/release/app-release-androidTest.apk",
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
