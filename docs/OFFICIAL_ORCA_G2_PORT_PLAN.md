@@ -1,6 +1,6 @@
 # Official Orca G2 remediation plan
 
-Status: **source snapshot complete; separate Android target not implemented; no engine promotion.**
+Status: **source snapshot complete; isolated official Orca Android compile/link probe passed; shipping JNI engine not integrated; no engine promotion.**
 
 ## Why a port is required
 
@@ -88,6 +88,18 @@ official Orca Android `libslic3r` target.
      `libslic3r` target; there is still no official-Orca Android binary or
      runtime evidence.
 
+   - **Official Android compile/link probe: PASS (2026-10-13).** Combined native run
+     [38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013),
+     on candidate source `f009282dd50a2485fab5e071abad406709314373`, built
+     the exact pinned official `libslic3r` source list into a separate ARM64
+     Android static target and forced it into a distinct shared link-probe
+     library. The complete run then passed API-35 ARM-translation
+     instrumentation, G3 export and the five-fixture software pilot. This
+     closes a significant source-build and link-closure milestone; it does
+     **not** wire this probe into Alloy's shipping JNI slicer, establish
+     official runtime slicing, pass G2 provenance, or prove G3 semantic
+     parity. Keep the existing legacy JNI engine classified
+     `legacy-unverified`.
    - OpenCV dependency sub-gate: **PASS for the isolated dependency consumer**.
      Android ARM64 OpenCV 4.6.0 was built from the verified source archive and
      pinned SHA-256. CI compiled the official Orca OBJ color-utility smoke
