@@ -340,6 +340,7 @@ jobs:
           path: |
             runtime/orca-reference
             runtime/profiles
+            runtime/profiles-support
             runtime/fixtures/SHA256SUMS
           if-no-files-found: error
 
