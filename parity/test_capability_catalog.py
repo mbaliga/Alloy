@@ -40,6 +40,12 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value["printers"][0]["alloy_direct_send"] = "Qualified"
         self.assert_rejected(value, "must stay not qualified")
 
+    def test_rejects_a1_ams_route_without_hub_requirement(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][1]["feed_routes"] if route["id"] == "ams-2-pro")
+        route["state"] = "Supported"
+        self.assert_rejected(value, "must have a sourced hub requirement")
+
     def test_rejects_a1_mini_ams_route_without_hub_and_official_source(self):
         value = self.current_catalog()
         route = next(route for route in value["printers"][0]["feed_routes"] if route["id"] == "regular-ams")
