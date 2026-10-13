@@ -117,6 +117,7 @@ G1 X4 E0.75
         self.assertEqual(canonical_feature("Bridge infill"), "bridge")
         self.assertEqual(canonical_feature("Overhang perimeter"), "overhang_wall")
         self.assertEqual(canonical_feature("Gap fill"), "gap_infill")
+        self.assertEqual(canonical_feature("Support material"), "support")
 
     def test_layer_count_excludes_z_travel_and_start_positions(self):
         gcode = """G90
