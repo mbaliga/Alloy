@@ -94,8 +94,9 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          bash build_all_deps_android.sh
-          python3 check-native-prebuilts.py arm64-v8a
+          mkdir -p "$GITHUB_WORKSPACE/lean-g1-evidence"
+          bash build_all_deps_android.sh 2>&1 | tee "$GITHUB_WORKSPACE/lean-g1-evidence/native-dependency-build.log"
+          python3 check-native-prebuilts.py arm64-v8a 2>&1 | tee -a "$GITHUB_WORKSPACE/lean-g1-evidence/native-dependency-build.log"
 
       - name: Build lean native debug APK
         working-directory: slicebeam
