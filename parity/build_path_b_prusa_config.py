@@ -125,18 +125,24 @@ def stringify(value) -> str:
 
 def rewrite_template(value: str) -> str:
     out = value
-    # The pinned Bambu A1 Mini is single-extruder. Orca's selected non-support
-    # tool is therefore Prusa's tool 0. Array expressions keep the selector in
-    # brackets; standalone Bambu command parameters need the literal 0.
+    # This A1 Mini route intentionally omits Bambu's timelapse-only macro
+    # section: it contains vendor firmware controls and is not portable to the
+    # Prusa template engine. It does not affect motion, extrusion, or cooling.
     out = re.sub(
-        r"([A-Za-z_][A-Za-z0-9_]+)\[initial_no_support_extruder\]",
+        r'\{if\s+!spiral_mode\s*&&\s*print_sequence\s*!=\s*"by object"\s*\}.*?\{endif\}',
+        "; Alloy omitted Bambu-only timelapse macro block (not portable to Prusa)\\n",
+        out,
+        flags=re.DOTALL,
+    )
+    # The pinned Bambu A1 Mini is single-extruder. Orca's selected tool is
+    # therefore Prusa's tool 0. Convert indexed selectors before scalar-only
+    # aliases so temperature and filament arrays resolve to the actual nozzle.
+    out = re.sub(
+        r"([A-Za-z_][A-Za-z0-9_]*)\[(?:initial_no_support_extruder|initial_extruder)\]",
         r"\1[0]",
         out,
     )
-    out = re.sub(r"\[initial_no_support_extruder\]", "0", out)
-    # Prusa's expression parser keeps the C-style &&/|| operators used by Orca,
-    # but does not accept Orca's unary ! spelling.
-    out = re.sub(r"(?<![=!<>])!\s*([A-Za-z_][A-Za-z0-9_]*)", r"\1 == 0", out)
+    out = re.sub(r"\[(?:initial_no_support_extruder|initial_extruder)\]", "0", out)
     # Bambu/Orca exposes per-tool flush arrays. This Path B profile is the
     # single-extruder A1 Mini PLA Basic route: its flush-specific settings are
     # unset, so Orca falls back to the selected filament max flow and print temp.
