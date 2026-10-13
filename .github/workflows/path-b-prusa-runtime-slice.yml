@@ -107,6 +107,16 @@ jobs:
           sys.path.insert(0, "parity")
           from build_path_b_prusa_config import normalize_value, rewrite_template
           config = Path("runtime/path-b/a1mini.ini").read_text()
+          for expected in (
+              "default_acceleration = 6000",
+              "travel_acceleration = 10000",
+              "first_layer_acceleration = 500",
+              "perimeter_acceleration = 0",
+              "external_perimeter_acceleration = 5000",
+              "infill_acceleration = 6000",
+              "top_solid_infill_acceleration = 2000",
+          ):
+              assert expected in config, expected
           report = json.loads(Path("runtime/path-b/translation-report.json").read_text())
           assert report["derived_template_values"]["curr_bed_type"] == "Textured PEI Plate"
           plate_code = rewrite_template(';curr_bed_type={curr_bed_type}\n{if curr_bed_type=="Textured PEI Plate"}\nG29.1 Z{-0.02}\n{endif}', {"curr_bed_type": "Textured PEI Plate"})
