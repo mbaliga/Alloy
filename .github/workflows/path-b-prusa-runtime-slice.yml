@@ -106,7 +106,10 @@ jobs:
             name="$(basename "$stl" .stl)"
             out="$GITHUB_WORKSPACE/runtime/prusa-reference/$name"
             mkdir -p "$out"
-            "$PRUSA" --printer-technology FFF --center 90,90 --export-gcode --load "$CONFIG" --output "$out/$name.gcode" "$GITHUB_WORKSPACE/$stl" > "$out/prusa.log" 2>&1
+            if ! "$PRUSA" --printer-technology FFF --center 90,90 --export-gcode --load "$CONFIG" --output "$out/$name.gcode" "$GITHUB_WORKSPACE/$stl" > "$out/prusa.log" 2>&1; then
+              cat "$out/prusa.log"
+              exit 1
+            fi
             test -s "$out/$name.gcode"
           done
 
