@@ -138,7 +138,7 @@ def rewrite_template(value: str) -> str:
     # therefore Prusa's tool 0. Convert indexed selectors before scalar-only
     # aliases so temperature and filament arrays resolve to the actual nozzle.
     out = re.sub(
-        r"(nozzle_temperature|filament_type|filament_max_volumetric_speed)\[(?:initial_no_support_extruder|initial_extruder)\]",
+        r"(nozzle_temperature|filament_type|filament_max_volumetric_speed|flush_volumetric_speeds|flush_temperatures)\[(?:initial_no_support_extruder|initial_extruder)\]",
         r"\1[0]",
         out,
     )
@@ -148,6 +148,9 @@ def rewrite_template(value: str) -> str:
     # unset, so Orca falls back to the selected filament max flow and print temp.
     out = re.sub(r"flush_volumetric_speeds\[[^\]]+\]", "max_volumetric_speed", out)
     out = re.sub(r"flush_temperatures\[[^\]]+\]", "temperature[0]", out)
+    # Prusa recognizes only configured tool ids; on this one-tool profile, the
+    # Bambu unload sentinel means the sole tool rather than a second extruder.
+    out = re.sub(r"(?m)^\\s*T255(?=\\s*(?:;.*)?$)", "T0", out)
     # Orca exposes the first-layer object-footprint center. Prusa exposes the
     # footprint bounds; with this single-extruder profile (no wipe tower), their
     # midpoint is the same point.
