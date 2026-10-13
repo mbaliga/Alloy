@@ -31,8 +31,11 @@ public final class PrinterCapabilityCatalog {
         }
     }
     public static final class FeedRoute {
-        public final String id, title, state, note;
-        FeedRoute(JSONObject o) { id = need(o, "id"); title = need(o, "title"); state = need(o, "state"); note = need(o, "note"); }
+        public final String id, title, state, note, sourceUrl;
+        FeedRoute(JSONObject o) {
+            id = need(o, "id"); title = need(o, "title"); state = need(o, "state"); note = need(o, "note");
+            sourceUrl = o.has("source_url") ? officialSourceUrl(o, "source_url") : "";
+        }
     }
     /** A physical spool/refill form; this is distinct from its material and feed route. */
     public static final class SpoolForm {
@@ -105,8 +108,15 @@ public final class PrinterCapabilityCatalog {
         else if ("a1".equals(printer.id)) a1 = printer;
         else if ("p1s".equals(printer.id)) p1s = printer;
         if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled", "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe"))
-                || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool")))
+                || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"))
+                || !ids(mini.feedRoutes).equals(setOf("external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht")))
             throw new IOException("A1 mini capability coverage is incomplete");
+        for (FeedRoute route : mini.feedRoutes) {
+            if (setOf("regular-ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.state.contains("A1 Series AMS Hub")
+                    || !route.note.contains("01.06.10.33") || !route.note.contains("Do not mix AMS Lite")))
+                throw new IOException("A1 mini " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
+        }
         if (a1 == null || !ids(a1.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"))
                 || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite")))
             throw new IOException("A1 capability coverage must disclose each sourced material class separately");
