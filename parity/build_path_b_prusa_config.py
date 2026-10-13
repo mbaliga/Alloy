@@ -124,8 +124,45 @@ def stringify(value) -> str:
     return str(value)
 
 
-def rewrite_template(value: str) -> str:
+def derive_outer_wall_volumetric_speed(profiles: dict[str, dict]) -> float:
+    """Reproduce Orca's pinned get_outer_wall_volumetric_speed calculation."""
+    def first_number(profile: dict, key: str, fallback: float | None = None) -> float:
+        raw = profile.get(key, fallback)
+        if isinstance(raw, list):
+            raw = raw[0] if raw else fallback
+        if raw is None:
+            raise ValueError(f"cannot derive outer-wall flow: missing {key}")
+        return float(raw)
+
+    machine = profiles["machine"]
+    process = profiles["process"]
+    filament = profiles["filament"]
+    layer_height = first_number(process, "layer_height")
+    nozzle_diameter = first_number(machine, "nozzle_diameter")
+    filament_diameter = first_number(filament, "filament_diameter")
+    line_width = first_number(process, "outer_wall_line_width", 0.0)
+    if line_width == 0.0:
+        line_width = first_number(process, "line_width", 0.0)
+    if line_width == 0.0:
+        line_width = filament_diameter
+    outer_wall_speed = first_number(process, "outer_wall_speed")
+    max_volumetric_speed = first_number(filament, "filament_max_volumetric_speed")
+    # Orca Flow::mm3_per_mm for non-bridge extrusion:
+    # height * (width - height * (1 - pi/4)).
+    flow_area = layer_height * (
+        line_width - layer_height * (1.0 - 0.25 * 3.141592653589793)
+    )
+    return min(outer_wall_speed * flow_area, max_volumetric_speed)
+
+
+def rewrite_template(value: str, derived_values: dict[str, float] | None = None) -> str:
     out = value
+    for name, numeric_value in (derived_values or {}).items():
+        out = re.sub(
+            rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])",
+            format(numeric_value, ".9g"),
+            out,
+        )
     # This A1 Mini route intentionally omits Bambu's timelapse-only macro
     # section: it contains vendor firmware controls and is not portable to the
     # Prusa template engine. It does not affect motion, extrusion, or cooling.
@@ -205,6 +242,13 @@ def main() -> None:
     args = p.parse_args()
 
     supported = supported_keys(args.slicebeam_checkout)
+    profile_data = {
+        kind: json.loads((args.resolved_profile_dir / f"{kind}.json").read_text())
+        for kind in ("machine", "process", "filament")
+    }
+    derived_template_values = {
+        "outer_wall_volumetric_speed": derive_outer_wall_volumetric_speed(profile_data)
+    }
     merged: OrderedDict[str, str] = OrderedDict()
     unsupported: list[dict] = []
     mapped: list[dict] = []
@@ -212,7 +256,7 @@ def main() -> None:
 
     # Same precedence as the production plan: printer -> process -> filament.
     for kind in ("machine", "process", "filament"):
-        data = json.loads((args.resolved_profile_dir / f"{kind}.json").read_text())
+        data = profile_data[kind]
         for source_key, raw in data.items():
             if source_key in META_KEYS:
                 continue
@@ -223,7 +267,7 @@ def main() -> None:
             value = stringify(raw)
             source_value = value
             if target in GCODE_KEYS:
-                value = rewrite_template(value)
+                value = rewrite_template(value, derived_template_values)
             value = normalize_value(target, value)
             if value != source_value:
                 mapped_values.append({
@@ -243,7 +287,7 @@ def main() -> None:
 
     # Preserve SliceBeam's special no-ironing behavior when present.
     if merged.get("ironing_type") == "top" and any(
-        json.loads((args.resolved_profile_dir / f"{kind}.json").read_text()).get("ironing_type") == "no ironing"
+        profile_data[kind].get("ironing_type") == "no ironing"
         for kind in ("machine", "process", "filament")
     ):
         if "ironing" in supported:
@@ -264,6 +308,7 @@ def main() -> None:
         "unsupported_count": len(unsupported),
         "unsupported": unsupported,
         "gcode_template_keys": {k: merged[k] for k in GCODE_KEYS if k in merged},
+        "derived_template_values": derived_template_values,
     }
     report_path = args.report or args.output_ini.with_suffix(".report.json")
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
