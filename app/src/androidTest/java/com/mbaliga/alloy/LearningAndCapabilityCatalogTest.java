@@ -229,6 +229,38 @@ public final class LearningAndCapabilityCatalogTest {
         }
     }
 
+    @Test public void a1AndP1sExposeIndividualSourcedMaterialClassesWithoutSendQualification() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(context.getAssets());
+        PrinterCapabilityCatalog.Printer a1 = catalog.byId("a1");
+        PrinterCapabilityCatalog.Printer p1s = catalog.byId("p1s");
+        Assert.assertNotNull(a1);
+        Assert.assertNotNull(p1s);
+        Assert.assertEquals(10, a1.materials.size());
+        Assert.assertEquals(10, p1s.materials.size());
+        for (PrinterCapabilityCatalog.Printer printer : new PrinterCapabilityCatalog.Printer[]{a1, p1s}) {
+            Assert.assertTrue("printer must stay not qualified", printer.directSendState.startsWith("Not qualified"));
+            for (PrinterCapabilityCatalog.Material material : printer.materials) {
+                Assert.assertTrue("material must stay unavailable for direct send",
+                        material.directSendState.startsWith("Not qualified") || material.directSendState.startsWith("Blocked"));
+                Assert.assertTrue("each material class must carry a direct official source",
+                        material.sourceUrl.startsWith("https://") && material.sourceUrl.contains("bambulab.com"));
+            }
+        }
+        Assert.assertEquals("Ideal", materialById(a1, "pla").bambuStatus);
+        Assert.assertEquals("Not recommended", materialById(a1, "asa").bambuStatus);
+        Assert.assertEquals("Ideal", materialById(p1s, "abs").bambuStatus);
+        Assert.assertEquals("Capable", materialById(p1s, "pa").bambuStatus);
+        Assert.assertEquals("Not recommended", materialById(p1s, "cf-gf-filled").bambuStatus);
+    }
+
+    private static PrinterCapabilityCatalog.Material materialById(
+            PrinterCapabilityCatalog.Printer printer, String id) {
+        for (PrinterCapabilityCatalog.Material material : printer.materials)
+            if (id.equals(material.id)) return material;
+        return null;
+    }
+
     private static byte[] readAll(java.io.InputStream input) throws java.io.IOException {
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         byte[] buffer = new byte[4096];

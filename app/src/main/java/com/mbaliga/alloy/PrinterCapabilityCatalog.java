@@ -100,10 +100,19 @@ public final class PrinterCapabilityCatalog {
                 throw new IOException(printer.id + " material " + material.id + " cannot qualify direct send");
         }
         Printer mini = null;
+        Printer a1 = null, p1s = null;
         for (Printer printer : printers) if ("a1-mini".equals(printer.id)) mini = printer;
+        else if ("a1".equals(printer.id)) a1 = printer;
+        else if ("p1s".equals(printer.id)) p1s = printer;
         if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled", "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe"))
                 || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool")))
             throw new IOException("A1 mini capability coverage is incomplete");
+        if (a1 == null || !ids(a1.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"))
+                || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite")))
+            throw new IOException("A1 capability coverage must disclose each sourced material class separately");
+        if (p1s == null || !ids(p1s.materials).equals(setOf("pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"))
+                || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams")))
+            throw new IOException("P1S capability coverage must disclose each sourced material class separately");
         for (Material material : mini.materials) {
             if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
                 throw new IOException("A1 mini material " + material.id + " lacks sourced AMS Lite route status");
