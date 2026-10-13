@@ -91,6 +91,7 @@ GCODE_KEYS = {
 # SliceBeam already performs these two placeholder aliases. Keep them explicit
 # so the generated config is the same on desktop and Android.
 TEMPLATE_ALIASES = {
+    "nozzle_temperature": "temperature",
     "nozzle_temperature_initial_layer": "first_layer_temperature",
     "bed_temperature_initial_layer_single": "first_layer_bed_temperature",
 }
