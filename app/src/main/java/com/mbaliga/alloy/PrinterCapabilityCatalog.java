@@ -118,10 +118,17 @@ public final class PrinterCapabilityCatalog {
                 throw new IOException("A1 mini " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
         }
         if (a1 == null || !ids(a1.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"))
-                || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite")))
+                || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht"))
+                || !ids(a1.spoolForms).contains("ams-hub-spool"))
             throw new IOException("A1 capability coverage must disclose each sourced material class separately");
         for (Material material : a1.materials) if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
             throw new IOException("A1 material " + material.id + " lacks sourced AMS Lite route status");
+        for (FeedRoute route : a1.feedRoutes) {
+            if (setOf("regular-ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.state.contains("A1 Series AMS Hub")
+                    || !route.note.contains("01.06.10.33") || !route.note.contains("Do not mix AMS Lite")))
+                throw new IOException("A1 " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
+        }
         if (p1s == null || !ids(p1s.materials).equals(setOf("pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"))
                 || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams")))
             throw new IOException("P1S capability coverage must disclose each sourced material class separately");
