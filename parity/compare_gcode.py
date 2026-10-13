@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare desktop and Android slicer G-code semantically for Alloy G3.
+"""Compare a desktop reference and candidate slicer G-code semantically for Alloy G3.
 
 Inputs may be plain .gcode or Bambu/Orca .gcode.3mf archives. For archives the
 first Metadata/plate_*.gcode member is used unless --plate-member is supplied.
@@ -300,7 +300,7 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
     def add(name: str, status: str, detail: str) -> None:
         checks.append({"name": name, "status": status, "detail": detail})
 
-    # Major feature classes: Android must not omit anything desktop reports.
+    # Major feature classes: The candidate must not omit anything the desktop reference reports.
     desktop_features = set(desktop.feature_counts)
     android_features = set(android.feature_counts)
     missing = sorted(desktop_features - android_features)
@@ -325,20 +325,20 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
     add(
         "layer_count",
         "pass" if layer_diff == 0 else "fail",
-        f"desktop={desktop.layer_count}, Android={android.layer_count}",
+        f"desktop={desktop.layer_count}, candidate={android.layer_count}",
     )
 
     for name in ("print_time_seconds", "filament_mm", "filament_g"):
         a = getattr(desktop, name)
         b = getattr(android, name)
         if a is None or b is None:
-            add(name, "unavailable", f"desktop={a}, Android={b}")
+            add(name, "unavailable", f"desktop={a}, candidate={b}")
             continue
         diff = relative_diff(a, b)
         add(
             name,
             "pass" if diff <= tolerance else "fail",
-            f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
+            f"desktop={a:.6g}, candidate={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
         )
 
     # Motion/extrusion metrics are diagnostics. A slight emitter variation is allowed, but
@@ -350,7 +350,7 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float) -> dict:
         add(
             name,
             "pass" if diff <= 0.05 else "warn",
-            f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}",
+            f"desktop={a:.6g}, candidate={b:.6g}, delta={diff:.2%}",
         )
 
     hard_fail = any(c["status"] == "fail" for c in checks)
@@ -394,6 +394,8 @@ def main() -> None:
         args.json_out.write_text(rendered + "\n")
     if args.summary_only:
         print(f"Result: {comparison['result']} (tolerance {args.tolerance:.2%})")
+        print("Desktop feature classes: " + ", ".join(sorted(desktop.feature_counts)))
+        print("Candidate feature classes: " + ", ".join(sorted(android.feature_counts)))
         for check in comparison["checks"]:
             print(f"{check['status'].upper():11} {check['name']}: {check['detail']}")
         print(f"Evidence complete: {comparison['evidence_complete']}")
