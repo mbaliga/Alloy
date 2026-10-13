@@ -166,9 +166,15 @@ def rewrite_template(value: str, derived_values: dict[str, float | str] | None =
             flags=re.DOTALL,
         )
     for name, numeric_value in (derived_values or {}).items():
+        replacement = (
+            format(numeric_value, ".9g")
+            if isinstance(numeric_value, (int, float))
+            else str(numeric_value)
+        )
+        pattern = rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])"
         out = re.sub(
-            rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])",
-            format(numeric_value, ".9g") if isinstance(numeric_value, (int, float)) else str(numeric_value),
+            r"\\{([^{}]*)\\}",
+            lambda macro: "{" + re.sub(pattern, replacement, macro.group(1)) + "}",
             out,
         )
     # This A1 Mini route intentionally omits Bambu's timelapse-only macro
