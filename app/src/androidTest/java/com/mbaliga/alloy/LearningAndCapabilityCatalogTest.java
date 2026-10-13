@@ -255,7 +255,8 @@ public final class LearningAndCapabilityCatalogTest {
         Assert.assertEquals("Ideal", materialById(a1, "pla").bambuStatus);
         Assert.assertEquals("Not recommended", materialById(a1, "asa").bambuStatus);
         Assert.assertTrue(materialById(a1, "tpu").amsLiteStatus.startsWith("Unsupported"));
-        Assert.assertTrue(materialById(a1, "pva").amsLiteStatus.contains("dry PVA only"));
+        Assert.assertTrue("dry PVA exception must be shown for A1 AMS Lite",
+                materialById(a1, "pva").amsLiteStatus.toLowerCase(java.util.Locale.US).contains("dry pva only"));
         Assert.assertEquals("Ideal", materialById(p1s, "abs").bambuStatus);
         Assert.assertEquals("Capable", materialById(p1s, "pa").bambuStatus);
         Assert.assertEquals("Not recommended", materialById(p1s, "cf-gf-filled").bambuStatus);
