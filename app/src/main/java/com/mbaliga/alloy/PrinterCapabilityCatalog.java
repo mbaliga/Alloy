@@ -130,8 +130,15 @@ public final class PrinterCapabilityCatalog {
                 throw new IOException("A1 " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
         }
         if (p1s == null || !ids(p1s.materials).equals(setOf("pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"))
-                || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams")))
+                || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams", "ams-2-pro", "ams-ht")))
             throw new IOException("P1S capability coverage must disclose each sourced material class separately");
+        for (FeedRoute route : p1s.feedRoutes) {
+            if (setOf("ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.note.contains("P1 Series")
+                    || (("ams-2-pro".equals(route.id) || "ams-ht".equals(route.id))
+                    && (!route.note.contains("before connecting") || !route.note.contains("four AMS units")))))
+                throw new IOException("P1S " + route.id + " must retain sourced model and firmware requirements");
+        }
         for (Material material : mini.materials) {
             if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
                 throw new IOException("A1 mini material " + material.id + " lacks sourced AMS Lite route status");
