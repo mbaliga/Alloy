@@ -72,15 +72,21 @@ jobs:
           set -euxo pipefail
           python3 - <<'PY'
           import json
+          import sys
           from pathlib import Path
+          sys.path.insert(0, "parity")
+          from build_path_b_prusa_config import normalize_value
           config = Path("runtime/path-b/a1mini.ini").read_text()
           report = json.loads(Path("runtime/path-b/translation-report.json").read_text())
-          assert "support_material_style = organic" in config
-          assert any(
-              entry.get("source_value") == "tree(auto)"
-              and entry.get("target_value") == "organic"
+          assert normalize_value("support_material_style", "tree(auto)") == "organic"
+          assert normalize_value("support_material_style", "tree(manual)") == "organic"
+          assert all(
+              entry.get("target_value") == "organic"
               for entry in report["mapped_values"]
-          ), "tree(auto) must be explicitly recorded as Prusa organic supports"
+              if entry.get("target") == "support_material_style"
+          ), "tree support aliases must never be emitted untranslated"
+          if "support_material = 1" in config:
+              assert "support_material_style = organic" in config
           PY
 
       - name: Install AppImage host OpenGL runtime
