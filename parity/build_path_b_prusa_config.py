@@ -133,6 +133,20 @@ def rewrite_template(value: str) -> str:
 
 def normalize_value(key: str, value: str) -> str:
     # Known enumeration aliases between Orca and Prusa.
+    if key == "support_material_style":
+        aliases = {
+            "tree(auto)": "organic",
+            "tree(manual)": "organic",
+            "normal(auto)": "snug",
+            "normal(manual)": "snug",
+            "tree": "organic",
+            "normal": "snug",
+        }
+        normalized = value.strip().lower()
+        if normalized in aliases:
+            return aliases[normalized]
+        if normalized not in {"grid", "snug", "organic"}:
+            raise ValueError(f"unsupported Orca support style: {value}")
     if key == "perimeter_generator":
         aliases = {"classic": "classic", "arachne": "arachne"}
         return aliases.get(value.strip().lower(), value)
@@ -159,6 +173,7 @@ def main() -> None:
     merged: OrderedDict[str, str] = OrderedDict()
     unsupported: list[dict] = []
     mapped: list[dict] = []
+    mapped_values: list[dict] = []
 
     # Same precedence as the production plan: printer -> process -> filament.
     for kind in ("machine", "process", "filament"):
@@ -171,9 +186,18 @@ def main() -> None:
                 unsupported.append({"profile": kind, "source": source_key, "target": target})
                 continue
             value = stringify(raw)
+            source_value = value
             if target in GCODE_KEYS:
                 value = rewrite_template(value)
             value = normalize_value(target, value)
+            if value != source_value:
+                mapped_values.append({
+                    "profile": kind,
+                    "source": source_key,
+                    "target": target,
+                    "source_value": source_value,
+                    "target_value": value,
+                })
             merged[target] = value
             if target != source_key:
                 mapped.append({"profile": kind, "source": source_key, "target": target})
@@ -201,6 +225,7 @@ def main() -> None:
         "supported_key_count": len(supported),
         "emitted_key_count": len(merged),
         "mapped_keys": mapped,
+        "mapped_values": mapped_values,
         "unsupported_count": len(unsupported),
         "unsupported": unsupported,
         "gcode_template_keys": {k: merged[k] for k in GCODE_KEYS if k in merged},
