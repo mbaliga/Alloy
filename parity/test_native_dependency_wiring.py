@@ -156,6 +156,21 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertEqual(1, workflow.count("sudo udevadm trigger --name-match=kvm"))
         self.assertIn("arm64-v8a JNI library", workflow)
 
+    def test_native_pr_g3_evidence_is_compared_with_exact_head_reference(self) -> None:
+        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        self.assertIn("actions: read", workflow)
+        self.assertIn("Compare native G3 output with exact-PR-head Orca reference", workflow)
+        self.assertIn("ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", workflow)
+        self.assertIn("ci/compare_g3_artifacts.py", workflow)
+        self.assertIn("name: alloy-native-desktop-g3-parity", workflow)
+        native_upload = workflow.index("name: alloy-native-g3-evidence")
+        compare_step = workflow.index("Compare native G3 output with exact-PR-head Orca reference")
+        report_upload = workflow.index("name: alloy-native-desktop-g3-parity")
+        pilot = workflow.index("Build isolated A1 Mini physical-pilot APK pair")
+        self.assertLess(native_upload, compare_step)
+        self.assertLess(compare_step, report_upload)
+        self.assertLess(report_upload, pilot)
+
     def test_native_target_uses_pinned_libnoise_not_the_handwritten_stub(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         fuzzy = (ROOT / "app/src/main/jni/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp").read_text(encoding="utf-8")
