@@ -57,6 +57,20 @@ def select_reference_artifact(artifacts: list[dict[str, Any]]) -> dict[str, Any]
     return max(candidates, key=lambda artifact: artifact.get("created_at", ""))
 
 
+def validate_artifact_digest(artifact: dict[str, Any], archive_bytes: bytes) -> str:
+    """Require GitHub's SHA-256 metadata and verify the downloaded ZIP."""
+    expected = artifact.get("digest")
+    if not isinstance(expected, str) or not expected.startswith("sha256:"):
+        raise RuntimeError("desktop reference artifact has no SHA-256 digest metadata")
+    expected_hex = expected.removeprefix("sha256:")
+    if len(expected_hex) != 64 or any(character not in "0123456789abcdef" for character in expected_hex):
+        raise RuntimeError("desktop reference artifact has invalid SHA-256 digest metadata")
+    actual = hashlib.sha256(archive_bytes).hexdigest()
+    if actual != expected_hex:
+        raise RuntimeError("downloaded desktop reference ZIP digest does not match GitHub metadata")
+    return actual
+
+
 def github_get_json(url: str, token: str) -> dict[str, Any]:
     request = Request(
         url,
@@ -262,10 +276,7 @@ def main() -> int:
         artifact_listing = github_get_json(artifacts_url, args.token)
         artifact = select_reference_artifact(artifact_listing.get("artifacts", []))
         artifact_bytes = download_artifact(artifact["archive_download_url"], args.token)
-        digest = hashlib.sha256(artifact_bytes).hexdigest()
-        expected_digest = str(artifact.get("digest", "")).removeprefix("sha256:")
-        if expected_digest and digest != expected_digest:
-            raise RuntimeError("downloaded desktop reference ZIP digest does not match GitHub metadata")
+        digest = validate_artifact_digest(artifact, artifact_bytes)
         with tempfile.TemporaryDirectory(prefix="alloy-g3-reference-") as temporary:
             reference_dir = Path(temporary) / "reference"
             safe_extract(artifact_bytes, reference_dir)

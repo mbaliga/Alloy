@@ -16,6 +16,7 @@ from ci.compare_g3_artifacts import (
     select_reference_artifact,
     select_reference_run,
     validate_reference_manifest,
+    validate_artifact_digest,
     wait_for_reference_run,
 )
 
@@ -60,6 +61,18 @@ class G3ArtifactParityTests(unittest.TestCase):
             {"name": REFERENCE_ARTIFACT, "expired": False, "archive_download_url": "valid"},
         ]
         self.assertEqual("valid", select_reference_artifact(artifacts)["archive_download_url"])
+
+    def test_reference_artifact_digest_is_required_and_verified(self):
+        archive = b"reference zip bytes"
+        import hashlib
+        digest = hashlib.sha256(archive).hexdigest()
+        self.assertEqual(digest, validate_artifact_digest({"digest": f"sha256:{digest}"}, archive))
+        with self.assertRaisesRegex(RuntimeError, "no SHA-256"):
+            validate_artifact_digest({}, archive)
+        with self.assertRaisesRegex(RuntimeError, "invalid SHA-256"):
+            validate_artifact_digest({"digest": "sha256:1234"}, archive)
+        with self.assertRaisesRegex(RuntimeError, "does not match"):
+            validate_artifact_digest({"digest": f"sha256:{'0' * 64}"}, archive)
 
     def test_artifact_extraction_rejects_path_traversal(self):
         archive_buffer = BytesIO()
