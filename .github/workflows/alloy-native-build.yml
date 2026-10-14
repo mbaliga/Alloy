@@ -45,6 +45,8 @@ on:
       - 'ci/normalize_occt_headers.py'
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
+      - 'ci/compare_g3_artifacts.py'
+      - 'parity/test_g3_artifact_parity.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -91,6 +93,8 @@ on:
       - 'ci/normalize_occt_headers.py'
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
+      - 'ci/compare_g3_artifacts.py'
+      - 'parity/test_g3_artifact_parity.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -99,6 +103,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -417,6 +422,23 @@ jobs:
           name: alloy-native-g3-evidence
           path: path-b-g3-evidence
           if-no-files-found: error
+      - name: Compare native G3 output with exact-PR-head Orca reference
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 ci/compare_g3_artifacts.py \
+            --native-dir path-b-g3-evidence \
+            --report-dir path-b-g3-parity
+      - name: Upload native G3 semantic comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-desktop-g3-parity
+          path: path-b-g3-parity
+          if-no-files-found: warn
+          retention-days: 14
       # A native test failure is the moment its JUnit XML is most valuable.
       # Keep it even when later success-only evidence artifacts are skipped.
       - name: Upload native instrumentation report
