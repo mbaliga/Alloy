@@ -74,3 +74,29 @@ Owner questions in the program register that concern this repo (status as of 202
 - OQ-22 (ruled): Secret custody per platform (plan section 4: printer access codes on any other platform)
 
 When the owner confirms or changes the line, this repo's original cells above stay as the engineering detail; only the verdicts and re-costs in program section 5A change.
+
+## Update 2026-10-14: the market lens, iPadOS and the owner's latest answers
+
+Status: PLAN. Nothing here is built, run on a device, signed or submitted. This update follows the section "Owner rulings and the proposed line (added 2026-10-07)" above and the program plan's section 5A.12 (Personal-Tracker `PORTING_PROGRAM.md`, [PR #10](https://github.com/mbaliga/Personal-Tracker/pull/10)), which governs where the two differ. It records the owner's market lens and answers of 2026-10-13 and 2026-10-14; the proposed line is still a proposal. Two tests were added to the program's section 5A.1: (d) a real gap, or we are better or cheaper ("better" only where it has been measured; free alone is no gap when free tools exist); (w) mature free alternatives abound and the app adds nothing.
+
+### Where Alloy sits now (program section 5A.12, a proposal)
+
+| Target       | Verdict, weeks and flags |
+| ------------ | ------------------------ |
+| Ubuntu Touch | no-port                  |
+| Linux        | no-port                  |
+| iPhone       | no-port                  |
+| iPad         | no-port                  |
+| macOS        | no-port                  |
+| Windows      | no-port                  |
+
+### What changed for this repo
+
+- No cell changes: Linux, macOS and Windows stay no-port (OrcaSlicer and Bambu Studio are free, AGPL-3.0 and maintained on all three; PrusaSlicer and Cura are also listed, but some of their per-OS downloads were not seen), as the owner expected for Linux.
+- Ubuntu Touch and iPad stay no-port for now, but both may be gaps (Ubuntu Touch: a search of the OpenStore API on 2026-10-13 found no slicer, moderate evidence; iPad: a partly read Apple search found only profile-limited on-device slicers, cloud slicers and an estimator, and no Orca-class app, though early Orca-for-iPad projects exist, so that gap is thinly evidenced). They are revisited after the Android app passes its own gates and a licence review: a Ubuntu Touch version is a rewrite of the Android-Views viewport, and an iPad version raises the unreviewed question of AGPL-3.0 against App Store terms.
+
+### Owner answers that apply here
+
+- **Skin contract (OQ-39, 2026-10-14):** Alloy is not in the draft spec's app inventory (its app is on an unmerged branch), so no level is proposed; it declares one when its theme is mapped. The owner chose Tier 1 (palette) everywhere first and every app declaring its own level; the assistant chose JSON, not XML, after the owner asked for a check; the draft spec is Personal-Tracker `porting/skin-contract/SPEC-DRAFT.md`.
+
+When the owner confirms or changes the line, this repo's original cells above stay as the engineering detail; only the verdicts and re-costs in program section 5A.12 change.
