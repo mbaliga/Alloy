@@ -162,6 +162,31 @@ def safe_extract(archive_bytes: bytes, destination: Path) -> None:
         raise RuntimeError("desktop reference artifact is not a valid ZIP") from None
 
 
+def validate_reference_manifest(
+    reference_dir: Path,
+    head_sha: str,
+    base_sha: str,
+    merge_sha: str,
+) -> None:
+    manifest = reference_dir / "evidence" / "reference-manifest.txt"
+    if not manifest.is_file():
+        raise RuntimeError("desktop reference artifact has no run-context manifest")
+    values: dict[str, str] = {}
+    for line in manifest.read_text(encoding="utf-8", errors="replace").splitlines():
+        if ": " not in line:
+            continue
+        key, value = line.split(": ", 1)
+        values[key] = value
+    expected = {
+        "PR head SHA": head_sha,
+        "PR base SHA": base_sha,
+        "PR merge SHA": merge_sha,
+    }
+    mismatches = [key for key, value in expected.items() if values.get(key) != value]
+    if mismatches:
+        raise RuntimeError("desktop reference was built from a different PR tree: " + ", ".join(mismatches))
+
+
 def compare_fixtures(
     native_dir: Path,
     reference_dir: Path,
@@ -215,6 +240,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-dir", type=Path, required=True)
     parser.add_argument("--repository", default=os.environ.get("GITHUB_REPOSITORY"))
     parser.add_argument("--head-sha", default=os.environ.get("ALLOY_PR_HEAD_SHA"))
+    parser.add_argument("--base-sha", default=os.environ.get("ALLOY_PR_BASE_SHA"))
+    parser.add_argument("--merge-sha", default=os.environ.get("ALLOY_PR_MERGE_SHA"))
     parser.add_argument("--token", default=os.environ.get("GITHUB_TOKEN"))
     parser.add_argument("--tolerance", type=float, default=0.02)
     return parser.parse_args()
@@ -222,8 +249,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if not args.repository or not args.head_sha or not args.token:
-        raise SystemExit("G3 parity requires repository, exact PR head SHA, and GitHub token")
+    if not all((args.repository, args.head_sha, args.base_sha, args.merge_sha, args.token)):
+        raise SystemExit("G3 parity requires repository, exact PR head/base/merge SHAs, and GitHub token")
     if not 0 < args.tolerance <= 0.02:
         raise SystemExit("G3 estimate tolerance must be greater than zero and no greater than 2%")
     try:
@@ -242,6 +269,7 @@ def main() -> int:
         with tempfile.TemporaryDirectory(prefix="alloy-g3-reference-") as temporary:
             reference_dir = Path(temporary) / "reference"
             safe_extract(artifact_bytes, reference_dir)
+            validate_reference_manifest(reference_dir, args.head_sha, args.base_sha, args.merge_sha)
             print(f"Desktop reference run {run_id} ({args.head_sha}); artifact SHA-256 {digest}")
             summary = compare_fixtures(args.native_dir, reference_dir, args.report_dir, args.tolerance)
         return 0 if summary["result"] == "pass" else 2

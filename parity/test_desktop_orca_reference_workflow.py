@@ -44,6 +44,14 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn('--export-3mf "$name.gcode.3mf"', text)
         self.assertNotIn('--export-3mf "$out/$name.gcode.3mf"', text)
 
+    def test_reference_manifest_captures_exact_pr_tree_identity(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        for key in ("PR head SHA", "PR base SHA", "PR merge SHA"):
+            self.assertIn(f'echo "{key}:', text)
+        self.assertIn("ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", text)
+        self.assertIn("ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", text)
+        self.assertIn("ALLOY_PR_MERGE_SHA: ${{ github.sha }}", text)
+
 
 if __name__ == "__main__":
     unittest.main()

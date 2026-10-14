@@ -427,6 +427,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
         run: |
           python3 ci/compare_g3_artifacts.py \
             --native-dir path-b-g3-evidence \

@@ -15,6 +15,7 @@ from ci.compare_g3_artifacts import (
     safe_extract,
     select_reference_artifact,
     select_reference_run,
+    validate_reference_manifest,
     wait_for_reference_run,
 )
 
@@ -68,6 +69,23 @@ class G3ArtifactParityTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "unsafe path"):
                 safe_extract(archive_buffer.getvalue(), Path(temporary) / "reference")
             self.assertFalse((Path(temporary) / "outside.txt").exists())
+
+    def test_reference_manifest_requires_same_head_base_and_merge_tree(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest = Path(temporary) / "evidence" / "reference-manifest.txt"
+            manifest.parent.mkdir()
+            manifest.write_text(
+                "PR head SHA: head\nPR base SHA: base\nPR merge SHA: merge\n",
+                encoding="utf-8",
+            )
+            validate_reference_manifest(Path(temporary), "head", "base", "merge")
+            with self.assertRaisesRegex(RuntimeError, "different PR tree"):
+                validate_reference_manifest(Path(temporary), "head", "moved-base", "merge")
+
+    def test_reference_manifest_is_required(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(RuntimeError, "no run-context manifest"):
+                validate_reference_manifest(Path(temporary), "head", "base", "merge")
 
     def test_github_token_is_not_forwarded_to_signed_artifact_host(self):
         response_headers = Message()
