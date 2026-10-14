@@ -1,13 +1,17 @@
 """Unit tests for matching, downloading, and validating same-commit G3 evidence."""
 
 from io import BytesIO
+from email.message import Message
+from urllib.error import HTTPError
 from pathlib import Path
 import tempfile
 import unittest
 from zipfile import ZipFile
+from unittest.mock import patch
 
 from ci.compare_g3_artifacts import (
     REFERENCE_ARTIFACT,
+    download_artifact,
     safe_extract,
     select_reference_artifact,
     select_reference_run,
@@ -64,6 +68,24 @@ class G3ArtifactParityTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "unsafe path"):
                 safe_extract(archive_buffer.getvalue(), Path(temporary) / "reference")
             self.assertFalse((Path(temporary) / "outside.txt").exists())
+
+    def test_github_token_is_not_forwarded_to_signed_artifact_host(self):
+        response_headers = Message()
+        response_headers["Location"] = "https://artifact-storage.example/signed.zip"
+
+        class RedirectingOpener:
+            def open(self, request, timeout):
+                self_request["authorization"] = request.get_header("Authorization")
+                raise HTTPError(request.full_url, 302, "Found", response_headers, None)
+
+        self_request = {}
+        with patch("ci.compare_g3_artifacts.build_opener", return_value=RedirectingOpener()):
+            with patch("ci.compare_g3_artifacts.urlopen", return_value=BytesIO(b"zip")) as signed_open:
+                self.assertEqual(b"zip", download_artifact("https://api.github.com/artifact", "secret-token"))
+
+        signed_request = signed_open.call_args.args[0]
+        self.assertEqual("Bearer secret-token", self_request["authorization"])
+        self.assertIsNone(signed_request.get_header("Authorization"))
 
 
 if __name__ == "__main__":
