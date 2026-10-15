@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ci.validate_release_readiness import REQUIRED_GATES, validate
+from ci.validate_release_readiness import PRINTER_SPECIFIC_GATES, REQUIRED_GATES, validate
 
 
 class ReleaseReadinessTests(unittest.TestCase):
@@ -36,6 +36,9 @@ class ReleaseReadinessTests(unittest.TestCase):
             content = f"reviewed evidence for {gate}\n".encode("utf-8")
             (path.parent / name).write_bytes(content)
             evidence[gate] = {"path": name, "sha256": hashlib.sha256(content).hexdigest()}
+            printer_id = PRINTER_SPECIFIC_GATES.get(gate)
+            if printer_id:
+                evidence[gate]["printer_id"] = printer_id
         value.setdefault("gate_evidence", evidence)
         path.write_text(json.dumps(value), encoding="utf-8")
         return directory, path
@@ -46,7 +49,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "a1-mini-acceptance-2027-01-01",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         value["physical_acceptance_evidence"] = {
@@ -91,7 +94,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         directory, path = self._write(value)
@@ -107,7 +110,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini, A1, P1S",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini / N1, A1, P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
             "physical_acceptance_evidence": {
                 "a1-mini": "mini.json", "a1": "a1.json", "p1s": "p1s.json",
@@ -133,7 +136,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "REPLACE-WITH-REVIEWED-ID",
             "verified_at": "REPLACE-WITH-UTC-TIMESTAMP",
             "reviewer": "REPLACE-WITH-REVIEWER",
-            "device_scope": "Bambu Lab A1 Mini / N1 / firmware REPLACE",
+            "device_scope": "Bambu Lab A1 Mini (N1), A1, and P1S / firmware REPLACE",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         value["physical_acceptance_evidence"] = {"a1-mini": "physical.json"}
@@ -150,7 +153,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         directory, path = self._write(value)
@@ -162,13 +165,31 @@ class ReleaseReadinessTests(unittest.TestCase):
         finally:
             directory.cleanup()
 
+    def test_per_printer_gate_evidence_cannot_be_relabelled_for_another_model(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini / N1, A1, P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        directory, path = self._write(value)
+        try:
+            value["gate_evidence"]["p1s_g3_toolpath_parity"]["printer_id"] = "a1"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "printer_id must be p1s"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
     def test_gate_evidence_cannot_escape_readiness_directory(self):
         value = {
             "schema_version": 1,
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         directory, path = self._write(value)

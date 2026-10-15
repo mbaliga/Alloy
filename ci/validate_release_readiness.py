@@ -36,6 +36,20 @@ REQUIRED_GATES = (
     "interruption_and_recovery",
 )
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+PRINTER_SPECIFIC_GATES = {
+    "a1_mini_profile_parity": "a1-mini",
+    "a1_profile_parity": "a1",
+    "p1s_profile_parity": "p1s",
+    "a1_mini_g3_toolpath_parity": "a1-mini",
+    "a1_g3_toolpath_parity": "a1",
+    "p1s_g3_toolpath_parity": "p1s",
+    "a1_mini_g4_profile_runtime_parity": "a1-mini",
+    "a1_g4_profile_runtime_parity": "a1",
+    "p1s_g4_profile_runtime_parity": "p1s",
+    "physical_a1_mini_transport": "a1-mini",
+    "physical_a1_transport": "a1",
+    "physical_p1s_transport": "p1s",
+}
 
 
 def fail(message: str) -> None:
@@ -65,6 +79,11 @@ def validate(path: Path) -> dict:
             fail(f"{field} must be a non-empty string")
         if "REPLACE-WITH" in value or value.strip().upper().startswith("TODO"):
             fail(f"{field} still contains a placeholder")
+    normalized_scope = document["device_scope"].lower()
+    if ("a1 mini" not in normalized_scope or "n1" not in normalized_scope
+            or re.search(r"\ba1\b", normalized_scope) is None
+            or "p1s" not in normalized_scope):
+        fail("device_scope must identify A1 Mini/N1, A1, and P1S")
     gates = document.get("gates")
     if not isinstance(gates, dict):
         fail("gates must be an object")
@@ -78,6 +97,9 @@ def validate(path: Path) -> dict:
         item = gate_evidence.get(gate)
         if not isinstance(item, dict):
             fail(f"gate_evidence.{gate} must identify a retained evidence file")
+        expected_printer = PRINTER_SPECIFIC_GATES.get(gate)
+        if expected_printer is not None and item.get("printer_id") != expected_printer:
+            fail(f"gate_evidence.{gate}.printer_id must be {expected_printer}")
         evidence_name = item.get("path")
         expected_sha256 = item.get("sha256")
         if not isinstance(evidence_name, str) or not evidence_name.strip():

@@ -26,19 +26,19 @@
   "gate_evidence": {
     "native_engine_source_build": { "path": "evidence/REPLACE-WITH-NATIVE-BUILD-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
     "native_smoke_on_arm64_device": { "path": "evidence/REPLACE-WITH-ARM64-SMOKE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "a1_mini_profile_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "a1_profile_parity": { "path": "evidence/REPLACE-WITH-A1-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "p1s_profile_parity": { "path": "evidence/REPLACE-WITH-P1S-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "a1_mini_g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-G3-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "a1_g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-A1-G3-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "p1s_g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-P1S-G3-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "a1_mini_g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-G4-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "a1_g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-A1-G4-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "p1s_g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-P1S-G4-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "a1_mini_profile_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1-mini" },
+    "a1_profile_parity": { "path": "evidence/REPLACE-WITH-A1-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1" },
+    "p1s_profile_parity": { "path": "evidence/REPLACE-WITH-P1S-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "p1s" },
+    "a1_mini_g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-G3-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1-mini" },
+    "a1_g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-A1-G3-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1" },
+    "p1s_g3_toolpath_parity": { "path": "evidence/REPLACE-WITH-P1S-G3-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "p1s" },
+    "a1_mini_g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-G4-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1-mini" },
+    "a1_g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-A1-G4-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1" },
+    "p1s_g4_profile_runtime_parity": { "path": "evidence/REPLACE-WITH-P1S-G4-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "p1s" },
     "bambu_treesupport3d_parity": { "path": "evidence/REPLACE-WITH-TREESUPPORT3D-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "physical_a1_mini_transport": { "path": "evidence/REPLACE-WITH-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "physical_a1_transport": { "path": "evidence/REPLACE-WITH-A1-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
-    "physical_p1s_transport": { "path": "evidence/REPLACE-WITH-P1S-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "physical_a1_mini_transport": { "path": "evidence/REPLACE-WITH-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1-mini" },
+    "physical_a1_transport": { "path": "evidence/REPLACE-WITH-A1-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1" },
+    "physical_p1s_transport": { "path": "evidence/REPLACE-WITH-P1S-PHYSICAL-TRANSPORT-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "p1s" },
     "signed_install_and_upgrade": { "path": "evidence/REPLACE-WITH-SIGNED-UPGRADE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
     "interruption_and_recovery": { "path": "evidence/REPLACE-WITH-RECOVERY-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" }
   },
@@ -47,5 +47,5 @@
     "a1": "evidence/REPLACE-WITH-A1-PHYSICAL-ACCEPTANCE.json",
     "p1s": "evidence/REPLACE-WITH-P1S-PHYSICAL-ACCEPTANCE.json"
   },
-  "notes": "Copy to production-readiness.json only after every per-printer gate has reviewed evidence. Each PASS requires a retained file and matching SHA-256 under gate_evidence. Each physical transport PASS additionally requires a separate model-matched acceptance record. Never replace PENDING without the corresponding reviewed evidence."
+  "notes": "Copy to production-readiness.json only after every per-printer gate has reviewed evidence. Each per-printer PASS requires a retained file, matching SHA-256, and matching printer_id under gate_evidence. Each physical transport PASS additionally requires a separate model-matched acceptance record. Never replace PENDING without the corresponding reviewed evidence."
 }
