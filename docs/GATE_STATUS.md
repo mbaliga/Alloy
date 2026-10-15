@@ -3176,3 +3176,5 @@ software-only manifest. Artifacts:
 These results establish software/packaging evidence only. They do not establish
 physical print quality, direct-send transport reliability, Bambu Handy
 acceptance, support parity, desktop G3 parity, production signing, or A1/P1S
+physical qualification. See the consolidated on-device checklist and narrow
+pilot runbook for outstanding checks.
