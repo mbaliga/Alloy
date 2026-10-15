@@ -1,6 +1,26 @@
 # Alloy engine gate status
 
-Date: 2026-10-15
+Date: 2026-10-16
+
+## 2026-10-16 source-backed A1/P1S native motion settings
+
+The A1 and P1S planning profiles now carry the pinned Bambu Studio motion,
+acceleration, jerk and retraction values used by the native adapter, instead
+of leaving those fields to SliceBeam defaults. `verify_profile_snapshot.py`
+requires these values and resolves every emitted scalar against the selected
+machine/process inheritance chain. The three-profile Android native smoke test
+also asserts that each profile's source-backed default acceleration reaches
+the generated G-code. The profile and test changes are on PR #12 at
+[`adbbd86`](https://github.com/mbaliga/Alloy/commit/adbbd86be0af40837b37bd0df8d5973bdb2c42b4).
+
+Local verification passed: 122 parity tests, all packaged profile asset
+validation, and whitespace checks. A fresh hosted Android/native run has not
+been observed for this exact commit; GitHub API publication did not start an
+Actions run, and authenticated Git transport is unavailable in this session.
+The prior static compatibility matrix at commit `d07b58f` remains only a
+pre-gate and does not validate these new A1/P1S motion projections. Do not
+promote runtime or print-readiness claims until exact-head tests and subsequent
+physical qualification pass.
 
 ## 2026-10-16 three-printer static profile compatibility pre-gate
 
