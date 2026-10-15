@@ -1,6 +1,42 @@
 # Alloy engine gate status
 
-Date: 2026-10-14
+Date: 2026-10-15
+
+
+## 2026-10-15 exact PR-head software and G3 comparison
+
+PR #12 head `f3842b272df76c7a7b7bb39a92b46eabd49a2b57` has completed its exact-head Android, desktop-reference,
+source-snapshot, parity-tooling, and native-engine workflows. Android v1 run
+[38488883765](https://github.com/mbaliga/Alloy/actions/runs/38488883765)
+passed its acceptance suite and produced CI QA APK artifact
+[11864271997](https://github.com/mbaliga/Alloy/actions/runs/38488883765/artifacts/11864271997)
+(SHA-256 `d0972752b845b1ab768b25fe6746c9b3dbe30a851225bc108762b5f3aefeb057`).
+This ordinary APK does not include or prove native slicing.
+
+Parity tooling run
+[38488883711](https://github.com/mbaliga/Alloy/actions/runs/38488883711),
+official Orca source snapshot
+[38488883701](https://github.com/mbaliga/Alloy/actions/runs/38488883701),
+and desktop Orca A1 Mini reference-slice run
+[38488883743](https://github.com/mbaliga/Alloy/actions/runs/38488883743)
+passed. The desktop reference artifact
+[11861195383](https://github.com/mbaliga/Alloy/actions/runs/38488883743/artifacts/11861195383)
+has SHA-256 `22a9991348666d1044e7330059bde6eedd83f515fa82471b00cb1ffb5bd85cea`
+and is tied to this exact PR head.
+
+Native run
+[38488883737](https://github.com/mbaliga/Alloy/actions/runs/38488883737)
+built the native release and instrumentation APKs, passed API-35 ARM-translation
+instrumentation and exported G3 evidence. It **failed** at step 31,
+“Compare native G3 output with exact-PR-head Orca reference”; the five-fixture
+software pilot steps were skipped after that failure. The native-vs-desktop
+comparison report is artifact
+[11863749550](https://github.com/mbaliga/Alloy/actions/runs/38488883737/artifacts/11863749550)
+(SHA-256 `aeb50231ad5cd2005320cf75e82e6260fdc1e5b8cd2965b382c199f1c458c6fa`).
+Until that report's specific parity mismatches are resolved and a fresh exact-head
+comparison passes, G3 parity remains **FAIL / NO-GO**. These hosted runs do not
+establish physical A1 Mini/A1/P1S print acceptance, Bambu Handy import, direct-send
+qualification, production signing, or release approval. Keep those gates closed.
 
 ## 2026-10-14 G3 Orca reference export and validation
 
