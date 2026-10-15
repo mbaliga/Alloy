@@ -56,9 +56,12 @@ if (productionRelease) {
         def readiness = new JsonSlurper().parse(readinessFile)
         def requiredReadinessGates = [
                 'native_engine_source_build', 'native_smoke_on_arm64_device',
-                'a1_mini_profile_parity', 'g3_toolpath_parity',
-                'g4_profile_runtime_parity', 'bambu_treesupport3d_parity',
-                'physical_a1_mini_transport', 'signed_install_and_upgrade',
+                'a1_mini_profile_parity', 'a1_profile_parity', 'p1s_profile_parity',
+                'a1_mini_g3_toolpath_parity', 'a1_g3_toolpath_parity', 'p1s_g3_toolpath_parity',
+                'a1_mini_g4_profile_runtime_parity', 'a1_g4_profile_runtime_parity', 'p1s_g4_profile_runtime_parity',
+                'bambu_treesupport3d_parity',
+                'physical_a1_mini_transport', 'physical_a1_transport', 'physical_p1s_transport',
+                'signed_install_and_upgrade',
                 'interruption_and_recovery'
         ]
         if (readiness.schema_version != 1 || !(readiness.gates instanceof Map)

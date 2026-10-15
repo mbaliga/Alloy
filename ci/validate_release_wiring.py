@@ -68,11 +68,33 @@ def main() -> None:
     missing_signing = [token for token in signing_required if token not in signing_text]
     if missing_signing:
         raise SystemExit(f"{SIGNING_SCRIPT}: missing signer-pair verification: {missing_signing}")
-    for token in ("REQUIRED_GATES", "physical_a1_mini_transport", "bambu_treesupport3d_parity"):
+    for token in (
+        "REQUIRED_GATES",
+        "a1_mini_profile_parity",
+        "a1_profile_parity",
+        "p1s_profile_parity",
+        "a1_mini_g3_toolpath_parity",
+        "a1_g3_toolpath_parity",
+        "p1s_g3_toolpath_parity",
+        "a1_mini_g4_profile_runtime_parity",
+        "a1_g4_profile_runtime_parity",
+        "p1s_g4_profile_runtime_parity",
+        "physical_a1_mini_transport",
+        "physical_a1_transport",
+        "physical_p1s_transport",
+        "physical_acceptance_evidence",
+        "validate_physical",
+        "bambu_treesupport3d_parity",
+    ):
         if token not in readiness_text:
             raise SystemExit(f"{READINESS_SCRIPT}: missing production gate: {token}")
     build_text = APP_BUILD.read_text(encoding="utf-8")
     build_required = (
+        "a1_mini_g3_toolpath_parity",
+        "a1_g3_toolpath_parity",
+        "p1s_g3_toolpath_parity",
+        "physical_a1_transport",
+        "physical_p1s_transport",
         "validateNativePrebuiltDirectory",
         "tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }",
         "includeSuppliedReferenceVisuals",
