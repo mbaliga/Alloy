@@ -84,6 +84,7 @@ def main() -> None:
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "python3 ci/validate_learning_assets.py",
     ):
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
@@ -163,6 +164,7 @@ def main() -> None:
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "python3 ci/validate_learning_assets.py",
     ):
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
@@ -209,6 +211,7 @@ def main() -> None:
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "python3 ci/validate_learning_assets.py",
     ):
         require(release_text, token, release)
     release_bootstrap = release_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
