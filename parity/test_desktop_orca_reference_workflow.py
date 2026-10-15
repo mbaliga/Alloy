@@ -36,6 +36,8 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         pull_request = text.split("  pull_request:", 1)[1].split("  workflow_dispatch:", 1)[0]
         self.assertIn("codex/fix-native-test-status", pull_request)
         self.assertIn("parity/test_generate_fixtures.py", pull_request)
+        self.assertIn("parity/compare_gcode.py", pull_request)
+        self.assertIn("parity/test_compare_gcode.py", pull_request)
         self.assertIn("app/src/main/assets/models/**", pull_request)
 
     def test_export_3mf_uses_filename_relative_to_output_directory(self):

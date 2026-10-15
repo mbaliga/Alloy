@@ -3,6 +3,30 @@
 Date: 2026-10-15
 
 
+## 2026-10-15 G3 comparator investigation (not a parity pass)
+
+Inspection of exact-head native run [38488883737](https://github.com/mbaliga/Alloy/actions/runs/38488883737)
+found that the new G3 comparator failed its last gate after the native build,
+emulator instrumentation, and G3 export had succeeded. The retained report
+[11863749550](https://github.com/mbaliga/Alloy/actions/runs/38488883737/artifacts/11863749550)
+was measuring machine-start extrusion and acceleration commands before the
+first model layer as if they belonged to the sliced object. I corrected the
+local comparison scope to begin at explicit layer markers and added regression
+coverage. Re-evaluating the retained exact-head desktop and native artifacts
+locally reduced positive-E deltas to 0.03% (cube), 0.89% (thin-wall frame),
+and 0.35% (travel obstacle); the overhang/support fixture still differs by
+6.04%. This is diagnostic evidence only—the corrected comparator has not yet
+passed a fresh hosted exact-head run.
+
+The unresolved checks remain material: desktop-vs-native reported print-time
+deltas are 9.14–18.02% against the 2% gate on all four fixtures, the
+support-bearing fixture's header filament estimates differ by about 8.9%, and
+acceleration-command warnings remain. Do not relax the gates or describe G3 as
+passed. The updated workflows now rerun both the desktop reference and native
+comparison when comparator code changes, so the next exact-head CI run can
+validate the fix without reusing stale-head evidence.
+
+
 ## 2026-10-15 exact PR-head software and G3 comparison
 
 PR #12 head `f3842b272df76c7a7b7bb39a92b46eabd49a2b57` has completed its exact-head Android, desktop-reference,

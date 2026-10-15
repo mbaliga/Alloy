@@ -164,6 +164,8 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertIn("ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", workflow)
         self.assertIn("ALLOY_PR_MERGE_SHA: ${{ github.sha }}", workflow)
         self.assertIn("ci/compare_g3_artifacts.py", workflow)
+        self.assertIn("parity/compare_gcode.py", workflow)
+        self.assertIn("parity/test_compare_gcode.py", workflow)
         self.assertIn("name: alloy-native-desktop-g3-parity", workflow)
         native_upload = workflow.index("name: alloy-native-g3-evidence")
         compare_step = workflow.index("Compare native G3 output with exact-PR-head Orca reference")
