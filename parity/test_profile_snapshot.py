@@ -28,6 +28,18 @@ class ProfileSnapshotTests(unittest.TestCase):
             set(verify_profile_snapshot.SELECTIONS),
         )
 
+    def test_a1_and_p1s_profiles_include_source_backed_motion_envelopes(self):
+        for profile_id, required in verify_profile_snapshot.MOTION_NATIVE_PROJECTIONS.items():
+            profile = next(
+                json.loads(path.read_text(encoding="utf-8"))
+                for path in PROFILE_DIRECTORY.glob("*.json")
+                if json.loads(path.read_text(encoding="utf-8"))["id"] == profile_id
+            )
+            self.assertTrue(
+                required.issubset(profile["native_settings"]),
+                f"{profile_id} is missing {sorted(required - set(profile['native_settings']))}",
+            )
+
     def test_auto_brim_is_explicitly_normalized_for_slicebeam(self):
         self.assertEqual(
             "no_brim",
