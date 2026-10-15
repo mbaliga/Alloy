@@ -5,30 +5,28 @@ only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
 **Current candidate (2026-10-16):** PR #12 head
-[`9cce2c7a075043598094826413a86bf9e87257c6`](https://github.com/mbaliga/Alloy/commit/9cce2c7a075043598094826413a86bf9e87257c6),
-stacked on PR #13. This head updates this checklist only; the application
-source is unchanged from
-[`ee40fb602d7b2edd245364d60123bf27bd789986`](https://github.com/mbaliga/Alloy/commit/ee40fb602d7b2edd245364d60123bf27bd789986).
-On that exact application source, parity tooling
-[38800659221](https://github.com/mbaliga/Alloy/actions/runs/38800659221),
+[`4dc532d6ad71ec7ab6f5a524bf68bee647290947`](https://github.com/mbaliga/Alloy/commit/4dc532d6ad71ec7ab6f5a524bf68bee647290947),
+stacked on PR #13. This commit repairs native-run concurrency and its CI
+workflow validation; it does not change app behavior from the prior reviewed
+source. On this exact head, parity tooling
+[38802544918](https://github.com/mbaliga/Alloy/actions/runs/38802544918),
 the three-printer static profile pre-gate
-[38800659293](https://github.com/mbaliga/Alloy/actions/runs/38800659293),
+[38802545030](https://github.com/mbaliga/Alloy/actions/runs/38802545030),
 desktop A1 Mini reference slicing
-[38800659257](https://github.com/mbaliga/Alloy/actions/runs/38800659257),
+[38802544908](https://github.com/mbaliga/Alloy/actions/runs/38802544908),
 and the official Orca source snapshot
-[38800659353](https://github.com/mbaliga/Alloy/actions/runs/38800659353)
+[38802544906](https://github.com/mbaliga/Alloy/actions/runs/38802544906)
 passed. Android run
-[38800659309](https://github.com/mbaliga/Alloy/actions/runs/38800659309)
-has built the CI-signed APK and is still running its acceptance tests. The
-optional native run
-[38800659286](https://github.com/mbaliga/Alloy/actions/runs/38800659286)
-is pending behind an older native instrumentation run. It has not produced a
-current-head native APK or test result yet.
+[38802544927](https://github.com/mbaliga/Alloy/actions/runs/38802544927)
+is building the CI-signed APK; acceptance tests have not run yet. Native run
+[38802544902](https://github.com/mbaliga/Alloy/actions/runs/38802544902)
+is building native dependencies. Neither has produced a current-head APK or
+native parity result yet.
 
 **No APK artifact from the current candidate is available yet.** Do not use an
 earlier APK as a substitute: those builds predate the expanded four-fixture A1
 Mini/A1/P1S native smoke coverage. The APK from
-38800659309 is not available for download until its acceptance run completes.
+38802544927 is not available for download until its acceptance run completes.
 When released, use it for software verification only; a CI-debug signature
 does not authorize physical printing or production installation. Record the
 extracted APK's own SHA-256 separately from its ZIP digest. Do not uninstall a
