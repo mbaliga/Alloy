@@ -27,6 +27,14 @@ class G4WorkflowTests(unittest.TestCase):
         )
         self.assertIn("printer: [a1-mini, a1, p1s]", workflow)
         self.assertNotIn("branches:", workflow.split("paths:", 1)[0])
+        for changed_surface in (
+            "ci/verify_profile_snapshot.py",
+            "ci/validate_profile_assets.py",
+            "app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java",
+            "app/src/main/java/com/mbaliga/alloy/NativeSettings.java",
+            "app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java",
+        ):
+            self.assertIn(changed_surface, workflow)
         self.assertIn("--printer \"${{ matrix.printer }}\"", workflow)
         self.assertIn("BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354", workflow)
         self.assertIn("github.com/bambulab/BambuStudio.git", workflow)

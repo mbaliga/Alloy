@@ -6,7 +6,12 @@ on:
       - '.github/workflows/bambu-profile-compatibility.yml'
       - 'parity/audit_path_b_a1mini_profile.py'
       - 'parity/test_g4_workflow.py'
+      - 'ci/verify_profile_snapshot.py'
+      - 'ci/validate_profile_assets.py'
       - 'app/src/main/assets/profiles/**'
+      - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
+      - 'app/src/main/java/com/mbaliga/alloy/NativeSettings.java'
+      - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
   workflow_dispatch:
 
 permissions:
