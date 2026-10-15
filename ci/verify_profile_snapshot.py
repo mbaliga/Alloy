@@ -194,6 +194,42 @@ NATIVE_VALUE_ALIASES = {
     ("process", "print_sequence"): {"by layer": "0", "by object": "1"},
 }
 
+# A1 and P1S ship as planning profiles, but their native adapter still needs
+# the upstream motion/retraction envelope instead of falling back to generic
+# SliceBeam defaults. Keep this narrower than the A1 Mini's fully projected
+# profile: only source-backed fields consumed by the current adapter are
+# required here.
+MOTION_NATIVE_PROJECTIONS = {
+    "bambu.a1.0.4.pla-basic": {
+        "printer_model", "printer_variant",
+        "machine_max_acceleration_e", "machine_max_acceleration_extruding",
+        "machine_max_acceleration_retracting", "machine_max_acceleration_x",
+        "machine_max_acceleration_y", "machine_max_acceleration_z",
+        "machine_max_acceleration_travel", "machine_max_feedrate_e",
+        "machine_max_feedrate_x", "machine_max_feedrate_y", "machine_max_feedrate_z",
+        "machine_max_jerk_e", "machine_max_jerk_x", "machine_max_jerk_y",
+        "machine_max_jerk_z", "default_acceleration", "initial_layer_acceleration",
+        "initial_layer_travel_acceleration", "travel_acceleration",
+        "outer_wall_acceleration", "inner_wall_acceleration", "top_surface_acceleration",
+        "retract_length", "retract_speed", "retract_lift", "retract_before_travel",
+        "retract_layer_change", "retract_before_wipe", "deretract_speed",
+    },
+    "bambu.p1s.0.4.pla-basic": {
+        "printer_model", "printer_variant",
+        "machine_max_acceleration_e", "machine_max_acceleration_extruding",
+        "machine_max_acceleration_retracting", "machine_max_acceleration_x",
+        "machine_max_acceleration_y", "machine_max_acceleration_z",
+        "machine_max_acceleration_travel", "machine_max_feedrate_e",
+        "machine_max_feedrate_x", "machine_max_feedrate_y", "machine_max_feedrate_z",
+        "machine_max_jerk_e", "machine_max_jerk_x", "machine_max_jerk_y",
+        "machine_max_jerk_z", "default_acceleration", "initial_layer_acceleration",
+        "initial_layer_travel_acceleration", "travel_acceleration",
+        "outer_wall_acceleration", "inner_wall_acceleration", "top_surface_acceleration",
+        "retract_length", "retract_speed", "retract_lift", "retract_before_travel",
+        "retract_layer_change", "retract_before_wipe", "deretract_speed",
+    },
+}
+
 
 def git(repo: Path, *args: str) -> str:
     result = subprocess.run(
@@ -422,6 +458,10 @@ def verify(repo: Path, profile_path: Path) -> dict:
         close(actual, expected, label)
     native_checks = verify_native_projection(
         asset, resolved, require_complete=profile_id == "bambu.a1-mini.0.4.pla-basic")
+    checked_native_targets = {item["target"] for item in native_checks}
+    missing_motion = sorted(MOTION_NATIVE_PROJECTIONS.get(profile_id, set()) - checked_native_targets)
+    if missing_motion:
+        raise ValueError("native_settings is missing source-backed motion fields: " + ", ".join(missing_motion))
     return {
         "revision": revision,
         "profile_id": profile_id,
