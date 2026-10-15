@@ -5,8 +5,11 @@ only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
 **Current candidate (2026-10-16):** PR #12 head
-[`ee40fb602d7b2edd245364d60123bf27bd789986`](https://github.com/mbaliga/Alloy/commit/ee40fb602d7b2edd245364d60123bf27bd789986),
-stacked on PR #13. On this exact source, parity tooling
+[`9cce2c7a075043598094826413a86bf9e87257c6`](https://github.com/mbaliga/Alloy/commit/9cce2c7a075043598094826413a86bf9e87257c6),
+stacked on PR #13. This head updates this checklist only; the application
+source is unchanged from
+[`ee40fb602d7b2edd245364d60123bf27bd789986`](https://github.com/mbaliga/Alloy/commit/ee40fb602d7b2edd245364d60123bf27bd789986).
+On that exact application source, parity tooling
 [38800659221](https://github.com/mbaliga/Alloy/actions/runs/38800659221),
 the three-printer static profile pre-gate
 [38800659293](https://github.com/mbaliga/Alloy/actions/runs/38800659293),
@@ -22,9 +25,9 @@ optional native run
 is pending behind an older native instrumentation run. It has not produced a
 current-head native APK or test result yet.
 
-**Do not use older linked APK/artifact IDs below this point for the current
-candidate.** They were built from earlier source and do not include the
-expanded four-fixture A1 Mini/A1/P1S native smoke coverage. The APK from
+**No APK artifact from the current candidate is available yet.** Do not use an
+earlier APK as a substitute: those builds predate the expanded four-fixture A1
+Mini/A1/P1S native smoke coverage. The APK from
 38800659309 is not available for download until its acceptance run completes.
 When released, use it for software verification only; a CI-debug signature
 does not authorize physical printing or production installation. Record the
