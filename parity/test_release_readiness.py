@@ -7,6 +7,13 @@ from pathlib import Path
 from ci.validate_release_readiness import PRINTER_SPECIFIC_GATES, REQUIRED_GATES, validate
 
 
+PHYSICAL_GATES = {
+    "a1-mini": "physical_a1_mini_transport",
+    "a1": "physical_a1_transport",
+    "p1s": "physical_p1s_transport",
+}
+
+
 class ReleaseReadinessTests(unittest.TestCase):
     def _physical_record(self, printer, scope):
         return {
@@ -43,6 +50,19 @@ class ReleaseReadinessTests(unittest.TestCase):
         path.write_text(json.dumps(value), encoding="utf-8")
         return directory, path
 
+    def _attach_physical_record(self, path, value, printer, filename, scope):
+        record = self._physical_record(printer, scope)
+        data = json.dumps(record).encode("utf-8")
+        (path.parent / filename).write_bytes(data)
+        digest = hashlib.sha256(data).hexdigest()
+        reference = {"path": filename, "sha256": digest}
+        value["physical_acceptance_evidence"][printer] = reference
+        value["gate_evidence"][PHYSICAL_GATES[printer]] = {
+            **reference,
+            "printer_id": printer,
+        }
+        path.write_text(json.dumps(value), encoding="utf-8")
+
     def test_all_required_gates_are_explicit(self):
         value = {
             "schema_version": 1,
@@ -53,9 +73,9 @@ class ReleaseReadinessTests(unittest.TestCase):
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         value["physical_acceptance_evidence"] = {
-            "a1-mini": "physical-a1-mini.json",
-            "a1": "physical-a1.json",
-            "p1s": "physical-p1s.json",
+            "a1-mini": {"path": "physical-a1-mini.json", "sha256": "0" * 64},
+            "a1": {"path": "physical-a1.json", "sha256": "0" * 64},
+            "p1s": {"path": "physical-p1s.json", "sha256": "0" * 64},
         }
         directory, path = self._write(value)
         try:
@@ -64,9 +84,8 @@ class ReleaseReadinessTests(unittest.TestCase):
                 "a1": "Bambu Lab A1 / firmware 01.00",
                 "p1s": "Bambu Lab P1S / firmware 01.00",
             }
-            for printer, filename in value["physical_acceptance_evidence"].items():
-                record = self._physical_record(printer, scopes[printer])
-                (path.parent / filename).write_text(json.dumps(record), encoding="utf-8")
+            for printer, reference in value["physical_acceptance_evidence"].items():
+                self._attach_physical_record(path, value, printer, reference["path"], scopes[printer])
             self.assertEqual("a1-mini-acceptance-2027-01-01", validate(path)["evidence_id"])
         finally:
             directory.cleanup()
@@ -113,18 +132,20 @@ class ReleaseReadinessTests(unittest.TestCase):
             "device_scope": "Android arm64 + Bambu Lab A1 Mini / N1, A1, P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
             "physical_acceptance_evidence": {
-                "a1-mini": "mini.json", "a1": "a1.json", "p1s": "p1s.json",
+                "a1-mini": {"path": "mini.json", "sha256": "0" * 64},
+                "a1": {"path": "a1.json", "sha256": "0" * 64},
+                "p1s": {"path": "p1s.json", "sha256": "0" * 64},
             },
         }
         directory, path = self._write(value)
         try:
-            (path.parent / "mini.json").write_text(json.dumps(self._physical_record(
-                "a1-mini", "Bambu Lab A1 Mini / N1 / firmware 01.00")), encoding="utf-8")
-            (path.parent / "a1.json").write_text(json.dumps(self._physical_record(
-                "a1", "Bambu Lab A1 / firmware 01.00")), encoding="utf-8")
             # Deliberately provide A1 evidence for the P1S gate: model substitution must fail.
-            (path.parent / "p1s.json").write_text(json.dumps(self._physical_record(
-                "p1s", "Bambu Lab A1 / firmware 01.00")), encoding="utf-8")
+            self._attach_physical_record(path, value, "a1-mini", "mini.json",
+                                         "Bambu Lab A1 Mini / N1 / firmware 01.00")
+            self._attach_physical_record(path, value, "a1", "a1.json",
+                                         "Bambu Lab A1 / firmware 01.00")
+            self._attach_physical_record(path, value, "p1s", "p1s.json",
+                                         "Bambu Lab A1 / firmware 01.00")
             with self.assertRaisesRegex(SystemExit, "physical P1S acceptance"):
                 validate(path)
         finally:
@@ -208,6 +229,73 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertTrue(all(status == "PENDING" for status in value["gates"].values()))
         with self.assertRaisesRegex(SystemExit, "still contains a placeholder"):
             validate(template)
+
+    def test_physical_acceptance_record_must_be_the_hash_bound_transport_evidence(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "physical_acceptance_evidence": {
+                "a1-mini": {"path": "physical.json", "sha256": "0" * 64},
+                "a1": {"path": "a1.json", "sha256": "0" * 64},
+                "p1s": {"path": "p1s.json", "sha256": "0" * 64},
+            },
+        }
+        directory, path = self._write(value)
+        try:
+            scopes = {
+                "a1-mini": "Bambu Lab A1 Mini / N1 / firmware 01.00",
+                "a1": "Bambu Lab A1 / firmware 01.00",
+                "p1s": "Bambu Lab P1S / firmware 01.00",
+            }
+            for printer, filename in (("a1-mini", "physical.json"), ("a1", "a1.json"), ("p1s", "p1s.json")):
+                self._attach_physical_record(path, value, printer, filename, scopes[printer])
+
+            # The transport gate's own hash-bound report is deliberately substituted.
+            unrelated = path.parent / "unrelated-transport-report.txt"
+            unrelated_bytes = b"a separately hashed but unrelated transport report\n"
+            unrelated.write_bytes(unrelated_bytes)
+            value["gate_evidence"][PHYSICAL_GATES["a1-mini"]].update({
+                "path": unrelated.name,
+                "sha256": hashlib.sha256(unrelated_bytes).hexdigest(),
+            })
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "must be the hash-bound evidence"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
+    def test_physical_acceptance_digest_must_match_record_bytes(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "physical_acceptance_evidence": {
+                "a1-mini": {"path": "physical.json", "sha256": "0" * 64},
+                "a1": {"path": "a1.json", "sha256": "0" * 64},
+                "p1s": {"path": "p1s.json", "sha256": "0" * 64},
+            },
+        }
+        directory, path = self._write(value)
+        try:
+            scopes = {
+                "a1-mini": "Bambu Lab A1 Mini / N1 / firmware 01.00",
+                "a1": "Bambu Lab A1 / firmware 01.00",
+                "p1s": "Bambu Lab P1S / firmware 01.00",
+            }
+            for printer, filename in (("a1-mini", "physical.json"), ("a1", "a1.json"), ("p1s", "p1s.json")):
+                self._attach_physical_record(path, value, printer, filename, scopes[printer])
+            (path.parent / "physical.json").write_text("changed after review", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "SHA-256 does not match"):
+                validate(path)
+        finally:
+            directory.cleanup()
 
 
 if __name__ == "__main__":

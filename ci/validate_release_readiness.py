@@ -130,9 +130,20 @@ def validate(path: Path) -> dict:
     for gate, printer in physical_gate_printers.items():
         if gates[gate] != "PASS":
             continue
-        evidence_name = physical_evidence.get(printer)
+        evidence_item = physical_evidence.get(printer)
+        if not isinstance(evidence_item, dict):
+            fail(f"physical_acceptance_evidence.{printer} must include a path and SHA-256")
+        evidence_name = evidence_item.get("path")
+        expected_sha256 = evidence_item.get("sha256")
         if not isinstance(evidence_name, str) or not evidence_name.strip():
-            fail(f"physical_acceptance_evidence.{printer} is required when {gate} is PASS")
+            fail(f"physical_acceptance_evidence.{printer}.path must be a non-empty relative path")
+        if Path(evidence_name).is_absolute():
+            fail(f"physical_acceptance_evidence.{printer}.path must be relative")
+        if not isinstance(expected_sha256, str) or not SHA256_RE.fullmatch(expected_sha256):
+            fail(f"physical_acceptance_evidence.{printer}.sha256 must be a lowercase SHA-256 digest")
+        gate_item = gate_evidence[gate]
+        if gate_item.get("path") != evidence_name or gate_item.get("sha256") != expected_sha256:
+            fail(f"physical_acceptance_evidence.{printer} must be the hash-bound evidence for {gate}")
         evidence_path = (path.parent / evidence_name).resolve()
         if path.parent.resolve() not in evidence_path.parents:
             fail(f"physical_acceptance_evidence.{printer} must stay beside the readiness record")

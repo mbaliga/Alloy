@@ -43,9 +43,9 @@
     "interruption_and_recovery": { "path": "evidence/REPLACE-WITH-RECOVERY-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" }
   },
   "physical_acceptance_evidence": {
-    "a1-mini": "evidence/REPLACE-WITH-A1-MINI-PHYSICAL-ACCEPTANCE.json",
-    "a1": "evidence/REPLACE-WITH-A1-PHYSICAL-ACCEPTANCE.json",
-    "p1s": "evidence/REPLACE-WITH-P1S-PHYSICAL-ACCEPTANCE.json"
+    "a1-mini": { "path": "evidence/REPLACE-WITH-A1-MINI-PHYSICAL-ACCEPTANCE.json", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "a1": { "path": "evidence/REPLACE-WITH-A1-PHYSICAL-ACCEPTANCE.json", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
+    "p1s": { "path": "evidence/REPLACE-WITH-P1S-PHYSICAL-ACCEPTANCE.json", "sha256": "REPLACE-WITH-64-CHAR-SHA256" }
   },
-  "notes": "Copy to production-readiness.json only after every per-printer gate has reviewed evidence. Each per-printer PASS requires a retained file, matching SHA-256, and matching printer_id under gate_evidence. Each physical transport PASS additionally requires a separate model-matched acceptance record. Never replace PENDING without the corresponding reviewed evidence."
+  "notes": "Copy to production-readiness.json only after every per-printer gate has reviewed evidence. Each per-printer PASS requires a retained file, matching SHA-256, and matching printer_id under gate_evidence. Each physical transport PASS additionally requires a model-matched acceptance record whose path and SHA-256 exactly match that transport gate's gate_evidence entry. Never replace PENDING without the corresponding reviewed evidence."
 }
