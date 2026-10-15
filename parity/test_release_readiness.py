@@ -107,6 +107,23 @@ class ReleaseReadinessTests(unittest.TestCase):
         finally:
             directory.cleanup()
 
+    def test_engine_source_provenance_and_license_gate_cannot_be_omitted_or_softened(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        value["gates"]["native_engine_source_provenance_and_license"] = "PENDING"
+        directory, path = self._write(value)
+        try:
+            with self.assertRaisesRegex(SystemExit, "native_engine_source_provenance_and_license"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
     def test_physical_pass_requires_valid_acceptance_record(self):
         value = {
             "schema_version": 1,

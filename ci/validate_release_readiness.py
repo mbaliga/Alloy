@@ -17,6 +17,7 @@ from pathlib import Path
 
 
 REQUIRED_GATES = (
+    "native_engine_source_provenance_and_license",
     "native_engine_source_build",
     "native_smoke_on_arm64_device",
     "a1_mini_profile_parity",

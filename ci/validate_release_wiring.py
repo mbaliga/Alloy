@@ -71,6 +71,7 @@ def main() -> None:
     for token in (
         "REQUIRED_GATES",
         "PRINTER_SPECIFIC_GATES",
+        "native_engine_source_provenance_and_license",
         'item.get("printer_id") != expected_printer',
         "a1_mini_profile_parity",
         "a1_profile_parity",
@@ -92,6 +93,7 @@ def main() -> None:
             raise SystemExit(f"{READINESS_SCRIPT}: missing production gate: {token}")
     build_text = APP_BUILD.read_text(encoding="utf-8")
     build_required = (
+        "native_engine_source_provenance_and_license",
         "a1_mini_g3_toolpath_parity",
         "a1_g3_toolpath_parity",
         "p1s_g3_toolpath_parity",

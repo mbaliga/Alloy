@@ -80,19 +80,21 @@ case where that flag is enabled without the native engine itself. The profile as
 
 Before calling a build a production release, all of these gates must pass:
 
-1. the optional native engine builds for `arm64-v8a`;
-2. `NativeEngineSmokeTest` passes on a supported arm64 Android device;
-3. the pinned A1 Mini, A1, and P1S profiles each pass their automated
+1. the exact native engine and dependency revisions shipped in the APK/AAB
+   have reviewed source-provenance and license/notice evidence;
+2. the optional native engine builds for `arm64-v8a`;
+3. `NativeEngineSmokeTest` passes on a supported arm64 Android device;
+4. the pinned A1 Mini, A1, and P1S profiles each pass their automated
    Orca/Bambu snapshot checks and per-printer G1-G4 source, runtime, and parity
    checks;
-4. exported `.gcode.3mf` packages pass structural and semantic comparison,
+5. exported `.gcode.3mf` packages pass structural and semantic comparison,
    including the bounded comment-aware G-code safety preflight;
-5. each real A1 Mini, A1, and P1S independently confirms discovery, upload,
+6. each real A1 Mini, A1, and P1S independently confirms discovery, upload,
    start, running, completion, pause/resume, cancellation, and recovery over
    LAN transport, including the FTPS control/data TLS session-reuse requirement
    where supported; the start path must also refuse an explicit already-busy
    telemetry state before publishing `project_file`; and
-6. signed Android installation, upgrade, interruption, offline recovery and
+7. signed Android installation, upgrade, interruption, offline recovery and
    release-artifact checks pass on supported devices.
 
 The release workflow's instrumentation APK is a compiled test harness, not
