@@ -25,9 +25,11 @@ and the official-source snapshot
 ([38791097151](https://github.com/mbaliga/Alloy/actions/runs/38791097151)).
 Android acceptance run
 [38791097221](https://github.com/mbaliga/Alloy/actions/runs/38791097221)
-is queued; native build/instrumentation/G3 run
+is still queued. Native build/instrumentation/G3 run
 [38791097066](https://github.com/mbaliga/Alloy/actions/runs/38791097066)
-is pending without a job started. These must not be called passes.
+ended `cancelled` before any job started, so it produced no native or G3
+evidence. No replacement native run has completed on this exact code tree;
+neither status is a pass.
 
 The last completed native-vs-desktop G3 report still fails the 2% print-time
 gate (9.14–18.02% deltas across four fixtures) and the support fixture's
@@ -3174,5 +3176,3 @@ software-only manifest. Artifacts:
 These results establish software/packaging evidence only. They do not establish
 physical print quality, direct-send transport reliability, Bambu Handy
 acceptance, support parity, desktop G3 parity, production signing, or A1/P1S
-physical qualification. See the consolidated on-device checklist and narrow
-pilot runbook for outstanding checks.
