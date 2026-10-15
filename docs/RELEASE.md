@@ -43,19 +43,23 @@ promoted as an accidentally mismatched test harness.
 
 Before any pushed `v*` tag can reach the signing step, CI also requires a
 reviewed `release/production-readiness.json` record. The record must mark every
-required gate `PASS`, including Bambu TreeSupport3D parity and a physical A1
-Mini transport run; emulator/build success alone cannot satisfy those fields.
+required gate `PASS`, including separate profile, toolpath, and runtime parity
+for A1 Mini, A1, and P1S; Bambu TreeSupport3D parity; and separate physical
+transport runs on all three printers. Evidence from one printer cannot be
+substituted for another, and emulator/build success alone cannot satisfy those
+fields.
 Before treating the first no-support PLA direct-print beta as a candidate for
 that physical transport run, complete the narrower
 [`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) evidence record. It
 qualifies native output and visible print quality for the initial A1 Mini / 0.4
 mm / PLA Basic / no-support scope. It is intentionally **not** a substitute
 for the production support-parity or physical transport gates.
-When physical transport is marked `PASS`, the record must additionally point to
-the reviewed `physical-a1-mini-acceptance.json` beside it. That nested record
-is validated for the A1 Mini `N1` model code, APK/signer/certificate hashes,
-and every upload/start/telemetry/recovery case. The schemas are enforced by
-`ci/validate_release_readiness.py` and
+When a physical transport gate is marked `PASS`, the record must additionally
+point to a separate reviewed acceptance JSON record for that exact printer
+(`a1-mini`, `a1`, or `p1s`) beside it. Each nested record is checked against its
+declared model (including the A1 Mini `N1` model code), APK/signer/certificate
+hashes, and every upload/start/telemetry/recovery case. The schemas are enforced
+by `ci/validate_release_readiness.py` and
 `ci/validate_physical_a1_acceptance.py`.
 Each `PASS` entry must also have a `gate_evidence` record with a retained file
 path relative to `production-readiness.json` and that file's lowercase
@@ -74,14 +78,16 @@ Before calling a build a production release, all of these gates must pass:
 
 1. the optional native engine builds for `arm64-v8a`;
 2. `NativeEngineSmokeTest` passes on a supported arm64 Android device;
-3. the pinned A1 Mini profile passes the automated Orca snapshot/blob check and
-   the remaining G1-G4 source, runtime and parity checks;
+3. the pinned A1 Mini, A1, and P1S profiles each pass their automated
+   Orca/Bambu snapshot checks and per-printer G1-G4 source, runtime, and parity
+   checks;
 4. exported `.gcode.3mf` packages pass structural and semantic comparison,
    including the bounded comment-aware G-code safety preflight;
-5. a real A1 Mini confirms upload, start, running, completion and cancellation
-   telemetry over the LAN transport, including the FTPS control/data TLS
-   session-reuse requirement; the start path must also refuse an explicit
-   already-busy telemetry state before publishing `project_file`; and
+5. each real A1 Mini, A1, and P1S independently confirms discovery, upload,
+   start, running, completion, pause/resume, cancellation, and recovery over
+   LAN transport, including the FTPS control/data TLS session-reuse requirement
+   where supported; the start path must also refuse an explicit already-busy
+   telemetry state before publishing `project_file`; and
 6. signed Android installation, upgrade, interruption, offline recovery and
    release-artifact checks pass on supported devices.
 
