@@ -156,6 +156,14 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertEqual(1, workflow.count("sudo udevadm trigger --name-match=kvm"))
         self.assertIn("arm64-v8a JNI library", workflow)
 
+    def test_native_runs_for_distinct_pr_heads_do_not_queue_behind_stale_emulators(self) -> None:
+        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        self.assertIn(
+            "group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}",
+            workflow,
+        )
+        self.assertIn("cancel-in-progress: false", workflow)
+
     def test_native_pr_g3_evidence_is_compared_with_exact_head_reference(self) -> None:
         workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn("actions: read", workflow)

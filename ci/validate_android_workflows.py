@@ -186,8 +186,12 @@ def main() -> None:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must select KVM when available and allow software fallback")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
         raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before emulator boots")
-    if "group: alloy-native-${{ github.ref }}" not in native_text or "cancel-in-progress: false" not in native_text:
-        raise SystemExit(f"{native}: native source builds must queue instead of cancelling live diagnostic runs")
+    if (
+        "group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}"
+        not in native_text
+        or "cancel-in-progress: false" not in native_text
+    ):
+        raise SystemExit(f"{native}: preserve live diagnostics while isolating native runs by source revision")
     if native_text.count("app/src/androidTest/**") != 2:
         raise SystemExit(f"{native}: every full-suite native trigger must include all instrumentation tests")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
