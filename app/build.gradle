@@ -109,6 +109,60 @@ if (productionRelease) {
                 throw new GradleException("release evidence digest mismatch for ${gate}")
             }
         }
+        def physicalGateIds = [
+                'physical_a1_mini_transport': 'a1-mini',
+                'physical_a1_transport': 'a1',
+                'physical_p1s_transport': 'p1s'
+        ]
+        def physicalAcceptance = readiness.physical_acceptance_evidence
+        if (!(physicalAcceptance instanceof Map)) {
+            throw new GradleException('release readiness must retain separate physical acceptance records')
+        }
+        def requiredPhysicalCases = [
+                'discovery', 'upload', 'start', 'running', 'completion',
+                'pause_resume', 'cancel', 'recovery', 'offline'
+        ]
+        def requiredPhysicalHashes = [
+                'apk_sha256', 'instrumentation_sha256', 'signer_sha256',
+                'printer_certificate_sha256'
+        ]
+        physicalGateIds.each { gate, printerId ->
+            def acceptancePath = physicalAcceptance[printerId]
+            if (!(acceptancePath instanceof String) || acceptancePath.trim().isEmpty()
+                    || new File(acceptancePath).absolute) {
+                throw new GradleException("physical acceptance evidence for ${printerId} must be a relative path")
+            }
+            def acceptanceFile = new File(evidenceRoot, acceptancePath).canonicalFile
+            if (!acceptanceFile.toPath().startsWith(evidenceRoot.toPath()) || !acceptanceFile.isFile()) {
+                throw new GradleException("physical acceptance evidence for ${printerId} is missing or escapes the evidence directory")
+            }
+            def acceptance = new JsonSlurper().parse(acceptanceFile)
+            if (acceptance.schema_version != 1) {
+                throw new GradleException("physical acceptance evidence for ${printerId} has an unsupported schema")
+            }
+            ['evidence_id', 'verified_at', 'reviewer', 'device_scope'].each { field ->
+                if (!(acceptance[field] instanceof String) || acceptance[field].trim().isEmpty()) {
+                    throw new GradleException("physical acceptance evidence for ${printerId} is missing ${field}")
+                }
+            }
+            def printerScope = acceptance.device_scope.toLowerCase(Locale.ROOT)
+            def matchesPrinter = printerId == 'a1-mini'
+                    ? printerScope.contains('a1 mini') && printerScope.contains('n1')
+                    : printerId == 'a1'
+                            ? (printerScope =~ /\ba1\b/) && !printerScope.contains('a1 mini')
+                            : printerScope.contains('p1s')
+            if (!matchesPrinter) {
+                throw new GradleException("physical acceptance evidence does not match printer ${printerId}")
+            }
+            if (requiredPhysicalHashes.any { !(acceptance[it] instanceof String)
+                    || !(acceptance[it] ==~ /[0-9a-fA-F]{64}/) }) {
+                throw new GradleException("physical acceptance evidence for ${printerId} has invalid SHA-256 fields")
+            }
+            if (!(acceptance.cases instanceof Map)
+                    || requiredPhysicalCases.any { acceptance.cases[it] != 'PASS' }) {
+                throw new GradleException("physical acceptance evidence for ${printerId} is incomplete")
+            }
+        }
     } catch (GradleException error) {
         throw error
     } catch (Exception error) {
