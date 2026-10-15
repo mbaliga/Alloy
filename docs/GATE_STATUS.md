@@ -2,6 +2,41 @@
 
 Date: 2026-10-16
 
+## 2026-10-16 restore native smoke-test source and rerun exact-head gates
+
+The PR branch had a corrupted binary blob at
+`app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java` even
+though the local tested tree contained the valid 917-line Java test. I restored
+the source from the local tree in commit
+[`ac8590a`](https://github.com/mbaliga/Alloy/commit/ac8590aceec53c3b4e509fc8dca2f77e07608c6f);
+the GitHub file now returns UTF-8 source and its blob SHA matches the local
+file (`7732803b142cd8976c0525e7fb6d48276c79fe08`). The local tree and PR head
+tree were verified identical after the repair.
+
+Local checks on that tree passed: 122 parity tests, profile asset validation,
+Android workflow validation, native wiring validation and `git diff --check`.
+Fresh exact-head CI on `ac8590a` passed parity tooling
+([38791097168](https://github.com/mbaliga/Alloy/actions/runs/38791097168)),
+the A1 Mini/A1/P1S static profile compatibility pre-gate
+([38791097277](https://github.com/mbaliga/Alloy/actions/runs/38791097277)),
+desktop Orca reference slicing
+([38791097217](https://github.com/mbaliga/Alloy/actions/runs/38791097217)),
+and the official-source snapshot
+([38791097151](https://github.com/mbaliga/Alloy/actions/runs/38791097151)).
+Android acceptance run
+[38791097221](https://github.com/mbaliga/Alloy/actions/runs/38791097221)
+is queued; native build/instrumentation/G3 run
+[38791097066](https://github.com/mbaliga/Alloy/actions/runs/38791097066)
+is pending without a job started. These must not be called passes.
+
+The last completed native-vs-desktop G3 report still fails the 2% print-time
+gate (9.14–18.02% deltas across four fixtures) and the support fixture's
+filament estimate gate (~8.9%). Corrected local metric scoping brings three
+fixtures' positive-extrusion deltas below 1%, but the support fixture remains
+at 6.04%. A fresh exact-head native comparison is still required; do not lower
+tolerances or promote output as printer-ready. No physical-print, Bambu Handy,
+or release-signing evidence was added by restoring this test source.
+
 ## 2026-10-16 source-backed A1/P1S native motion settings
 
 The A1 and P1S planning profiles now carry the pinned Bambu Studio motion,
