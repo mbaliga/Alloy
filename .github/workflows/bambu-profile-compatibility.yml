@@ -2,7 +2,6 @@ name: Bambu printer profile compatibility pre-gate
 
 on:
   pull_request:
-    branches: [stage1-gates-prep, codex/fix-native-test-status]
     paths:
       - '.github/workflows/bambu-profile-compatibility.yml'
       - 'parity/audit_path_b_a1mini_profile.py'

@@ -26,6 +26,7 @@ class G4WorkflowTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("printer: [a1-mini, a1, p1s]", workflow)
+        self.assertNotIn("branches:", workflow.split("paths:", 1)[0])
         self.assertIn("--printer \"${{ matrix.printer }}\"", workflow)
         self.assertIn("BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354", workflow)
         self.assertIn("github.com/bambulab/BambuStudio.git", workflow)
