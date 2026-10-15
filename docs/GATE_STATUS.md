@@ -14,13 +14,22 @@ the generated G-code. The profile and test changes are on PR #12 at
 [`adbbd86`](https://github.com/mbaliga/Alloy/commit/adbbd86be0af40837b37bd0df8d5973bdb2c42b4).
 
 Local verification passed: 122 parity tests, all packaged profile asset
-validation, and whitespace checks. A fresh hosted Android/native run has not
-been observed for this exact commit; GitHub API publication did not start an
-Actions run, and authenticated Git transport is unavailable in this session.
-The prior static compatibility matrix at commit `d07b58f` remains only a
-pre-gate and does not validate these new A1/P1S motion projections. Do not
-promote runtime or print-readiness claims until exact-head tests and subsequent
-physical qualification pass.
+validation, and whitespace checks. On exact PR head
+[`7a5d42d`](https://github.com/mbaliga/Alloy/commit/7a5d42ddf80b6cc7cf4f26d36bbf92c3fcdecfc0),
+the A1 Mini/A1/P1S compatibility matrix passed in run
+[38789741097](https://github.com/mbaliga/Alloy/actions/runs/38789741097), parity
+tooling passed in [38789741101](https://github.com/mbaliga/Alloy/actions/runs/38789741101),
+desktop A1 Mini reference slices passed in
+[38789741127](https://github.com/mbaliga/Alloy/actions/runs/38789741127), and
+the official-source snapshot passed in
+[38789741187](https://github.com/mbaliga/Alloy/actions/runs/38789741187).
+The ordinary Android run [38789741022](https://github.com/mbaliga/Alloy/actions/runs/38789741022)
+is still queued, and optional native-engine run
+[38789741132](https://github.com/mbaliga/Alloy/actions/runs/38789741132)
+remains pending with no job started. The earlier matrix at `d07b58f` is
+superseded by the exact-head matrix result, but neither static profile audit
+nor the desktop reference establishes runtime profile parity, native semantic
+parity, or physical print readiness. Keep those claims fail-closed.
 
 ## 2026-10-16 three-printer static profile compatibility pre-gate
 
