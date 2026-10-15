@@ -5,6 +5,7 @@
   "reviewer": "REPLACE-WITH-REVIEWER",
   "device_scope": "Bambu Lab A1 Mini / N1, A1, and P1S / exact firmware versions REPLACE",
   "gates": {
+    "native_engine_source_provenance_and_license": "PENDING",
     "native_engine_source_build": "PENDING",
     "native_smoke_on_arm64_device": "PENDING",
     "a1_mini_profile_parity": "PENDING",
@@ -24,6 +25,7 @@
     "interruption_and_recovery": "PENDING"
   },
   "gate_evidence": {
+    "native_engine_source_provenance_and_license": { "path": "evidence/REPLACE-WITH-SHIPPED-ENGINE-SOURCE-AND-LICENSE-AUDIT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
     "native_engine_source_build": { "path": "evidence/REPLACE-WITH-NATIVE-BUILD-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
     "native_smoke_on_arm64_device": { "path": "evidence/REPLACE-WITH-ARM64-SMOKE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
     "a1_mini_profile_parity": { "path": "evidence/REPLACE-WITH-A1-MINI-PROFILE-REPORT", "sha256": "REPLACE-WITH-64-CHAR-SHA256", "printer_id": "a1-mini" },
@@ -47,5 +49,5 @@
     "a1": { "path": "evidence/REPLACE-WITH-A1-PHYSICAL-ACCEPTANCE.json", "sha256": "REPLACE-WITH-64-CHAR-SHA256" },
     "p1s": { "path": "evidence/REPLACE-WITH-P1S-PHYSICAL-ACCEPTANCE.json", "sha256": "REPLACE-WITH-64-CHAR-SHA256" }
   },
-  "notes": "Copy to production-readiness.json only after every per-printer gate has reviewed evidence. Each per-printer PASS requires a retained file, matching SHA-256, and matching printer_id under gate_evidence. Each physical transport PASS additionally requires a model-matched acceptance record whose path and SHA-256 exactly match that transport gate's gate_evidence entry. Never replace PENDING without the corresponding reviewed evidence."
+  "notes": "Copy to production-readiness.json only after every gate has reviewed evidence, including provenance and licensing for the exact engine/dependency source shipped in the artifact. Each per-printer PASS requires a retained file, matching SHA-256, and matching printer_id under gate_evidence. Each physical transport PASS additionally requires a model-matched acceptance record whose path and SHA-256 exactly match that transport gate's gate_evidence entry. Never replace PENDING without the corresponding reviewed evidence."
 }

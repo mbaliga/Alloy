@@ -55,6 +55,7 @@ if (productionRelease) {
     try {
         def readiness = new JsonSlurper().parse(readinessFile)
         def requiredReadinessGates = [
+                'native_engine_source_provenance_and_license',
                 'native_engine_source_build', 'native_smoke_on_arm64_device',
                 'a1_mini_profile_parity', 'a1_profile_parity', 'p1s_profile_parity',
                 'a1_mini_g3_toolpath_parity', 'a1_g3_toolpath_parity', 'p1s_g3_toolpath_parity',
