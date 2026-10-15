@@ -33,18 +33,20 @@ public final class NativeEngineSmokeTest {
         assertSlicesAndStages(context, config, "box-20mm.stl", "native-smoke-box");
     }
 
-    @Test(timeout = 240_000)
+    @Test(timeout = 480_000)
     public void slicesAndStagesReviewOnlyPackagesForAllThreeInitialBambuProfiles() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         java.util.List<ProfileCatalog.Profile> profiles = ProfileCatalog.loadInitial(context.getAssets());
         Assert.assertEquals("the initial Bambu cohort must remain A1 Mini, A1 and P1S", 3, profiles.size());
-        MeshModel mesh;
-        try (InputStream input = context.getAssets().open("models/box-20mm.stl")) {
-            mesh = MeshModel.read("box-20mm.stl", input);
-        }
         NativeSlicerEngine engine = new NativeSlicerEngine(context.getCacheDir(), false);
         String[] printerIds = {"bambu.a1-mini", "bambu.a1", "bambu.p1s"};
+        String[] fixtures = {
+                "box-20mm.stl",
+                "overhang-support-fixture.stl",
+                "thin-wall-frame-fixture.stl",
+                "travel_obstacle.stl"
+        };
         for (int i = 0; i < printerIds.length; i++) {
             ProfileCatalog.Profile profile = profiles.get(i);
             Assert.assertEquals("profiles must keep their documented order", printerIds[i], profile.printerId);
@@ -57,38 +59,50 @@ public final class NativeEngineSmokeTest {
             Assert.assertEquals(profile.nozzleTemperature, config.nozzleTemperature, 0.001f);
             Assert.assertEquals(profile.bedTemperature, config.bedTemperature, 0.001f);
 
-            Slicer.Result result = engine.slice(mesh, config, null);
-            Assert.assertEquals("each printer profile must reach the native slicer",
-                    NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
-            Assert.assertFalse("software smoke evidence must not qualify direct send", result.engineVerified);
-            Assert.assertFalse("native result must contain toolpaths", result.gcode.isEmpty());
-            Assert.assertFalse("native result must contain inspectable layers", result.layers.isEmpty());
-            Assert.assertTrue("selected nozzle temperature must reach the toolpath for " + profile.printerId,
-                    result.gcode.contains("M109 S" + Math.round(profile.nozzleTemperature)));
             String selectedAcceleration = config.nativeSettings.get("default_acceleration");
             Assert.assertNotNull("each initial printer profile must carry its source-backed default acceleration",
                     selectedAcceleration);
             String firstAcceleration = selectedAcceleration.split(",", 2)[0].trim();
-            Assert.assertTrue("source-backed default acceleration must reach the native toolpath for " + profile.printerId,
-                    result.gcode.contains("M204 S" + Math.round(Float.parseFloat(firstAcceleration))));
-            GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
-            Assert.assertTrue(profile.printerId + ": " + safety.summary(), safety.isValid());
-            Assert.assertTrue("toolpath must contain printable motion for " + profile.printerId,
-                    safety.hasPrintableMotion);
+            for (String fixture : fixtures) {
+                MeshModel mesh;
+                try (InputStream input = context.getAssets().open("models/" + fixture)) {
+                    mesh = MeshModel.read(fixture, input);
+                }
+                Slicer.Config fixtureConfig = config.copy();
+                if (fixture.equals("overhang-support-fixture.stl")) fixtureConfig.supports = true;
 
-            File storage = new File(context.getCacheDir(), "native-profile-" + profile.printerId
-                    + "-" + System.nanoTime());
-            PrinterTransport.Artifact artifact = null;
-            try {
-                artifact = ArtifactStore.stage(storage, mesh, result, config,
-                        "native-profile-" + profile.printerId);
-                Assert.assertTrue("profile package must be non-empty for " + profile.printerId,
-                        artifact.sizeBytes > 0L);
-                GcodePackageValidator.validate(artifact.sourceFile, config);
-            } finally {
-                if (artifact != null && artifact.sourceFile.exists())
-                    Assert.assertTrue(artifact.sourceFile.delete());
-                if (storage.exists()) Assert.assertTrue(storage.delete());
+                Slicer.Result result = engine.slice(mesh, fixtureConfig, null);
+                String scope = profile.printerId + " / " + fixture;
+                Assert.assertEquals(scope + " must reach the native slicer",
+                        NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
+                Assert.assertFalse("software smoke evidence must not qualify direct send", result.engineVerified);
+                Assert.assertFalse(scope + " must contain toolpaths", result.gcode.isEmpty());
+                Assert.assertFalse(scope + " must contain inspectable layers", result.layers.isEmpty());
+                Assert.assertTrue(scope + " must use the selected nozzle temperature",
+                        result.gcode.contains("M109 S" + Math.round(profile.nozzleTemperature)));
+                Assert.assertTrue(scope + " must use the source-backed profile acceleration",
+                        result.gcode.contains("M204 S" + Math.round(Float.parseFloat(firstAcceleration))));
+                GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
+                Assert.assertTrue(scope + ": " + safety.summary(), safety.isValid());
+                Assert.assertTrue(scope + " must contain printable motion", safety.hasPrintableMotion);
+                if (fixtureConfig.supports) {
+                    Assert.assertTrue(scope + " must include support toolpaths",
+                            result.gcode.contains(";TYPE:Support"));
+                }
+
+                File storage = new File(context.getCacheDir(), "native-profile-" + profile.printerId
+                        + "-" + fixture + "-" + System.nanoTime());
+                PrinterTransport.Artifact artifact = null;
+                try {
+                    artifact = ArtifactStore.stage(storage, mesh, result, fixtureConfig,
+                            "native-profile-" + profile.printerId + "-" + fixture);
+                    Assert.assertTrue(scope + " package must be non-empty", artifact.sizeBytes > 0L);
+                    GcodePackageValidator.validate(artifact.sourceFile, fixtureConfig);
+                } finally {
+                    if (artifact != null && artifact.sourceFile.exists())
+                        Assert.assertTrue(artifact.sourceFile.delete());
+                    if (storage.exists()) Assert.assertTrue(storage.delete());
+                }
             }
         }
     }

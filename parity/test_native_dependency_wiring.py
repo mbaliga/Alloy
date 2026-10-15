@@ -175,6 +175,26 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertLess(compare_step, report_upload)
         self.assertLess(report_upload, pilot)
 
+    def test_all_initial_printers_slice_representative_review_only_geometry(self) -> None:
+        smoke = (ROOT / "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java").read_text(
+            encoding="utf-8"
+        )
+        start = smoke.index("public void slicesAndStagesReviewOnlyPackagesForAllThreeInitialBambuProfiles")
+        end = smoke.index("@Test", start)
+        test_body = smoke[start:end]
+        for fixture in (
+            "box-20mm.stl",
+            "overhang-support-fixture.stl",
+            "thin-wall-frame-fixture.stl",
+            "travel_obstacle.stl",
+        ):
+            self.assertIn(f'"{fixture}"', test_body)
+        self.assertIn('String[] printerIds = {"bambu.a1-mini", "bambu.a1", "bambu.p1s"}', test_body)
+        self.assertIn('fixtureConfig.supports = true', test_body)
+        self.assertIn('Assert.assertFalse("software smoke evidence must not qualify direct send", result.engineVerified)',
+                      test_body)
+        self.assertIn("GcodePackageValidator.validate(artifact.sourceFile, fixtureConfig)", test_body)
+
     def test_native_target_uses_pinned_libnoise_not_the_handwritten_stub(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         fuzzy = (ROOT / "app/src/main/jni/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp").read_text(encoding="utf-8")
