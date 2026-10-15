@@ -63,9 +63,11 @@ by `ci/validate_release_readiness.py` and
 `ci/validate_physical_a1_acceptance.py`.
 Each `PASS` entry must also have a `gate_evidence` record with a retained file
 path relative to `production-readiness.json` and that file's lowercase
-SHA-256 digest. The validator rejects missing files, changed digests, absolute
-paths and paths that escape the evidence directory; replacing a gate value
-with `PASS` alone cannot satisfy the release check.
+SHA-256 digest. Every printer-specific gate must also identify its matching
+`printer_id`; the record's overall device scope must name all three supported
+printers. The validator rejects missing files, mismatched printer IDs, changed
+digests, absolute paths and paths that escape the evidence directory; replacing
+a gate value with `PASS` alone cannot satisfy the release check.
 
 `alloyNativeEngineVerified` is explicitly forced to `false` in the release
 candidate workflow; setting it to `true` is an

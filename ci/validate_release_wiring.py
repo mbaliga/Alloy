@@ -70,6 +70,8 @@ def main() -> None:
         raise SystemExit(f"{SIGNING_SCRIPT}: missing signer-pair verification: {missing_signing}")
     for token in (
         "REQUIRED_GATES",
+        "PRINTER_SPECIFIC_GATES",
+        'item.get("printer_id") != expected_printer',
         "a1_mini_profile_parity",
         "a1_profile_parity",
         "p1s_profile_parity",
@@ -95,6 +97,10 @@ def main() -> None:
         "p1s_g3_toolpath_parity",
         "physical_a1_transport",
         "physical_p1s_transport",
+        "readiness.device_scope",
+        "readiness.gate_evidence",
+        "item.printer_id",
+        "MessageDigest.getInstance('SHA-256')",
         "validateNativePrebuiltDirectory",
         "tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }",
         "includeSuppliedReferenceVisuals",
