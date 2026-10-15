@@ -105,6 +105,8 @@ def main() -> None:
         "requiredPhysicalCases",
         "printerScope.contains('n1')",
         "acceptance.cases[it] != 'PASS'",
+        "physicalGateEvidence.path != acceptanceEvidence.path",
+        "physicalGateEvidence.sha256 != acceptanceEvidence.sha256",
         "validateNativePrebuiltDirectory",
         "tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }",
         "includeSuppliedReferenceVisuals",

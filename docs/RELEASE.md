@@ -55,11 +55,13 @@ qualifies native output and visible print quality for the initial A1 Mini / 0.4
 mm / PLA Basic / no-support scope. It is intentionally **not** a substitute
 for the production support-parity or physical transport gates.
 When a physical transport gate is marked `PASS`, the record must additionally
-point to a separate reviewed acceptance JSON record for that exact printer
-(`a1-mini`, `a1`, or `p1s`) beside it. Each nested record is checked against its
-declared model (including the A1 Mini `N1` model code), APK/signer/certificate
-hashes, and every upload/start/telemetry/recovery case. The schemas are enforced
-by `ci/validate_release_readiness.py` and
+point to a reviewed acceptance JSON record for that exact printer (`a1-mini`,
+`a1`, or `p1s`). Its path and SHA-256 must exactly match the hash-checked
+`gate_evidence` entry for that transport gate, so the model/case record itself
+cannot be swapped independently of the evidence digest. Each nested record is
+checked against its declared model (including the A1 Mini `N1` model code),
+APK/signer/certificate hashes, and every upload/start/telemetry/recovery case.
+The schemas are enforced by `ci/validate_release_readiness.py` and
 `ci/validate_physical_a1_acceptance.py`.
 Each `PASS` entry must also have a `gate_evidence` record with a retained file
 path relative to `production-readiness.json` and that file's lowercase
