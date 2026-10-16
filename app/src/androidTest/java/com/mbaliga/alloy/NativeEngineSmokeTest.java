@@ -322,7 +322,8 @@ public final class NativeEngineSmokeTest {
             Assert.assertTrue(serialized.contains("support_tree_branch_diameter_double_wall = 0"));
             Assert.assertTrue(serialized.contains("support_tree_branch_distance = 5"));
             Assert.assertTrue(serialized.contains("support_tree_branch_diameter_angle = 5"));
-        Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_diameter_organic = 2"));
             Assert.assertTrue(serialized.contains("filament_max_volumetric_speed = 21"));
             Assert.assertTrue(serialized.contains("max_volumetric_speed = 0"));
             Assert.assertTrue(serialized.contains("gcode_flavor = marlin2"));
