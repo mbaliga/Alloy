@@ -5354,7 +5354,7 @@ public final class MainActivity extends Activity {
         intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
     }
 
-    /** Offer a bounded package to another Android app without implying recipient compatibility. */
+    /** Share only a qualified print package; exporting an unverified file remains a separate path. */
     private void sharePackage() {
         sharePackage(false);
     }
@@ -5377,18 +5377,16 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
             return;
         }
-        if (preferBambuHandy) {
-            String handoffBlock = BambuHandyHandoff.validationBlockReason(
-                    report.isValid(), slice.engineVerified, profile != null && profile.verified,
-                    SupportEngineStatus.physicalPrintReady(config, slice));
-            if (handoffBlock != null) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Not ready for Bambu Handy")
-                        .setMessage(handoffBlock + "\n\nYou can still export or share the package for inspection, but Alloy will not label or hand it off as printer-ready.")
-                        .setPositiveButton("Understood", null)
-                        .show();
-                return;
-            }
+        String handoffBlock = BambuHandyHandoff.validationBlockReason(
+                report.isValid(), slice.engineVerified, profile != null && profile.verified,
+                SupportEngineStatus.physicalPrintReady(config, slice));
+        if (handoffBlock != null) {
+            new AlertDialog.Builder(this)
+                    .setTitle(preferBambuHandy ? "Not ready for Bambu Handy" : "Package not ready to share")
+                    .setMessage(handoffBlock + "\n\nAlloy will not share an unqualified print job to another app. You can still export it for inspection; exported jobs remain marked unverified and must not be printed.")
+                    .setPositiveButton("Understood", null)
+                    .show();
+            return;
         }
         try {
             if (stagedArtifact == null || stagedArtifact.sourceFile == null

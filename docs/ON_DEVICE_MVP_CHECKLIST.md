@@ -42,6 +42,11 @@ This artifact is suitable only for inspecting the app and package files; do not
 upload the generated jobs to Bambu Handy, send them to the printer, or print.
 Keep the debug-signed build separate from any working production installation.
 
+The current follow-up candidate [`f0c8b22706703a4b46fe94aa9370bb0f49a07282`](https://github.com/mbaliga/Alloy/commit/f0c8b22706703a4b46fe94aa9370bb0f49a07282)
+adds an explicit external-share gate for unqualified packages; its CI runs are
+pending. Results below describe verified behavior at source `4dc532d`, not this
+new change.
+
 The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
 physical printing, Bambu Handy acceptance, direct-send qualification, or
@@ -190,19 +195,23 @@ part of the first physical pilot.
   unavailable/not reported unless a qualified engine or printer supplied them.
 - Export the `.gcode.3mf`; reopen it in a compatible desktop verifier if
   available and retain its SHA-256.
-- With Bambu Handy installed, tap **Share to Bambu Handy** for a structurally
-  validated package. On Android 11+, confirm Alloy resolves the intended
-  receiver and launches Handy directly; then check Handy's own import result.
-  A successful launch is not proof of acceptance. If Handy is absent or has no
-  receiver, confirm the ordinary chooser fallback opens and can be cancelled
-  without altering the package. Alloy must not call the file Bambu-ready or
-  claim Handy accepted it unless the app visibly confirms the import.
+- While the engine/profile/support gates are unverified, tap both **Share
+  package** and **Try Bambu Handy**. Each must block external sharing with a
+  clear reason; neither may launch Android's chooser or Handy. **Export package**
+  may still save a review copy, visibly marked unverified. Do not open that
+  review copy in Handy or print it.
+- Only after the package, engine, selected printer profile and any requested
+  support engine are qualified should either share action become available.
+  Then verify Android resolves and launches Handy (or falls back to a
+  cancellable chooser if Handy is unavailable), and inspect Handy's own import
+  result. A successful launch is not proof of acceptance.
 - Return to Alloy and open **Print readiness**. In the ordinary build, confirm
   direct-print controls remain blocked until every native/profile/support/
   artifact/pairing/certificate and recovery gate is actually satisfied.
 
-Expected: a structurally validated, inspectable package can be exported; no
-unverified physical dispatch or Bambu Handy compatibility claim is made.
+Expected: an inspectable package can be exported, but unqualified jobs cannot
+be externally handed off through Alloy. No physical dispatch or Bambu Handy
+compatibility claim is made until evidence passes.
 
 ## 6. Narrow A1 Mini physical pilot — currently blocked
 
