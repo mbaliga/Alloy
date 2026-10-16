@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import subprocess
 from pathlib import Path
 
@@ -194,6 +195,14 @@ NATIVE_VALUE_ALIASES = {
     ("process", "print_sequence"): {"by layer": "0", "by object": "1"},
 }
 
+# These organic TreeSupport3D values are not present in Bambu's legacy A1 Mini
+# process JSON. Keep them explicit and verify their defaults against the exact
+# pinned Orca engine source instead of pretending they came from Bambu.
+NATIVE_ENGINE_DEFAULTS = {
+    "support_tree_branch_distance_organic": ("tree_support_branch_distance_organic", "1"),
+    "support_tree_branch_diameter_organic": ("tree_support_branch_diameter_organic", "2"),
+}
+
 # A1 and P1S ship as planning profiles, but their native adapter still needs
 # the upstream motion/retraction envelope instead of falling back to generic
 # SliceBeam defaults. Keep this narrower than the A1 Mini's fully projected
@@ -314,15 +323,51 @@ def normalize_native_projection(target: str, kind: str, source_key: str,
     return value
 
 
-def verify_native_projection(asset: dict, resolved: dict[str, dict], require_complete: bool) -> list[dict[str, str]]:
+def verify_engine_native_defaults(repo: Path, native: dict) -> list[dict[str, str]]:
+    source_path = repo / "src/libslic3r/PrintConfig.cpp"
+    if not source_path.is_file():
+        raise ValueError(f"pinned Orca engine defaults source is missing: {source_path}")
+    source = source_path.read_text(encoding="utf-8", errors="replace")
+    checks: list[dict[str, str]] = []
+    for target, (engine_key, expected) in NATIVE_ENGINE_DEFAULTS.items():
+        if target not in native:
+            continue
+        declaration = re.search(
+            rf'this->add\("{re.escape(engine_key)}",\s*coFloat\);(?P<body>.*?)(?=\n\s*(?:def\s*=\s*)?this->add\(|\Z)',
+            source,
+            re.DOTALL,
+        )
+        body = declaration["body"] if declaration else ""
+        default = re.search(
+            r"set_default_value\(new ConfigOptionFloat\(\s*([0-9]+(?:\.[0-9]*)?)\s*\)\);",
+            body,
+        )
+        source_value = str(float(default.group(1))) if default else None
+        if source_value != str(float(expected)):
+            raise ValueError(f"pinned engine default drift for {engine_key}: source={source_value!r}, expected={expected!r}")
+        try:
+            actual = float(native[target])
+        except (TypeError, ValueError):
+            actual = None
+        if actual != float(expected):
+            raise ValueError(f"native_settings.{target}: asset={native.get(target)!r}, engine default={expected!r}")
+        checks.append({"target": target, "source": engine_key, "value": expected})
+    return checks
+
+
+def verify_native_projection(asset: dict, resolved: dict[str, dict], require_complete: bool,
+                             repo: Path) -> list[dict[str, str]]:
     native = asset.get("native_settings")
     if not isinstance(native, dict):
         raise ValueError("native_settings must be an object")
-    unknown = sorted(set(native) - set(NATIVE_PROJECTIONS))
+    unknown = sorted(set(native) - set(NATIVE_PROJECTIONS) - set(NATIVE_ENGINE_DEFAULTS))
     if unknown:
         raise ValueError("native_settings contains unverified fields: " + ", ".join(unknown))
     if require_complete:
         targets = NATIVE_PROJECTIONS
+        missing_engine_defaults = sorted(set(NATIVE_ENGINE_DEFAULTS) - set(native))
+        if missing_engine_defaults:
+            raise ValueError("native_settings is missing engine-default fields: " + ", ".join(missing_engine_defaults))
     else:
         # A1 and P1S have a deliberately narrow planning projection. Verify
         # every emitted scalar without pretending their absent native fields
@@ -337,6 +382,7 @@ def verify_native_projection(asset: dict, resolved: dict[str, dict], require_com
         if not isinstance(actual, str) or actual != expected:
             raise ValueError(f"native_settings.{target}: asset={actual!r}, source={expected!r}")
         checks.append({"target": target, "profile": kind, "source": source_key, "value": expected})
+    checks.extend(verify_engine_native_defaults(repo, native))
     return checks
 
 
@@ -457,7 +503,7 @@ def verify(repo: Path, profile_path: Path) -> dict:
     for label, (actual, expected) in comparisons.items():
         close(actual, expected, label)
     native_checks = verify_native_projection(
-        asset, resolved, require_complete=profile_id == "bambu.a1-mini.0.4.pla-basic")
+        asset, resolved, require_complete=profile_id == "bambu.a1-mini.0.4.pla-basic", repo=repo)
     checked_native_targets = {item["target"] for item in native_checks}
     missing_motion = sorted(MOTION_NATIVE_PROJECTIONS.get(profile_id, set()) - checked_native_targets)
     if missing_motion:
