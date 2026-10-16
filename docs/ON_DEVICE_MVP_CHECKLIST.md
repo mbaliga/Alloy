@@ -5,8 +5,10 @@ only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
 **Current PR checkpoint (2026-10-16 18:16 UTC):** PR #12 head is
-[`1a69eb327b42de435b9387391668e20bc7cb3778`](https://github.com/mbaliga/Alloy/commit/1a69eb327b42de435b9387391668e20bc7cb3778), a documentation-only update. The application and CI source under test is
-[`0f7eca4ca85ad8754d7431c2d7386e44c5fde084`](https://github.com/mbaliga/Alloy/commit/0f7eca4ca85ad8754d7431c2d7386e44c5fde084). At that source, parity tooling
+[`1a69eb327b42de435b9387391668e20bc7cb3778`](https://github.com/mbaliga/Alloy/commit/1a69eb327b42de435b9387391668e20bc7cb3778),
+a documentation-only update. The application and CI source under test is
+[`0f7eca4ca85ad8754d7431c2d7386e44c5fde084`](https://github.com/mbaliga/Alloy/commit/0f7eca4ca85ad8754d7431c2d7386e44c5fde084).
+At that source, parity tooling
 ([38943973566](https://github.com/mbaliga/Alloy/actions/runs/38943973566)),
 official Orca source snapshot
 ([38943973344](https://github.com/mbaliga/Alloy/actions/runs/38943973344)),
@@ -42,6 +44,7 @@ The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
 physical printing, Bambu Handy acceptance, direct-send qualification, or
 production signing.
+
 ## 1. Install the matching artifacts
 
 If you choose to inspect the Android build, wait for run 38943973165 to
