@@ -223,6 +223,8 @@ class ProfileSnapshotTests(unittest.TestCase):
                 "support_top_z_distance": "0.2",
                 "tree_support_branch_angle": "45",
                 "tree_support_branch_diameter": "2",
+                "tree_support_branch_distance_organic": "1",
+                "tree_support_branch_diameter_organic": "2",
                 "tree_support_wall_count": "0",
                 "detect_thin_wall": "0",
                 "top_surface_acceleration": ["2000"],
