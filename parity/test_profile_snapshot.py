@@ -279,6 +279,15 @@ class ProfileSnapshotTests(unittest.TestCase):
         }
         for relative, value in {**machine_files, **process_files, **filament_files}.items():
             self._write(repo, relative, value)
+        engine_defaults = repo / "src/libslic3r/PrintConfig.cpp"
+        engine_defaults.parent.mkdir(parents=True, exist_ok=True)
+        engine_defaults.write_text(
+            'this->add("tree_support_branch_distance_organic", coFloat);\n'
+            '    def->set_default_value(new ConfigOptionFloat(1.));\n'
+            '    def = this->add("tree_support_branch_diameter_organic", coFloat);\n'
+            '    def->set_default_value(new ConfigOptionFloat(2.));\n',
+            encoding="utf-8",
+        )
         self._git(repo, "add", ".")
         subprocess.run(
             [
@@ -308,7 +317,8 @@ class ProfileSnapshotTests(unittest.TestCase):
             self.assertEqual(report["projected_field_count"], 26)
             self.assertEqual(
                 report["native_projected_field_count"],
-                len(verify_profile_snapshot.NATIVE_PROJECTIONS),
+                len(verify_profile_snapshot.NATIVE_PROJECTIONS)
+                + len(verify_profile_snapshot.NATIVE_ENGINE_DEFAULTS),
             )
 
     def test_rejects_projection_drift(self):
@@ -351,6 +361,26 @@ class ProfileSnapshotTests(unittest.TestCase):
             profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "unverified_setting"):
+                verify_profile_snapshot.verify(repo, profile_path)
+
+    def test_rejects_organic_tree_engine_default_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo, revision = self._make_orca_checkout(Path(directory))
+            profile = json.loads(PROFILE.read_text(encoding="utf-8"))
+            profile["provenance"]["revision"] = revision
+            for source in profile["provenance"]["files"]:
+                source["sha"] = self._git(repo, "rev-parse", f"{revision}:{source['path']}")
+            defaults_path = repo / "src/libslic3r/PrintConfig.cpp"
+            defaults_path.write_text(
+                defaults_path.read_text(encoding="utf-8").replace(
+                    "ConfigOptionFloat(1.)", "ConfigOptionFloat(5.)"
+                ),
+                encoding="utf-8",
+            )
+            profile_path = Path(directory) / "profile.json"
+            profile_path.write_text(json.dumps(profile), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "pinned engine default drift"):
                 verify_profile_snapshot.verify(repo, profile_path)
 
 
