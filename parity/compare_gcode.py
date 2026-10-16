@@ -93,6 +93,8 @@ class Metrics:
     unsupported_arc_moves: int
     feature_transitions: list[str]
     feature_counts: dict[str, int]
+    feature_extrusion_path_mm: dict[str, float]
+    feature_positive_e_mm: dict[str, float]
     print_time_seconds: float | None
     filament_mm: float | None
     filament_g: float | None
@@ -253,6 +255,9 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
 
     feature_transitions: list[str] = []
     feature_counts: Counter[str] = Counter()
+    feature_extrusion_path_mm: Counter[str] = Counter()
+    feature_positive_e_mm: Counter[str] = Counter()
+    active_feature: str | None = None
     z_levels: list[float] = []
     seen_z: set[float] = set()
     extrusion_moves = 0
@@ -289,6 +294,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
 
         feature = feature_from_comment(line)
         if feature is not None:
+            active_feature = feature
             if model_started:
                 feature_counts[feature] += 1
                 if not feature_transitions or feature_transitions[-1] != feature:
@@ -365,6 +371,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
 
         if model_started and positive_e > 0:
             extrusion_moves += 1
+            if active_feature is not None:
+                feature_positive_e_mm[active_feature] += positive_e
         elif model_started and moved_xyz:
             travel_moves += 1
 
@@ -394,6 +402,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                         arc_xy = radius * sweep
                         distance = math.hypot(arc_xy, xyz["Z"] - previous_xyz["Z"])
                         arc_path_mm += distance
+                        if active_feature is not None and positive_e > 0:
+                            feature_extrusion_path_mm[active_feature] += distance
                         if feedrate_mm_min > 0:
                             nominal_seconds = distance * 60.0 / feedrate_mm_min
                             if positive_e > 0:
@@ -405,6 +415,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                     (xyz[axis] - previous_xyz[axis]) ** 2 for axis in "XYZ"
                 ))
                 linear_xyz_path_mm += distance
+                if active_feature is not None and positive_e > 0:
+                    feature_extrusion_path_mm[active_feature] += distance
                 if feedrate_mm_min > 0:
                     nominal_seconds = distance * 60.0 / feedrate_mm_min
                     if positive_e > 0:
@@ -441,6 +453,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         unsupported_arc_moves=unsupported_arc_moves,
         feature_transitions=feature_transitions,
         feature_counts=dict(feature_counts),
+        feature_extrusion_path_mm=dict(feature_extrusion_path_mm),
+        feature_positive_e_mm=dict(feature_positive_e_mm),
         print_time_seconds=print_time,
         filament_mm=filament_mm,
         filament_g=filament_g,
@@ -647,6 +661,42 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
         f"Android={android.nominal_linear_extrusion_seconds + android.nominal_arc_extrusion_seconds:.6g}; "
         f"travel_seconds desktop={desktop.nominal_linear_travel_seconds + desktop.nominal_arc_travel_seconds:.6g}/"
         f"Android={android.nominal_linear_travel_seconds + android.nominal_arc_travel_seconds:.6g}",
+    )
+
+    # Move totals alone can obscure a support regression when an engine emits
+    # the same feature classes but deposits substantially different geometry.
+    # Count deposited XYZ distance only, excluding travel because feature
+    # comments are not consistently reset before non-extruding motion.
+    role_names = (set(desktop.feature_extrusion_path_mm)
+                  | set(android.feature_extrusion_path_mm)
+                  | set(desktop.feature_positive_e_mm)
+                  | set(android.feature_positive_e_mm))
+    role_diagnostics = []
+    role_has_large_delta = False
+    for role in sorted(role_names):
+        desktop_path = desktop.feature_extrusion_path_mm.get(role, 0.0)
+        android_path = android.feature_extrusion_path_mm.get(role, 0.0)
+        desktop_e = desktop.feature_positive_e_mm.get(role, 0.0)
+        android_e = android.feature_positive_e_mm.get(role, 0.0)
+        path_delta = relative_diff(desktop_path, android_path)
+        e_delta = relative_diff(desktop_e, android_e)
+        role_has_large_delta |= max(path_delta, e_delta) > 0.05
+        role_diagnostics.append((max(abs(desktop_path - android_path),
+                                     abs(desktop_e - android_e)), role,
+                                 desktop_path, android_path, path_delta,
+                                 desktop_e, android_e, e_delta))
+    role_diagnostics.sort(reverse=True)
+    shown_roles = role_diagnostics[:8]
+    role_detail = "; ".join(
+        f"{role}: path {a_path:.6g}/{b_path:.6g} mm ({path_delta:.2%}), "
+        f"E {a_e:.6g}/{b_e:.6g} mm ({e_delta:.2%})"
+        for _, role, a_path, b_path, path_delta, a_e, b_e, e_delta in shown_roles
+    ) or "no feature-labelled motion"
+    add(
+        "per_feature_toolpath_diagnostic",
+        "warn" if role_has_large_delta else "pass",
+        "diagnostic only; deposited XYZ path excludes travel; "
+        "desktop/Android values are deposited path mm then positive E mm: " + role_detail,
     )
 
     desktop_e = desktop.positive_e_mm
