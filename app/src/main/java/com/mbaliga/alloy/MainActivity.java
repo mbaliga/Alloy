@@ -5377,6 +5377,19 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
             return;
         }
+        if (preferBambuHandy) {
+            String handoffBlock = BambuHandyHandoff.validationBlockReason(
+                    report.isValid(), slice.engineVerified, profile != null && profile.verified,
+                    SupportEngineStatus.physicalPrintReady(config, slice));
+            if (handoffBlock != null) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Not ready for Bambu Handy")
+                        .setMessage(handoffBlock + "\n\nYou can still export or share the package for inspection, but Alloy will not label or hand it off as printer-ready.")
+                        .setPositiveButton("Understood", null)
+                        .show();
+                return;
+            }
+        }
         try {
             if (stagedArtifact == null || stagedArtifact.sourceFile == null
                     || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
