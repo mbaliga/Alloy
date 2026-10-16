@@ -377,6 +377,19 @@ class ProfileSnapshotTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            self._git(repo, "add", "src/libslic3r/PrintConfig.cpp")
+            subprocess.run(
+                [
+                    "git", "-C", str(repo), "-c", "user.name=Alloy tests", "-c",
+                    "user.email=alloy-tests@example.invalid", "commit", "--quiet", "-m", "engine default drift",
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            revision = self._git(repo, "rev-parse", "HEAD")
+            profile["provenance"]["revision"] = revision
             profile_path = Path(directory) / "profile.json"
             profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
