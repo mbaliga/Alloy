@@ -42,10 +42,12 @@ This artifact is suitable only for inspecting the app and package files; do not
 upload the generated jobs to Bambu Handy, send them to the printer, or print.
 Keep the debug-signed build separate from any working production installation.
 
-The current follow-up candidate [`e3b2642b3368e32731a634d1a1f41bedaa171105`](https://github.com/mbaliga/Alloy/commit/e3b2642b3368e32731a634d1a1f41bedaa171105)
-closes both the direct Bambu Handy and generic Android share routes for
-unqualified print packages. Its Android/native CI runs are in progress. Results
-above describe verified behavior at source `4dc532d`, not this new change.
+The current follow-up candidate [`3df22d61`](https://github.com/mbaliga/Alloy/commit/3df22d61)
+closes both direct Bambu Handy and generic Android share routes for
+unqualified print packages, then re-runs physical-print package validation
+immediately before creating an external share URI. Its Android/native CI runs
+are pending. Results above describe verified behavior at source `4dc532d`, not
+this new change.
 
 The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
