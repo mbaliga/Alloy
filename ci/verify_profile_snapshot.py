@@ -151,6 +151,8 @@ NATIVE_PROJECTIONS = {
     "support_material_xy_spacing": ("process", "support_object_xy_distance"),
     "support_tree_angle": ("process", "tree_support_branch_angle"),
     "support_tree_branch_diameter": ("process", "tree_support_branch_diameter"),
+    "support_tree_branch_distance_organic": ("process", "tree_support_branch_distance_organic"),
+    "support_tree_branch_diameter_organic": ("process", "tree_support_branch_diameter_organic"),
     "support_tree_branch_diameter_double_wall": ("process", "tree_support_wall_count"),
     "thin_walls": ("process", "detect_thin_wall"),
     "top_solid_infill_speed": ("process", "top_surface_speed"),
