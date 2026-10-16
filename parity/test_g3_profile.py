@@ -157,6 +157,18 @@ class G3ProfileTests(unittest.TestCase):
                      if item["field"] == "retraction_minimum_travel")
         self.assertEqual("retract_before_travel", check["native_key"])
 
+    def test_bambu_automatic_tree_wall_sentinel_matches_native_zero_extra_walls(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        desktop["tree_support_wall_count"] = "0"
+        native["support_tree_branch_diameter_double_wall"] = "-1"
+        report = verify(desktop, native)
+        self.assertEqual("pass", report["result"], report)
+        check = next(item for item in report["checks"]
+                     if item["field"] == "support_tree_branch_diameter_double_wall")
+        self.assertEqual("0", check["desktop"])
+        self.assertEqual("0", check["native"])
+
     def test_bambu_project_settings_archive_is_read(self):
         with tempfile.TemporaryDirectory() as root:
             archive = Path(root) / "reference.gcode.3mf"
