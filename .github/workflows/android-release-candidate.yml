@@ -44,7 +44,7 @@ jobs:
         run: |
           set -euxo pipefail
           git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
-          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
