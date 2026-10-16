@@ -216,6 +216,14 @@ def normalize(field: str, value: Any, source: str, settings: dict[str, Any]) -> 
     result = _scalar(value)
     low = result.lower()
 
+    if field == "support_tree_branch_diameter_double_wall" and source == "native" and result == "-1":
+        # Bambu's automatic wall policy is represented by -1 in the profile
+        # projection. NativeSlicerEngine deliberately lowers that sentinel to
+        # zero extra walls because the pinned mobile engine rejects -1. Compare
+        # the effective engine value, not the pre-adapter spelling.
+        result = "0"
+        low = result
+
     if field == "support_material_style" and source == "desktop":
         result = {
             "tree(auto)": "organic",
