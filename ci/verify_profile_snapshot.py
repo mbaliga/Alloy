@@ -323,11 +323,18 @@ def normalize_native_projection(target: str, kind: str, source_key: str,
     return value
 
 
-def verify_engine_native_defaults(repo: Path, native: dict) -> list[dict[str, str]]:
-    source_path = repo / "src/libslic3r/PrintConfig.cpp"
-    if not source_path.is_file():
+def verify_engine_native_defaults(repo: Path, revision: str, native: dict) -> list[dict[str, str]]:
+    source_path = "src/libslic3r/PrintConfig.cpp"
+    result = subprocess.run(
+        ["git", "-C", str(repo), "show", f"{revision}:{source_path}"],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
         raise ValueError(f"pinned Orca engine defaults source is missing: {source_path}")
-    source = source_path.read_text(encoding="utf-8", errors="replace")
+    source = result.stdout
     checks: list[dict[str, str]] = []
     for target, (engine_key, expected) in NATIVE_ENGINE_DEFAULTS.items():
         if target not in native:
@@ -356,7 +363,7 @@ def verify_engine_native_defaults(repo: Path, native: dict) -> list[dict[str, st
 
 
 def verify_native_projection(asset: dict, resolved: dict[str, dict], require_complete: bool,
-                             repo: Path) -> list[dict[str, str]]:
+                             repo: Path, revision: str) -> list[dict[str, str]]:
     native = asset.get("native_settings")
     if not isinstance(native, dict):
         raise ValueError("native_settings must be an object")
@@ -382,7 +389,7 @@ def verify_native_projection(asset: dict, resolved: dict[str, dict], require_com
         if not isinstance(actual, str) or actual != expected:
             raise ValueError(f"native_settings.{target}: asset={actual!r}, source={expected!r}")
         checks.append({"target": target, "profile": kind, "source": source_key, "value": expected})
-    checks.extend(verify_engine_native_defaults(repo, native))
+    checks.extend(verify_engine_native_defaults(repo, revision, native))
     return checks
 
 
@@ -503,7 +510,8 @@ def verify(repo: Path, profile_path: Path) -> dict:
     for label, (actual, expected) in comparisons.items():
         close(actual, expected, label)
     native_checks = verify_native_projection(
-        asset, resolved, require_complete=profile_id == "bambu.a1-mini.0.4.pla-basic", repo=repo)
+        asset, resolved, require_complete=profile_id == "bambu.a1-mini.0.4.pla-basic",
+        repo=repo, revision=revision)
     checked_native_targets = {item["target"] for item in native_checks}
     missing_motion = sorted(MOTION_NATIVE_PROJECTIONS.get(profile_id, set()) - checked_native_targets)
     if missing_motion:
