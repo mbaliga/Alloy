@@ -107,8 +107,18 @@ jobs:
           # the actual release acceptance suite instead.
           disable-animations: false
           script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
+      - name: Upload Android acceptance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-android-acceptance-diagnostics
+          path: |
+            app/build/reports/androidTests/connected/
+            app/build/outputs/androidTest-results/connected/
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-v1-release-ci-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+

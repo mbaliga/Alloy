@@ -555,7 +555,80 @@ public final class ProfileCatalogImportTest {
         }
     }
 
+    @Test
+    public void treeRecipesRemainIndependentAcrossSupportStyleSwitches() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        // Deliberately different from each other AND from native defaults:
+        // checking only the stock 5/1/2 values can hide a dropped override.
+        config.nativeSettings.put("support_tree_branch_distance", "7");
+        config.nativeSettings.put("support_tree_branch_distance_organic", "3");
+        config.nativeSettings.put("support_tree_branch_diameter", "6");
+        config.nativeSettings.put("support_tree_branch_diameter_organic", "4");
+        for (String style : new String[]{"organic", "tree", "organic"}) {
+            config.nativeSettings.put("support_material_style", style);
+            String serialized = serializeTreeRecipe(config);
+            assertNativeSetting(serialized, "tree_support_branch_distance", "7");
+            assertNativeSetting(serialized, "tree_support_branch_distance_organic", "3");
+            assertNativeSetting(serialized, "tree_support_branch_diameter", "6");
+            assertNativeSetting(serialized, "tree_support_branch_diameter_organic", "4");
+        }
+    }
+
+    @Test
+    public void ordinaryTreeOverridesNeverBecomeOrganicOverrides() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        config.nativeSettings.put("support_material_style", "organic");
+        config.nativeSettings.put("support_tree_branch_distance", "7");
+        config.nativeSettings.put("support_tree_branch_diameter", "6");
+        String serialized = serializeTreeRecipe(config);
+        assertNativeSetting(serialized, "tree_support_branch_distance", "7");
+        assertNativeSetting(serialized, "tree_support_branch_diameter", "6");
+        assertNativeSetting(serialized, "tree_support_branch_distance_organic", null);
+        assertNativeSetting(serialized, "tree_support_branch_diameter_organic", null);
+    }
+
+    @Test
+    public void organicTreeOverridesNeverBecomeOrdinaryOverrides() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        config.nativeSettings.put("support_material_style", "tree");
+        config.nativeSettings.put("support_tree_branch_distance_organic", "3");
+        config.nativeSettings.put("support_tree_branch_diameter_organic", "4");
+        String serialized = serializeTreeRecipe(config);
+        assertNativeSetting(serialized, "tree_support_branch_distance", null);
+        assertNativeSetting(serialized, "tree_support_branch_diameter", null);
+        assertNativeSetting(serialized, "tree_support_branch_distance_organic", "3");
+        assertNativeSetting(serialized, "tree_support_branch_diameter_organic", "4");
+    }
+
+    private static String serializeTreeRecipe(Slicer.Config config) throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File file = File.createTempFile("tree-recipe-", ".ini", context.getCacheDir());
+        try {
+            NativeSlicerEngine.writeConfig(config, file);
+            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.US_ASCII);
+        } finally {
+            if (file.exists()) Assert.assertTrue(file.delete());
+        }
+    }
+
+    private static void assertNativeSetting(String serialized, String key, String expected) {
+        int occurrences = 0;
+        for (String line : serialized.split("\\r?\\n")) {
+            if (line.startsWith(key + " = ")) {
+                occurrences++;
+                Assert.assertEquals("native setting " + key, expected,
+                        line.substring((key + " = ").length()));
+            }
+        }
+        Assert.assertEquals("native setting occurrence count: " + key,
+                expected == null ? 0 : 1, occurrences);
+    }
+
     private static byte[] json(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
     }
 }
+
