@@ -124,7 +124,7 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("support_speed = 80"));
             Assert.assertTrue(serialized.contains("support_interface_spacing = 0.45"));
             Assert.assertTrue(serialized.contains("support_bottom_interface_spacing = 0.5"));
-            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
         } finally {
             if (nativeConfig.exists()) Assert.assertTrue(nativeConfig.delete());
         }
@@ -248,6 +248,8 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("2", imported.nativeSettings.get("wipe_distance"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_remove_small_overhang"));
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_distance"));
+        Assert.assertEquals("1", imported.nativeSettings.get("support_tree_branch_distance_organic"));
+        Assert.assertEquals("2", imported.nativeSettings.get("support_tree_branch_diameter_organic"));
         Assert.assertEquals("0.2", imported.nativeSettings.get("support_object_first_layer_gap"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_interface_not_for_body"));
         Assert.assertEquals("cubic", imported.nativeSettings.get("fill_pattern"));
@@ -294,7 +296,9 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("retract_lift = 0.4"));
             Assert.assertTrue(serialized.contains("wipe_distance = 2"));
             Assert.assertTrue(serialized.contains("support_remove_small_overhang = 1"));
-            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_diameter_organic = 2"));
             Assert.assertTrue(serialized.contains("support_object_first_layer_gap = 0.2"));
             Assert.assertTrue(serialized.contains("support_interface_not_for_body = 1"));
             Assert.assertTrue(serialized.contains("internal_solid_infill_pattern = rectilinear"));
