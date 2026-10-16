@@ -85,6 +85,23 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertAlmostEqual(a.positive_e_mm, 4.0)
             self.assertAlmostEqual(b.positive_e_mm, 4.0)
 
+    def test_feature_toolpath_diagnostic_reports_deposited_path_and_extrusion(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_A), None)
+            android = parse_metrics(self.write(root, "android.gcode", GCODE_B), None)
+
+            self.assertAlmostEqual(40.0, desktop.feature_extrusion_path_mm["outer_wall"])
+            self.assertAlmostEqual(3.0, desktop.feature_positive_e_mm["outer_wall"])
+            self.assertAlmostEqual(14.1421356, desktop.feature_extrusion_path_mm["sparse_infill"], places=5)
+            diagnostic = next(
+                check for check in compare(desktop, android, 0.02)["checks"]
+                if check["name"] == "per_feature_toolpath_diagnostic"
+            )
+            self.assertIn("outer_wall", diagnostic["detail"])
+            self.assertIn("path", diagnostic["detail"])
+            self.assertIn("E", diagnostic["detail"])
+
     def test_estimate_tolerance_is_measured_from_desktop_reference(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
