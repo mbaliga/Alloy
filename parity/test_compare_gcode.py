@@ -248,6 +248,45 @@ G1 X4 E0.75
             self.assertAlmostEqual(metrics.positive_e_mm, 2.0)
             self.assertEqual(metrics.extrusion_moves, 3)
 
+    def test_nominal_motion_diagnostic_models_xy_center_offset_arcs(self):
+        gcode = """G90
+M83
+G1 F600
+;LAYER_CHANGE
+G1 X3 Y4 Z0.2 E1
+G1 X3 Y8 E-0.2 F300
+G2 X3 Y10 I0 J1 E1
+"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            metrics = parse_metrics(self.write(root, "motion.gcode", gcode), None)
+
+            self.assertAlmostEqual(metrics.linear_xyz_path_mm, 9.004, places=3)
+            self.assertAlmostEqual(metrics.nominal_linear_extrusion_seconds, 0.5, places=3)
+            self.assertAlmostEqual(metrics.nominal_linear_travel_seconds, 0.8)
+            self.assertAlmostEqual(metrics.arc_path_mm, 3.14159265, places=6)
+            self.assertAlmostEqual(metrics.nominal_arc_extrusion_seconds, 0.62831853, places=6)
+            self.assertEqual(metrics.unsupported_arc_moves, 0)
+
+            report = compare(metrics, metrics, tolerance=0.02)
+            diagnostic = next(
+                check for check in report["checks"]
+                if check["name"] == "nominal_linear_motion_diagnostic"
+            )
+            self.assertEqual(diagnostic["status"], "pass")
+            self.assertIn("arc=3.14159", diagnostic["detail"])
+
+    def test_nominal_motion_diagnostic_marks_unsupported_arc_plane(self):
+        gcode = """G90
+G18
+;LAYER_CHANGE
+G2 X2 Z1 I1 K0
+"""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            metrics = parse_metrics(self.write(root, "unsupported-arc.gcode", gcode), None)
+            self.assertEqual(metrics.unsupported_arc_moves, 1)
+
     def test_bambu_headers_and_slice_beam_layer_markers_are_normalized(self):
         bambu = """; model printing time: 28m 50s; total estimated time: 28m 51s
 ; total layer number: 100

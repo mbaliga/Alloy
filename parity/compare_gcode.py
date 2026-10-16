@@ -23,6 +23,7 @@ import argparse
 from collections import Counter
 from dataclasses import asdict, dataclass
 import json
+import math
 from pathlib import Path
 import re
 from typing import Iterable
@@ -83,6 +84,13 @@ class Metrics:
     extrusion_moves: int
     travel_moves: int
     positive_e_mm: float
+    linear_xyz_path_mm: float
+    arc_path_mm: float
+    nominal_linear_extrusion_seconds: float
+    nominal_linear_travel_seconds: float
+    nominal_arc_extrusion_seconds: float
+    nominal_arc_travel_seconds: float
+    unsupported_arc_moves: int
     feature_transitions: list[str]
     feature_counts: dict[str, int]
     print_time_seconds: float | None
@@ -250,11 +258,21 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     extrusion_moves = 0
     travel_moves = 0
     positive_e_mm = 0.0
+    linear_xyz_path_mm = 0.0
+    arc_path_mm = 0.0
+    nominal_linear_extrusion_seconds = 0.0
+    nominal_linear_travel_seconds = 0.0
+    nominal_arc_extrusion_seconds = 0.0
+    nominal_arc_travel_seconds = 0.0
+    unsupported_arc_moves = 0
 
     xyz = {"X": 0.0, "Y": 0.0, "Z": 0.0}
     e_value = 0.0
+    feedrate_mm_min = 0.0
     absolute_xyz = True
     absolute_e = True
+    absolute_arc_center = False
+    active_plane = "G17"
 
     for raw_line in lines:
         line = raw_line.strip()
@@ -281,11 +299,20 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         if not code:
             continue
         command = code.split(maxsplit=1)[0].upper()
+        if command in {"G17", "G18", "G19"}:
+            active_plane = command
+            continue
         if command == "G90":
             absolute_xyz = True
             continue
         if command == "G91":
             absolute_xyz = False
+            continue
+        if command == "G90.1":
+            absolute_arc_center = True
+            continue
+        if command == "G91.1":
+            absolute_arc_center = False
             continue
         if command == "M82":
             absolute_e = True
@@ -306,6 +333,10 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
 
         vals = {k.upper(): float(v) for k, v in TOKEN_RE.findall(code)}
         moved_xyz = any(k in vals for k in "XYZ")
+        if "F" in vals:
+            feedrate_mm_min = vals["F"]
+
+        previous_xyz = xyz.copy()
 
         if "Z" in vals:
             new_z = vals["Z"] if absolute_xyz else xyz["Z"] + vals["Z"]
@@ -337,6 +368,50 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         elif model_started and moved_xyz:
             travel_moves += 1
 
+        if model_started and moved_xyz:
+            if command in {"G2", "G3"}:
+                if active_plane != "G17" or "R" in vals or not {"I", "J"}.issubset(vals):
+                    # Only XY-plane center-offset arcs are currently modeled.
+                    unsupported_arc_moves += 1
+                else:
+                    center_x = vals["I"] if absolute_arc_center else previous_xyz["X"] + vals["I"]
+                    center_y = vals["J"] if absolute_arc_center else previous_xyz["Y"] + vals["J"]
+                    radius_start = math.hypot(previous_xyz["X"] - center_x, previous_xyz["Y"] - center_y)
+                    radius_end = math.hypot(xyz["X"] - center_x, xyz["Y"] - center_y)
+                    radius = (radius_start + radius_end) / 2.0
+                    radii_agree = abs(radius_start - radius_end) <= max(0.05, radius * 0.01)
+                    if radius <= 0 or not radii_agree:
+                        unsupported_arc_moves += 1
+                    else:
+                        start_angle = math.atan2(previous_xyz["Y"] - center_y, previous_xyz["X"] - center_x)
+                        end_angle = math.atan2(xyz["Y"] - center_y, xyz["X"] - center_x)
+                        if command == "G2":
+                            sweep = (start_angle - end_angle) % (2.0 * math.pi)
+                        else:
+                            sweep = (end_angle - start_angle) % (2.0 * math.pi)
+                        if math.isclose(sweep, 0.0, abs_tol=1e-9):
+                            sweep = 2.0 * math.pi
+                        arc_xy = radius * sweep
+                        distance = math.hypot(arc_xy, xyz["Z"] - previous_xyz["Z"])
+                        arc_path_mm += distance
+                        if feedrate_mm_min > 0:
+                            nominal_seconds = distance * 60.0 / feedrate_mm_min
+                            if positive_e > 0:
+                                nominal_arc_extrusion_seconds += nominal_seconds
+                            else:
+                                nominal_arc_travel_seconds += nominal_seconds
+            elif command in {"G0", "G1"}:
+                distance = math.sqrt(sum(
+                    (xyz[axis] - previous_xyz[axis]) ** 2 for axis in "XYZ"
+                ))
+                linear_xyz_path_mm += distance
+                if feedrate_mm_min > 0:
+                    nominal_seconds = distance * 60.0 / feedrate_mm_min
+                    if positive_e > 0:
+                        nominal_linear_extrusion_seconds += nominal_seconds
+                    else:
+                        nominal_linear_travel_seconds += nominal_seconds
+
     # Bambu's total estimate includes machine warm-up and other orchestration
     # time that the native slicer does not report. Prefer model time when it is
     # available; retain total time as a diagnostic fallback only.
@@ -357,6 +432,13 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         extrusion_moves=extrusion_moves,
         travel_moves=travel_moves,
         positive_e_mm=positive_e_mm,
+        linear_xyz_path_mm=linear_xyz_path_mm,
+        arc_path_mm=arc_path_mm,
+        nominal_linear_extrusion_seconds=nominal_linear_extrusion_seconds,
+        nominal_linear_travel_seconds=nominal_linear_travel_seconds,
+        nominal_arc_extrusion_seconds=nominal_arc_extrusion_seconds,
+        nominal_arc_travel_seconds=nominal_arc_travel_seconds,
+        unsupported_arc_moves=unsupported_arc_moves,
         feature_transitions=feature_transitions,
         feature_counts=dict(feature_counts),
         print_time_seconds=print_time,
@@ -531,6 +613,41 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             "pass" if diff <= 0.05 else "warn",
             f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}",
         )
+
+    desktop_linear_time = (
+        desktop.nominal_linear_extrusion_seconds
+        + desktop.nominal_linear_travel_seconds
+        + desktop.nominal_arc_extrusion_seconds
+        + desktop.nominal_arc_travel_seconds
+    )
+    android_linear_time = (
+        android.nominal_linear_extrusion_seconds
+        + android.nominal_linear_travel_seconds
+        + android.nominal_arc_extrusion_seconds
+        + android.nominal_arc_travel_seconds
+    )
+    desktop_path = desktop.linear_xyz_path_mm + desktop.arc_path_mm
+    android_path = android.linear_xyz_path_mm + android.arc_path_mm
+    path_diff = relative_diff(desktop_path, android_path)
+    nominal_time_diff = relative_diff(desktop_linear_time, android_linear_time)
+    add(
+        "nominal_linear_motion_diagnostic",
+        "pass" if max(path_diff, nominal_time_diff) <= tolerance else "warn",
+        "linear XYZ plus XY I/J arcs; ignores acceleration, firmware planning, "
+        "E-only moves, and unsupported arc forms. "
+        f"unsupported_arcs desktop={desktop.unsupported_arc_moves}, "
+        f"Android={android.unsupported_arc_moves}; "
+        f"path_mm desktop={desktop_path:.6g} (linear={desktop.linear_xyz_path_mm:.6g}, "
+        f"arc={desktop.arc_path_mm:.6g}), Android={android_path:.6g} "
+        f"(linear={android.linear_xyz_path_mm:.6g}, arc={android.arc_path_mm:.6g}), "
+        f"delta={path_diff:.2%}; "
+        f"nominal_seconds desktop={desktop_linear_time:.6g}, "
+        f"Android={android_linear_time:.6g}, delta={nominal_time_diff:.2%}; "
+        f"extrusion_seconds desktop={desktop.nominal_linear_extrusion_seconds + desktop.nominal_arc_extrusion_seconds:.6g}/"
+        f"Android={android.nominal_linear_extrusion_seconds + android.nominal_arc_extrusion_seconds:.6g}; "
+        f"travel_seconds desktop={desktop.nominal_linear_travel_seconds + desktop.nominal_arc_travel_seconds:.6g}/"
+        f"Android={android.nominal_linear_travel_seconds + android.nominal_arc_travel_seconds:.6g}",
+    )
 
     desktop_e = desktop.positive_e_mm
     android_e = android.positive_e_mm
