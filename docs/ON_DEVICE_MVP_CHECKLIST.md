@@ -42,7 +42,7 @@ This artifact is suitable only for inspecting the app and package files; do not
 upload the generated jobs to Bambu Handy, send them to the printer, or print.
 Keep the debug-signed build separate from any working production installation.
 
-The current follow-up candidate [`3df22d61`](https://github.com/mbaliga/Alloy/commit/3df22d61)
+The current follow-up candidate [`f62e884f004457aaa2663fe8eeeaf872363790e9`](https://github.com/mbaliga/Alloy/commit/f62e884f004457aaa2663fe8eeeaf872363790e9)
 closes both direct Bambu Handy and generic Android share routes for
 unqualified print packages, then re-runs physical-print package validation
 immediately before creating an external share URI. Its Android/native CI runs
