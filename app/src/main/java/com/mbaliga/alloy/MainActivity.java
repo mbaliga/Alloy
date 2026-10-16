@@ -5395,6 +5395,7 @@ public final class MainActivity extends Activity {
                 stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
                         artifactDisplayName(), viewport.thumbnailPng(512));
             }
+            GcodePackageValidator.validateForPhysicalPrint(stagedArtifact.sourceFile, config);
             Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
             if (preferBambuHandy) {
                 Intent targeted = BambuHandyHandoff.targetedShare(uri);
@@ -5421,6 +5422,12 @@ public final class MainActivity extends Activity {
             } else {
                 startActivity(BambuHandyHandoff.chooserShare(uri));
             }
+        } catch (IOException notPrinterReady) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Package failed print-readiness checks")
+                    .setMessage(notPrinterReady.getMessage() + "\n\nThe file was not shared. You can export it for inspection, but do not print an unverified job.")
+                    .setPositiveButton("Understood", null)
+                    .show();
         } catch (Exception error) {
             Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
