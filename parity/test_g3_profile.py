@@ -35,6 +35,8 @@ def desktop_settings():
         "tree_support_branch_diameter": 2,
         "tree_support_branch_diameter_angle": 5,
         "tree_support_branch_distance": 5,
+        "tree_support_branch_diameter_organic": 2,
+        "tree_support_branch_distance_organic": 1,
         "tree_support_wall_count": 0,
         "support_object_first_layer_gap": 0.2,
         "support_interface_not_for_body": 1,
@@ -113,6 +115,8 @@ def native_settings():
         "support_material_extrusion_width": "0.42",
         "support_material_speed": "150",
         "support_tree_angle": "45", "support_tree_branch_diameter": "2",
+        "tree_support_branch_diameter_organic": "2",
+        "tree_support_branch_distance_organic": "1",
         "tree_support_branch_diameter_angle": "5",
         "support_tree_branch_diameter_double_wall": "0",
         "tree_support_branch_distance_organic": "5",
@@ -168,6 +172,22 @@ class G3ProfileTests(unittest.TestCase):
                      if item["field"] == "support_tree_branch_diameter_double_wall")
         self.assertEqual("0", check["desktop"])
         self.assertEqual("0", check["native"])
+
+    def test_organic_tree_settings_override_legacy_tree_values(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        native["support_tree_branch_distance"] = "5"
+        native["support_tree_branch_diameter"] = "5"
+        native["tree_support_branch_distance_organic"] = "1"
+        native["tree_support_branch_diameter_organic"] = "2"
+        report = verify(desktop, native)
+        self.assertEqual("pass", report["result"], report)
+        distance = next(item for item in report["checks"]
+                        if item["field"] == "support_tree_branch_distance")
+        diameter = next(item for item in report["checks"]
+                        if item["field"] == "support_tree_branch_diameter")
+        self.assertEqual("tree_support_branch_distance_organic", distance["desktop_key"])
+        self.assertEqual("tree_support_branch_diameter_organic", diameter["desktop_key"])
 
     def test_bambu_project_settings_archive_is_read(self):
         with tempfile.TemporaryDirectory() as root:
