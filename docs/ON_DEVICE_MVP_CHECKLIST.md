@@ -4,34 +4,43 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Verification snapshot (2026-10-16):** The PR #12 application/CI source
-candidate tested below is
-[`4dc532d6ad71ec7ab6f5a524bf68bee647290947`](https://github.com/mbaliga/Alloy/commit/4dc532d6ad71ec7ab6f5a524bf68bee647290947);
-it repairs native-run concurrency and CI workflow validation without changing
-app behavior from the prior reviewed source. Later checklist-only commits do
-not change that tested source. On the exact source commit, parity tooling
-[38802544918](https://github.com/mbaliga/Alloy/actions/runs/38802544918),
-the three-printer static profile pre-gate
-[38802545030](https://github.com/mbaliga/Alloy/actions/runs/38802545030),
+**Verification snapshot (2026-10-16):** PR #12 application/CI source tested
+is [`4dc532d6ad71ec7ab6f5a524bf68bee647290947`](https://github.com/mbaliga/Alloy/commit/4dc532d6ad71ec7ab6f5a524bf68bee647290947).
+Later checklist-only commits do not change that tested source. Parity tooling
+([38802544918](https://github.com/mbaliga/Alloy/actions/runs/38802544918)),
+three-printer static profile pre-gate
+([38802545030](https://github.com/mbaliga/Alloy/actions/runs/38802545030)),
 desktop A1 Mini reference slicing
-[38802544908](https://github.com/mbaliga/Alloy/actions/runs/38802544908),
-and the official Orca source snapshot
-[38802544906](https://github.com/mbaliga/Alloy/actions/runs/38802544906)
-passed. Android run
-[38802544927](https://github.com/mbaliga/Alloy/actions/runs/38802544927)
-is building the CI-signed APK; acceptance tests have not run yet. Native run
-[38802544902](https://github.com/mbaliga/Alloy/actions/runs/38802544902)
-is building native dependencies. Neither has produced a current-head APK or
-native parity result yet.
+([38802544908](https://github.com/mbaliga/Alloy/actions/runs/38802544908)),
+official Orca source snapshot
+([38802544906](https://github.com/mbaliga/Alloy/actions/runs/38802544906)),
+and Android v1 build/tests
+([38802544927](https://github.com/mbaliga/Alloy/actions/runs/38802544927))
+passed. The Android run produced CI QA APK ZIP artifact
+[`12006353162`](https://github.com/mbaliga/Alloy/actions/runs/38802544927/artifacts/12006353162)
+(ZIP SHA-256 `1f469a0170ea2522ce7d11761d066583445f7921ed17b63f6374b46fe7b24ee3`;
+extracted APK SHA-256 `8394676538274415e94266f99d8bf4a7d7fe55bd26ed2ce1195e66f8af519759`).
 
-**No APK artifact from the current candidate is available yet.** Do not use an
-earlier APK as a substitute: those builds predate the expanded four-fixture A1
-Mini/A1/P1S native smoke coverage. The APK from
-38802544927 is not available for download until its acceptance run completes.
-When released, use it for software verification only; a CI-debug signature
-does not authorize physical printing or production installation. Record the
-extracted APK's own SHA-256 separately from its ZIP digest. Do not uninstall a
-working Alloy installation merely to replace it with a CI-debug QA build.
+The native PR run
+([38802544902](https://github.com/mbaliga/Alloy/actions/runs/38802544902))
+successfully built the native engine, ran Android instrumentation and exported
+G3 evidence, but **failed the desktop-parity comparison**. Its report artifact
+is [`12010150964`](https://github.com/mbaliga/Alloy/actions/runs/38802544902/artifacts/12010150964).
+At the required 2% print-time / filament tolerance, all four comparison
+fixtures fail print-time parity: cube 14.08%, supported overhang 18.02%,
+thin-wall frame 12.48%, travel obstacle 9.14%. The supported-overhang fixture
+also misses filament length by 8.90%, mass by 8.83%, and positive extrusion by
+6.04% (5% allowance). **Do not send or print these generated jobs.**
+
+A separate push-triggered software-pilot build
+([38802536896](https://github.com/mbaliga/Alloy/actions/runs/38802536896))
+produced the native QA APK pair and five software-preflighted sample packages
+(artifact [`12010340940`](https://github.com/mbaliga/Alloy/actions/runs/38802536896/artifacts/12010340940)).
+Its manifest explicitly marks `software_only: true`,
+`engine_verified: false`, and physical/direct-send qualification as pending.
+This artifact is suitable only for inspecting the app and package files; do not
+upload the generated jobs to Bambu Handy, send them to the printer, or print.
+Keep the debug-signed build separate from any working production installation.
 
 The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
@@ -40,11 +49,12 @@ production signing.
 
 ## 1. Install the matching artifacts
 
-Wait for the current Android/native jobs above to complete and download the
-artifacts from those exact run pages. Before installing, verify the artifact
-is attached to the current PR head and retain both the archive digest and the
-extracted APK digest. Install only as a software QA build; these CI-signed
-artifacts do not qualify a print or replace a production installation.
+If you choose to inspect the Android build, download the QA APK from the exact
+run above. Before installing, verify its artifact identity and retain both
+the archive digest and extracted APK digest. Install only as a software QA
+build; these CI-signed artifacts do not qualify a print or replace a
+production installation. Do not install the software-pilot packages on the
+printer or import them into Bambu Handy while the native parity gate fails.
 
 ## 1a. Phone navigation and visual system
 

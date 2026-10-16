@@ -3178,3 +3178,51 @@ physical print quality, direct-send transport reliability, Bambu Handy
 acceptance, support parity, desktop G3 parity, production signing, or A1/P1S
 physical qualification. See the consolidated on-device checklist and narrow
 pilot runbook for outstanding checks.
+
+### 2026-10-16 exact-head native G3 result and software-only APKs
+
+The tested application/CI source was
+`4dc532d6ad71ec7ab6f5a524bf68bee647290947`. Parity tooling
+[38802544918](https://github.com/mbaliga/Alloy/actions/runs/38802544918),
+three-printer static profile pre-gate
+[38802545030](https://github.com/mbaliga/Alloy/actions/runs/38802545030),
+desktop A1 Mini references
+[38802544908](https://github.com/mbaliga/Alloy/actions/runs/38802544908),
+official Orca snapshot
+[38802544906](https://github.com/mbaliga/Alloy/actions/runs/38802544906),
+and Android QA build/tests
+[38802544927](https://github.com/mbaliga/Alloy/actions/runs/38802544927)
+passed. Android artifact `12006353162` has ZIP SHA-256
+`1f469a0170ea2522ce7d11761d066583445f7921ed17b63f6374b46fe7b24ee3`; the
+extracted APK SHA-256 is
+`8394676538274415e94266f99d8bf4a7d7fe55bd26ed2ce1195e66f8af519759`.
+
+The native PR run
+[38802544902](https://github.com/mbaliga/Alloy/actions/runs/38802544902)
+completed its ARM64 build, instrumentation, and G3 evidence export, then
+**failed** the desktop comparison. The four print-time deltas at a 2% tolerance
+are: cube 14.08% (1,525 vs 1,775 s), supported overhang 18.02% (1,679 vs
+2,048 s), thin-wall frame 12.48% (1,164 vs 1,330 s), and travel obstacle
+9.14% (3,083 vs 3,393 s). On supported overhang, filament length differs by
+8.90% (1,017.81 vs 934.59 mm), mass by 8.83% (3.08 vs 2.83 g), and positive-E
+by 6.04% (1,509.81 vs 1,606.85 mm, against a 5% allowance). Profile identity
+matches 62 fields; that does not override the output failures. This native
+result is a concrete G3 **NO-GO**, not a reason to loosen tolerances or apply a
+global timing correction.
+
+Separate push-triggered native run
+[38802536896](https://github.com/mbaliga/Alloy/actions/runs/38802536896)
+produced software-only artifact `12010340940`: a CI QA APK pair and five
+preflighted sample packages. Its manifest says `software_only: true`,
+`engine_verified: false`, and physical/direct-send qualification pending. It
+can support app and file-inspection QA only; **do not send these packages to a
+printer or import them into Bambu Handy for printing**.
+
+The Bambu TreeSupport3D source audit was also repeated against pinned Bambu
+Studio `v02.08.02.61` (`926a7192574bcb9b3a732e1ec59a46d79cb45466`) and remains
+`PORT_REQUIRED`: seven required implementation files differ, 30/36 direct
+support includes differ, with 94 transitive includes, 12 unresolved quoted
+includes, 9 absent transitive dependencies, and 68 differing same-path files.
+The next slicer milestone is to close that coherent source/dependency/API port
+and rerun the same strict four-fixture comparison. Until then, G3 and every
+physical-send/release gate remain closed.
