@@ -85,6 +85,10 @@ def main() -> None:
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
         "python3 ci/validate_learning_assets.py",
+        "name: Upload Android acceptance diagnostics\n        if: always()\n        uses: actions/upload-artifact@v4",
+        "name: alloy-android-acceptance-diagnostics",
+        "app/build/reports/androidTests/connected/",
+        "app/build/outputs/androidTest-results/connected/",
     ):
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
@@ -228,3 +232,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

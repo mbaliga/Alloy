@@ -405,11 +405,15 @@ public final class NativeSlicerEngine implements SlicerEngine {
             String angle = config.nativeSettings.get("support_tree_angle");
             setting(settings, "tree_support_branch_angle_organic", angle);
         }
+        // The native schema registers ordinary and organic tree fields
+        // independently. Preserve both recipes even when only one style is
+        // active; switching styles must not silently restore engine defaults.
+        // Missing organic overrides must never inherit ordinary tree values.
         if (config.nativeSettings.containsKey("support_tree_branch_distance_organic")) {
             setting(settings, "tree_support_branch_distance_organic",
                     config.nativeSettings.get("support_tree_branch_distance_organic"));
-        } else if (!"organic".equals(currentSupportStyle)
-                && config.nativeSettings.containsKey("support_tree_branch_distance")) {
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_distance")) {
             // Legacy tree and organic tree profiles have distinct branch
             // spacing fields. Never let the legacy value override the
             // organic field's own resolved value/default.
@@ -419,8 +423,8 @@ public final class NativeSlicerEngine implements SlicerEngine {
         if (config.nativeSettings.containsKey("support_tree_branch_diameter_organic")) {
             setting(settings, "tree_support_branch_diameter_organic",
                     config.nativeSettings.get("support_tree_branch_diameter_organic"));
-        } else if (!"organic".equals(currentSupportStyle)
-                && config.nativeSettings.containsKey("support_tree_branch_diameter")) {
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_diameter")) {
             setting(settings, "tree_support_branch_diameter",
                     config.nativeSettings.get("support_tree_branch_diameter"));
         }
@@ -1230,3 +1234,4 @@ public final class NativeSlicerEngine implements SlicerEngine {
         @Override public void close() throws IOException { reader.close(); }
     }
 }
+
