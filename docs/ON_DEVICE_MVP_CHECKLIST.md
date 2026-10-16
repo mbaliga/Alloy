@@ -45,9 +45,20 @@ Keep the debug-signed build separate from any working production installation.
 The current follow-up candidate [`f62e884f004457aaa2663fe8eeeaf872363790e9`](https://github.com/mbaliga/Alloy/commit/f62e884f004457aaa2663fe8eeeaf872363790e9)
 closes both direct Bambu Handy and generic Android share routes for
 unqualified print packages, then re-runs physical-print package validation
-immediately before creating an external share URI. Its Android/native CI runs
-are pending. Results above describe verified behavior at source `4dc532d`, not
-this new change.
+immediately before creating an external share URI. For this source, parity
+tooling ([38852762325](https://github.com/mbaliga/Alloy/actions/runs/38852762325)),
+the official Orca snapshot
+([38852762391](https://github.com/mbaliga/Alloy/actions/runs/38852762391)),
+three-printer profile pre-gate
+([38852762389](https://github.com/mbaliga/Alloy/actions/runs/38852762389)),
+and desktop reference slicing
+([38852762343](https://github.com/mbaliga/Alloy/actions/runs/38852762343))
+passed. Android acceptance tests
+([38852762409](https://github.com/mbaliga/Alloy/actions/runs/38852762409)) and
+the native build/G3 run
+([38852762351](https://github.com/mbaliga/Alloy/actions/runs/38852762351)) are
+still in progress. Results above describe verified slicer behavior at source
+`4dc532d`, not this new handoff change.
 
 The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
