@@ -119,7 +119,6 @@ def native_settings():
         "tree_support_branch_distance_organic": "1",
         "tree_support_branch_diameter_angle": "5",
         "support_tree_branch_diameter_double_wall": "0",
-        "tree_support_branch_distance_organic": "5",
         "support_object_first_layer_gap": "0.2",
         "support_interface_not_for_body": "1",
         "support_remove_small_overhang": "1",
