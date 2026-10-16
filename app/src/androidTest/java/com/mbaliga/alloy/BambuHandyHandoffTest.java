@@ -64,7 +64,7 @@ public final class BambuHandyHandoffTest {
                 BambuHandyHandoff.genericShare(artifact)));
     }
 
-    @Test public void printerHandoffRequiresEveryReadinessDimension() {
+    @Test public void externalPackageHandoffRequiresEveryReadinessDimension() {
         Assert.assertNull(BambuHandyHandoff.validationBlockReason(true, true, true, true));
         Assert.assertTrue(BambuHandyHandoff.validationBlockReason(false, true, true, true)
                 .contains("structural"));
