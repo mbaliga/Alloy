@@ -4,13 +4,12 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Current PR head (2026-10-16):**
-[`4922973d8a4ea55e397fec765d848a63fc1837f0`](https://github.com/mbaliga/Alloy/commit/4922973d8a4ea55e397fec765d848a63fc1837f0),
-stacked on PR #13. This head updates this checklist only. The verified
-application/CI source candidate is
+**Verification snapshot (2026-10-16):** The PR #12 application/CI source
+candidate tested below is
 [`4dc532d6ad71ec7ab6f5a524bf68bee647290947`](https://github.com/mbaliga/Alloy/commit/4dc532d6ad71ec7ab6f5a524bf68bee647290947);
 it repairs native-run concurrency and CI workflow validation without changing
-app behavior from the prior reviewed source. On that exact source, parity tooling
+app behavior from the prior reviewed source. Later checklist-only commits do
+not change that tested source. On the exact source commit, parity tooling
 [38802544918](https://github.com/mbaliga/Alloy/actions/runs/38802544918),
 the three-printer static profile pre-gate
 [38802545030](https://github.com/mbaliga/Alloy/actions/runs/38802545030),
