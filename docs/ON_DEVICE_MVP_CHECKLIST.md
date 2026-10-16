@@ -59,10 +59,25 @@ passed: **207 tests, 0 failed, 7 skipped**. Its QA APK artifact is
 [`12027740324`](https://github.com/mbaliga/Alloy/actions/runs/38852762409/artifacts/12027740324)
 (ZIP SHA-256 `342f64943f4805ff634acda0d2d45425b4d1b61c8745410fe0c4f40c90803d0a`;
 APK SHA-256 `615e6df2eb7bd9852e173fc4852c0865974946310de2047a3caad1fa0db0f43e`).
-The native build/G3 run
-([38852762351](https://github.com/mbaliga/Alloy/actions/runs/38852762351)) is
-still in progress. Results above describe slicer parity at source `4dc532d`,
-not qualification of this new handoff change.
+The native run
+([38852762351](https://github.com/mbaliga/Alloy/actions/runs/38852762351))
+completed on app source `29e917a1091ea0d066e6e4e4f13fd35fb238cd81`. The
+optional ARM64 native engine built, and API-35 ARM-translation release
+instrumentation passed **196 tests, 0 failures, 2 skipped** (report artifact
+[`12027549895`](https://github.com/mbaliga/Alloy/actions/runs/38852762351/artifacts/12027549895),
+SHA-256 `8a06cfd5a9b574beff7cdef020969ef0846b4953abb59a881b5e233390bdc327`).
+The G3 comparison then **failed** at the unchanged 2% tolerance (artifact
+[`12027913528`](https://github.com/mbaliga/Alloy/actions/runs/38852762351/artifacts/12027913528),
+SHA-256 `6af2dd7416db8e0026a7fd384495444e57e81f3f77cf10616bcf28bad697a515`).
+All 62 profile-identity fields match on each fixture, but print-time estimates
+remain outside tolerance: cube 14.08%, supported overhang 18.02%, thin-wall
+frame 12.48%, and travel obstacle 9.22%. The supported-overhang fixture also
+misses filament length by 8.90%, mass by 8.83%, and positive extrusion by
+6.04% (5% allowance). The five-fixture pilot steps were skipped after the G3
+failure. A separate APK artifact is available for software inspection, but
+the native output remains unqualified; do not share it with Handy, send it, or
+print it. These results supersede the earlier native run noted above and do
+not qualify the handoff change.
 
 The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
