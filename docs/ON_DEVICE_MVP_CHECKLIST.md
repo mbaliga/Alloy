@@ -54,11 +54,15 @@ three-printer profile pre-gate
 and desktop reference slicing
 ([38852762343](https://github.com/mbaliga/Alloy/actions/runs/38852762343))
 passed. Android acceptance tests
-([38852762409](https://github.com/mbaliga/Alloy/actions/runs/38852762409)) and
-the native build/G3 run
-([38852762351](https://github.com/mbaliga/Alloy/actions/runs/38852762351)) are
-still in progress. Results above describe verified slicer behavior at source
-`4dc532d`, not this new handoff change.
+([38852762409](https://github.com/mbaliga/Alloy/actions/runs/38852762409)) also
+passed: **207 tests, 0 failed, 7 skipped**. Its QA APK artifact is
+[`12027740324`](https://github.com/mbaliga/Alloy/actions/runs/38852762409/artifacts/12027740324)
+(ZIP SHA-256 `342f64943f4805ff634acda0d2d45425b4d1b61c8745410fe0c4f40c90803d0a`;
+APK SHA-256 `615e6df2eb7bd9852e173fc4852c0865974946310de2047a3caad1fa0db0f43e`).
+The native build/G3 run
+([38852762351](https://github.com/mbaliga/Alloy/actions/runs/38852762351)) is
+still in progress. Results above describe slicer parity at source `4dc532d`,
+not qualification of this new handoff change.
 
 The completed desktop reference is not native slicer parity. The completed
 static profile audit is not runtime profile parity. None of these runs proves
