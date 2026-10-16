@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -5607,8 +5609,38 @@ public final class MainActivity extends Activity {
         EditText supportSpeed = field(nativeSetting(config, "support_material_speed", "150"), "Support speed (mm/s)");
         EditText supportInterfaceSpeed = field(nativeSetting(config, "support_material_interface_speed", "80"), "Interface speed (mm/s)");
         EditText treeAngle = field(nativeSetting(config, "support_tree_angle", "45"), "Tree branch angle (degrees)");
-        EditText treeDistance = field(nativeSetting(config, "support_tree_branch_distance", "5"), "Tree branch distance (mm)");
-        EditText treeDiameter = field(nativeSetting(config, "support_tree_branch_diameter", "2"), "Tree branch diameter (mm)");
+        boolean organicTreeStyle = "organic".equalsIgnoreCase(supportStyleValue);
+        String treeDistanceKey = organicTreeStyle
+                ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
+        String treeDiameterKey = organicTreeStyle
+                ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
+        EditText treeDistance = field(nativeSetting(config, treeDistanceKey,
+                organicTreeStyle ? "1" : "5"), "Tree branch distance (mm)");
+        EditText treeDiameter = field(nativeSetting(config, treeDiameterKey,
+                organicTreeStyle ? "2" : "5"), "Tree branch diameter (mm)");
+        Map<String, String> treeGeometryValues = new HashMap<>();
+        String[] displayedTreeStyle = {supportStyleValue};
+        treeGeometryValues.put(supportStyleValue + ":distance", treeDistance.getText().toString());
+        treeGeometryValues.put(supportStyleValue + ":diameter", treeDiameter.getText().toString());
+        supportStyles.setOnCheckedChangeListener((group, checkedId) -> {
+            RadioButton selected = group.findViewById(checkedId);
+            if (selected == null) return;
+            String nextStyle = String.valueOf(selected.getTag());
+            String previousStyle = displayedTreeStyle[0];
+            if (nextStyle.equals(previousStyle)) return;
+            treeGeometryValues.put(previousStyle + ":distance", treeDistance.getText().toString());
+            treeGeometryValues.put(previousStyle + ":diameter", treeDiameter.getText().toString());
+            boolean nextOrganic = "organic".equalsIgnoreCase(nextStyle);
+            String nextDistanceKey = nextOrganic
+                    ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
+            String nextDiameterKey = nextOrganic
+                    ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
+            treeDistance.setText(treeGeometryValues.getOrDefault(nextStyle + ":distance",
+                    nativeSetting(config, nextDistanceKey, nextOrganic ? "1" : "5")));
+            treeDiameter.setText(treeGeometryValues.getOrDefault(nextStyle + ":diameter",
+                    nativeSetting(config, nextDiameterKey, nextOrganic ? "2" : "5")));
+            displayedTreeStyle[0] = nextStyle;
+        });
         EditText treeDiameterAngle = field(nativeSetting(config, "support_tree_branch_diameter_angle", "5"), "Branch thickening angle (degrees)");
         EditText treeWallCount = field(nativeSetting(config, "support_tree_branch_diameter_double_wall", "0"), "Tree wall mode (0–4)");
         fields.addView(sectionLabel("QUALITY"));
@@ -5727,8 +5759,9 @@ public final class MainActivity extends Activity {
                 config.nativeSettings.put("ironing_flowrate", number(nextIroningFlow) + "%");
                 config.nativeSettings.put("bridge_speed", number(nextBridgeSpeed));
                 config.nativeSettings.put("default_acceleration", number(nextDefaultAcceleration));
-                config.nativeSettings.put("support_material_style",
-                        String.valueOf(supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag()));
+                String selectedTreeStyle = String.valueOf(
+                        supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag());
+                config.nativeSettings.put("support_material_style", selectedTreeStyle);
                 config.nativeSettings.put("support_material_interface_layers", Integer.toString(nextSupportTopLayers));
                 config.nativeSettings.put("support_material_bottom_interface_layers", Integer.toString(nextSupportBottomLayers));
                 config.nativeSettings.put("support_material_xy_spacing", number(nextSupportXyDistance));
@@ -5738,8 +5771,13 @@ public final class MainActivity extends Activity {
                 config.nativeSettings.put("support_material_speed", number(nextSupportSpeed));
                 config.nativeSettings.put("support_material_interface_speed", number(nextSupportInterfaceSpeed));
                 config.nativeSettings.put("support_tree_angle", number(nextTreeAngle));
-                config.nativeSettings.put("support_tree_branch_distance", number(nextTreeDistance));
-                config.nativeSettings.put("support_tree_branch_diameter", number(nextTreeDiameter));
+                boolean selectedOrganicTree = "organic".equalsIgnoreCase(selectedTreeStyle);
+                config.nativeSettings.put(selectedOrganicTree
+                        ? "support_tree_branch_distance_organic" : "support_tree_branch_distance",
+                        number(nextTreeDistance));
+                config.nativeSettings.put(selectedOrganicTree
+                        ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter",
+                        number(nextTreeDiameter));
                 config.nativeSettings.put("support_tree_branch_diameter_angle", number(nextTreeDiameterAngle));
                 config.nativeSettings.put("support_tree_branch_diameter_double_wall", Integer.toString(nextTreeWallCount));
                 projectStore.saveRecipe(config);
