@@ -429,7 +429,7 @@ jobs:
             adb shell am instrument -w -e class com.mbaliga.alloy.BambuMachineTemplateProbeTest com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
             mkdir -p path-b-template-probe
             adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-bambu-template-probe/. path-b-template-probe/
-            python3 -c 'import json,pathlib; p=pathlib.Path("path-b-template-probe"); d=json.loads((p/"manifest.json").read_text()); assert d["scope"]=="template-rendering-only" and d["qualified"] is False; assert {f["fixture"] for f in d["fixtures"]}=={"cube_20mm","overhang_support","thin_wall_frame","travel_obstacle"}; assert all(f["rendered"] is True and f["qualified"] is False and (p/f["file"]).is_file() for f in d["fixtures"])'
+            python3 ci/validate_machine_template_probe_output.py path-b-template-probe
       - name: Upload unqualified Bambu template rendering probe
         if: always()
         uses: actions/upload-artifact@v4
