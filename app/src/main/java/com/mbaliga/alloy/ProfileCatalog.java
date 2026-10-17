@@ -421,6 +421,8 @@ public final class ProfileCatalog {
             case "tree_support_branch_angle": return "support_tree_angle";
             case "tree_support_branch_diameter": return "support_tree_branch_diameter";
             case "tree_support_branch_distance": return "support_tree_branch_distance";
+            case "tree_support_branch_diameter_organic": return "support_tree_branch_diameter_organic";
+            case "tree_support_branch_distance_organic": return "support_tree_branch_distance_organic";
             case "tree_support_branch_diameter_angle": return "support_tree_branch_diameter_angle";
             case "tree_support_wall_count": return "support_tree_branch_diameter_double_wall";
             case "support_remove_small_overhang": return "support_remove_small_overhang";

@@ -84,6 +84,11 @@ def main() -> None:
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "python3 ci/validate_learning_assets.py",
+        "name: Upload Android acceptance diagnostics\n        if: always()\n        uses: actions/upload-artifact@v4",
+        "name: alloy-android-acceptance-diagnostics",
+        "app/build/reports/androidTests/connected/",
+        "app/build/outputs/androidTest-results/connected/",
     ):
         require(ordinary_text, token, ordinary)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
@@ -120,6 +125,9 @@ def main() -> None:
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
         "Run native release instrumentation through API-35 ARM translation",
         "Export native G3 evidence through API-35 ARM translation",
+        "python3 ci/verify_machine_template_probe.py orca-profile-source",
+        "com.mbaliga.alloy.BambuMachineTemplateProbeTest",
+        "name: alloy-bambu-template-rendering-probe",
         "target: google_apis",
         "arch: x86_64",
         "disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}",
@@ -163,6 +171,7 @@ def main() -> None:
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "python3 ci/validate_learning_assets.py",
     ):
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
@@ -184,8 +193,12 @@ def main() -> None:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must select KVM when available and allow software fallback")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
         raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before emulator boots")
-    if "group: alloy-native-${{ github.ref }}" not in native_text or "cancel-in-progress: false" not in native_text:
-        raise SystemExit(f"{native}: native source builds must queue instead of cancelling live diagnostic runs")
+    if (
+        "group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}"
+        not in native_text
+        or "cancel-in-progress: false" not in native_text
+    ):
+        raise SystemExit(f"{native}: preserve live diagnostics while isolating native runs by source revision")
     if native_text.count("app/src/androidTest/**") != 2:
         raise SystemExit(f"{native}: every full-suite native trigger must include all instrumentation tests")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
@@ -209,6 +222,7 @@ def main() -> None:
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "python3 ci/validate_learning_assets.py",
     ):
         require(release_text, token, release)
     release_bootstrap = release_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
@@ -221,3 +235,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

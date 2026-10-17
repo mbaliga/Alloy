@@ -152,7 +152,7 @@ public final class LearningAndCapabilityCatalogTest {
             }
         }
         Assert.assertTrue(mini.directSendState.toLowerCase().contains("not qualified"));
-        boolean pla = false, petg = false, tpu = false, pva = false, supportPla = false, supportPetg = false, blocked = false, external = false, amsLite = false, regularAms = false;
+        boolean pla = false, petg = false, tpu = false, pva = false, supportPla = false, supportPetg = false, blocked = false, external = false, amsLite = false, regularAms = false, ams2Pro = false, amsHt = false;
         for (PrinterCapabilityCatalog.Material material : mini.materials) {
             pla |= material.name.equals("PLA"); petg |= material.name.equals("PETG");
             tpu |= material.name.equals("TPU"); pva |= material.name.equals("PVA");
@@ -168,12 +168,23 @@ public final class LearningAndCapabilityCatalogTest {
                     material.sourceUrl.startsWith("https://") && material.sourceUrl.contains("bambulab.com"));
         }
         for (PrinterCapabilityCatalog.FeedRoute route : mini.feedRoutes) {
-            external |= route.id.equals("external-direct"); amsLite |= route.id.equals("ams-lite"); regularAms |= route.id.equals("regular-ams") && route.state.equals("Unsupported");
+            external |= route.id.equals("external-direct");
+            amsLite |= route.id.equals("ams-lite");
+            regularAms |= route.id.equals("regular-ams") && route.state.contains("A1 Series AMS Hub");
+            ams2Pro |= route.id.equals("ams-2-pro") && route.state.contains("A1 Series AMS Hub");
+            amsHt |= route.id.equals("ams-ht") && route.state.contains("A1 Series AMS Hub");
+            if (route.id.equals("regular-ams") || route.id.equals("ams-2-pro") || route.id.equals("ams-ht")) {
+                Assert.assertTrue("AMS family routes require official source links", route.sourceUrl.startsWith("https://forum.bambulab.com/"));
+                Assert.assertTrue("AMS family routes must separate AMS Lite and preserve firmware requirements",
+                        route.note.contains("01.06.10.33") && route.note.contains("Do not mix AMS Lite")
+                                && route.note.contains("Alloy send remains unqualified"));
+            }
         }
         Assert.assertTrue(pla && petg && tpu && pva && blocked);
         Assert.assertTrue("A1 mini support-filament families need explicit non-qualification and AMS lite caveats",
                 supportPla && supportPetg);
-        Assert.assertTrue(external && amsLite && regularAms);
+        Assert.assertTrue("A1 mini must disclose external feed, AMS Lite and all hub-enabled AMS families",
+                external && amsLite && regularAms && ams2Pro && amsHt);
         Assert.assertTrue("A1 mini must disclose physical AMS lite spool dimensions", mini.spoolGuidance.toString().contains("40–68 mm"));
         Assert.assertTrue("A1 mini must disclose TPU/PVA AMS lite exclusions", mini.spoolGuidance.toString().contains("PVA"));
         boolean completeSpool = false, refill = false, thirdParty = false, regularAmsSpool = false;
@@ -181,12 +192,13 @@ public final class LearningAndCapabilityCatalogTest {
             completeSpool |= form.id.equals("bambu-spooled") && form.compatibleRoutes.contains("AMS lite");
             refill |= form.id.equals("bambu-refill") && form.form.contains("Refill");
             thirdParty |= form.id.equals("third-party-direct") && form.state.contains("Manual review");
-            regularAmsSpool |= form.id.equals("regular-ams-spool") && form.state.equals("Unsupported route");
+            regularAmsSpool |= form.id.equals("regular-ams-spool") && form.state.equals("Manual review required")
+                    && form.compatibleRoutes.contains("AMS 2 Pro") && form.compatibleRoutes.contains("AMS HT");
             Assert.assertFalse("every spool form needs a source/scope record", form.source.isEmpty());
             Assert.assertTrue("every spool form needs an official source URL",
                     form.sourceUrl.startsWith("https://") && form.sourceUrl.contains("bambulab.com"));
         }
-        Assert.assertTrue("A1 mini needs explicit complete-spool, refill, third-party and regular-AMS states",
+        Assert.assertTrue("A1 mini needs explicit complete-spool, refill, third-party and hub-enabled AMS spool states",
                 completeSpool && refill && thirdParty && regularAmsSpool);
     }
 
@@ -227,6 +239,74 @@ public final class LearningAndCapabilityCatalogTest {
             Assert.assertEquals("PLA", profile.material);
             Assert.assertEquals(0.4d, profile.nozzle, 0.0001d);
         }
+    }
+
+    @Test public void a1AndP1sExposeIndividualSourcedMaterialClassesWithoutSendQualification() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(context.getAssets());
+        PrinterCapabilityCatalog.Printer a1 = catalog.byId("a1");
+        PrinterCapabilityCatalog.Printer p1s = catalog.byId("p1s");
+        Assert.assertNotNull(a1);
+        Assert.assertNotNull(p1s);
+        Assert.assertEquals(10, a1.materials.size());
+        Assert.assertEquals(10, p1s.materials.size());
+        for (PrinterCapabilityCatalog.Printer printer : new PrinterCapabilityCatalog.Printer[]{a1, p1s}) {
+            Assert.assertTrue("printer must stay not qualified", printer.directSendState.startsWith("Not qualified"));
+            for (PrinterCapabilityCatalog.Material material : printer.materials) {
+                Assert.assertTrue("material must stay unavailable for direct send",
+                        material.directSendState.startsWith("Not qualified") || material.directSendState.startsWith("Blocked"));
+                Assert.assertTrue("each material class must carry a direct official source",
+                        material.sourceUrl.startsWith("https://") && material.sourceUrl.contains("bambulab.com"));
+            }
+        }
+        boolean p1sAms = false, p1sAms2Pro = false, p1sAmsHt = false;
+        for (PrinterCapabilityCatalog.FeedRoute route : p1s.feedRoutes) {
+            if (route.id.equals("ams") || route.id.equals("ams-2-pro") || route.id.equals("ams-ht")) {
+                Assert.assertTrue("P1S AMS family routes must link to official guidance",
+                        route.sourceUrl.startsWith("https://forum.bambulab.com/"));
+                Assert.assertTrue(route.note.contains("P1 Series"));
+            }
+            p1sAms |= route.id.equals("ams");
+            p1sAms2Pro |= route.id.equals("ams-2-pro") && route.note.contains("before connecting")
+                    && route.note.contains("four AMS units");
+            p1sAmsHt |= route.id.equals("ams-ht") && route.note.contains("before connecting")
+                    && route.note.contains("four AMS units");
+        }
+        Assert.assertTrue("P1S must disclose supported AMS types separately", p1sAms && p1sAms2Pro && p1sAmsHt);
+        for (PrinterCapabilityCatalog.Material material : a1.materials) {
+            Assert.assertFalse("A1 AMS Lite route status must be individually sourced", material.amsLiteStatus.isEmpty());
+            Assert.assertTrue(material.amsLiteSourceUrl.startsWith("https://")
+                    && material.amsLiteSourceUrl.contains("bambulab.com"));
+        }
+        boolean originalAms = false, ams2Pro = false, amsHt = false, hubSpool = false;
+        for (PrinterCapabilityCatalog.FeedRoute route : a1.feedRoutes) {
+            if (route.id.equals("regular-ams") || route.id.equals("ams-2-pro") || route.id.equals("ams-ht")) {
+                Assert.assertEquals("Requires A1 Series AMS Hub", route.state);
+                Assert.assertTrue(route.sourceUrl.startsWith("https://forum.bambulab.com/"));
+                Assert.assertTrue(route.note.contains("01.06.10.33") && route.note.contains("Do not mix AMS Lite")
+                        && route.note.contains("Alloy send remains unqualified"));
+            }
+            originalAms |= route.id.equals("regular-ams"); ams2Pro |= route.id.equals("ams-2-pro"); amsHt |= route.id.equals("ams-ht");
+        }
+        for (PrinterCapabilityCatalog.SpoolForm form : a1.spoolForms)
+            hubSpool |= form.id.equals("ams-hub-spool") && form.state.equals("Manual review required");
+        Assert.assertTrue("A1 must disclose every A1-series AMS with conservative spool-fit review",
+                originalAms && ams2Pro && amsHt && hubSpool);
+        Assert.assertEquals("Ideal", materialById(a1, "pla").bambuStatus);
+        Assert.assertEquals("Not recommended", materialById(a1, "asa").bambuStatus);
+        Assert.assertTrue(materialById(a1, "tpu").amsLiteStatus.startsWith("Unsupported"));
+        Assert.assertTrue("dry PVA exception must be shown for A1 AMS Lite",
+                materialById(a1, "pva").amsLiteStatus.toLowerCase(java.util.Locale.US).contains("dry pva only"));
+        Assert.assertEquals("Ideal", materialById(p1s, "abs").bambuStatus);
+        Assert.assertEquals("Capable", materialById(p1s, "pa").bambuStatus);
+        Assert.assertEquals("Not recommended", materialById(p1s, "cf-gf-filled").bambuStatus);
+    }
+
+    private static PrinterCapabilityCatalog.Material materialById(
+            PrinterCapabilityCatalog.Printer printer, String id) {
+        for (PrinterCapabilityCatalog.Material material : printer.materials)
+            if (id.equals(material.id)) return material;
+        return null;
     }
 
     private static byte[] readAll(java.io.InputStream input) throws java.io.IOException {

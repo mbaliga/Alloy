@@ -40,6 +40,31 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value["printers"][0]["alloy_direct_send"] = "Qualified"
         self.assert_rejected(value, "must stay not qualified")
 
+    def test_rejects_p1s_ams2pro_route_without_firmware_and_capacity_caveats(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][2]["feed_routes"] if route["id"] == "ams-2-pro")
+        route["note"] = "Bambu supports this on P1 Series."
+        self.assert_rejected(value, "must retain firmware, capacity and Alloy qualification caveats")
+
+    def test_rejects_a1_ams_route_without_hub_requirement(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][1]["feed_routes"] if route["id"] == "ams-2-pro")
+        route["state"] = "Supported"
+        self.assert_rejected(value, "must have a sourced hub requirement")
+
+    def test_rejects_a1_mini_ams_route_without_hub_and_official_source(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][0]["feed_routes"] if route["id"] == "regular-ams")
+        route["state"] = "Supported"
+        route.pop("source_url")
+        self.assert_rejected(value, "must have a sourced hub requirement")
+
+    def test_rejects_a1_mini_ams_route_without_separation_caveats(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][0]["feed_routes"] if route["id"] == "ams-ht")
+        route["note"] = "Supported."
+        self.assert_rejected(value, "must retain firmware, AMS Lite separation and Alloy qualification caveats")
+
     def test_rejects_missing_a1_mini_spool_form(self):
         value = self.current_catalog()
         value["printers"][0]["spool_forms"] = value["printers"][0]["spool_forms"][:-1]

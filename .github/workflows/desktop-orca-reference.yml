@@ -7,16 +7,24 @@ on:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/test_generate_fixtures.py'
+      - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
+      - 'app/src/main/assets/models/**'
       - 'parity/test_desktop_orca_reference_workflow.py'
       - 'parity/g3-bambu-filament-overlay.json'
       - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
   pull_request:
-    branches: [stage1-gates-prep]
+    branches: [stage1-gates-prep, codex/fix-native-test-status]
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
+      - 'parity/test_generate_fixtures.py'
+      - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
+      - 'app/src/main/assets/models/**'
       - 'parity/test_desktop_orca_reference_workflow.py'
       - 'parity/g3-bambu-filament-overlay.json'
       - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
@@ -46,6 +54,7 @@ jobs:
           set -euxo pipefail
           python3 parity/generate_fixtures.py --out runtime/fixtures
           sha256sum runtime/fixtures/*.stl | tee runtime/fixtures/SHA256SUMS
+          python3 -m unittest discover -s parity -p 'test_generate_fixtures.py' -v
 
       - name: Clone pinned Orca profile snapshot
         shell: bash
@@ -119,7 +128,7 @@ jobs:
               --load-filaments "$FILAMENT" \
               --allow-newer-file \
               --outputdir "$out" \
-              --export-3mf "$out/$name.gcode.3mf" \
+              --export-3mf "$name.gcode.3mf" \
               "$GITHUB_WORKSPACE/$stl" \
               > "$out/orca.log" 2>&1
 
@@ -128,11 +137,18 @@ jobs:
 
       - name: Record authoritative baseline manifest
         shell: bash
+        env:
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
         run: |
           set -euxo pipefail
           {
             echo "OrcaSlicer release: v${ORCA_VERSION}"
             echo "Orca profile source: ${ORCA_PROFILE_SHA}"
+            echo "PR head SHA: ${ALLOY_PR_HEAD_SHA:-not-applicable}"
+            echo "PR base SHA: ${ALLOY_PR_BASE_SHA:-not-applicable}"
+            echo "PR merge SHA: ${ALLOY_PR_MERGE_SHA:-not-applicable}"
             echo "Machine: Bambu Lab A1 mini 0.4 nozzle"
             echo "Process: Alloy checked-in G3 project recipe"
             echo "Filament: Alloy checked-in G3 PLA overlay"

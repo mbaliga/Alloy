@@ -124,7 +124,7 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("support_speed = 80"));
             Assert.assertTrue(serialized.contains("support_interface_spacing = 0.45"));
             Assert.assertTrue(serialized.contains("support_bottom_interface_spacing = 0.5"));
-            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
         } finally {
             if (nativeConfig.exists()) Assert.assertTrue(nativeConfig.delete());
         }
@@ -248,6 +248,8 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("2", imported.nativeSettings.get("wipe_distance"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_remove_small_overhang"));
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_distance"));
+        Assert.assertEquals("1", imported.nativeSettings.get("support_tree_branch_distance_organic"));
+        Assert.assertEquals("2", imported.nativeSettings.get("support_tree_branch_diameter_organic"));
         Assert.assertEquals("0.2", imported.nativeSettings.get("support_object_first_layer_gap"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_interface_not_for_body"));
         Assert.assertEquals("cubic", imported.nativeSettings.get("fill_pattern"));
@@ -294,7 +296,9 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("retract_lift = 0.4"));
             Assert.assertTrue(serialized.contains("wipe_distance = 2"));
             Assert.assertTrue(serialized.contains("support_remove_small_overhang = 1"));
-            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_diameter_organic = 2"));
             Assert.assertTrue(serialized.contains("support_object_first_layer_gap = 0.2"));
             Assert.assertTrue(serialized.contains("support_interface_not_for_body = 1"));
             Assert.assertTrue(serialized.contains("internal_solid_infill_pattern = rectilinear"));
@@ -551,7 +555,80 @@ public final class ProfileCatalogImportTest {
         }
     }
 
+    @Test
+    public void treeRecipesRemainIndependentAcrossSupportStyleSwitches() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        // Deliberately different from each other AND from native defaults:
+        // checking only the stock 5/1/2 values can hide a dropped override.
+        config.nativeSettings.put("support_tree_branch_distance", "7");
+        config.nativeSettings.put("support_tree_branch_distance_organic", "3");
+        config.nativeSettings.put("support_tree_branch_diameter", "6");
+        config.nativeSettings.put("support_tree_branch_diameter_organic", "4");
+        for (String style : new String[]{"organic", "tree", "organic"}) {
+            config.nativeSettings.put("support_material_style", style);
+            String serialized = serializeTreeRecipe(config);
+            assertNativeSetting(serialized, "tree_support_branch_distance", "7");
+            assertNativeSetting(serialized, "tree_support_branch_distance_organic", "3");
+            assertNativeSetting(serialized, "tree_support_branch_diameter", "6");
+            assertNativeSetting(serialized, "tree_support_branch_diameter_organic", "4");
+        }
+    }
+
+    @Test
+    public void ordinaryTreeOverridesNeverBecomeOrganicOverrides() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        config.nativeSettings.put("support_material_style", "organic");
+        config.nativeSettings.put("support_tree_branch_distance", "7");
+        config.nativeSettings.put("support_tree_branch_diameter", "6");
+        String serialized = serializeTreeRecipe(config);
+        assertNativeSetting(serialized, "tree_support_branch_distance", "7");
+        assertNativeSetting(serialized, "tree_support_branch_diameter", "6");
+        assertNativeSetting(serialized, "tree_support_branch_distance_organic", null);
+        assertNativeSetting(serialized, "tree_support_branch_diameter_organic", null);
+    }
+
+    @Test
+    public void organicTreeOverridesNeverBecomeOrdinaryOverrides() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        config.nativeSettings.put("support_material_style", "tree");
+        config.nativeSettings.put("support_tree_branch_distance_organic", "3");
+        config.nativeSettings.put("support_tree_branch_diameter_organic", "4");
+        String serialized = serializeTreeRecipe(config);
+        assertNativeSetting(serialized, "tree_support_branch_distance", null);
+        assertNativeSetting(serialized, "tree_support_branch_diameter", null);
+        assertNativeSetting(serialized, "tree_support_branch_distance_organic", "3");
+        assertNativeSetting(serialized, "tree_support_branch_diameter_organic", "4");
+    }
+
+    private static String serializeTreeRecipe(Slicer.Config config) throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File file = File.createTempFile("tree-recipe-", ".ini", context.getCacheDir());
+        try {
+            NativeSlicerEngine.writeConfig(config, file);
+            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.US_ASCII);
+        } finally {
+            if (file.exists()) Assert.assertTrue(file.delete());
+        }
+    }
+
+    private static void assertNativeSetting(String serialized, String key, String expected) {
+        int occurrences = 0;
+        for (String line : serialized.split("\\r?\\n")) {
+            if (line.startsWith(key + " = ")) {
+                occurrences++;
+                Assert.assertEquals("native setting " + key, expected,
+                        line.substring((key + " = ").length()));
+            }
+        }
+        Assert.assertEquals("native setting occurrence count: " + key,
+                expected == null ? 0 : 1, occurrences);
+    }
+
     private static byte[] json(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
     }
 }
+

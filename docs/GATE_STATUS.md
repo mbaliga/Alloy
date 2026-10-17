@@ -1,6 +1,217 @@
 # Alloy engine gate status
 
-Date: 2026-10-13
+Date: 2026-10-16
+
+## 2026-10-16 restore native smoke-test source and rerun exact-head gates
+
+The PR branch had a corrupted binary blob at
+`app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java` even
+though the local tested tree contained the valid 917-line Java test. I restored
+the source from the local tree in commit
+[`ac8590a`](https://github.com/mbaliga/Alloy/commit/ac8590aceec53c3b4e509fc8dca2f77e07608c6f);
+the GitHub file now returns UTF-8 source and its blob SHA matches the local
+file (`7732803b142cd8976c0525e7fb6d48276c79fe08`). The local tree and PR head
+tree were verified identical after the repair.
+
+Local checks on that tree passed: 122 parity tests, profile asset validation,
+Android workflow validation, native wiring validation and `git diff --check`.
+Fresh exact-head CI on `ac8590a` passed parity tooling
+([38791097168](https://github.com/mbaliga/Alloy/actions/runs/38791097168)),
+the A1 Mini/A1/P1S static profile compatibility pre-gate
+([38791097277](https://github.com/mbaliga/Alloy/actions/runs/38791097277)),
+desktop Orca reference slicing
+([38791097217](https://github.com/mbaliga/Alloy/actions/runs/38791097217)),
+and the official-source snapshot
+([38791097151](https://github.com/mbaliga/Alloy/actions/runs/38791097151)).
+Android acceptance run
+[38791097221](https://github.com/mbaliga/Alloy/actions/runs/38791097221)
+is still queued. Native build/instrumentation/G3 run
+[38791097066](https://github.com/mbaliga/Alloy/actions/runs/38791097066)
+ended `cancelled` before any job started, so it produced no native or G3
+evidence. No replacement native run has completed on this exact code tree;
+neither status is a pass.
+
+The last completed native-vs-desktop G3 report still fails the 2% print-time
+gate (9.14–18.02% deltas across four fixtures) and the support fixture's
+filament estimate gate (~8.9%). Corrected local metric scoping brings three
+fixtures' positive-extrusion deltas below 1%, but the support fixture remains
+at 6.04%. A fresh exact-head native comparison is still required; do not lower
+tolerances or promote output as printer-ready. No physical-print, Bambu Handy,
+or release-signing evidence was added by restoring this test source.
+
+## 2026-10-16 source-backed A1/P1S native motion settings
+
+The A1 and P1S planning profiles now carry the pinned Bambu Studio motion,
+acceleration, jerk and retraction values used by the native adapter, instead
+of leaving those fields to SliceBeam defaults. `verify_profile_snapshot.py`
+requires these values and resolves every emitted scalar against the selected
+machine/process inheritance chain. The three-profile Android native smoke test
+also asserts that each profile's source-backed default acceleration reaches
+the generated G-code. The profile and test changes are on PR #12 at
+[`adbbd86`](https://github.com/mbaliga/Alloy/commit/adbbd86be0af40837b37bd0df8d5973bdb2c42b4).
+
+Local verification passed: 122 parity tests, all packaged profile asset
+validation, and whitespace checks. On exact PR head
+[`7a5d42d`](https://github.com/mbaliga/Alloy/commit/7a5d42ddf80b6cc7cf4f26d36bbf92c3fcdecfc0),
+the A1 Mini/A1/P1S compatibility matrix passed in run
+[38789741097](https://github.com/mbaliga/Alloy/actions/runs/38789741097), parity
+tooling passed in [38789741101](https://github.com/mbaliga/Alloy/actions/runs/38789741101),
+desktop A1 Mini reference slices passed in
+[38789741127](https://github.com/mbaliga/Alloy/actions/runs/38789741127), and
+the official-source snapshot passed in
+[38789741187](https://github.com/mbaliga/Alloy/actions/runs/38789741187).
+The ordinary Android run [38789741022](https://github.com/mbaliga/Alloy/actions/runs/38789741022)
+is still queued, and optional native-engine run
+[38789741132](https://github.com/mbaliga/Alloy/actions/runs/38789741132)
+remains pending with no job started. The earlier matrix at `d07b58f` is
+superseded by the exact-head matrix result, but neither static profile audit
+nor the desktop reference establishes runtime profile parity, native semantic
+parity, or physical print readiness. Keep those claims fail-closed.
+
+## 2026-10-16 three-printer static profile compatibility pre-gate
+
+PR #12 exact head
+[`d07b58f430fba107c1fa9d955f9b93c0cc2ecbb0`](https://github.com/mbaliga/Alloy/commit/d07b58f430fba107c1fa9d955f9b93c0cc2ecbb0)
+passed all three jobs in the new static profile compatibility matrix:
+[workflow run 38786843166](https://github.com/mbaliga/Alloy/actions/runs/38786843166).
+The jobs resolved the pinned Bambu Studio profiles for A1 Mini, A1 and P1S
+against the pinned SliceBeam/Prusa configuration-key surface and passed the
+declared critical-field checks. Their retained artifacts are
+`profile-compatibility-a1-mini` (11998352169),
+`profile-compatibility-a1` (11997253722), and
+`profile-compatibility-p1s` (11997348526). This is a static adapter
+compatibility **pre-gate only**. It does not establish that Alloy applies each
+resolved setting correctly at runtime, that the three native slicers match
+Bambu Studio, or that any printer can safely execute the generated output.
+
+The same head's Python tooling and desktop Orca A1 Mini reference-slice checks
+also passed; the reference artifact is
+[11998228014](https://github.com/mbaliga/Alloy/actions/runs/38786842821/artifacts/11998228014).
+The optional native-engine workflow had not completed at the time of this
+entry. G3 semantic parity, G4 runtime profile parity, Bambu Handy acceptance,
+physical qualification for all printers, and signed production release remain
+open. Keep print and release claims fail-closed.
+
+
+## 2026-10-15 G3 comparator investigation (not a parity pass)
+
+Inspection of exact-head native run [38488883737](https://github.com/mbaliga/Alloy/actions/runs/38488883737)
+found that the new G3 comparator failed its last gate after the native build,
+emulator instrumentation, and G3 export had succeeded. The retained report
+[11863749550](https://github.com/mbaliga/Alloy/actions/runs/38488883737/artifacts/11863749550)
+was measuring machine-start extrusion and acceleration commands before the
+first model layer as if they belonged to the sliced object. I corrected the
+local comparison scope to begin at explicit layer markers and added regression
+coverage. Re-evaluating the retained exact-head desktop and native artifacts
+locally reduced positive-E deltas to 0.03% (cube), 0.89% (thin-wall frame),
+and 0.35% (travel obstacle); the overhang/support fixture still differs by
+6.04%. This is diagnostic evidence only—the corrected comparator has not yet
+passed a fresh hosted exact-head run.
+
+The unresolved checks remain material: desktop-vs-native reported print-time
+deltas are 9.14–18.02% against the 2% gate on all four fixtures, the
+support-bearing fixture's header filament estimates differ by about 8.9%, and
+acceleration-command warnings remain. Do not relax the gates or describe G3 as
+passed. The updated workflows now rerun both the desktop reference and native
+comparison when comparator code changes, so the next exact-head CI run can
+validate the fix without reusing stale-head evidence.
+
+
+## 2026-10-15 exact PR-head software and G3 comparison
+
+PR #12 head `f3842b272df76c7a7b7bb39a92b46eabd49a2b57` has completed its exact-head Android, desktop-reference,
+source-snapshot, parity-tooling, and native-engine workflows. Android v1 run
+[38488883765](https://github.com/mbaliga/Alloy/actions/runs/38488883765)
+passed its acceptance suite and produced CI QA APK artifact
+[11864271997](https://github.com/mbaliga/Alloy/actions/runs/38488883765/artifacts/11864271997)
+(SHA-256 `d0972752b845b1ab768b25fe6746c9b3dbe30a851225bc108762b5f3aefeb057`).
+This ordinary APK does not include or prove native slicing.
+
+Parity tooling run
+[38488883711](https://github.com/mbaliga/Alloy/actions/runs/38488883711),
+official Orca source snapshot
+[38488883701](https://github.com/mbaliga/Alloy/actions/runs/38488883701),
+and desktop Orca A1 Mini reference-slice run
+[38488883743](https://github.com/mbaliga/Alloy/actions/runs/38488883743)
+passed. The desktop reference artifact
+[11861195383](https://github.com/mbaliga/Alloy/actions/runs/38488883743/artifacts/11861195383)
+has SHA-256 `22a9991348666d1044e7330059bde6eedd83f515fa82471b00cb1ffb5bd85cea`
+and is tied to this exact PR head.
+
+Native run
+[38488883737](https://github.com/mbaliga/Alloy/actions/runs/38488883737)
+built the native release and instrumentation APKs, passed API-35 ARM-translation
+instrumentation and exported G3 evidence. It **failed** at step 31,
+“Compare native G3 output with exact-PR-head Orca reference”; the five-fixture
+software pilot steps were skipped after that failure. The native-vs-desktop
+comparison report is artifact
+[11863749550](https://github.com/mbaliga/Alloy/actions/runs/38488883737/artifacts/11863749550)
+(SHA-256 `aeb50231ad5cd2005320cf75e82e6260fdc1e5b8cd2965b382c199f1c458c6fa`).
+Until that report's specific parity mismatches are resolved and a fresh exact-head
+comparison passes, G3 parity remains **FAIL / NO-GO**. These hosted runs do not
+establish physical A1 Mini/A1/P1S print acceptance, Bambu Handy import, direct-send
+qualification, production signing, or release approval. Keep those gates closed.
+
+## 2026-10-14 G3 Orca reference export and validation
+
+PR #12 source checkpoint `baa36d95c1224706ca6bd983293a04a07fb3c76d` passed the
+parity tooling run [38486520421](https://github.com/mbaliga/Alloy/actions/runs/38486520421),
+official Orca source snapshot [38486520339](https://github.com/mbaliga/Alloy/actions/runs/38486520339),
+and desktop Orca reference-slice run
+[38486520525](https://github.com/mbaliga/Alloy/actions/runs/38486520525).
+The desktop run successfully sliced all four checked-in Android mesh fixtures
+with OrcaSlicer 2.4.2 and pinned A1 Mini profiles. Artifact
+[11860102035](https://github.com/mbaliga/Alloy/actions/runs/38486520525/artifacts/11860102035)
+has ZIP SHA-256
+`d5946e9fad66fd698592c95f5807ea8dafb87a49db9636da338d3cc99b57a8fd`.
+The parity suite passed locally with 101 tests and no failures.
+
+The preceding desktop run [38486269262](https://github.com/mbaliga/Alloy/actions/runs/38486269262)
+failed after slicing because the workflow supplied an absolute path to
+`--export-3mf` while also specifying `--outputdir`, causing Orca to prefix
+the output directory twice. The artifact log established the exact failure.
+The workflow now passes a filename relative to the selected output directory,
+and a regression test guards the CLI contract.
+
+For checkpoint `baa36d9`, Android run
+[38486520487](https://github.com/mbaliga/Alloy/actions/runs/38486520487)
+was queued and native run
+[38486520405](https://github.com/mbaliga/Alloy/actions/runs/38486520405)
+was pending at the last check. The successful desktop reference is not an
+Android/native semantic comparison. G2 provenance, G3 parity, physical A1
+Mini acceptance, Bambu Handy acceptance, signed install/upgrade, production
+signing, and release approval remain open. Keep direct-send and physical-print
+claims fail-closed.
+
+## 2026-10-14 A1/P1S catalog test correction and desktop baseline
+
+PR #12 head [`a7ceb6bc444d2c139bac732048c05e9eb00c80ed`](https://github.com/mbaliga/Alloy/commit/a7ceb6bc444d2c139bac732048c05e9eb00c80ed) fixes the sole failure reported by the preceding ordinary Android acceptance run: the A1/P1S material catalog test looked for lowercase `dry PVA only` in Bambu's title-case “Dry PVA only” guidance. The assertion now normalizes case and includes a diagnostic message. The fresh Android run [38479632636](https://github.com/mbaliga/Alloy/actions/runs/38479632636) completed successfully: APK build and emulator acceptance suite passed, and artifact `alloy-v1-release-ci-apk` (ID `11856349296`) has ZIP SHA-256 `96ae24f2a9e75c603e9b13e40502922163e340db3a8fd559bb3517b8e923e11e`. The hosted test output reached 131/195 invocations with 1 skipped and 0 failed before Gradle reported BUILD SUCCESSFUL.
+
+The separate native-engine build for the same source, run [38479632639](https://github.com/mbaliga/Alloy/actions/runs/38479632639), is queued and has not passed. The ordinary APK does not contain the optional native engine and proves no native slicing or printer send.
+
+Desktop run [38478213726](https://github.com/mbaliga/Alloy/actions/runs/38478213726) passed the pinned Orca 2.4.2 G3 profile checks and sliced four mesh inputs copied from Android assets. This is a successful desktop reference/recipe check only; a same-source native-vs-desktop semantic comparison is still required. G2 provenance and G3 semantic parity remain open, as do physical A1 Mini acceptance, Bambu Handy acceptance, signed install/upgrade, production signing, and release approval. Keep direct-send and physical-print claims fail-closed.
+
+## 2026-10-13 combined-source software verification
+
+PR #12 candidate source
+[`f009282dd50a2485fab5e071abad406709314373`](https://github.com/mbaliga/Alloy/commit/f009282dd50a2485fab5e071abad406709314373)
+was tested against the PR #13 base
+[`5e52089c6c31c0390a2e4bc93bf480b4c7f1195b`](https://github.com/mbaliga/Alloy/commit/5e52089c6c31c0390a2e4bc93bf480b4c7f1195b).
+The combined Android run
+[38365197015](https://github.com/mbaliga/Alloy/actions/runs/38365197015)
+passed 194 tests with 0 failures. The combined native run
+[38365197013](https://github.com/mbaliga/Alloy/actions/runs/38365197013)
+passed the ARM64 legacy native build, isolated official Orca libslic3r
+compile/link probe, API-35 ARM-translation instrumentation, G3 export and
+five-fixture software pilot. The five-fixture manifest is software-only.
+
+This does not wire the official Orca compile probe into the shipping JNI
+slicer, pass G2 provenance, or establish G3 semantic parity. Fresh G2
+provenance remains **FAIL / NO-GO**; desktop slicer parity, G4 profile runtime
+parity, Bambu TreeSupport3D parity, physical A1 Mini qualification, Bambu
+Handy acceptance, signed install/upgrade and interruption/recovery remain
+open. Physical and direct-send qualification remain pending. Do not promote
+print-ready or release claims.
 
 ## 2026-10-13 latest Android and G2 recheck
 
@@ -2967,3 +3178,51 @@ physical print quality, direct-send transport reliability, Bambu Handy
 acceptance, support parity, desktop G3 parity, production signing, or A1/P1S
 physical qualification. See the consolidated on-device checklist and narrow
 pilot runbook for outstanding checks.
+
+### 2026-10-16 exact-head native G3 result and software-only APKs
+
+The tested application/CI source was
+`4dc532d6ad71ec7ab6f5a524bf68bee647290947`. Parity tooling
+[38802544918](https://github.com/mbaliga/Alloy/actions/runs/38802544918),
+three-printer static profile pre-gate
+[38802545030](https://github.com/mbaliga/Alloy/actions/runs/38802545030),
+desktop A1 Mini references
+[38802544908](https://github.com/mbaliga/Alloy/actions/runs/38802544908),
+official Orca snapshot
+[38802544906](https://github.com/mbaliga/Alloy/actions/runs/38802544906),
+and Android QA build/tests
+[38802544927](https://github.com/mbaliga/Alloy/actions/runs/38802544927)
+passed. Android artifact `12006353162` has ZIP SHA-256
+`1f469a0170ea2522ce7d11761d066583445f7921ed17b63f6374b46fe7b24ee3`; the
+extracted APK SHA-256 is
+`8394676538274415e94266f99d8bf4a7d7fe55bd26ed2ce1195e66f8af519759`.
+
+The native PR run
+[38802544902](https://github.com/mbaliga/Alloy/actions/runs/38802544902)
+completed its ARM64 build, instrumentation, and G3 evidence export, then
+**failed** the desktop comparison. The four print-time deltas at a 2% tolerance
+are: cube 14.08% (1,525 vs 1,775 s), supported overhang 18.02% (1,679 vs
+2,048 s), thin-wall frame 12.48% (1,164 vs 1,330 s), and travel obstacle
+9.14% (3,083 vs 3,393 s). On supported overhang, filament length differs by
+8.90% (1,017.81 vs 934.59 mm), mass by 8.83% (3.08 vs 2.83 g), and positive-E
+by 6.04% (1,509.81 vs 1,606.85 mm, against a 5% allowance). Profile identity
+matches 62 fields; that does not override the output failures. This native
+result is a concrete G3 **NO-GO**, not a reason to loosen tolerances or apply a
+global timing correction.
+
+Separate push-triggered native run
+[38802536896](https://github.com/mbaliga/Alloy/actions/runs/38802536896)
+produced software-only artifact `12010340940`: a CI QA APK pair and five
+preflighted sample packages. Its manifest says `software_only: true`,
+`engine_verified: false`, and physical/direct-send qualification pending. It
+can support app and file-inspection QA only; **do not send these packages to a
+printer or import them into Bambu Handy for printing**.
+
+The Bambu TreeSupport3D source audit was also repeated against pinned Bambu
+Studio `v02.08.02.61` (`926a7192574bcb9b3a732e1ec59a46d79cb45466`) and remains
+`PORT_REQUIRED`: seven required implementation files differ, 30/36 direct
+support includes differ, with 94 transitive includes, 12 unresolved quoted
+includes, 9 absent transitive dependencies, and 68 differing same-path files.
+The next slicer milestone is to close that coherent source/dependency/API port
+and rerun the same strict four-fixture comparison. Until then, G3 and every
+physical-send/release gate remain closed.

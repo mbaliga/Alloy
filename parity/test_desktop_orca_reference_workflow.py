@@ -31,6 +31,29 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("name: a1mini-orca-2.4.2-reference-slices", text)
         self.assertIn("runtime/orca-reference", text)
 
+    def test_current_pull_request_and_fixture_changes_trigger_reference_slices(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        pull_request = text.split("  pull_request:", 1)[1].split("  workflow_dispatch:", 1)[0]
+        self.assertIn("codex/fix-native-test-status", pull_request)
+        self.assertIn("parity/test_generate_fixtures.py", pull_request)
+        self.assertIn("parity/compare_gcode.py", pull_request)
+        self.assertIn("parity/test_compare_gcode.py", pull_request)
+        self.assertIn("app/src/main/assets/models/**", pull_request)
+
+    def test_export_3mf_uses_filename_relative_to_output_directory(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn('--outputdir "$out"', text)
+        self.assertIn('--export-3mf "$name.gcode.3mf"', text)
+        self.assertNotIn('--export-3mf "$out/$name.gcode.3mf"', text)
+
+    def test_reference_manifest_captures_exact_pr_tree_identity(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        for key in ("PR head SHA", "PR base SHA", "PR merge SHA"):
+            self.assertIn(f'echo "{key}:', text)
+        self.assertIn("ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", text)
+        self.assertIn("ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", text)
+        self.assertIn("ALLOY_PR_MERGE_SHA: ${{ github.sha }}", text)
+
 
 if __name__ == "__main__":
     unittest.main()

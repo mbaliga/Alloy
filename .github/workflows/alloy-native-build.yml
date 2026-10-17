@@ -35,6 +35,8 @@ on:
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
+      - 'ci/validate_learning_assets.py'
+      - 'docs/LEARNING_ASSET_MANIFEST.md'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
@@ -45,6 +47,10 @@ on:
       - 'ci/normalize_occt_headers.py'
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
+      - 'ci/compare_g3_artifacts.py'
+      - 'parity/test_g3_artifact_parity.py'
+      - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -81,6 +87,8 @@ on:
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
+      - 'ci/validate_learning_assets.py'
+      - 'docs/LEARNING_ASSET_MANIFEST.md'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
@@ -91,6 +99,10 @@ on:
       - 'ci/normalize_occt_headers.py'
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
+      - 'ci/compare_g3_artifacts.py'
+      - 'parity/test_g3_artifact_parity.py'
+      - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -99,14 +111,14 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
-  group: alloy-native-${{ github.ref }}
-  # A source-built Android native stack is deliberately expensive. Keep its
-  # evidence-producing run alive when a follow-up fix arrives; GitHub queues
-  # the newest run for this branch instead of discarding the only diagnostic
-  # result we have paid to produce.
+  group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
+  # Keep evidence-producing runs alive, but isolate each source revision so
+  # a stalled emulator on an older commit cannot block validation of the
+  # current candidate indefinitely.
   cancel-in-progress: false
 
 env:
@@ -152,10 +164,11 @@ jobs:
         run: |
           set -euxo pipefail
           git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
-          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/verify_machine_template_probe.py orca-profile-source
       - name: Verify pinned Bambu planning profiles
         shell: bash
         run: |
@@ -173,6 +186,7 @@ jobs:
           python3 ci/validate_native_prebuilts.py arm64-v8a
           python3 ci/validate_profile_assets.py
           python3 ci/validate_capability_catalog.py
+          python3 ci/validate_learning_assets.py
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -412,11 +426,42 @@ jobs:
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
             test -s path-b-g3-evidence/overhang_support.gcode
             test -s path-b-g3-evidence/overhang_support.config.ini
+            adb shell am instrument -w -e class com.mbaliga.alloy.BambuMachineTemplateProbeTest com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+            mkdir -p path-b-template-probe
+            adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-bambu-template-probe/. path-b-template-probe/
+            python3 ci/validate_machine_template_probe_output.py path-b-template-probe
+      - name: Upload unqualified Bambu template rendering probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-bambu-template-rendering-probe
+          path: path-b-template-probe
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-native-g3-evidence
           path: path-b-g3-evidence
           if-no-files-found: error
+      - name: Compare native G3 output with exact-PR-head Orca reference
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+        run: |
+          python3 ci/compare_g3_artifacts.py \
+            --native-dir path-b-g3-evidence \
+            --report-dir path-b-g3-parity
+      - name: Upload native G3 semantic comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-desktop-g3-parity
+          path: path-b-g3-parity
+          if-no-files-found: warn
+          retention-days: 14
       # A native test failure is the moment its JUnit XML is most valuable.
       # Keep it even when later success-only evidence artifacts are skipped.
       - name: Upload native instrumentation report

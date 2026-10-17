@@ -21,16 +21,21 @@ public final class PrinterCapabilityCatalog {
     private static final String ASSET = "capabilities/bambu-initial-v1.json";
 
     public static final class Material {
-        public final String id, name, bambuStatus, directSendState, note, sourceUrl;
+        public final String id, name, bambuStatus, directSendState, note, sourceUrl, amsLiteStatus, amsLiteSourceUrl;
         Material(JSONObject o) {
             id = need(o, "id"); name = need(o, "name"); bambuStatus = need(o, "bambu_status");
             directSendState = need(o, "alloy_direct_send"); note = need(o, "note");
             sourceUrl = officialSourceUrl(o, "source_url");
+            amsLiteStatus = o.optString("ams_lite_status", "").trim();
+            amsLiteSourceUrl = amsLiteStatus.isEmpty() ? "" : officialSourceUrl(o, "ams_lite_source_url");
         }
     }
     public static final class FeedRoute {
-        public final String id, title, state, note;
-        FeedRoute(JSONObject o) { id = need(o, "id"); title = need(o, "title"); state = need(o, "state"); note = need(o, "note"); }
+        public final String id, title, state, note, sourceUrl;
+        FeedRoute(JSONObject o) {
+            id = need(o, "id"); title = need(o, "title"); state = need(o, "state"); note = need(o, "note");
+            sourceUrl = o.has("source_url") ? officialSourceUrl(o, "source_url") : "";
+        }
     }
     /** A physical spool/refill form; this is distinct from its material and feed route. */
     public static final class SpoolForm {
@@ -98,10 +103,64 @@ public final class PrinterCapabilityCatalog {
                 throw new IOException(printer.id + " material " + material.id + " cannot qualify direct send");
         }
         Printer mini = null;
+        Printer a1 = null, p1s = null;
         for (Printer printer : printers) if ("a1-mini".equals(printer.id)) mini = printer;
-        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"))
-                || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool")))
+        else if ("a1".equals(printer.id)) a1 = printer;
+        else if ("p1s".equals(printer.id)) p1s = printer;
+        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled", "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe"))
+                || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"))
+                || !ids(mini.feedRoutes).equals(setOf("external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht")))
             throw new IOException("A1 mini capability coverage is incomplete");
+        for (FeedRoute route : mini.feedRoutes) {
+            if (setOf("regular-ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.state.contains("A1 Series AMS Hub")
+                    || !route.note.contains("01.06.10.33") || !route.note.contains("Do not mix AMS Lite")))
+                throw new IOException("A1 mini " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
+        }
+        if (a1 == null || !ids(a1.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"))
+                || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht"))
+                || !ids(a1.spoolForms).contains("ams-hub-spool"))
+            throw new IOException("A1 capability coverage must disclose each sourced material class separately");
+        for (Material material : a1.materials) if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
+            throw new IOException("A1 material " + material.id + " lacks sourced AMS Lite route status");
+        for (FeedRoute route : a1.feedRoutes) {
+            if (setOf("regular-ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.state.contains("A1 Series AMS Hub")
+                    || !route.note.contains("01.06.10.33") || !route.note.contains("Do not mix AMS Lite")))
+                throw new IOException("A1 " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
+        }
+        if (p1s == null || !ids(p1s.materials).equals(setOf("pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"))
+                || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams", "ams-2-pro", "ams-ht")))
+            throw new IOException("P1S capability coverage must disclose each sourced material class separately");
+        for (FeedRoute route : p1s.feedRoutes) {
+            if (setOf("ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.note.contains("P1 Series")
+                    || (("ams-2-pro".equals(route.id) || "ams-ht".equals(route.id))
+                    && (!route.note.contains("before connecting") || !route.note.contains("four AMS units")))))
+                throw new IOException("P1S " + route.id + " must retain sourced model and firmware requirements");
+        }
+        for (Material material : mini.materials) {
+            if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
+                throw new IOException("A1 mini material " + material.id + " lacks sourced AMS Lite route status");
+            if (!unavailable(material.directSendState))
+                throw new IOException("A1 mini material " + material.id + " cannot qualify direct send");
+        }
+        Material pva = null, bvoh = null, genericTpu = null, tpu95a = null, supportPla = null, genericFiber = null;
+        for (Material material : mini.materials) {
+            if ("pva".equals(material.id)) pva = material;
+            else if ("bvoh".equals(material.id)) bvoh = material;
+            else if ("tpu".equals(material.id)) genericTpu = material;
+            else if ("tpu-95a".equals(material.id)) tpu95a = material;
+            else if ("support-pla".equals(material.id)) supportPla = material;
+            else if ("cf-gf-filled".equals(material.id)) genericFiber = material;
+        }
+        if (pva == null || !pva.amsLiteStatus.toLowerCase(Locale.US).contains("dry pva only")
+                || bvoh == null || !bvoh.amsLiteStatus.toLowerCase(Locale.US).contains("dry bvoh only")
+                || genericTpu == null || !genericTpu.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
+                || tpu95a == null || !tpu95a.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
+                || supportPla == null || !supportPla.amsLiteStatus.toLowerCase(Locale.US).contains("snap-away or dissolvable support")
+                || genericFiber == null || !genericFiber.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported"))
+            throw new IOException("A1 mini AMS Lite exceptions are incomplete");
     }
     private static boolean unavailable(String state) {
         String normalized = state.toLowerCase(Locale.US);

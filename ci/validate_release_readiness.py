@@ -17,17 +17,40 @@ from pathlib import Path
 
 
 REQUIRED_GATES = (
+    "native_engine_source_provenance_and_license",
     "native_engine_source_build",
     "native_smoke_on_arm64_device",
     "a1_mini_profile_parity",
-    "g3_toolpath_parity",
-    "g4_profile_runtime_parity",
+    "a1_profile_parity",
+    "p1s_profile_parity",
+    "a1_mini_g3_toolpath_parity",
+    "a1_g3_toolpath_parity",
+    "p1s_g3_toolpath_parity",
+    "a1_mini_g4_profile_runtime_parity",
+    "a1_g4_profile_runtime_parity",
+    "p1s_g4_profile_runtime_parity",
     "bambu_treesupport3d_parity",
     "physical_a1_mini_transport",
+    "physical_a1_transport",
+    "physical_p1s_transport",
     "signed_install_and_upgrade",
     "interruption_and_recovery",
 )
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+PRINTER_SPECIFIC_GATES = {
+    "a1_mini_profile_parity": "a1-mini",
+    "a1_profile_parity": "a1",
+    "p1s_profile_parity": "p1s",
+    "a1_mini_g3_toolpath_parity": "a1-mini",
+    "a1_g3_toolpath_parity": "a1",
+    "p1s_g3_toolpath_parity": "p1s",
+    "a1_mini_g4_profile_runtime_parity": "a1-mini",
+    "a1_g4_profile_runtime_parity": "a1",
+    "p1s_g4_profile_runtime_parity": "p1s",
+    "physical_a1_mini_transport": "a1-mini",
+    "physical_a1_transport": "a1",
+    "physical_p1s_transport": "p1s",
+}
 
 
 def fail(message: str) -> None:
@@ -57,6 +80,11 @@ def validate(path: Path) -> dict:
             fail(f"{field} must be a non-empty string")
         if "REPLACE-WITH" in value or value.strip().upper().startswith("TODO"):
             fail(f"{field} still contains a placeholder")
+    normalized_scope = document["device_scope"].lower()
+    if ("a1 mini" not in normalized_scope or "n1" not in normalized_scope
+            or re.search(r"\ba1\b", normalized_scope) is None
+            or "p1s" not in normalized_scope):
+        fail("device_scope must identify A1 Mini/N1, A1, and P1S")
     gates = document.get("gates")
     if not isinstance(gates, dict):
         fail("gates must be an object")
@@ -70,6 +98,9 @@ def validate(path: Path) -> dict:
         item = gate_evidence.get(gate)
         if not isinstance(item, dict):
             fail(f"gate_evidence.{gate} must identify a retained evidence file")
+        expected_printer = PRINTER_SPECIFIC_GATES.get(gate)
+        if expected_printer is not None and item.get("printer_id") != expected_printer:
+            fail(f"gate_evidence.{gate}.printer_id must be {expected_printer}")
         evidence_name = item.get("path")
         expected_sha256 = item.get("sha256")
         if not isinstance(evidence_name, str) or not evidence_name.strip():
@@ -89,18 +120,39 @@ def validate(path: Path) -> dict:
             fail(f"gate_evidence.{gate} file cannot be read: {error}")
         if actual_sha256 != expected_sha256:
             fail(f"gate_evidence.{gate} SHA-256 does not match: {evidence_name}")
-    if gates["physical_a1_mini_transport"] == "PASS":
-        evidence_name = document.get("physical_acceptance_evidence")
+    physical_gate_printers = {
+        "physical_a1_mini_transport": "a1-mini",
+        "physical_a1_transport": "a1",
+        "physical_p1s_transport": "p1s",
+    }
+    physical_evidence = document.get("physical_acceptance_evidence", {})
+    if not isinstance(physical_evidence, dict):
+        fail("physical_acceptance_evidence must map printer IDs to retained acceptance records")
+    for gate, printer in physical_gate_printers.items():
+        if gates[gate] != "PASS":
+            continue
+        evidence_item = physical_evidence.get(printer)
+        if not isinstance(evidence_item, dict):
+            fail(f"physical_acceptance_evidence.{printer} must include a path and SHA-256")
+        evidence_name = evidence_item.get("path")
+        expected_sha256 = evidence_item.get("sha256")
         if not isinstance(evidence_name, str) or not evidence_name.strip():
-            fail("physical_acceptance_evidence is required when physical transport is PASS")
+            fail(f"physical_acceptance_evidence.{printer}.path must be a non-empty relative path")
+        if Path(evidence_name).is_absolute():
+            fail(f"physical_acceptance_evidence.{printer}.path must be relative")
+        if not isinstance(expected_sha256, str) or not SHA256_RE.fullmatch(expected_sha256):
+            fail(f"physical_acceptance_evidence.{printer}.sha256 must be a lowercase SHA-256 digest")
+        gate_item = gate_evidence[gate]
+        if gate_item.get("path") != evidence_name or gate_item.get("sha256") != expected_sha256:
+            fail(f"physical_acceptance_evidence.{printer} must be the hash-bound evidence for {gate}")
         evidence_path = (path.parent / evidence_name).resolve()
         if path.parent.resolve() not in evidence_path.parents:
-            fail("physical_acceptance_evidence must stay beside the readiness record")
+            fail(f"physical_acceptance_evidence.{printer} must stay beside the readiness record")
         try:
             from ci.validate_physical_a1_acceptance import validate as validate_physical
-            validate_physical(evidence_path)
+            validate_physical(evidence_path, printer)
         except SystemExit as error:
-            fail(f"physical acceptance evidence is invalid: {error}")
+            fail(f"physical acceptance evidence for {printer} is invalid: {error}")
     return document
 
 

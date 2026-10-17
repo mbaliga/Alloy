@@ -3,9 +3,9 @@ name: Alloy Android v1
 on:
   push:
     branches: [main, 'codex/**']
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   pull_request:
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   workflow_dispatch:
 
 permissions:
@@ -32,7 +32,7 @@ jobs:
         run: |
           set -euxo pipefail
           git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
-          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
@@ -59,6 +59,7 @@ jobs:
         run: |
           python3 ci/validate_profile_assets.py
           python3 ci/validate_capability_catalog.py
+          python3 ci/validate_learning_assets.py
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
       - name: Validate Android shell and import wiring
         run: python3 ci/validate_android_wiring.py
@@ -106,8 +107,18 @@ jobs:
           # the actual release acceptance suite instead.
           disable-animations: false
           script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
+      - name: Upload Android acceptance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-android-acceptance-diagnostics
+          path: |
+            app/build/reports/androidTests/connected/
+            app/build/outputs/androidTest-results/connected/
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-v1-release-ci-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+

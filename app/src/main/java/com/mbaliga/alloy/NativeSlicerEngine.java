@@ -138,7 +138,9 @@ public final class NativeSlicerEngine implements SlicerEngine {
         };
     }
 
-    private static void writeAsciiStl(MeshModel mesh, Slicer.Config config, File target) throws IOException {
+    // Package-visible so native template integration tests use exactly the
+    // same bed placement as the production adapter, without duplicating it.
+    static void writeAsciiStl(MeshModel mesh, Slicer.Config config, File target) throws IOException {
         float shiftX = config.bedX / 2f - (mesh.minX + mesh.maxX) / 2f;
         float shiftY = config.bedY / 2f - (mesh.minY + mesh.maxY) / 2f;
         float shiftZ = -mesh.minZ;
@@ -405,26 +407,28 @@ public final class NativeSlicerEngine implements SlicerEngine {
             String angle = config.nativeSettings.get("support_tree_angle");
             setting(settings, "tree_support_branch_angle_organic", angle);
         }
-        if (config.nativeSettings.containsKey("support_tree_branch_distance")) {
-            String distance = config.nativeSettings.get("support_tree_branch_distance");
-            setting(settings, "tree_support_branch_distance_organic", distance);
-        } else if (config.nativeSettings.containsKey("support_tree_branch_distance_organic")) {
+        // The native schema registers ordinary and organic tree fields
+        // independently. Preserve both recipes even when only one style is
+        // active; switching styles must not silently restore engine defaults.
+        // Missing organic overrides must never inherit ordinary tree values.
+        if (config.nativeSettings.containsKey("support_tree_branch_distance_organic")) {
             setting(settings, "tree_support_branch_distance_organic",
                     config.nativeSettings.get("support_tree_branch_distance_organic"));
-        } else if ("organic".equals(currentSupportStyle)) {
-            // Bambu's v02.08.02.61 A1 Mini TreeSupport3D profile resolves
-            // the legacy tree branch distance to its 5 mm default. The
-            // pinned Orca-Mobile core has a separate organic default of 1 mm;
-            // leaving that value implicit creates a denser, materially
-            // different support tree whenever the older profile projection
-            // omits the newer organic-only key. Keep the Bambu-compatible
-            // default explicit until the packaged profile is refreshed with
-            // this source field and its provenance hash.
-            setting(settings, "tree_support_branch_distance_organic", "5");
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_distance")) {
+            // Legacy tree and organic tree profiles have distinct branch
+            // spacing fields. Never let the legacy value override the
+            // organic field's own resolved value/default.
+            setting(settings, "tree_support_branch_distance",
+                    config.nativeSettings.get("support_tree_branch_distance"));
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_diameter_organic")) {
+            setting(settings, "tree_support_branch_diameter_organic",
+                    config.nativeSettings.get("support_tree_branch_diameter_organic"));
         }
         if (config.nativeSettings.containsKey("support_tree_branch_diameter")) {
-            String diameter = config.nativeSettings.get("support_tree_branch_diameter");
-            setting(settings, "tree_support_branch_diameter_organic", diameter);
+            setting(settings, "tree_support_branch_diameter",
+                    config.nativeSettings.get("support_tree_branch_diameter"));
         }
         if (config.nativeSettings.containsKey("support_tree_branch_diameter_angle")) {
             String diameterAngle = config.nativeSettings.get("support_tree_branch_diameter_angle");
@@ -1232,3 +1236,4 @@ public final class NativeSlicerEngine implements SlicerEngine {
         @Override public void close() throws IOException { reader.close(); }
     }
 }
+

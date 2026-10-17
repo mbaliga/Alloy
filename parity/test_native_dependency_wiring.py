@@ -43,7 +43,13 @@ class NativeDependencyWiringTests(unittest.TestCase):
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         official_probe = cmake.split("add_library(official_orca_libslic3r STATIC", 1)[1]
         self.assertIn('"${CMAKE_CURRENT_SOURCE_DIR}/src/main/jni/official_orca_compat"', official_probe)
-        self.assertIn("target_link_libraries(official_orca_libslic3r PRIVATE ${OpenCV_LIBS} noise::noise)", official_probe)
+        link_block = re.search(
+            r"target_link_libraries\(\s*official_orca_libslic3r\s+PRIVATE(.*?)\)",
+            official_probe,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(link_block)
+        self.assertRegex(link_block.group(1), r"\bnoise::noise\b")
         wrapper = ROOT / "app/src/main/jni/official_orca_compat/libnoise/noise.h"
         self.assertIn('#include <noise.h>', wrapper.read_text(encoding="utf-8"))
 
@@ -149,6 +155,53 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertIn("sudo udevadm control --reload-rules", workflow)
         self.assertEqual(1, workflow.count("sudo udevadm trigger --name-match=kvm"))
         self.assertIn("arm64-v8a JNI library", workflow)
+
+    def test_native_runs_for_distinct_pr_heads_do_not_queue_behind_stale_emulators(self) -> None:
+        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        self.assertIn(
+            "group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}",
+            workflow,
+        )
+        self.assertIn("cancel-in-progress: false", workflow)
+
+    def test_native_pr_g3_evidence_is_compared_with_exact_head_reference(self) -> None:
+        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        self.assertIn("actions: read", workflow)
+        self.assertIn("Compare native G3 output with exact-PR-head Orca reference", workflow)
+        self.assertIn("ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", workflow)
+        self.assertIn("ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", workflow)
+        self.assertIn("ALLOY_PR_MERGE_SHA: ${{ github.sha }}", workflow)
+        self.assertIn("ci/compare_g3_artifacts.py", workflow)
+        self.assertIn("parity/compare_gcode.py", workflow)
+        self.assertIn("parity/test_compare_gcode.py", workflow)
+        self.assertIn("name: alloy-native-desktop-g3-parity", workflow)
+        native_upload = workflow.index("name: alloy-native-g3-evidence")
+        compare_step = workflow.index("Compare native G3 output with exact-PR-head Orca reference")
+        report_upload = workflow.index("name: alloy-native-desktop-g3-parity")
+        pilot = workflow.index("Build isolated A1 Mini physical-pilot APK pair")
+        self.assertLess(native_upload, compare_step)
+        self.assertLess(compare_step, report_upload)
+        self.assertLess(report_upload, pilot)
+
+    def test_all_initial_printers_slice_representative_review_only_geometry(self) -> None:
+        smoke = (ROOT / "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java").read_text(
+            encoding="utf-8"
+        )
+        start = smoke.index("public void slicesAndStagesReviewOnlyPackagesForAllThreeInitialBambuProfiles")
+        end = smoke.index("@Test", start)
+        test_body = smoke[start:end]
+        for fixture in (
+            "box-20mm.stl",
+            "overhang-support-fixture.stl",
+            "thin-wall-frame-fixture.stl",
+            "travel_obstacle.stl",
+        ):
+            self.assertIn(f'"{fixture}"', test_body)
+        self.assertIn('String[] printerIds = {"bambu.a1-mini", "bambu.a1", "bambu.p1s"}', test_body)
+        self.assertIn('fixtureConfig.supports = true', test_body)
+        self.assertIn('Assert.assertFalse("software smoke evidence must not qualify direct send", result.engineVerified)',
+                      test_body)
+        self.assertIn("GcodePackageValidator.validate(artifact.sourceFile, fixtureConfig)", test_body)
 
     def test_native_target_uses_pinned_libnoise_not_the_handwritten_stub(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")

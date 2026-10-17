@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -3773,9 +3775,27 @@ public final class MainActivity extends Activity {
         TextView name = label(printer.name, 18, TEXT); name.setTypeface(null, android.graphics.Typeface.BOLD); card.addView(name);
         TextView facts = label(printer.buildVolume + " · " + printer.nozzle + " · Bed " + printer.bed, 12, MUTED); facts.setPadding(0, dp(3), 0, 0); card.addView(facts);
         TextView direct = label("ALLOY DIRECT SEND · " + printer.directSendState, 10, RED); direct.setLetterSpacing(0.07f); direct.setPadding(0, dp(10), 0, dp(4)); card.addView(direct);
-        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu: " + material.bambuStatus + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus + (material.amsLiteStatus.isEmpty() ? "" : " · AMS Lite: " + material.amsLiteStatus) + " · Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
+        if (!amsLiteSourceUrl.isEmpty()) {
+            final String sourceUrl = amsLiteSourceUrl;
+            TextView feedSource = label("AMS Lite handling is feeder guidance only; it does not override this printer's material rating.", 11, MUTED);
+            feedSource.setPadding(0, dp(8), 0, 0); card.addView(feedSource);
+            Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
+            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); card.addView(sourceButton, sourceLp);
+        }
         TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
-        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) { TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT); row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
+            TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT);
+            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
+            if (!route.sourceUrl.isEmpty()) {
+                final String routeSourceUrl = route.sourceUrl;
+                Button routeSourceButton = dialogButton("Open official " + route.title + " compatibility guidance",
+                        v -> openCapabilitySource(routeSourceUrl));
+                LinearLayout.LayoutParams routeSourceLp = new LinearLayout.LayoutParams(-1, dp(40));
+                routeSourceLp.topMargin = dp(4); card.addView(routeSourceButton, routeSourceLp);
+            }
+        }
         TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
         for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
             TextView row = label(form.title + " · " + form.state + "\n"
@@ -5336,7 +5356,7 @@ public final class MainActivity extends Activity {
         intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
     }
 
-    /** Offer a bounded package to another Android app without implying recipient compatibility. */
+    /** Share only a qualified print package; exporting an unverified file remains a separate path. */
     private void sharePackage() {
         sharePackage(false);
     }
@@ -5359,6 +5379,17 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
             return;
         }
+        String handoffBlock = BambuHandyHandoff.validationBlockReason(
+                report.isValid(), slice.engineVerified, profile != null && profile.verified,
+                SupportEngineStatus.physicalPrintReady(config, slice));
+        if (handoffBlock != null) {
+            new AlertDialog.Builder(this)
+                    .setTitle(preferBambuHandy ? "Not ready for Bambu Handy" : "Package not ready to share")
+                    .setMessage(handoffBlock + "\n\nAlloy will not share an unqualified print job to another app. You can still export it for inspection; exported jobs remain marked unverified and must not be printed.")
+                    .setPositiveButton("Understood", null)
+                    .show();
+            return;
+        }
         try {
             if (stagedArtifact == null || stagedArtifact.sourceFile == null
                     || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
@@ -5366,6 +5397,7 @@ public final class MainActivity extends Activity {
                 stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
                         artifactDisplayName(), viewport.thumbnailPng(512));
             }
+            GcodePackageValidator.validateForPhysicalPrint(stagedArtifact.sourceFile, config);
             Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
             if (preferBambuHandy) {
                 Intent targeted = BambuHandyHandoff.targetedShare(uri);
@@ -5392,6 +5424,12 @@ public final class MainActivity extends Activity {
             } else {
                 startActivity(BambuHandyHandoff.chooserShare(uri));
             }
+        } catch (IOException notPrinterReady) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Package failed print-readiness checks")
+                    .setMessage(notPrinterReady.getMessage() + "\n\nThe file was not shared. You can export it for inspection, but do not print an unverified job.")
+                    .setPositiveButton("Understood", null)
+                    .show();
         } catch (Exception error) {
             Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -5571,8 +5609,38 @@ public final class MainActivity extends Activity {
         EditText supportSpeed = field(nativeSetting(config, "support_material_speed", "150"), "Support speed (mm/s)");
         EditText supportInterfaceSpeed = field(nativeSetting(config, "support_material_interface_speed", "80"), "Interface speed (mm/s)");
         EditText treeAngle = field(nativeSetting(config, "support_tree_angle", "45"), "Tree branch angle (degrees)");
-        EditText treeDistance = field(nativeSetting(config, "support_tree_branch_distance", "5"), "Tree branch distance (mm)");
-        EditText treeDiameter = field(nativeSetting(config, "support_tree_branch_diameter", "2"), "Tree branch diameter (mm)");
+        boolean organicTreeStyle = "organic".equalsIgnoreCase(supportStyleValue);
+        String treeDistanceKey = organicTreeStyle
+                ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
+        String treeDiameterKey = organicTreeStyle
+                ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
+        EditText treeDistance = field(nativeSetting(config, treeDistanceKey,
+                organicTreeStyle ? "1" : "5"), "Tree branch distance (mm)");
+        EditText treeDiameter = field(nativeSetting(config, treeDiameterKey,
+                organicTreeStyle ? "2" : "5"), "Tree branch diameter (mm)");
+        Map<String, String> treeGeometryValues = new HashMap<>();
+        String[] displayedTreeStyle = {supportStyleValue};
+        treeGeometryValues.put(supportStyleValue + ":distance", treeDistance.getText().toString());
+        treeGeometryValues.put(supportStyleValue + ":diameter", treeDiameter.getText().toString());
+        supportStyles.setOnCheckedChangeListener((group, checkedId) -> {
+            RadioButton selected = group.findViewById(checkedId);
+            if (selected == null) return;
+            String nextStyle = String.valueOf(selected.getTag());
+            String previousStyle = displayedTreeStyle[0];
+            if (nextStyle.equals(previousStyle)) return;
+            treeGeometryValues.put(previousStyle + ":distance", treeDistance.getText().toString());
+            treeGeometryValues.put(previousStyle + ":diameter", treeDiameter.getText().toString());
+            boolean nextOrganic = "organic".equalsIgnoreCase(nextStyle);
+            String nextDistanceKey = nextOrganic
+                    ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
+            String nextDiameterKey = nextOrganic
+                    ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
+            treeDistance.setText(treeGeometryValues.getOrDefault(nextStyle + ":distance",
+                    nativeSetting(config, nextDistanceKey, nextOrganic ? "1" : "5")));
+            treeDiameter.setText(treeGeometryValues.getOrDefault(nextStyle + ":diameter",
+                    nativeSetting(config, nextDiameterKey, nextOrganic ? "2" : "5")));
+            displayedTreeStyle[0] = nextStyle;
+        });
         EditText treeDiameterAngle = field(nativeSetting(config, "support_tree_branch_diameter_angle", "5"), "Branch thickening angle (degrees)");
         EditText treeWallCount = field(nativeSetting(config, "support_tree_branch_diameter_double_wall", "0"), "Tree wall mode (0–4)");
         fields.addView(sectionLabel("QUALITY"));
@@ -5691,8 +5759,9 @@ public final class MainActivity extends Activity {
                 config.nativeSettings.put("ironing_flowrate", number(nextIroningFlow) + "%");
                 config.nativeSettings.put("bridge_speed", number(nextBridgeSpeed));
                 config.nativeSettings.put("default_acceleration", number(nextDefaultAcceleration));
-                config.nativeSettings.put("support_material_style",
-                        String.valueOf(supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag()));
+                String selectedTreeStyle = String.valueOf(
+                        supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag());
+                config.nativeSettings.put("support_material_style", selectedTreeStyle);
                 config.nativeSettings.put("support_material_interface_layers", Integer.toString(nextSupportTopLayers));
                 config.nativeSettings.put("support_material_bottom_interface_layers", Integer.toString(nextSupportBottomLayers));
                 config.nativeSettings.put("support_material_xy_spacing", number(nextSupportXyDistance));
@@ -5702,8 +5771,13 @@ public final class MainActivity extends Activity {
                 config.nativeSettings.put("support_material_speed", number(nextSupportSpeed));
                 config.nativeSettings.put("support_material_interface_speed", number(nextSupportInterfaceSpeed));
                 config.nativeSettings.put("support_tree_angle", number(nextTreeAngle));
-                config.nativeSettings.put("support_tree_branch_distance", number(nextTreeDistance));
-                config.nativeSettings.put("support_tree_branch_diameter", number(nextTreeDiameter));
+                boolean selectedOrganicTree = "organic".equalsIgnoreCase(selectedTreeStyle);
+                config.nativeSettings.put(selectedOrganicTree
+                        ? "support_tree_branch_distance_organic" : "support_tree_branch_distance",
+                        number(nextTreeDistance));
+                config.nativeSettings.put(selectedOrganicTree
+                        ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter",
+                        number(nextTreeDiameter));
                 config.nativeSettings.put("support_tree_branch_diameter_angle", number(nextTreeDiameterAngle));
                 config.nativeSettings.put("support_tree_branch_diameter_double_wall", Integer.toString(nextTreeWallCount));
                 projectStore.saveRecipe(config);
@@ -5748,9 +5822,16 @@ public final class MainActivity extends Activity {
             TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
             materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
             for (PrinterCapabilityCatalog.Material material : printer.materials) {
-                TextView row = label(material.name + "\nBambu: " + material.bambuStatus
-                        + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT);
+                TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus
+                        + (material.amsLiteStatus.isEmpty() ? "" : " · AMS Lite: " + material.amsLiteStatus)
+                        + " · Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT);
                 row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
+            if (!amsLiteSourceUrl.isEmpty()) {
+                final String sourceUrl = amsLiteSourceUrl;
+                Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
+                LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); page.addView(sourceButton, sourceLp);
             }
             TextView routes = label("FEED ROUTES", 10, GOLD); routes.setLetterSpacing(0.08f);
             routes.setPadding(0, dp(12), 0, 0); page.addView(routes);

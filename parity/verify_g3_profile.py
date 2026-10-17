@@ -98,6 +98,14 @@ FIELDS = OrderedDict([
 # without allowing an arbitrary fallback or silently ignoring a missing key.
 NATIVE_KEY_ALIASES = {
     "retraction_minimum_travel": ("retraction_minimum_travel", "retract_before_travel"),
+    # Organic tree keys are distinct from the legacy tree profile values.
+    "support_tree_branch_diameter": ("tree_support_branch_diameter_organic", "support_tree_branch_diameter"),
+    "support_tree_branch_distance": ("tree_support_branch_distance_organic", "support_tree_branch_distance"),
+}
+
+DESKTOP_KEY_ALIASES = {
+    "support_tree_branch_diameter": ("tree_support_branch_diameter_organic", "tree_support_branch_diameter"),
+    "support_tree_branch_distance": ("tree_support_branch_distance_organic", "tree_support_branch_distance"),
 }
 
 
@@ -216,6 +224,14 @@ def normalize(field: str, value: Any, source: str, settings: dict[str, Any]) -> 
     result = _scalar(value)
     low = result.lower()
 
+    if field == "support_tree_branch_diameter_double_wall" and source == "native" and result == "-1":
+        # Bambu's automatic wall policy is represented by -1 in the profile
+        # projection. NativeSlicerEngine deliberately lowers that sentinel to
+        # zero extra walls because the pinned mobile engine rejects -1. Compare
+        # the effective engine value, not the pre-adapter spelling.
+        result = "0"
+        low = result
+
     if field == "support_material_style" and source == "desktop":
         result = {
             "tree(auto)": "organic",
@@ -262,7 +278,10 @@ def normalize(field: str, value: Any, source: str, settings: dict[str, Any]) -> 
 def verify(desktop: dict[str, Any], native: dict[str, str]) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     for field, (desktop_key, native_key) in FIELDS.items():
-        desktop_raw = desktop.get(desktop_key)
+        desktop_candidates = DESKTOP_KEY_ALIASES.get(field, (desktop_key,))
+        desktop_match = next(((key, desktop[key]) for key in desktop_candidates if key in desktop), None)
+        desktop_key_used = desktop_match[0] if desktop_match else desktop_key
+        desktop_raw = desktop_match[1] if desktop_match else None
         native_candidates = NATIVE_KEY_ALIASES.get(field, (native_key,))
         native_match = next(((key, native[key]) for key in native_candidates if key in native), None)
         native_key_used = native_match[0] if native_match else native_key
@@ -271,7 +290,7 @@ def verify(desktop: dict[str, Any], native: dict[str, str]) -> dict[str, Any]:
             checks.append({
                 "field": field,
                 "status": "fail",
-                "desktop_key": desktop_key,
+                "desktop_key": desktop_key_used,
                 "native_key": native_key_used,
                 "desktop": None if desktop_raw is None else _scalar(desktop_raw),
                 "native": native_raw,
@@ -283,7 +302,7 @@ def verify(desktop: dict[str, Any], native: dict[str, str]) -> dict[str, Any]:
         checks.append({
             "field": field,
             "status": "pass" if left == right else "fail",
-            "desktop_key": desktop_key,
+            "desktop_key": desktop_key_used,
             "native_key": native_key_used,
             "desktop": left,
             "native": right,
