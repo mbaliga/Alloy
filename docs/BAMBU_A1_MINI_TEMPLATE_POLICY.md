@@ -67,6 +67,44 @@ per-layer machine template. Firmware flag conditions are not evidence that
 these motions actually execute on the user's printer. The aggregate timing
 comparison currently includes these differing emitted programs.
 
+### Filament accounting result
+
+The new `filament_accounting_diagnostic` in `parity/compare_gcode.py` separates
+positive E on XYZ/arc commands, positive E-only commands (including recovery
+and purge), retraction, and net E. It records commands before and after the
+first layer marker separately; without markers, it reports `unscoped` rather
+than inventing a startup boundary. G92 resets do not count as extrusion.
+These are emitted-program quantities, not measured deposited material:
+firmware conditionals are not evaluated, and positive XYZ E can include
+retraction recovery. The after-first-layer region includes later templates
+and shutdown, not just the object.
+
+Reprocessing exact-source desktop artifact `12080931201` and native artifact
+`12083501725` gives the following lengths in mm:
+
+| Fixture | Desktop startup XYZ-positive E | Desktop later XYZ-positive E | Desktop header | Native later XYZ-positive E | Native header |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Cube | 23.742 | 1111.87572 | 1135.62 | 1114.63883 | 1114.64 |
+| Supported overhang | 23.742 | 910.84892 | 934.59 | 912.99605 | 913.00 |
+| Thin-wall frame | 23.742 | 871.66480 | 895.41 | 879.21660 | 879.22 |
+| Travel obstacle | 23.742 | 2013.81125 | 2037.55 | 2022.86337 | 2022.86 |
+
+Native startup XYZ-positive E is zero in all four outputs. Each header
+matches its own startup-plus-later sum within 0.004 mm (header rounding).
+The desktop startup contains two sequences, each emitting `E10` plus five
+`E0.3742` XY movements: `2 * (10 + 5 * 0.3742) = 23.742 mm`. Thus the
+remaining supported-overhang header failure is explained by the different
+emitted startup programs, rather than an unexplained filament-statistics
+offset. This does **not** authorize adding those sequences or an artificial
+23.742 mm offset to Alloy. The startup template still needs firmware review
+and qualification; command accounting alone cannot establish which branches
+execute on a physical printer.
+
+All four fixtures retain exactly the same hard G3 failure sets after adding
+the diagnostic. Tests explicitly ensure matching accounting cannot turn a
+failing filament-header comparison green. Desktop artifact SHA-256:
+`435c3ffa23905f988e0595eb008ab01c7b4af2f0d418e56ac6b17a34d5475844`.
+
 Next implementation work:
 
 1. Attribute machine-template motion/waits separately from deposited model

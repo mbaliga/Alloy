@@ -102,6 +102,63 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertIn("path", diagnostic["detail"])
             self.assertIn("E", diagnostic["detail"])
 
+    def test_filament_ledger_separates_priming_and_recovery_without_changing_gates(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            model = GCODE_A.replace("G90\n", ";LAYER_CHANGE\nG90\n")
+            priming = "M83\nG1 X5 E10\nG1 E-0.8\nG92 E0\nG1 E0.8\n"
+            desktop = parse_metrics(self.write(root, "desktop.gcode", priming + model), None)
+            android = parse_metrics(self.write(root, "android.gcode", model), None)
+            before = desktop.extrusion_accounting["before_first_layer"]
+            self.assertAlmostEqual(10, before["positive_xyz_e_mm"])
+            self.assertAlmostEqual(0.8, before["positive_e_only_mm"])
+            self.assertAlmostEqual(0.8, before["retracted_e_mm"])
+            self.assertAlmostEqual(10, before["net_e_mm"])
+            self.assertAlmostEqual(4, desktop.extrusion_accounting["after_first_layer"]["positive_xyz_e_mm"])
+            # The established model-positive-E check retains its original scope.
+            self.assertAlmostEqual(4, desktop.positive_e_mm)
+            result = compare(desktop, android, 0.02)
+            self.assertEqual("pass", result["result"])
+            diagnostic = next(c for c in result["checks"] if c["name"] == "filament_accounting_diagnostic")
+            self.assertIn("before_first_layer: XYZ-positive E=10", diagnostic["detail"])
+            self.assertIn("header minus all XYZ-positive E=986 mm", diagnostic["detail"])
+            self.assertIn("not measured usage", diagnostic["detail"])
+
+    def test_filament_ledger_absolute_resets_are_not_extrusion(self):
+        with tempfile.TemporaryDirectory() as td:
+            text = "M82\nG92 E100\nG1 X1 E101\nG1 E100.2\nG92 E0\nG1 E0.8\n;LAYER_CHANGE\nG1 X2 E2.8\n"
+            metrics = parse_metrics(self.write(Path(td), "absolute.gcode", text), None)
+            before = metrics.extrusion_accounting["before_first_layer"]
+            self.assertAlmostEqual(1, before["positive_xyz_e_mm"])
+            self.assertAlmostEqual(0.8, before["positive_e_only_mm"])
+            self.assertAlmostEqual(0.8, before["retracted_e_mm"])
+            self.assertAlmostEqual(1, before["net_e_mm"])
+            self.assertAlmostEqual(2, metrics.extrusion_accounting["after_first_layer"]["positive_xyz_e_mm"])
+
+    def test_filament_ledger_does_not_invent_startup_boundary(self):
+        with tempfile.TemporaryDirectory() as td:
+            metrics = parse_metrics(self.write(Path(td), "unscoped.gcode", GCODE_A), None)
+            self.assertEqual({"unscoped"}, set(metrics.extrusion_accounting))
+            self.assertAlmostEqual(4, metrics.extrusion_accounting["unscoped"]["positive_xyz_e_mm"])
+
+    def test_filament_ledger_records_conditional_emission_without_predicting_firmware(self):
+        with tempfile.TemporaryDirectory() as td:
+            text = "M83\nM622 J1\nG1 X5 E10\nM623\n;LAYER_CHANGE\nG2 I5 J0 E2\nG1 E0.8\n"
+            metrics = parse_metrics(self.write(Path(td), "conditional.gcode", text), None)
+            self.assertAlmostEqual(10, metrics.extrusion_accounting["before_first_layer"]["positive_xyz_e_mm"])
+            self.assertAlmostEqual(2, metrics.extrusion_accounting["after_first_layer"]["positive_xyz_e_mm"])
+            self.assertAlmostEqual(0.8, metrics.extrusion_accounting["after_first_layer"]["positive_e_only_mm"])
+
+    def test_filament_header_failure_is_not_erased_by_matching_ledger(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_A), None)
+            android = parse_metrics(self.write(root, "android.gcode", GCODE_A.replace("1000.0", "900.0")), None)
+            self.assertEqual(desktop.extrusion_accounting, android.extrusion_accounting)
+            report = compare(desktop, android, 0.02)
+            self.assertEqual("fail", report["result"])
+            self.assertEqual("fail", next(c for c in report["checks"] if c["name"] == "filament_mm")["status"])
+
     def test_estimate_tolerance_is_measured_from_desktop_reference(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
