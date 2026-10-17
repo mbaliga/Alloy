@@ -95,6 +95,7 @@ class Metrics:
     feature_counts: dict[str, int]
     feature_extrusion_path_mm: dict[str, float]
     feature_positive_e_mm: dict[str, float]
+    extrusion_accounting: dict[str, dict[str, float]]
     print_time_seconds: float | None
     filament_mm: float | None
     filament_g: float | None
@@ -257,6 +258,10 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     feature_counts: Counter[str] = Counter()
     feature_extrusion_path_mm: Counter[str] = Counter()
     feature_positive_e_mm: Counter[str] = Counter()
+    # Emitted-program accounting, not an assertion that firmware executes
+    # conditional macros or that every positive E movement deposits plastic.
+    # Do not subtract this ledger from the strict header/geometry checks.
+    extrusion_accounting: dict[str, Counter[str]] = {}
     active_feature: str | None = None
     z_levels: list[float] = []
     seen_z: set[float] = set()
@@ -364,6 +369,18 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
             else:
                 delta = vals["E"]
                 e_value += delta
+            scope = ("unscoped" if not has_layer_markers else
+                     "after_first_layer" if model_started else "before_first_layer")
+            ledger = extrusion_accounting.setdefault(scope, Counter())
+            ledger["net_e_mm"] += delta
+            if delta > 0:
+                # E-only recovery/purge must not be counted as positive E
+                # commanded with XYZ. Full-circle arcs may omit endpoint axes.
+                key = ("positive_xyz_e_mm" if moved_xyz or command in {"G2", "G3"}
+                       else "positive_e_only_mm")
+                ledger[key] += delta
+            elif delta < 0:
+                ledger["retracted_e_mm"] -= delta
             if delta > 0:
                 positive_e = delta
                 if model_started:
@@ -455,6 +472,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         feature_counts=dict(feature_counts),
         feature_extrusion_path_mm=dict(feature_extrusion_path_mm),
         feature_positive_e_mm=dict(feature_positive_e_mm),
+        extrusion_accounting={scope: dict(values)
+                              for scope, values in extrusion_accounting.items()},
         print_time_seconds=print_time,
         filament_mm=filament_mm,
         filament_g=filament_g,
@@ -697,6 +716,29 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
         "warn" if role_has_large_delta else "pass",
         "diagnostic only; deposited XYZ path excludes travel; "
         "desktop/Android values are deposited path mm then positive E mm: " + role_detail,
+    )
+
+    accounting_details = []
+    for label, metrics in (("desktop", desktop), ("Android", android)):
+        positive_xyz = sum(values.get("positive_xyz_e_mm", 0.0)
+                           for values in metrics.extrusion_accounting.values())
+        scopes = "; ".join(
+            f"{scope}: XYZ-positive E={values.get('positive_xyz_e_mm', 0.0):.6g}, "
+            f"E-only positive={values.get('positive_e_only_mm', 0.0):.6g}, "
+            f"retracted={values.get('retracted_e_mm', 0.0):.6g}, "
+            f"net={values.get('net_e_mm', 0.0):.6g} mm"
+            for scope, values in metrics.extrusion_accounting.items()
+        )
+        residual = ("unavailable" if metrics.filament_mm is None else
+                    f"{metrics.filament_mm - positive_xyz:.6g} mm")
+        accounting_details.append(f"{label} [{scopes}]; header minus all XYZ-positive E={residual}")
+    add(
+        "filament_accounting_diagnostic",
+        "warn",
+        "emitted commands only, not measured usage; firmware conditionals are not evaluated; "
+        "XYZ-positive E can include retraction recovery and zero-distance XYZ commands. "
+        "after_first_layer includes later templates/shutdown, not just the object. "
+        "No adjustment to hard checks: " + " | ".join(accounting_details),
     )
 
     desktop_e = desktop.positive_e_mm
