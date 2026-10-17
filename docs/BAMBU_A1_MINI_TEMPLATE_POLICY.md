@@ -107,6 +107,21 @@ failing filament-header comparison green. Desktop artifact SHA-256:
 
 Next implementation work:
 
+An offline Android integration probe is now implemented in
+`BambuMachineTemplateProbeTest`. Its four template hooks are exact bytes from
+the pinned resolved A1 Mini machine profile, packaged only in instrumentation
+assets. `ci/verify_machine_template_probe.py` checks their identity, hashes and
+contents against the pinned upstream checkout before the native build. The
+test uses Alloy's own mesh positioning and recipe writer, replaces only the
+four hooks, and asks the embedded native engine to render all four fixtures.
+It checks for unresolved command expressions, layer notifications and
+timelapse blocks, and asserts that the output remains rejected by the current
+production template policy. It never stages, shares or sends the probe output.
+CI retains a separate `alloy-bambu-template-rendering-probe` artifact.
+Implementation and local fixture tests do not yet prove native rendering;
+that requires the new ARM64 instrumentation run. This probe does not replace
+the unchanged ordinary G3 gate or qualify firmware behavior.
+
 1. Attribute machine-template motion/waits separately from deposited model
    and support motion, including the return trip after a template. Retain raw
    full-program metrics and the existing strict G3 failures.

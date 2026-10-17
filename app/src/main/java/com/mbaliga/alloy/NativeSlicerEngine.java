@@ -138,7 +138,9 @@ public final class NativeSlicerEngine implements SlicerEngine {
         };
     }
 
-    private static void writeAsciiStl(MeshModel mesh, Slicer.Config config, File target) throws IOException {
+    // Package-visible so native template integration tests use exactly the
+    // same bed placement as the production adapter, without duplicating it.
+    static void writeAsciiStl(MeshModel mesh, Slicer.Config config, File target) throws IOException {
         float shiftX = config.bedX / 2f - (mesh.minX + mesh.maxX) / 2f;
         float shiftY = config.bedY / 2f - (mesh.minY + mesh.maxY) / 2f;
         float shiftZ = -mesh.minZ;
