@@ -43,3 +43,47 @@ Promotion to physical A1 Mini printing still requires all of the following:
 
 Until then, native output remains inspectable and exportable, while the app
 continues to mark the engine as unverified for physical printing.
+
+## Exact-source timing investigation, 2026-10-17
+
+Application source `05981d75e70026cdb011f5d6ea9cf8a33609db52` passes Android
+acceptance and native instrumentation, but native run `38979999591` fails G3.
+The supported-overhang support path is within 0.18% of desktop Orca and its
+positive support extrusion within 0.07%; this supersedes the older large
+support discrepancy as the next debugging target. It does not certify spatial
+toolpath equivalence. Total filament still differs by 2.31% (length) and 2.12%
+(mass), and all four fixtures fail print-time parity.
+
+The exact desktop target is OrcaSlicer v2.4.2, not a newer Bambu Studio source
+snapshot. Comparing its `GCodeProcessor.cpp` with Alloy shows the same
+reverse-then-forward motion-planning order. The main differences concern
+buffered additional/tool-change time. A speculative port of Bambu Studio's
+different planner order is therefore not justified by the current evidence.
+
+The desktop cube G-code explicitly includes `SKIPTYPE: timelapse` and
+`SKIPTYPE: head_wrap_detect` blocks between model features. They include
+travel to X0/X-13 and a 300 ms shutter wait. Alloy's baseline has no equivalent
+per-layer machine template. Firmware flag conditions are not evidence that
+these motions actually execute on the user's printer. The aggregate timing
+comparison currently includes these differing emitted programs.
+
+Next implementation work:
+
+1. Attribute machine-template motion/waits separately from deposited model
+   and support motion, including the return trip after a template. Retain raw
+   full-program metrics and the existing strict G3 failures.
+2. Reconcile filament accounting (deposited extrusion, retraction recovery,
+   priming, support and waste) against the exact desktop output. Do not apply
+   an empirical correction factor to force header totals to match.
+3. Resolve the pinned Bambu machine-template adapter and its firmware scope,
+   with tests for every placeholder, conditional and command. Diagnostic
+   template exclusions are not permission to drop printer safeguards or to
+   label the neutral baseline production-equivalent.
+4. Rerun exact-source slicing comparisons, then perform the separately gated
+   hardware qualification. Do not loosen tolerances or enable sending just
+   because deposited support totals are close.
+
+Evidence: [G3 report artifact](https://github.com/mbaliga/Alloy/actions/runs/38979999591/artifacts/12082788519),
+SHA-256 `31c38e917fff960ddd7ded384392c0a8540f60673293117ccbe87eaa5ae568a3`;
+[native G-code evidence](https://github.com/mbaliga/Alloy/actions/runs/38979999591/artifacts/12083501725),
+SHA-256 `cb1df21deb7dcd2af6c8ab7e21cd3e7d68f2ba46c2712d096b3363a53b1f377d`.
