@@ -168,6 +168,7 @@ jobs:
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/verify_machine_template_probe.py orca-profile-source
       - name: Verify pinned Bambu planning profiles
         shell: bash
         run: |
@@ -425,6 +426,18 @@ jobs:
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
             test -s path-b-g3-evidence/overhang_support.gcode
             test -s path-b-g3-evidence/overhang_support.config.ini
+            adb shell am instrument -w -e class com.mbaliga.alloy.BambuMachineTemplateProbeTest com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+            mkdir -p path-b-template-probe
+            adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-bambu-template-probe/. path-b-template-probe/
+            python3 -c 'import json,pathlib; p=pathlib.Path("path-b-template-probe"); d=json.loads((p/"manifest.json").read_text()); assert d["scope"]=="template-rendering-only" and d["qualified"] is False; assert {f["fixture"] for f in d["fixtures"]}=={"cube_20mm","overhang_support","thin_wall_frame","travel_obstacle"}; assert all(f["rendered"] is True and f["qualified"] is False and (p/f["file"]).is_file() for f in d["fixtures"])'
+      - name: Upload unqualified Bambu template rendering probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-bambu-template-rendering-probe
+          path: path-b-template-probe
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-native-g3-evidence
