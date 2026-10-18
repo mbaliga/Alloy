@@ -4,24 +4,27 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Verified software checkpoint (2026-10-17):** application source
-[`05981d75e70026cdb011f5d6ea9cf8a33609db52`](https://github.com/mbaliga/Alloy/commit/05981d75e70026cdb011f5d6ea9cf8a33609db52).
-Documentation-only commits after this checkpoint do not change its APKs.
+**Verified software checkpoint (2026-10-18):** application source
+[`d7f5d330f01d21f8f08821a780c16aae6cebe18c`](https://github.com/mbaliga/Alloy/commit/d7f5d330f01d21f8f08821a780c16aae6cebe18c).
 
-- [Android acceptance 38979999571](https://github.com/mbaliga/Alloy/actions/runs/38979999571)
-  passed: 210 tests reported, zero failures, 11 skipped (199 executed successfully).
-- [Native run 38979999591](https://github.com/mbaliga/Alloy/actions/runs/38979999591)
-  compiled the ARM64 engine and passed instrumentation: 199 tests reported,
-  zero failures/errors, two skipped (197 executed successfully). G3 evidence
-  export succeeded, but the subsequent strict desktop comparison failed.
-- Parity tooling, the official Orca snapshot, three-printer profile pre-gate,
-  and desktop A1 Mini reference slices all passed at this source.
-- Ordinary and organic support recipes now retain their distinct settings
-  across style switches; three new Android regression tests cover this.
-  Android acceptance reports are retained even on failed runs.
+- [Android acceptance 39132914351](https://github.com/mbaliga/Alloy/actions/runs/39132914351)
+  passed: 216 tests reported, 0 failures, 12 skipped (204 executed). This
+  exact-head run built the app and includes the offline learning catalog and
+  its first-layer visual-caption regression check.
+- [Parity tooling 39132914391](https://github.com/mbaliga/Alloy/actions/runs/39132914391),
+  [three-printer profile pre-gate 39132914355](https://github.com/mbaliga/Alloy/actions/runs/39132914355),
+  [desktop A1 Mini references 39132914354](https://github.com/mbaliga/Alloy/actions/runs/39132914354),
+  and [official Orca source snapshot 39132914386](https://github.com/mbaliga/Alloy/actions/runs/39132914386)
+  passed at this source.
+- The exact-head optional native run
+  [39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352)
+  is still building dependencies; native instrumentation, current-head G3,
+  and physical-pilot evidence are not available yet. The 12 Android skips
+  include native-dependent tests.
 
-The [exact-source G3 report](https://github.com/mbaliga/Alloy/actions/runs/38979999591/artifacts/12082788519)
-still fails the unchanged 2% tolerance:
+The latest completed strict G3 comparison is from an older source checkpoint,
+[run 38979999591](https://github.com/mbaliga/Alloy/actions/runs/38979999591),
+and fails the unchanged 2% tolerance:
 
 | Fixture | Print-time difference | Other failed checks |
 | --- | ---: | --- |
@@ -33,9 +36,10 @@ still fails the unchanged 2% tolerance:
 For the supported overhang, the deposited support path now differs by only
 0.18% and positive support extrusion by 0.07%. These aggregate diagnostics
 are encouraging but do not prove spatial equivalence or physical print quality.
-All 62 checked profile fields match for each fixture. Remaining timing work
-must account for different machine templates, including desktop per-layer
-timelapse/inspection motions, not just extrusion geometry. See
+All 62 checked profile fields match for each fixture. This older comparison is
+not evidence for the current source. Remaining timing work must account for
+different machine templates, including desktop per-layer timelapse/inspection
+motions, not just extrusion geometry. See
 [Bambu template policy](BAMBU_A1_MINI_TEMPLATE_POLICY.md).
 
 **Do not send or print unqualified generated jobs.** Direct-send and
@@ -45,21 +49,17 @@ Bambu Handy acceptance, and production signing remain unverified.
 
 ## 1. Install the matching artifacts
 
-For phone-only QA, use artifacts from the source checkpoint above:
+For phone-only QA, use the ordinary APK from the exact source checkpoint above:
 
-- [Native review APK](https://github.com/mbaliga/Alloy/actions/runs/38979999591/artifacts/12082363518):
-  native slicing/inspection, still unqualified for printing.
-  Archive SHA-256: `ec27dd7eacf9af5fe080c8f4d61d7c9fb82210699be5ef19be8f0bf5d8b635d9`.
-- [Ordinary QA APK](https://github.com/mbaliga/Alloy/actions/runs/38979999571/artifacts/12081690906):
-  UI/import/pipeline checks; this is not the native slicing build.
-  Archive SHA-256: `fadb7f08366d387fe3bc11d9065f37e0e93d1fb548254e2ea08a488c15cd1c49`.
+- [Ordinary CI QA APK, artifact 12138349322](https://github.com/mbaliga/Alloy/actions/runs/39132914351/artifacts/12138349322).
+  Archive SHA-256: `1d652efa864ae5fcac729fa971e07055c96ec39c93315d234caceb3483f5ff53`.
+  It is a debug-signed software QA build, not the optional native review build
+  and not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
-the extracted APK digest. These are CI-debug-signed software QA artifacts,
-not production releases. The native APK artifact expires October 24, 2026;
-if unavailable, build the exact source rather than substituting an unrelated
-APK. Do not send generated packages to the printer or Bambu Handy while
-qualification is incomplete.
+the extracted APK digest. This CI-debug-signed software QA artifact is not a
+production release. Do not substitute an older native APK or send generated
+packages to the printer or Bambu Handy while qualification is incomplete.
 
 ## 1a. Phone navigation and visual system
 
@@ -97,6 +97,9 @@ all destinations remain reachable without horizontal scrolling.
 - Verify every displayed article retains readable safety and source/scope
   labels. A hard-stop article must tell the user to stop, not merely change a
   setting.
+- Open the first-layer gaps, bunched-material, and warping guides. Confirm
+  each shared four-panel illustration names the relevant quadrant and says it
+  is a visual example, not a remote diagnosis.
 - Rotate the phone, increase Android font size, enable dark mode if supported,
   and enable Android reduced motion. Critical text and primary actions must
   remain reachable and understandable.
