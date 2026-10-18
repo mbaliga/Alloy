@@ -3689,7 +3689,14 @@ public final class MainActivity extends Activity {
         title.setPadding(0, dp(4), 0, dp(5)); card.addView(title);
         TextView summary = label(article.summary, 13, MUTED); summary.setLineSpacing(dp(3), 1f); card.addView(summary);
         if (article.artwork.length() > 0) {
-            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary);
+            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary
+                    + (article.visualNote.isEmpty() ? "" : ". " + article.visualNote));
+            if (!article.visualNote.isEmpty()) {
+                TextView visualNote = label(article.visualNote, 11, MUTED);
+                visualNote.setLineSpacing(dp(2), 1f);
+                visualNote.setPadding(dp(2), dp(2), dp(2), dp(2));
+                card.addView(visualNote);
+            }
         } else {
             addLearnDiagram(card, article);
         }
