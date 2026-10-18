@@ -122,6 +122,18 @@ Implementation and local fixture tests do not yet prove native rendering;
 that requires the new ARM64 instrumentation run. This probe does not replace
 the unchanged ordinary G3 gate or qualify firmware behavior.
 
+The native workflow also emits `alloy-bambu-template-probe-diagnostic`. It
+compares captured probe G-code against the successful desktop reference for
+the exact PR head, verifies the artifact digest and run-context manifest, and
+records timing, filament, total-motion, deposited-feature and extrusion-ledger
+deltas. The report is explicitly `diagnostic_only`, `non_gating`, and leaves
+print/direct-send qualification `PENDING`; missing probe/reference evidence is
+reported as unavailable rather than as a pass. The strict G3 artifact and its
+2% checks remain separate and unchanged. This side-by-side report is intended
+to determine whether rendering the hooks narrows the time/usage differences;
+it does not establish that Bambu firmware executes every conditional or that
+the resulting commands are safe on a physical printer.
+
 1. Attribute machine-template motion/waits separately from deposited model
    and support motion, including the return trip after a template. Retain raw
    full-program metrics and the existing strict G3 failures.

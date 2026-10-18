@@ -170,6 +170,11 @@ def main() -> None:
         "Test Bambu template probe evidence and failure collection",
         "parity/test_machine_template_probe_output.py",
         "parity/test_machine_template_probe_script.py",
+        "parity/test_machine_template_probe_diagnostic.py",
+        "Compare Bambu template probe with exact-head desktop reference (diagnostic only)",
+        "continue-on-error: true",
+        "ci/compare_machine_template_probe.py",
+        "alloy-bambu-template-probe-diagnostic",
         "if: always() && !cancelled()",
         "script: bash ci/run_machine_template_probe.sh",
         "name: alloy-bambu-template-rendering-probe",
@@ -219,13 +224,25 @@ def main() -> None:
         "python3 ci/validate_learning_assets.py",
     ):
         require(native_text, token, native)
+    probe_comparator = ROOT / "ci/compare_machine_template_probe.py"
+    probe_comparator_text = probe_comparator.read_text(encoding="utf-8")
+    for token in (
+        '"diagnostic_only": True',
+        '"non_gating": True',
+        '"strict_g3_gate": "separate; not modified by this diagnostic"',
+        'return 0',
+        "validate_reference_manifest",
+    ):
+        require(probe_comparator_text, token, probe_comparator)
     for path in (
         "ci/machine_template_probe_attempt.py",
         "ci/verify_machine_template_probe.py",
         "ci/validate_machine_template_probe_output.py",
         "ci/run_machine_template_probe.sh",
+        "ci/compare_machine_template_probe.py",
         "parity/test_machine_template_probe_output.py",
         "parity/test_machine_template_probe_script.py",
+        "parity/test_machine_template_probe_diagnostic.py",
     ):
         if native_text.count(f"- '{path}'") != 2:
             raise SystemExit(f"{native}: both push and pull_request filters must run the probe contract for {path}")
