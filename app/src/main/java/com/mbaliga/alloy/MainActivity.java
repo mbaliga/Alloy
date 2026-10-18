@@ -5804,7 +5804,7 @@ public final class MainActivity extends Activity {
         }
         try {
             PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
-            PrinterCapabilityCatalog.Printer printer = catalog.byId(profile.printerId);
+            PrinterCapabilityCatalog.Printer printer = catalog.forProfile(profile);
             if (printer == null) {
                 Toast.makeText(this, "No bounded material catalog is available for this profile", Toast.LENGTH_LONG).show();
                 return;
