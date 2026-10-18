@@ -9,6 +9,7 @@ confuses a CI key with a production signing key.
 """
 
 from pathlib import Path
+import re
 import xml.etree.ElementTree as ET
 
 
@@ -47,6 +48,29 @@ def require(text: str, token: str, path: Path) -> None:
         raise SystemExit(f"{path}: missing Android workflow contract: {token}")
 
 
+def validate_pr_trigger_deduplication(workflow: Path, text: str) -> None:
+    on_section_match = re.search(r"(?ms)^on:\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:|\Z)", text)
+    if on_section_match is None:
+        raise SystemExit(f"{workflow}: missing workflow trigger section")
+    on_section = on_section_match.group(1)
+    for trigger in ("push", "pull_request", "workflow_dispatch"):
+        if re.search(rf"(?m)^  {re.escape(trigger)}:\s*(?:#.*)?$", on_section) is None:
+            raise SystemExit(f"{workflow}: expected {trigger} trigger must remain enabled")
+
+    push_match = re.search(
+        r"(?ms)^  push:\n(?P<body>(?:^ {4,}.*\n|^\s*$)*)",
+        on_section,
+    )
+    if push_match is None:
+        raise SystemExit(f"{workflow}: missing push trigger configuration")
+    branches_match = re.search(r"(?m)^    branches:\s*\[([^]]*)\]\s*$", push_match.group("body"))
+    if branches_match is None:
+        raise SystemExit(f"{workflow}: push trigger must keep an explicit branch filter")
+    branches = [branch.strip().strip("'\" ") for branch in branches_match.group(1).split(",")]
+    if "main" not in branches or "codex/**" in branches:
+        raise SystemExit(f"{workflow}: push must include main and exclude codex/** (PRs build through pull_request)")
+
+
 def main() -> None:
     validate_handy_visibility()
     ordinary = ROOT / ".github/workflows/android-v1.yml"
@@ -68,6 +92,7 @@ def main() -> None:
             raise SystemExit(f"{workflow}: deprecated actions/setup-java@v4 is not allowed")
 
     ordinary_text = ordinary.read_text(encoding="utf-8")
+    validate_pr_trigger_deduplication(ordinary, ordinary_text)
     for token in (
         "gradle :app:assembleRelease -PalloyCiDebugSign=true --no-daemon --stacktrace",
         "gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace",
@@ -101,6 +126,7 @@ def main() -> None:
         raise SystemExit(f"{ordinary}: macOS Android acceptance must not carry Linux-only KVM configuration")
 
     native_text = native.read_text(encoding="utf-8")
+    validate_pr_trigger_deduplication(native, native_text)
     native_instrumentation = ROOT / "ci/run_native_release_instrumentation.sh"
     native_instrumentation_text = native_instrumentation.read_text(encoding="utf-8")
     for token in (

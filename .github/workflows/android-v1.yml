@@ -2,7 +2,7 @@ name: Alloy Android v1
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
     paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   pull_request:
     paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
