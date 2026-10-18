@@ -101,6 +101,7 @@ class Metrics:
     travel_by_layer_feedrate: dict[str, dict[str, float]]
     travel_segments: list[tuple]
     print_time_seconds: float | None
+    print_time_source: str | None
     filament_mm: float | None
     filament_g: float | None
 
@@ -477,11 +478,17 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     # Bambu's total estimate includes machine warm-up and other orchestration
     # time that the native slicer does not report. Prefer model time when it is
     # available; retain total time as a diagnostic fallback only.
-    print_time = last_matching(lines, MODEL_TIME_PATTERNS, parse_duration)
-    if print_time is None:
-        print_time = last_matching(lines, TIME_PATTERNS, parse_duration)
-    if print_time is None:
-        print_time = last_matching(lines, TOTAL_TIME_PATTERNS, parse_duration)
+    print_time = None
+    print_time_source = None
+    for source, patterns in (
+        ("model_printing_time", MODEL_TIME_PATTERNS),
+        ("estimated_printing_time", TIME_PATTERNS),
+        ("total_estimated_time", TOTAL_TIME_PATTERNS),
+    ):
+        print_time = last_matching(lines, patterns, parse_duration)
+        if print_time is not None:
+            print_time_source = source
+            break
     filament_mm = last_matching(lines, FILAMENT_MM_PATTERNS, parse_number_list)
     filament_g = last_matching(lines, FILAMENT_G_PATTERNS, parse_number_list)
 
@@ -511,6 +518,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                                   for scope, values in travel_by_layer_feedrate.items()},
         travel_segments=travel_segments,
         print_time_seconds=print_time,
+        print_time_source=print_time_source,
         filament_mm=filament_mm,
         filament_g=filament_g,
     )
@@ -723,6 +731,29 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             name,
             "pass" if diff <= tolerance else "fail",
             f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
+        )
+
+    # Keep the hard numeric estimate comparison unchanged, but make its
+    # provenance visible: Bambu's model-printing estimate and SliceBeam's
+    # generic estimate are not necessarily calculated from the same scope.
+    if desktop.print_time_source is None or android.print_time_source is None:
+        add(
+            "print_time_metric_source",
+            "unavailable",
+            f"desktop={desktop.print_time_source}, Android={android.print_time_source}",
+        )
+    elif desktop.print_time_source == android.print_time_source:
+        add(
+            "print_time_metric_source",
+            "pass",
+            f"both use {desktop.print_time_source}",
+        )
+    else:
+        add(
+            "print_time_metric_source",
+            "warn",
+            f"desktop={desktop.print_time_source}, Android={android.print_time_source}; "
+            "the unchanged numeric tolerance still applies",
         )
 
     # Move counts are diagnostics because slicers can segment identical paths
