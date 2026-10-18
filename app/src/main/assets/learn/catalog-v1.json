@@ -81,7 +81,7 @@
       "keywords": ["offline", "pairing", "send", "connection", "telemetry", "certificate"],
       "steps": ["Treat the printer’s physical panel and current official app as the source of truth when telemetry is stale.", "Do not retry by removing certificate or readiness safeguards.", "Review the saved job record and reconnect only through the normal pairing path."]
     },
-    {"id":"symptom-warping","kind":"troubleshoot","title":"Corners lift or the part warps","summary":"Symptom: edges lift from the plate. Plate condition, geometry, material and ambient conditions can contribute.","safety":"Review","scope":"Do not add an enclosure or change heat settings from generic advice.","source":"Alloy troubleshooting contract v1","artwork":"learn/first-layer-adhesion-v1.jpg","keywords":["warping","corner","lifting","crack"],"steps":["If a loose part risks contact, stop and supervise.","Review plate, material and profile identity after cooling.","Use current manufacturer guidance for a controlled retry."]},
+    {"id":"symptom-warping","kind":"troubleshoot","title":"Corners lift or the part warps","summary":"Symptom: edges lift from the plate. Plate condition, geometry, material and ambient conditions can contribute.","safety":"Review","scope":"Do not add an enclosure or change heat settings from generic advice.","source":"Alloy troubleshooting contract v1","artwork":"learn/first-layer-symptoms-v1.jpg","keywords":["warping","corner","lifting","crack"],"steps":["If a loose part risks contact, stop and supervise.","Review plate, material and profile identity after cooling.","Use current manufacturer guidance for a controlled retry."]},
     {"id":"symptom-under-extrusion","kind":"troubleshoot","title":"Gaps or weak-looking lines","summary":"Symptom: missing lines or gaps. Feed resistance, material condition and nozzle state are possible causes.","safety":"Hard stop","scope":"Do not pull filament through a powered feeder or open a hot assembly.","source":"Alloy troubleshooting contract v1","artwork":"","keywords":["under extrusion","gaps","clog","feed"],"steps":["Stop if grinding or a collision is present.","Record material and feed-route details.","Use current printer and filament guidance."]},
     {"id":"symptom-layer-shift","kind":"troubleshoot","title":"Layers are misaligned","summary":"Symptom: upper layers move sideways. An obstruction or collision needs a stop-and-check path.","safety":"Hard stop","scope":"Never force axes by hand or continue an uncertain collision.","source":"Alloy troubleshooting contract v1","artwork":"","keywords":["layer shift","collision","axis","grinding"],"steps":["Stop and supervise if the printer is active.","Do not force moving hardware.","Save evidence and use official support guidance."]},
     {"id":"symptom-spaghetti","kind":"troubleshoot","title":"Detached print or spaghetti","summary":"Symptom: printed material is no longer attached and may enter the moving toolhead area.","safety":"Hard stop","scope":"A detached print needs human supervision; the app cannot assess the physical hazard remotely.","source":"Alloy troubleshooting contract v1","artwork":"","keywords":["spaghetti","detached","loose print"],"steps":["Cancel only if normal controls are safe to reach.","Do not touch hot or moving parts.","Save a photo and review the first layer."]},
@@ -91,8 +91,8 @@
     {"id":"hard-stop-leaking-hotend","kind":"troubleshoot","title":"Leaking hotend or molten material","summary":"Molten material outside its normal path can damage hardware and needs a safe stop path.","safety":"Hard stop","scope":"Do not pull, scrape or dismantle hot components.","source":"Alloy safety boundary v1","artwork":"","keywords":["leak","hotend","molten"],"steps":["Stop and supervise if safe.","Keep clear of hot moving parts.","Use manufacturer service guidance."]},
     {"id":"hard-stop-recovery","kind":"troubleshoot","title":"An interrupted job needs review","summary":"An unknown upload or interrupted print must not be retried automatically.","safety":"Hard stop","scope":"Alloy recovery locks remain in effect until fresh state is reviewed.","source":"Alloy transport safety contract v1","artwork":"","keywords":["recovery","interrupted","retry","upload"],"steps":["Check the physical printer state.","Review the saved job record.","Reconnect only through the normal path."]},
     {"id":"hard-stop-unknown-material","kind":"troubleshoot","title":"Unknown or incompatible material","summary":"A material name without a matching route and profile is not direct-send ready.","safety":"Hard stop","scope":"A1 mini not-recommended classes remain blocked from direct send.","source":"Alloy A1 mini material contract v1","artwork":"","keywords":["unknown material","abs","asa","pc","carbon fiber"],"steps":["Do not prepare a direct job.","Choose a documented compatible material.","Keep the job as inspect/export only until qualified."]},
-    {"id":"symptom-first-layer-gaps","kind":"troubleshoot","title":"First-layer lines have gaps","summary":"Symptom: the first layer has separated lines or uncovered patches. Treat it as a setup review, not proof of one cause.","safety":"Review","scope":"Do not reach into the printer or tune hardware while it is active.","source":"Alloy troubleshooting contract v1 · reviewed 2026-09-29","artwork":"learn/first-layer-adhesion-v1.jpg","keywords":["first layer gaps","thin first layer","lines apart","adhesion"],"steps":["Watch from a safe distance and stop if the part drags or collides.","After cooling, compare the selected plate, nozzle, material and recipe with the real setup.","Keep the result as evidence and use current manufacturer guidance for a controlled retry."]},
-    {"id":"symptom-first-layer-bunched","kind":"troubleshoot","title":"First-layer material bunches at the nozzle","summary":"Symptom: material gathers or follows the nozzle instead of forming an even line. A loose moving print needs supervision.","safety":"Hard stop","scope":"Do not remove material near a hot nozzle or moving axes.","source":"Alloy troubleshooting contract v1 · reviewed 2026-09-29","artwork":"learn/first-layer-hotend-v1.png","keywords":["bunched filament","nozzle drag","first layer","blob"],"steps":["Cancel only through normal controls if it is safe to reach them.","Let the printer cool before any approved plate or material observation.","Review the first-layer preview and official support guidance before retrying."]},
+    {"id":"symptom-first-layer-gaps","kind":"troubleshoot","title":"First-layer lines have gaps","summary":"Symptom: the first layer has separated lines or uncovered patches. Treat it as a setup review, not proof of one cause.","safety":"Review","scope":"Do not reach into the printer or tune hardware while it is active.","source":"Alloy troubleshooting contract v1 · reviewed 2026-09-29","artwork":"learn/first-layer-symptoms-v1.jpg","keywords":["first layer gaps","thin first layer","lines apart","adhesion"],"steps":["Watch from a safe distance and stop if the part drags or collides.","After cooling, compare the selected plate, nozzle, material and recipe with the real setup.","Keep the result as evidence and use current manufacturer guidance for a controlled retry."]},
+    {"id":"symptom-first-layer-bunched","kind":"troubleshoot","title":"First-layer material bunches at the nozzle","summary":"Symptom: material gathers or follows the nozzle instead of forming an even line. A loose moving print needs supervision.","safety":"Hard stop","scope":"Do not remove material near a hot nozzle or moving axes.","source":"Alloy troubleshooting contract v1 · reviewed 2026-09-29","artwork":"learn/first-layer-symptoms-v1.jpg","keywords":["bunched filament","nozzle drag","first layer","blob"],"steps":["Cancel only through normal controls if it is safe to reach them.","Let the printer cool before any approved plate or material observation.","Review the first-layer preview and official support guidance before retrying."]},
     {"id":"symptom-bridge-droop","kind":"troubleshoot","title":"Bridges sag or droop","summary":"Symptom: material spanning an open gap hangs below the intended shape. Geometry, material and recipe can all contribute.","safety":"Review","scope":"Do not treat an export preview as a strength guarantee.","source":"Alloy troubleshooting contract v1 · reviewed 2026-09-29","artwork":"learn/support-styles-v1.jpg","keywords":["bridge","droop","sag","overhang"],"steps":["Inspect the bridge and layer preview before changing the model.","Record the selected material and profile.","Use a reviewed orientation or manufacturer recipe guidance for the next attempt."]},
     {"id":"symptom-surface-seam","kind":"troubleshoot","title":"A seam or scar appears on the surface","summary":"Symptom: a visible vertical line or small surface mark appears where a layer begins or ends. It is a finish question, not a safety diagnosis.","safety":"Inspect","scope":"Do not change unknown machine settings while a print is running.","source":"Alloy troubleshooting contract v1 · reviewed 2026-09-29","artwork":"","keywords":["seam","scar","surface line","finish"],"steps":["Compare the visible mark with the layer preview.","Record orientation and surface choice.","Adjust only a reviewed recipe and re-slice for a later attempt."]},
     {"id":"symptom-noisy-motion","kind":"troubleshoot","title":"Unexpected grinding or noisy motion","summary":"Symptom: movement sounds rough, blocked or different from normal. Noise plus a collision risk needs an immediate stop path.","safety":"Hard stop","scope":"Never force axes, belts or the toolhead by hand.","source":"Alloy safety boundary v1 · reviewed 2026-09-29","artwork":"","keywords":["noise","grinding","rattle","motion","belt"],"steps":["Stop and supervise if it is safe.","Do not force moving hardware or continue a suspected collision.","Save non-secret details and use current manufacturer service guidance."]},
@@ -198,81 +198,3 @@
           "Keep generated supports review-only until the support gate passes."
         ]
       },
-    {
-        "id": "faq-printer-profile",
-        "kind": "faq",
-        "title": "How do I choose between A1 mini, A1 and P1S?",
-        "summary": "Choose the model that is physically in front of you, then confirm its plate, nozzle and feed route. A1 mini has the smaller build area; never select another printer just to make an oversized object appear to fit.",
-        "safety": "Review",
-        "scope": "A loaded profile is not proof of the printer’s firmware, configuration or physical condition.",
-        "source": "Alloy initial Bambu profile contract v1",
-        "artwork": "learn/build-plate-boundary-v1.png",
-        "keywords": [
-          "faq",
-          "beginner"
-        ],
-        "steps": [
-          "Read the printer label in the app and compare it with the machine.",
-          "Check the selected plate and build-envelope warnings.",
-          "If the model does not fit, scale or split it only when that change is intended."
-        ]
-      },
-    {
-        "id": "faq-spools",
-        "kind": "faq",
-        "title": "Which spool and material should I use?",
-        "summary": "Use the printer’s Materials & compatibility guide to review Bambu-listed material capability, spool form and feed-route notes. A material being listed does not prove that a particular spool fits, is dry, or is qualified for Alloy direct-send.",
-        "safety": "Review",
-        "scope": "A1 mini material/spool records are planning guidance; unknown fit or feed routes must stay blocked.",
-        "source": "Alloy capability-catalog safety contract v1",
-        "artwork": "learn/material-feed-route-v1.png",
-        "keywords": [
-          "faq",
-          "beginner"
-        ],
-        "steps": [
-          "Identify the exact material and spool form.",
-          "Confirm the feed route and any drying requirement.",
-          "Do not force a spool or route that is not listed for the selected setup."
-        ]
-      },
-    {
-        "id": "faq-send-share",
-        "kind": "faq",
-        "title": "Can Alloy send this directly or open it in Bambu Handy?",
-        "summary": "Not yet as a validated production handoff. Alloy’s direct-send path remains fail-closed while native slicing, job packaging and printer acceptance are being qualified. An export or share action must not be mistaken for Bambu Handy acceptance.",
-        "safety": "Hard stop",
-        "scope": "Direct-send, validated Bambu-ready export and Bambu Handy import require separate completed evidence gates.",
-        "source": "Alloy release gate status v1",
-        "artwork": "learn/printer-phone-recovery-v1.png",
-        "keywords": [
-          "faq",
-          "beginner"
-        ],
-        "steps": [
-          "Use only the currently available review/export actions.",
-          "Check the current release gate status before relying on an output file.",
-          "Do not bypass the send lock or treat a generic 3MF as a validated printer job."
-        ]
-      },
-    {
-        "id": "faq-unsafe",
-        "kind": "faq",
-        "title": "What should I do if the printer behaves unexpectedly?",
-        "summary": "Stop and supervise if it is safe to do so. Smoke, unusual odor, collisions, damaged cables, leaking material, or unknown motion state are not problems to solve by blindly changing slicer settings.",
-        "safety": "Hard stop",
-        "scope": "Alloy learning content is not a remote diagnosis or a repair guide for hot, moving or electrical parts.",
-        "source": "Alloy universal safety boundary v1",
-        "artwork": "learn/printer-phone-recovery-v1.png",
-        "keywords": [
-          "faq",
-          "beginner"
-        ],
-        "steps": [
-          "Use the printer’s physical controls if safe.",
-          "Keep clear of hot and moving parts.",
-          "Follow current manufacturer support guidance."
-        ]
-      }
-  ]
-}
