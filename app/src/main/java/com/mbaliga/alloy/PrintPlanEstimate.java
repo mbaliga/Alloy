@@ -40,7 +40,8 @@ public final class PrintPlanEstimate {
         String scope = config.supports
                 ? "ENGINE FILAMENT TOTAL"
                 : "MODEL TOOLPATH FILAMENT";
-        String time = slice.printTimeSeconds < 0f ? "Not reported by engine" : duration(slice.printTimeSeconds);
+        String time = slice.printTimeSeconds < 0f ? "Not reported by engine"
+                : duration(slice.printTimeSeconds) + "  ·  engine estimate, not printer-verified";
         return new PrintPlanEstimate(slice.filamentMm,
                 grams(slice.filamentMm, config.filamentDiameter, config.filament,
                         config.nativeSettings.get("filament_density")),
