@@ -90,6 +90,8 @@ public final class BambuMachineTemplateProbeTest {
                 }
                 Assert.assertTrue("layer notification must be rendered",
                         containsGcodeLine(gcode, "M991 S0 P0"));
+                Assert.assertTrue("relative-E compatibility reset must be composed with the imported layer hook",
+                        containsGcodeLine(gcode, "G92 E0"));
                 Assert.assertTrue("time-lapse template must be rendered",
                         containsGcodeLine(gcode, "; SKIPPABLE_START"));
                 Assert.assertTrue("machine-start template must be rendered",
@@ -144,7 +146,19 @@ public final class BambuMachineTemplateProbeTest {
             String key = line.split(" = ", 2)[0];
             if (templates.has(key)) {
                 Assert.assertTrue("duplicate native template key", replaced.add(key));
-                patched.append(key).append(" = ").append(templates.getString(key).replace("\n", "\\n")).append('\n');
+                String value = templates.getString(key);
+                // The pinned Bambu layer hook reports progress but does not
+                // reset E. Alloy's native recipe uses relative extrusion, so
+                // the production adapter composes this engine-safety reset
+                // with the imported hook. Keep the upstream digest check on
+                // the untouched source above; add the same explicit shim here
+                // so the probe can exercise real template rendering instead
+                // of failing the slicer's preflight before a file is emitted.
+                if ("layer_change_gcode".equals(key)
+                        && !containsGcodeLine(value, "G92 E0")) {
+                    value = value + (value.endsWith("\n") ? "" : "\n") + "G92 E0\n";
+                }
+                patched.append(key).append(" = ").append(value.replace("\n", "\\n")).append('\n');
             } else patched.append(line).append('\n');
         }
         for (String key : KEYS) {
