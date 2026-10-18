@@ -399,6 +399,25 @@ jobs:
           disable-animations: false
           disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: bash ci/run_native_release_instrumentation.sh
+      # Keep an explicit attempt record even if the emulator action fails
+      # before it can invoke its instrumentation script.
+      - name: Initialize standalone Bambu template probe evidence
+        if: always() && !cancelled()
+        run: python3 ci/machine_template_probe_attempt.py path-b-template-probe initialized
+      # Run the narrow probe independently so a failure in the broad suite
+      # cannot prevent collection of template-rendering evidence.
+      - name: Render pinned Bambu templates independently
+        if: always() && !cancelled()
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-boot-timeout: "1800"
+          disable-animations: false
+          disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
+          script: bash ci/run_machine_template_probe.sh
       - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -426,10 +445,6 @@ jobs:
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
             test -s path-b-g3-evidence/overhang_support.gcode
             test -s path-b-g3-evidence/overhang_support.config.ini
-            adb shell am instrument -w -e class com.mbaliga.alloy.BambuMachineTemplateProbeTest com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
-            mkdir -p path-b-template-probe
-            adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-bambu-template-probe/. path-b-template-probe/
-            python3 ci/validate_machine_template_probe_output.py path-b-template-probe
       - name: Upload unqualified Bambu template rendering probe
         if: always()
         uses: actions/upload-artifact@v4

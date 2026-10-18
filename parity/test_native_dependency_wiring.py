@@ -139,12 +139,12 @@ class NativeDependencyWiringTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn("Run native release instrumentation through API-35 ARM translation", workflow)
         self.assertIn("Export native G3 evidence through API-35 ARM translation", workflow)
-        # Instrumentation, G3 export, and the isolated five-fixture pilot each
-        # boot a fresh API-35 ARM-translation emulator.
-        self.assertEqual(3, workflow.count("target: google_apis"))
-        self.assertEqual(3, workflow.count("arch: x86_64"))
+        # The broad suite, standalone template probe, G3 export, and isolated
+        # five-fixture pilot each boot a fresh API-35 ARM-translation emulator.
+        self.assertEqual(4, workflow.count("target: google_apis"))
+        self.assertEqual(4, workflow.count("arch: x86_64"))
         self.assertEqual(
-            3,
+            4,
             workflow.count(
                 "disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}"
             ),

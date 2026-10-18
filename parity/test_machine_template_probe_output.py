@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 from validate_machine_template_probe_output import FIXTURES, SOURCE, validate
+from machine_template_probe_attempt import record
 
 
 class MachineTemplateProbeOutputTests(unittest.TestCase):
@@ -72,6 +73,16 @@ class MachineTemplateProbeOutputTests(unittest.TestCase):
         (self.directory / "unexpected.gcode").write_text("G1\n")
         with self.assertRaisesRegex(ValueError, "unexpected G-code"):
             validate(self.directory)
+
+    def test_attempt_artifact_is_created_for_emulator_boot_or_test_failure(self):
+        directory = self.directory / "attempt-only"
+        record(directory, "initialized")
+        record(directory, "failed", 1)
+        payload = json.loads((directory / "attempt.json").read_text())
+        self.assertEqual("failed", payload["state"])
+        self.assertEqual(1, payload["exit_code"])
+        self.assertFalse(payload["qualified"])
+        self.assertEqual("template-rendering-only", payload["scope"])
 
 
 if __name__ == "__main__":

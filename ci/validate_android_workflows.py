@@ -115,6 +115,15 @@ def main() -> None:
     require(app_build_text, "applicationIdSuffix '.pilot'", app_build)
     require(app_build_text, "project.findProperty('alloyAdbTimeoutMs')", app_build)
     require(app_build_text, 'timeOutInMs = adbTimeoutInMs.toString().toInteger()', app_build)
+    template_probe_script = ROOT / "ci/run_machine_template_probe.sh"
+    template_probe_script_text = template_probe_script.read_text(encoding="utf-8")
+    for token in (
+        "com.mbaliga.alloy.BambuMachineTemplateProbeTest",
+        "ci/validate_machine_template_probe_output.py",
+        "instrumentation.txt",
+        "logcat-tail.txt",
+    ):
+        require(template_probe_script_text, token, template_probe_script)
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
@@ -126,7 +135,10 @@ def main() -> None:
         "Run native release instrumentation through API-35 ARM translation",
         "Export native G3 evidence through API-35 ARM translation",
         "python3 ci/verify_machine_template_probe.py orca-profile-source",
-        "com.mbaliga.alloy.BambuMachineTemplateProbeTest",
+        "Initialize standalone Bambu template probe evidence",
+        "Render pinned Bambu templates independently",
+        "if: always() && !cancelled()",
+        "script: bash ci/run_machine_template_probe.sh",
         "name: alloy-bambu-template-rendering-probe",
         "target: google_apis",
         "arch: x86_64",
@@ -176,20 +188,20 @@ def main() -> None:
         require(native_text, token, native)
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
-    if native_text.count("profile: pixel_6") != 3 or "profile: Pixel 6" in native_text:
+    if native_text.count("profile: pixel_6") != 4 or "profile: Pixel 6" in native_text:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must use the stable avdmanager profile id pixel_6")
-    if native_text.count("disable-animations: false") != 3:
+    if native_text.count("disable-animations: false") != 4:
         raise SystemExit(f"{native}: both translated-ARM emulator jobs must avoid optional post-boot animation writes")
-    if native_text.count('emulator-boot-timeout: "1800"') != 3:
+    if native_text.count('emulator-boot-timeout: "1800"') != 4:
         raise SystemExit(f"{native}: each API-35 ARM-translation emulator boot must allow the extended hosted-runner window")
     native_runtime = native_text.find("name: Run native release instrumentation through API-35 ARM translation")
     for artifact in ("alloy-native-release-ci-apk", "alloy-native-instrumentation-apk"):
         artifact_position = native_text.find(f"name: {artifact}")
         if artifact_position < 0 or artifact_position > native_runtime:
             raise SystemExit(f"{native}: {artifact} must upload before emulator startup so build evidence survives boot failures")
-    if native_text.count("target: google_apis") != 3 or native_text.count("arch: x86_64") != 3:
+    if native_text.count("target: google_apis") != 4 or native_text.count("arch: x86_64") != 4:
         raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
-    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 3:
+    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 4:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must select KVM when available and allow software fallback")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
         raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before emulator boots")
