@@ -18,28 +18,30 @@ printer safety, Bambu Handy acceptance, or production signing.
   passed at this source.
 - The exact-head optional native run
   [39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352)
-  is still building dependencies; native instrumentation, current-head G3,
-  and physical-pilot evidence are not available yet. The 12 Android skips
-  include native-dependent tests.
+  completed its native build, instrumentation, template rendering, and G3
+  export successfully, then **failed** strict G3 comparison. The physical
+  pilot was skipped. The 12 Android skips include native-dependent tests.
 
-The latest completed strict G3 comparison is from an older source checkpoint,
-[run 38979999591](https://github.com/mbaliga/Alloy/actions/runs/38979999591),
-and fails the unchanged 2% tolerance:
+The exact-head strict G3 comparison
+[39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352)
+fails the unchanged 2% tolerance:
 
 | Fixture | Print-time difference | Other failed checks |
 | --- | ---: | --- |
-| Cube | 14.08% | None |
-| Supported overhang | 17.63% | Filament length 2.31%; mass 2.12% |
-| Thin-wall frame | 12.48% | None |
-| Travel obstacle | 9.14% | None |
+| Cube | 14.37% | Filament length 2.10%; mass 2.03% |
+| Supported overhang | 17.87% | Filament length 2.61%; mass 2.47% |
+| Thin-wall frame | 13.23% | Filament length 2.65%; mass 2.58% |
+| Travel obstacle | 9.43% | Print time only |
 
-For the supported overhang, the deposited support path now differs by only
-0.18% and positive support extrusion by 0.07%. These aggregate diagnostics
-are encouraging but do not prove spatial equivalence or physical print quality.
-All 62 checked profile fields match for each fixture. This older comparison is
-not evidence for the current source. Remaining timing work must account for
-different machine templates, including desktop per-layer timelapse/inspection
-motions, not just extrusion geometry. See
+The current comparison reports profile identity for 63 fields per fixture.
+For cube, extrusion-motion time is nearly identical (1337.09 s Android vs
+1337.18 s desktop), while nominal travel time is 20.97 s vs 111.26 s and
+travel moves are 1,059 vs 2,435. This is evidence of toolpath/time-estimation
+behavior that still needs investigation—not grounds for a blanket time
+multiplier or relaxed tolerance. Aggregate geometry diagnostics do not prove
+spatial equivalence or physical print quality. Remaining work must account for
+engine behavior and Bambu machine-template motions, including per-layer
+inspection/timelapse moves. See
 [Bambu template policy](BAMBU_A1_MINI_TEMPLATE_POLICY.md).
 
 **Do not send or print unqualified generated jobs.** Direct-send and
