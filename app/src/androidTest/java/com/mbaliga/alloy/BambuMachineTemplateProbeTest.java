@@ -89,9 +89,9 @@ public final class BambuMachineTemplateProbeTest {
                             command.matches(".*[{}\\[\\]].*"));
                 }
                 Assert.assertTrue("layer notification must be rendered",
-                        containsGcodeLine(gcode, "M991 S0 P0"));
-                Assert.assertTrue("relative-E compatibility reset must be composed with the imported layer hook",
-                        containsGcodeLine(gcode, "G92 E0"));
+                        containsGcodeCommand(gcode, "M991 S0 P0"));
+                Assert.assertTrue("relative-E compatibility reset must follow the imported layer hook",
+                        hasFollowingGcodeCommand(gcode, "M991 S0 P0", "G92 E0"));
                 Assert.assertTrue("time-lapse template must be rendered",
                         containsGcodeLine(gcode, "; SKIPPABLE_START"));
                 Assert.assertTrue("machine-start template must be rendered",
@@ -182,5 +182,27 @@ public final class BambuMachineTemplateProbeTest {
         for (String line : gcode.split("\\r?\\n"))
             if (line.trim().equals(expected)) return true;
         return false;
+    }
+
+    private static boolean containsGcodeCommand(String gcode, String expected) {
+        for (String line : gcode.split("\\r?\\n"))
+            if (commandBeforeComment(line).equals(expected)) return true;
+        return false;
+    }
+
+    private static boolean hasFollowingGcodeCommand(String gcode, String command, String following) {
+        String[] lines = gcode.split("\\r?\\n");
+        for (int i = 0; i < lines.length; i++) {
+            if (!commandBeforeComment(lines[i]).equals(command)) continue;
+            for (int next = i + 1; next < lines.length; next++) {
+                String nextCommand = commandBeforeComment(lines[next]);
+                if (!nextCommand.isEmpty()) return nextCommand.equals(following);
+            }
+        }
+        return false;
+    }
+
+    private static String commandBeforeComment(String line) {
+        return line.split(";", 2)[0].trim();
     }
 }
