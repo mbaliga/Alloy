@@ -146,6 +146,10 @@ def main() -> None:
     for token in (
         "com.mbaliga.alloy.BambuMachineTemplateProbeTest",
         "ci/validate_machine_template_probe_output.py",
+        "trap finish_probe EXIT",
+        "collect_diagnostics",
+        "--exit-code \"$original_status\"",
+        "ALLOY_TEMPLATE_PROBE_OUTPUT_DIR",
         "instrumentation.txt",
         "logcat-tail.txt",
     ):
@@ -163,6 +167,9 @@ def main() -> None:
         "python3 ci/verify_machine_template_probe.py orca-profile-source",
         "Initialize standalone Bambu template probe evidence",
         "Render pinned Bambu templates independently",
+        "Test Bambu template probe evidence and failure collection",
+        "parity/test_machine_template_probe_output.py",
+        "parity/test_machine_template_probe_script.py",
         "if: always() && !cancelled()",
         "script: bash ci/run_machine_template_probe.sh",
         "name: alloy-bambu-template-rendering-probe",
@@ -212,6 +219,16 @@ def main() -> None:
         "python3 ci/validate_learning_assets.py",
     ):
         require(native_text, token, native)
+    for path in (
+        "ci/machine_template_probe_attempt.py",
+        "ci/verify_machine_template_probe.py",
+        "ci/validate_machine_template_probe_output.py",
+        "ci/run_machine_template_probe.sh",
+        "parity/test_machine_template_probe_output.py",
+        "parity/test_machine_template_probe_script.py",
+    ):
+        if native_text.count(f"- '{path}'") != 2:
+            raise SystemExit(f"{native}: both push and pull_request filters must run the probe contract for {path}")
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
     if native_text.count("profile: pixel_6") != 4 or "profile: Pixel 6" in native_text:

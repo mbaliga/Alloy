@@ -33,6 +33,10 @@ on:
       - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
+      - 'ci/machine_template_probe_attempt.py'
+      - 'ci/verify_machine_template_probe.py'
+      - 'ci/validate_machine_template_probe_output.py'
+      - 'ci/run_machine_template_probe.sh'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
       - 'ci/validate_learning_assets.py'
@@ -51,6 +55,8 @@ on:
       - 'parity/test_g3_artifact_parity.py'
       - 'parity/compare_gcode.py'
       - 'parity/test_compare_gcode.py'
+      - 'parity/test_machine_template_probe_output.py'
+      - 'parity/test_machine_template_probe_script.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -85,6 +91,10 @@ on:
       - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
+      - 'ci/machine_template_probe_attempt.py'
+      - 'ci/verify_machine_template_probe.py'
+      - 'ci/validate_machine_template_probe_output.py'
+      - 'ci/run_machine_template_probe.sh'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
       - 'ci/validate_learning_assets.py'
@@ -103,6 +113,8 @@ on:
       - 'parity/test_g3_artifact_parity.py'
       - 'parity/compare_gcode.py'
       - 'parity/test_compare_gcode.py'
+      - 'parity/test_machine_template_probe_output.py'
+      - 'parity/test_machine_template_probe_script.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -159,6 +171,8 @@ jobs:
           python3 -m unittest -v ci.test_export_official_orca_sources ci.test_patch_boost_android_locale ci.test_patch_orca_mobile_bootstrap
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
+      - name: Test Bambu template probe evidence and failure collection
+        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py
       - name: Verify pinned Orca profile snapshot
         shell: bash
         run: |
