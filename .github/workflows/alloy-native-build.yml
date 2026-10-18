@@ -37,6 +37,7 @@ on:
       - 'ci/verify_machine_template_probe.py'
       - 'ci/validate_machine_template_probe_output.py'
       - 'ci/run_machine_template_probe.sh'
+      - 'ci/compare_machine_template_probe.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
       - 'ci/validate_learning_assets.py'
@@ -57,6 +58,7 @@ on:
       - 'parity/test_compare_gcode.py'
       - 'parity/test_machine_template_probe_output.py'
       - 'parity/test_machine_template_probe_script.py'
+      - 'parity/test_machine_template_probe_diagnostic.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -95,6 +97,7 @@ on:
       - 'ci/verify_machine_template_probe.py'
       - 'ci/validate_machine_template_probe_output.py'
       - 'ci/run_machine_template_probe.sh'
+      - 'ci/compare_machine_template_probe.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
       - 'ci/validate_learning_assets.py'
@@ -115,6 +118,7 @@ on:
       - 'parity/test_compare_gcode.py'
       - 'parity/test_machine_template_probe_output.py'
       - 'parity/test_machine_template_probe_script.py'
+      - 'parity/test_machine_template_probe_diagnostic.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -172,7 +176,7 @@ jobs:
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
       - name: Test Bambu template probe evidence and failure collection
-        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py
+        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py parity/test_machine_template_probe_diagnostic.py
       - name: Verify pinned Orca profile snapshot
         shell: bash
         run: |
@@ -432,6 +436,28 @@ jobs:
           disable-animations: false
           disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: bash ci/run_machine_template_probe.sh
+      # Compare the captured unqualified template renders with the exact-PR-
+      # head desktop reference as a separate diagnostic. This never gates G3.
+      - name: Compare Bambu template probe with exact-head desktop reference (diagnostic only)
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+        run: |
+          python3 ci/compare_machine_template_probe.py \
+            --probe-dir path-b-template-probe/rendered \
+            --report-dir path-b-template-probe-parity
+      - name: Upload non-gating Bambu template comparison diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-bambu-template-probe-diagnostic
+          path: path-b-template-probe-parity
+          if-no-files-found: warn
+          retention-days: 14
       - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
         with:
