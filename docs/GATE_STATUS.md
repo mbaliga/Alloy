@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 52512)
-Total output lines: 3335
+Warning: truncated output (original token count: 52892)
+Total output lines: 3363
 
 # Alloy engine gate status
 
@@ -29,6 +29,34 @@ gap, not a reason to add a blanket time correction or relax the gate. Native
 build and instrumentation are verified; G3, physical A1 Mini printing, Handy
 handoff, A1/P1S runtime parity, production signing and release remain
 unqualified. Keep send/print/release controls fail-closed.
+
+The same run's separate, **non-gating** Bambu template probe
+[diagnostic artifact 12140727585](https://github.com/mbaliga/Alloy/actions/runs/39132914352/artifacts/12140727585)
+(SHA-256 `691b641f079c941bc3ac7d92fe83efd10e1842ae61eb4a11a8db523d8fd490d5`)
+successfully rendered the four pinned template hooks through the native test
+harness. The diagnostic's template-probe estimates are worse—not better—than
+desktop Orca:
+
+| Fixture | Desktop (s) | Template probe (s) | Delta |
+| --- | ---: | ---: | ---: |
+| Cube | 1,775 | 2,406 | +35.55% |
+| Supported overhang | 2,048 | 2,851 | +39.21% |
+| Thin-wall frame | 1,330 | 1,764 | +32.63% |
+| Travel obstacle | 3,393 | 4,211 | +24.11% |
+
+The cube's filament length is within 0.01% and its total XYZ path within 2.63%,
+but nominal motion time is 20.44% higher; other fixtures show different
+motion/time behavior. This is a rendered-template diagnostic, not printer
+firmware execution. It proves that copying the raw Bambu hooks into the
+current engine is not a validated fix; retain the neutral production policy
+until conditionals, firmware semantics, and actual device behavior are
+resolved. The strict G3 thresholds and send gate are unchanged.
+
+The comparator now records `print_time_source` (`model_printing_time`,
+`estimated_printing_time`, or `total_estimated_time`) and emits a warning when
+the two slicers report different estimate kinds. This diagnostic does not
+change the hard numeric check; the current G3 comparisons still fail their
+unchanged tolerance.
 
 ## 2026-10-18 exact-head CI and native provenance checkpoint
 
@@ -447,7 +475,47 @@ acceptance, Bambu Handy import, nor production signing is proven.
 2026-10-08 offline troubleshooting usability checkpoint: symptom search now
 updates as the user types, begins with stop-now cards rather than expanding all
 26 troubleshooting entries at once, and ranks matching hard-stop guidance
-ahead of routine remedie…38512 tokens truncated…cts Bambu's `retract_before_travel` into both
+ahead of routine remedies. `LearningCatalog.searchTroubleshooting` owns that
+ordering contract, with instrumentation coverage for empty-query safety and
+live-query priority. Current Android v1 run
+[`37810227273`](https://github.com/mbaliga/Alloy/actions/runs/37810227273)
+passed its build and acceptance suite (zero failures; nine skipped cases) and
+published `alloy-v1-release-ci-apk`. The current native pilot artifact remains
+from successful run [`37798978170`](https://github.com/mbaliga/Alloy/actions/…37892 tokens truncated…cepts a
+multi-plate transaction; the process-loss recovery gate remains explicit.
+
+The native build now fails closed on the GMP/MPFR boundary. A clean checkout
+first validates the checked-in fallback inputs, then the native/release
+workflows run `ci/build_gmp_mpfr_android.sh`, verify pinned official archive
+hashes, cross-build the arm64 libraries and require source-built validation
+before CMake runs. The local compile/link and emulator runtime smoke now pass;
+hosted reproducibility and the remaining engine/profile/hardware gates are
+still required before promotion.
+
+## Desktop reference audit
+
+The installed Bambu Studio 02.08.02.61 CLI can now be used as an external
+reference without depending on a GUI capture. The identical checked-in
+`travel_obstacle.stl` was packaged and sliced through a temporary copied
+profile directory using the A1 mini 0.4 nozzle and Bambu PLA profile. The
+desktop result reported 140 layers, 28 mm maximum Z and 56m14s estimated
+duration, and emitted `plate_1.gcode` successfully.
+
+The first reference was not like-for-like with Android, so a second temporary
+desktop project now overlays the Android recipe: 0.20 mm layers, 15% infill,
+organic/tree support, 5 mm auto-brim, wipe and Slope Lift. The profile
+identity harness now passes all 62 source-backed fields after aligning the
+support interface, tree-branch, speed, brim-gap and automatic-wall sentinel
+values to the resolved desktop recipe. With the desktop PLA density restored,
+the matched obstacle comparison now reports valid mass evidence as well. It
+passes layer count, profile identity, filament length and major feature
+coverage, but still fails production tolerance on time (6.11%), filament mass
+(4.79%) and motion counts; the acceleration sequence diverges at a later
+support transition. The next parity gate is to resolve that support-motion
+and acceleration difference, then repeat the comparison across all four
+fixtures—not to promote from a single obstacle.
+
+The native boundary now projects Bambu's `retract_before_travel` into both
 the filament-prefixed and active top-level native keys. A wipe-off experiment
 confirmed the setting is isolated and valid, but did not close the remaining
 motion gap: the best controlled wipe-off comparison is still 5.27% slower,
