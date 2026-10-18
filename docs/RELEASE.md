@@ -50,6 +50,12 @@ The current physical-print lane remains bound to the A1 Mini / N1 pilot; A1 and
 P1S remain blocked until their separate profile, toolpath, runtime, and
 printer-specific acceptance evidence is reviewed.
 
+The P1S capability catalog keeps carbon/glass-fiber reinforced polymers
+“Not recommended” and explicitly states Bambu's prerequisite: an extruder and
+hotend upgrade before directly printing fiber-reinforced filament. A nozzle
+swap alone is not represented as satisfying that prerequisite, and the note
+does not qualify an Alloy profile or send. See Bambu's [P1S product guidance](https://us.store.bambulab.com/products/p1s?id=583855874739507213).
+
 
 Release-candidate dispatch requires the organization-owned Android signing
 key, protected CI secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEY_ALIAS`,

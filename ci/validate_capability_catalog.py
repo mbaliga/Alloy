@@ -179,6 +179,11 @@ def validate_catalog(path):
             raise ValueError(f"P1S Bambu guidance must identify {material_id} as capable")
     if p1s_materials["cf-gf-filled"]["bambu_status"] != "Not recommended":
         raise ValueError("P1S carbon/glass fiber guidance must remain not recommended")
+    p1s_fiber_note = p1s_materials["cf-gf-filled"]["note"].lower()
+    if "extruder and hotend upgrade" not in p1s_fiber_note or "does not qualify" not in p1s_fiber_note:
+        raise ValueError("P1S fiber guidance must retain Bambu's hardware prerequisite without implying Alloy qualification")
+    if p1s_materials["cf-gf-filled"]["alloy_direct_send"] != "Blocked":
+        raise ValueError("P1S fiber-filled material must remain blocked for Alloy direct send")
     mini = next(printer for printer in printers if printer["id"] == "a1-mini")
     if {material["id"] for material in mini["materials"]} != A1_MINI_MATERIAL_IDS:
         raise ValueError("A1 mini must disclose each ideal and not-recommended material class separately")

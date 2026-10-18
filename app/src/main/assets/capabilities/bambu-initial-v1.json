@@ -632,7 +632,7 @@
           "name": "Carbon / glass fiber reinforced polymer",
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
-          "note": "Bambu lists carbon/glass-fiber reinforced polymers as not recommended for the supplied stainless nozzle; do not imply that a hardened-nozzle option qualifies an Alloy profile or send.",
+          "note": "Bambu says not to directly print fiber-reinforced filaments before an extruder and hotend upgrade. A nozzle change alone is not the stated prerequisite; review the exact material and upgraded hardware separately. This does not qualify an Alloy profile or send.",
           "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
         }
       ],
