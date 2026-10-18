@@ -33,6 +33,7 @@ on:
       - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
+      - 'ci/run_android_acceptance_with_diagnostics.sh'
       - 'ci/machine_template_probe_attempt.py'
       - 'ci/verify_machine_template_probe.py'
       - 'ci/validate_machine_template_probe_output.py'
@@ -59,6 +60,7 @@ on:
       - 'parity/test_machine_template_probe_output.py'
       - 'parity/test_machine_template_probe_script.py'
       - 'parity/test_machine_template_probe_diagnostic.py'
+      - 'parity/test_android_acceptance_diagnostics.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -93,6 +95,7 @@ on:
       - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
+      - 'ci/run_android_acceptance_with_diagnostics.sh'
       - 'ci/machine_template_probe_attempt.py'
       - 'ci/verify_machine_template_probe.py'
       - 'ci/validate_machine_template_probe_output.py'
@@ -119,6 +122,7 @@ on:
       - 'parity/test_machine_template_probe_output.py'
       - 'parity/test_machine_template_probe_script.py'
       - 'parity/test_machine_template_probe_diagnostic.py'
+      - 'parity/test_android_acceptance_diagnostics.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
@@ -176,7 +180,7 @@ jobs:
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
       - name: Test Bambu template probe evidence and failure collection
-        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py parity/test_machine_template_probe_diagnostic.py
+        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py parity/test_machine_template_probe_diagnostic.py parity/test_android_acceptance_diagnostics.py
       - name: Verify pinned Orca profile snapshot
         shell: bash
         run: |

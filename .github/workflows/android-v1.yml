@@ -3,9 +3,9 @@ name: Alloy Android v1
 on:
   push:
     branches: [main]
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/run_android_acceptance_with_diagnostics.sh', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'parity/test_android_acceptance_diagnostics.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   pull_request:
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/run_android_acceptance_with_diagnostics.sh', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'parity/test_android_acceptance_diagnostics.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   workflow_dispatch:
 
 permissions:
@@ -106,7 +106,7 @@ jobs:
           # animation scales, so leave the device default intact and exercise
           # the actual release acceptance suite instead.
           disable-animations: false
-          script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
+          script: bash ci/run_android_acceptance_with_diagnostics.sh
       - name: Upload Android acceptance diagnostics
         if: always()
         uses: actions/upload-artifact@v4
