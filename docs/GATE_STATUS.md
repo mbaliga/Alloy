@@ -2,6 +2,31 @@
 
 Date: 2026-10-18
 
+## 2026-10-18 exact-head native G3 result — FAIL / NO-GO
+
+Application source `d7f5d330f01d21f8f08821a780c16aae6cebe18c` passed the
+ordinary Android, profile pre-gate, desktop-reference, parity-tooling and
+official-source snapshot workflows listed in
+[`ON_DEVICE_MVP_CHECKLIST.md`](ON_DEVICE_MVP_CHECKLIST.md). Exact-head native
+run [39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352)
+completed its source/dependency checks, native build, API-35 ARM-translation
+instrumentation, Bambu template render/probe, and native G3 evidence export.
+It then failed the strict comparison against the exact-PR-head Orca reference;
+physical pilot steps were skipped. The report is artifact
+[12140872241](https://github.com/mbaliga/Alloy/actions/runs/39132914352/artifacts/12140872241)
+(SHA-256 `b9a4911168cf17df3e5b251a33f5a9bc58da22b3063f920452ac27709c384d18`).
+
+The four fixtures fail print-time tolerance by 9.43–17.87%; cube, supported
+overhang, and thin-wall also exceed the 2% filament length/mass tolerance by
+2.03–2.65%. For the cube, nominal extrusion time is nearly equal (1337.09 s
+Android vs 1337.18 s desktop), but nominal travel time is 20.97 s vs 111.26 s
+and travel moves are 1,059 vs 2,435. Profile identity passes for 63 checked
+fields per fixture. These diagnostics indicate an engine/toolpath/time-model
+gap, not a reason to add a blanket time correction or relax the gate. Native
+build and instrumentation are verified; G3, physical A1 Mini printing, Handy
+handoff, A1/P1S runtime parity, production signing and release remain
+unqualified. Keep send/print/release controls fail-closed.
+
 ## 2026-10-18 exact-head CI and native provenance checkpoint
 
 On PR source head `07c9dc0c4bfe1bbaa5ab8c1a91828fecf950ee30`, parity tooling
