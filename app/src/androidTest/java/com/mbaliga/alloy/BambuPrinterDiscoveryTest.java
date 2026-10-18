@@ -60,6 +60,22 @@ public final class BambuPrinterDiscoveryTest {
         Assert.assertEquals("A1 Mini", printer.name);
     }
 
+    @Test public void labelsKnownA1AndP1SModelsWithoutTreatingThemAsA1Mini() throws Exception {
+        for (String[] identity : new String[][]{{"N2S", "A1"}, {"C12", "P1S"}}) {
+            String response = "HTTP/1.1 200 OK\n"
+                    + "Location: 192.168.1.20\n"
+                    + "ST: urn:bambulab-com:device:3dprinter:1\n"
+                    + "USN: 01P000000000001\n"
+                    + "DevModel.bambu.com: " + identity[0] + "\n\n";
+            BambuPrinterDiscovery.Printer printer = BambuPrinterDiscovery.parseResponse(response, "192.168.1.20");
+            Assert.assertNotNull(printer);
+            Assert.assertEquals(identity[0], printer.model);
+            Assert.assertEquals(identity[1], printer.name);
+            Assert.assertFalse("only vendor model N1 is eligible for the separate A1 Mini lane",
+                    printer.isA1Mini());
+        }
+    }
+
     @Test public void rejectsNonBambuOrMalformedAnnouncements() throws Exception {
         Assert.assertNull(BambuPrinterDiscovery.parseResponse(
                 "HTTP/1.1 200 OK\r\nST: upnp:rootdevice\r\n\r\n", "192.168.1.8"));

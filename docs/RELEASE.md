@@ -41,6 +41,15 @@ verify an imported profile, identify the physically attached printer, change
 any material recipe, or qualify direct send. All printers and materials remain
 subject to the existing release and physical-acceptance gates.
 
+LAN discovery's display-only aliases use Bambu Studio's current printer
+metadata: [N1 (A1 mini)](https://github.com/bambulab/BambuStudio/blob/master/resources/printers/N1.json),
+[N2S (A1)](https://github.com/bambulab/BambuStudio/blob/master/resources/printers/N2S.json),
+and [C12 (P1S)](https://github.com/bambulab/BambuStudio/blob/master/resources/printers/C12.json).
+Recognizing or displaying a model code does not authorize a transport operation.
+The current physical-print lane remains bound to the A1 Mini / N1 pilot; A1 and
+P1S remain blocked until their separate profile, toolpath, runtime, and
+printer-specific acceptance evidence is reviewed.
+
 
 Release-candidate dispatch requires the organization-owned Android signing
 key, protected CI secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEY_ALIAS`,
