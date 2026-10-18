@@ -3272,3 +3272,39 @@ includes, 9 absent transitive dependencies, and 68 differing same-path files.
 The next slicer milestone is to close that coherent source/dependency/API port
 and rerun the same strict four-fixture comparison. Until then, G3 and every
 physical-send/release gate remain closed.
+
+
+### 2026-10-18 native template probe failure and correction
+
+On application commit `5f4d3529ddc495bacd22ef914bdb77c1824014ef`, regular
+Android acceptance run
+[39091992055](https://github.com/mbaliga/Alloy/actions/runs/39091992055)
+passed with 204 tests, 0 failures/errors, and 12 skips. Its QA APK artifact
+`12123651141` has ZIP SHA-256
+`5fea57b5660339e7e3a1424b0e6aa658b0afe19724918d36f2f5a5c6170f2e12`.
+
+Native run
+[39091992048](https://github.com/mbaliga/Alloy/actions/runs/39091992048)
+successfully built the ARM64 engine and both native APKs, but native
+instrumentation and the standalone template probe failed before any G3
+comparison. The retained diagnostic identifies the common setup error:
+the test overlaid the exact pinned Bambu layer-progress hook on Alloy's
+relative-extrusion recipe, replacing the required per-layer `G92 E0` and
+making the slicer reject the fixture before G-code rendering. The probe now
+adds that reset as a test-only compatibility shim after validating the
+untouched upstream template digest (`399963be081f2df51a5f83a68ac4d9d8875f7b79`;
+comment clarification `28c52690a39d85bd579de05b1fc5cfda9f170021`). This only
+repairs the diagnostic harness; it neither changes production output nor
+qualifies imported Bambu templates.
+
+The failure artifacts are retained: native instrumentation report
+`12124269192` (SHA-256
+`558c793f747748cc4f7be3953a19c116eefb4092469d2a45cdd159d782515326`),
+template render probe `12125445310` (SHA-256
+`8006b754a09fc2b2f1ba52a35f3fe45a1bc8dee7c544f6bdd56918a152df7fc5`),
+and native build provenance `12124657511` (SHA-256
+`8e90421a9e75f1065fb90b1126406f55bab77c0bbb5b590e1fa756d15a2be649`).
+G3 export and the software-only physical-pilot build were skipped because
+native instrumentation failed. The new harness fix still needs an exact-head
+native CI run; desktop parity, Bambu Handy acceptance, physical printing,
+legal/source-lineage, production signing, and release gates remain open.
