@@ -5301,7 +5301,7 @@ public final class MainActivity extends Activity {
         String engine = slice.engineId == null ? "Unknown" : slice.engineId;
         if (!slice.engineVerified) engine += " · unverified";
         String message = String.format(Locale.US,
-                "Selected layer\n%d / %d  ·  Z %.2f mm  ·  %d segments\n\nFilament estimate\n%.1f mm\n\nEstimated time\n%s\n\nTravel\n%s\n\nWarnings\n%d\n\nEngine\n%s",
+                "Selected layer\n%d / %d  ·  Z %.2f mm  ·  %d segments\n\nFilament estimate\n%.1f mm\n\nApprox. engine time (unverified)\n%s\n\nTravel\n%s\n\nWarnings\n%d\n\nEngine\n%s",
                 layer.index + 1, slice.layers.size(), layer.z, layer.segments.size(), slice.filamentMm, time,
                 slice.travelMm < 0f ? "Not reported" : String.format(Locale.US, "%.1f mm", slice.travelMm), slice.warnings, engine);
         new AlertDialog.Builder(this)
@@ -5326,7 +5326,7 @@ public final class MainActivity extends Activity {
         String orientation = String.format(Locale.US, "Z rotation %.0f°  ·  X tilt %.0f°  ·  Y tilt %.0f°  ·  scale %.0f%%",
                 modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
         String message = String.format(Locale.US,
-                "%s\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
+                "%s\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nAPPROX. ENGINE TIME (UNVERIFIED)\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
                 estimate.filamentScope, estimate.reportedFilamentMm, estimate.approximateReportedFilamentGrams, config.filament,
                 estimate.supportMaterial, estimate.primePurgeCleaning, estimate.time,
                 config.nozzleTemperature, config.firstLayerNozzleTemperature,
