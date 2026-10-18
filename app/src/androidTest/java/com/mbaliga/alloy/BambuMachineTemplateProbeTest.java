@@ -148,12 +148,13 @@ public final class BambuMachineTemplateProbeTest {
                 Assert.assertTrue("duplicate native template key", replaced.add(key));
                 String value = templates.getString(key);
                 // The pinned Bambu layer hook reports progress but does not
-                // reset E. Alloy's native recipe uses relative extrusion, so
-                // the production adapter composes this engine-safety reset
-                // with the imported hook. Keep the upstream digest check on
-                // the untouched source above; add the same explicit shim here
-                // so the probe can exercise real template rendering instead
-                // of failing the slicer's preflight before a file is emitted.
+                // reset E. Alloy's native recipe uses relative extrusion and
+                // its normal config supplies that reset. This probe replaces
+                // the normal hook with the upstream template to inspect its
+                // rendering, so add a test-only compatibility shim after it.
+                // The upstream digest check above remains on untouched bytes;
+                // this keeps the diagnostic render from failing preflight
+                // before a file is emitted without qualifying that template.
                 if ("layer_change_gcode".equals(key)
                         && !containsGcodeLine(value, "G92 E0")) {
                     value = value + (value.endsWith("\n") ? "" : "\n") + "G92 E0\n";
