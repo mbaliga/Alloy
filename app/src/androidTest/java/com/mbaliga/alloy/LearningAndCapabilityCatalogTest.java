@@ -43,6 +43,18 @@ public final class LearningAndCapabilityCatalogTest {
         Assert.assertTrue("symptom search must find plain language", catalog.ofKind("troubleshoot").get(0).matches("sticking"));
         Assert.assertNotNull("connection/recovery teaching needs an original visual", recoveryVisual);
         Assert.assertEquals("learn/printer-phone-recovery-v1.png", recoveryVisual.artwork);
+        for (String[] expected : new String[][] {
+                {"symptom-first-layer-gaps", "Top right shows separated lines"},
+                {"symptom-first-layer-bunched", "Bottom left shows material gathering"},
+                {"symptom-warping", "Bottom right shows a curling edge"}
+        }) {
+            LearningCatalog.Article symptom = null;
+            for (LearningCatalog.Article article : catalog.articles)
+                if (expected[0].equals(article.id)) symptom = article;
+            Assert.assertNotNull("symptom card needs a specific visual cue", symptom);
+            Assert.assertTrue("caption identifies the relevant quadrant", symptom.visualNote.contains(expected[1]));
+            Assert.assertTrue("caption avoids implying remote diagnosis", symptom.visualNote.contains("not a remote diagnosis"));
+        }
         try (java.io.InputStream artwork = context.getAssets().open(recoveryVisual.artwork)) {
             Assert.assertTrue("original recovery visual must be non-empty", artwork.read() >= 0);
         }
