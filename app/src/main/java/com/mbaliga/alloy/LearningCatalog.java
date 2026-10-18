@@ -31,7 +31,7 @@ public final class LearningCatalog {
     private static final Set<String> KINDS = kinds();
 
     public static final class Article {
-        public final String id, kind, title, summary, safety, scope, source, artwork;
+        public final String id, kind, title, summary, safety, scope, source, artwork, visualNote;
         public final List<String> keywords, steps;
 
         Article(JSONObject value) {
@@ -39,11 +39,12 @@ public final class LearningCatalog {
             summary = required(value, "summary"); safety = required(value, "safety");
             scope = required(value, "scope"); source = required(value, "source");
             artwork = value.optString("artwork", "");
+            visualNote = value.optString("visual_note", "").trim();
             if (!id.matches("[a-z0-9][a-z0-9-]{1,63}"))
                 throw new IllegalArgumentException("Invalid learning article id: " + id);
             if (!KINDS.contains(kind)) throw new IllegalArgumentException("Unsupported learning article kind: " + kind);
             if (title.length() > 120 || summary.length() > 800 || scope.length() > 1000
-                    || source.length() > 1000 || safety.length() > 80)
+                    || source.length() > 1000 || safety.length() > 80 || visualNote.length() > 240)
                 throw new IllegalArgumentException("Learning article text exceeds offline UI limits: " + id);
             if (artwork.length() > 0 && !artwork.matches("learn/[a-z0-9][a-z0-9-]{0,63}\\.(?:png|jpe?g)"))
                 throw new IllegalArgumentException("Invalid learning artwork path: " + artwork);
