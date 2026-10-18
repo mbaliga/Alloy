@@ -189,7 +189,9 @@ part of the first physical pilot.
 ## 5. Estimate and export boundary
 
 - Open **Print plan** after a slice. It should show the engine-reported
-  filament in mm and an *approximate* g value, time if reported, current
+  filament in mm and an *approximate* g value, time if reported (clearly
+  labelled **approximate engine time, unverified** until desktop and printer
+  parity pass), current
   nozzle/plate temperatures and current orientation. With supports off, the
   figure is labelled **MODEL TOOLPATH FILAMENT**; with supports on, it is
   labelled **ENGINE FILAMENT TOTAL** and must not be described as model-only.
