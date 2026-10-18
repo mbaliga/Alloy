@@ -332,7 +332,7 @@ public final class LearningAndCapabilityCatalogTest {
         Assert.assertEquals("Not recommended", materialById(p1s, "cf-gf-filled").bambuStatus);
         Assert.assertTrue("P1S fiber-filled caveat must require the stated extruder and hotend upgrades",
                 materialById(p1s, "cf-gf-filled").note.contains("extruder and hotend upgrade"));
-        Assert.assertEquals("Blocked", materialById(p1s, "cf-gf-filled").alloyDirectSend);
+        Assert.assertEquals("Blocked", materialById(p1s, "cf-gf-filled").directSendState);
     }
 
     private static PrinterCapabilityCatalog.Material materialById(
