@@ -63,6 +63,9 @@ on:
       - 'parity/test_android_acceptance_diagnostics.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
+      - 'ci/native_build_provenance.py'
+      - 'parity/test_native_build_provenance.py'
+      - 'docs/GATE_STATUS.md'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
       - 'docs/NATIVE_DEPENDENCIES.md'
       - '.github/workflows/alloy-native-build.yml'
@@ -125,6 +128,9 @@ on:
       - 'parity/test_android_acceptance_diagnostics.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
+      - 'ci/native_build_provenance.py'
+      - 'parity/test_native_build_provenance.py'
+      - 'docs/GATE_STATUS.md'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
       - 'docs/NATIVE_DEPENDENCIES.md'
       - '.github/workflows/alloy-native-build.yml'
@@ -180,7 +186,7 @@ jobs:
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
       - name: Test Bambu template probe evidence and failure collection
-        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py parity/test_machine_template_probe_diagnostic.py parity/test_android_acceptance_diagnostics.py
+        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py parity/test_machine_template_probe_diagnostic.py parity/test_android_acceptance_diagnostics.py parity/test_native_build_provenance.py
       - name: Verify pinned Orca profile snapshot
         shell: bash
         run: |
@@ -534,6 +540,29 @@ jobs:
             native-instrumentation-diagnostics
           if-no-files-found: warn
           retention-days: 14
+      # This is a hash-bound inventory, never a source-lineage or legal PASS.
+      # Run even when build/test steps fail so partial native evidence survives.
+      - name: Record native build provenance inventory
+        if: always()
+        env:
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+        run: |
+          python3 ci/native_build_provenance.py \
+            --repo-root . \
+            --slice-beam-root slicebeam \
+            --bootstrap-root bootstrap-source \
+            --output path-native-provenance/manifest.json
+          python3 ci/native_build_provenance.py \
+            --repo-root . \
+            --validate path-native-provenance/manifest.json
+      - name: Upload native build provenance inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-build-provenance-inventory
+          path: path-native-provenance
+          if-no-files-found: warn
+          retention-days: 30
       # Produce the narrowly scoped physical-pilot variant only after the
       # ordinary native runtime/G3 gates have exercised their unmodified APKs.
       # This artifact remains explicitly unverified and may submit only the
