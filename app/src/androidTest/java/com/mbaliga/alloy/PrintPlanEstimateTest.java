@@ -18,7 +18,7 @@ public final class PrintPlanEstimateTest {
         Assert.assertEquals(3.03f, estimate.approximateReportedFilamentGrams, 0.02f);
         Assert.assertEquals("MODEL TOOLPATH FILAMENT", estimate.filamentScope);
         Assert.assertEquals("0 g  ·  supports are off for this recipe.", estimate.supportMaterial);
-        Assert.assertEquals("2m 00s", estimate.time);
+        Assert.assertEquals("2m 00s  ·  engine estimate, not printer-verified", estimate.time);
     }
 
     @Test public void unsupportedSeparateConsumablesRemainExplicitlyUnavailable() {
