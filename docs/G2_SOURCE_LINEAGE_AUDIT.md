@@ -21,6 +21,23 @@ The official Orca `main` ref examined by that run resolved to
 refs and numbers describe the retained audit, not a fresh measurement of the
 current upstream `main`.
 
+The per-file inventory is retained as
+[JSON](G2_SOURCE_FILE_MANIFEST.json) and [CSV](G2_SOURCE_FILE_MANIFEST.csv).
+It was reconstructed from the exact pinned source-tree objects: mobile
+`libslic3r` tree `5f038896f899f70c558fef85732bc1b84ae7d4bd`, audited Orca-main
+`libslic3r` tree `b754917c42234da3f4bac81ace0bb2c40ac58430`, and best-candidate
+tree `41966808e128f674dcfe6748a95601768a53bab5`. Its 479 mapped rows contain
+314 exact matches, 157 different candidate blobs, and 8 paths absent at the
+candidate commit; the main snapshot has 42 exact matches. Every row's
+origin/port classification remains `UNREVIEWED`.
+
+The 72 sampled paths are identified in the inventory. The retained G2 log says
+66 had exact-history intervals and names the six unmatched blobs, but the
+interval commit/date bounds were in an expired Actions artifact. They are
+therefore null in the inventory rather than reconstructed or guessed. The
+machine-readable inventory validator is
+`ci/validate_g2_source_file_manifest.py`.
+
 The best-candidate tree comparison reported 172 changed files, 5,752
 insertions, and 15,902 deletions. Largest per-file diff-stat entries were:
 
