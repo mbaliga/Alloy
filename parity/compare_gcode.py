@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import json
 import math
 from pathlib import Path
@@ -96,6 +96,10 @@ class Metrics:
     feature_extrusion_path_mm: dict[str, float]
     feature_positive_e_mm: dict[str, float]
     extrusion_accounting: dict[str, dict[str, float]]
+    # Diagnostic inputs only. The ordered segment stream is omitted from the
+    # JSON report; compare() reduces it to a bounded first-difference sample.
+    travel_by_layer_feedrate: dict[str, dict[str, float]]
+    travel_segments: list[tuple]
     print_time_seconds: float | None
     filament_mm: float | None
     filament_g: float | None
@@ -275,6 +279,9 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     nominal_arc_extrusion_seconds = 0.0
     nominal_arc_travel_seconds = 0.0
     unsupported_arc_moves = 0
+    travel_by_layer_feedrate: dict[str, Counter[str]] = {}
+    travel_segments: list[tuple] = []
+    active_layer = -1
 
     xyz = {"X": 0.0, "Y": 0.0, "Z": 0.0}
     e_value = 0.0
@@ -292,6 +299,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                 or CHANGE_LAYER_RE.match(line)
                 or LAYER_MARKER_RE.match(line)):
             model_started = True
+            active_layer += 1
             continue
         lower = line.lower()
         if lower.startswith(VOLATILE_PREFIXES):
@@ -394,6 +402,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
             travel_moves += 1
 
         if model_started and moved_xyz:
+            motion_distance = None
+            motion_kind = "arc" if command in {"G2", "G3"} else "linear"
             if command in {"G2", "G3"}:
                 if active_plane != "G17" or "R" in vals or not {"I", "J"}.issubset(vals):
                     # Only XY-plane center-offset arcs are currently modeled.
@@ -418,6 +428,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                             sweep = 2.0 * math.pi
                         arc_xy = radius * sweep
                         distance = math.hypot(arc_xy, xyz["Z"] - previous_xyz["Z"])
+                        motion_distance = distance
                         arc_path_mm += distance
                         if active_feature is not None and positive_e > 0:
                             feature_extrusion_path_mm[active_feature] += distance
@@ -431,6 +442,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                 distance = math.sqrt(sum(
                     (xyz[axis] - previous_xyz[axis]) ** 2 for axis in "XYZ"
                 ))
+                motion_distance = distance
                 linear_xyz_path_mm += distance
                 if active_feature is not None and positive_e > 0:
                     feature_extrusion_path_mm[active_feature] += distance
@@ -440,6 +452,27 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                         nominal_linear_extrusion_seconds += nominal_seconds
                     else:
                         nominal_linear_travel_seconds += nominal_seconds
+            # This is a program-level diagnostic, not a firmware travel-time
+            # model. Positive-E moves stay classified as extrusion as above.
+            if positive_e <= 0 and motion_distance is not None:
+                layer = max(active_layer, 0)
+                feedrate = round(feedrate_mm_min, 3)
+                group_key = f"layer={layer},feedrate_mm_min={feedrate:g}"
+                group = travel_by_layer_feedrate.setdefault(
+                    group_key, Counter()
+                )
+                group["moves"] += 1
+                group["distance_mm"] += motion_distance
+                nominal_seconds = (
+                    motion_distance * 60.0 / feedrate if feedrate > 0 else 0.0
+                )
+                group["nominal_seconds"] += nominal_seconds
+                travel_segments.append((
+                    layer, command, feedrate,
+                    round(previous_xyz["X"], 3), round(previous_xyz["Y"], 3), round(previous_xyz["Z"], 3),
+                    round(xyz["X"], 3), round(xyz["Y"], 3), round(xyz["Z"], 3),
+                    round(motion_distance, 3), motion_kind,
+                ))
 
     # Bambu's total estimate includes machine warm-up and other orchestration
     # time that the native slicer does not report. Prefer model time when it is
@@ -474,6 +507,9 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         feature_positive_e_mm=dict(feature_positive_e_mm),
         extrusion_accounting={scope: dict(values)
                               for scope, values in extrusion_accounting.items()},
+        travel_by_layer_feedrate={scope: dict(values)
+                                  for scope, values in travel_by_layer_feedrate.items()},
+        travel_segments=travel_segments,
         print_time_seconds=print_time,
         filament_mm=filament_mm,
         filament_g=filament_g,
@@ -553,6 +589,63 @@ def relative_diff(reference: float, candidate: float) -> float:
     if denominator == 0:
         return 0.0 if candidate == 0 else float("inf")
     return abs(candidate - reference) / denominator
+
+
+def travel_diagnostic(desktop: Metrics, android: Metrics) -> str:
+    """Build a bounded program-level travel comparison, not a motion model."""
+    groups = sorted(
+        set(desktop.travel_by_layer_feedrate) | set(android.travel_by_layer_feedrate)
+    )
+    ranked = []
+    for key in groups:
+        left = desktop.travel_by_layer_feedrate.get(key, {})
+        right = android.travel_by_layer_feedrate.get(key, {})
+        left_distance = left.get("distance_mm", 0.0)
+        right_distance = right.get("distance_mm", 0.0)
+        ranked.append((abs(left_distance - right_distance), key, left, right))
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    group_text = "; ".join(
+        f"{key}: distance_mm={left.get('distance_mm', 0.0):.3f}/"
+        f"{right.get('distance_mm', 0.0):.3f}, "
+        f"moves={int(left.get('moves', 0))}/{int(right.get('moves', 0))}, "
+        f"nominal_seconds={left.get('nominal_seconds', 0.0):.3f}/"
+        f"{right.get('nominal_seconds', 0.0):.3f}"
+        for _, key, left, right in ranked[:8]
+    ) or "no supported travel segments"
+
+    left_segments = desktop.travel_segments
+    right_segments = android.travel_segments
+    mismatch = next(
+        (index for index, pair in enumerate(zip(left_segments, right_segments))
+         if pair[0] != pair[1]),
+        min(len(left_segments), len(right_segments)),
+    )
+    if mismatch == len(left_segments) == len(right_segments):
+        first_difference = "ordered travel segments match"
+    else:
+        def render(segments: list[tuple]) -> str:
+            return "[" + ", ".join(
+                f"layer={s[0]} {s[1]} F{s[2]:g} "
+                f"({s[3]:g},{s[4]:g},{s[5]:g})->({s[6]:g},{s[7]:g},{s[8]:g}) "
+                f"{s[9]:g}mm {s[10]}"
+                for s in segments[mismatch:mismatch + 3]
+            ) + "]"
+        first_difference = (
+            f"first ordered mismatch at travel index {mismatch}; "
+            f"desktop={render(left_segments)}, Android={render(right_segments)}"
+        )
+    return (
+        "diagnostic only; emitted travel moves grouped by model layer and feedrate; "
+        "nominal time ignores acceleration, lookahead, firmware conditionals, and unsupported arcs; "
+        f"top groups desktop/Android: {group_text}; {first_difference}"
+    )
+
+
+def metrics_report(metrics: Metrics) -> dict:
+    """Serialize public metrics while keeping the full comparison stream private."""
+    result = asdict(metrics)
+    result.pop("travel_segments", None)
+    return result
 
 
 def compare(desktop: Metrics, android: Metrics, tolerance: float,
@@ -741,6 +834,11 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
         "No adjustment to hard checks: " + " | ".join(accounting_details),
     )
 
+    # Emit more detailed travel evidence only for a failed comparison. This
+    # warning is diagnostic-only and is never part of hard_fail/evidence gates.
+    if any(check["status"] == "fail" for check in checks):
+        add("travel_path_diagnostic", "warn", travel_diagnostic(desktop, android))
+
     desktop_e = desktop.positive_e_mm
     android_e = android.positive_e_mm
     extrusion_diff = relative_diff(desktop_e, android_e)
@@ -821,8 +919,8 @@ def main() -> None:
         )
     comparison = compare(desktop, android, args.tolerance, profile_identity)
     report = {
-        "desktop": asdict(desktop),
-        "android": asdict(android),
+        "desktop": metrics_report(desktop),
+        "android": metrics_report(android),
         "comparison": comparison,
     }
 
