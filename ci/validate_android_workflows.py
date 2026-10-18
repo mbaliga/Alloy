@@ -92,10 +92,12 @@ def main() -> None:
             raise SystemExit(f"{workflow}: deprecated actions/setup-java@v4 is not allowed")
 
     ordinary_text = ordinary.read_text(encoding="utf-8")
+    acceptance_runner = ROOT / "ci/run_android_acceptance_with_diagnostics.sh"
+    acceptance_runner_text = acceptance_runner.read_text(encoding="utf-8")
     validate_pr_trigger_deduplication(ordinary, ordinary_text)
     for token in (
         "gradle :app:assembleRelease -PalloyCiDebugSign=true --no-daemon --stacktrace",
-        "gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace",
+        "script: bash ci/run_android_acceptance_with_diagnostics.sh",
         "name: alloy-v1-release-ci-apk",
         "app/build/outputs/apk/release/app-release.apk",
         "disable-animations: false",
@@ -116,6 +118,14 @@ def main() -> None:
         "app/build/outputs/androidTest-results/connected/",
     ):
         require(ordinary_text, token, ordinary)
+    for token in (
+        "gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace",
+        "app/build/reports/androidTests/connected",
+        "gradle-acceptance.log",
+        "cat \"$log_file\"",
+        "exit \"$status\"",
+    ):
+        require(acceptance_runner_text, token, acceptance_runner)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
         raise SystemExit(f"{ordinary}: ordinary CI must use its declared release test variant")
     if "profile: pixel_6" not in ordinary_text or "profile: Pixel 6" in ordinary_text:
