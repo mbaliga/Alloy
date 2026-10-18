@@ -60,6 +60,7 @@ FIELDS = OrderedDict([
     ("brim_object_gap", ("brim_object_gap", "brim_object_gap")),
     ("brim_type", ("brim_type", "brim_type")),
     ("brim_width", ("brim_width", "brim_width")),
+    ("skirt_loops", ("skirt_loops", "skirt_loops")),
     ("temperature", ("nozzle_temperature", "temperature")),
     ("first_layer_temperature", ("nozzle_temperature_initial_layer", "first_layer_temperature")),
     ("bed_temperature", ("hot_plate_temp", "bed_temperature")),
@@ -98,12 +99,14 @@ FIELDS = OrderedDict([
 # without allowing an arbitrary fallback or silently ignoring a missing key.
 NATIVE_KEY_ALIASES = {
     "retraction_minimum_travel": ("retraction_minimum_travel", "retract_before_travel"),
+    "skirt_loops": ("skirt_loops", "skirts"),
     # Organic tree keys are distinct from the legacy tree profile values.
     "support_tree_branch_diameter": ("tree_support_branch_diameter_organic", "support_tree_branch_diameter"),
     "support_tree_branch_distance": ("tree_support_branch_distance_organic", "support_tree_branch_distance"),
 }
 
 DESKTOP_KEY_ALIASES = {
+    "skirt_loops": ("skirt_loops", "skirts"),
     "support_tree_branch_diameter": ("tree_support_branch_diameter_organic", "tree_support_branch_diameter"),
     "support_tree_branch_distance": ("tree_support_branch_distance_organic", "tree_support_branch_distance"),
 }

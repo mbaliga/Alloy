@@ -462,23 +462,11 @@ public final class NativeSlicerEngine implements SlicerEngine {
         setting(settings, "inner_wall_speed", number(config.innerWallSpeed));
         setting(settings, "sparse_infill_speed", number(config.infillSpeed));
         optionalSetting(settings, config.nativeSettings, "gap_fill_speed", "gap_infill_speed");
-        // The current Orca schema no longer consumes the legacy `skirts` and
-        // width/acceleration spellings. Project both vocabularies so a pinned
-        // Bambu recipe does not silently regain a default skirt or fall back
-        // to unrelated native defaults.
-        String skirtLoops = config.nativeSettings.getOrDefault("skirts", "0");
-        // Bambu's geometry-aware auto-brim falls back to one skirt loop when
-        // the object does not need a physical brim. The native core preserves
-        // that auto-brim decision, but does not synthesize the fallback skirt
-        // when the imported recipe explicitly carries zero legacy skirts.
-        // Keep the fallback scoped to auto_brim with a positive width; an
-        // explicit no-brim or user-selected skirt count remains authoritative.
-        if ("auto_brim".equalsIgnoreCase(config.nativeSettings.get("brim_type"))
-                && positiveFinite(config.nativeSettings.get("brim_width"))
-                && parseInt(skirtLoops, 0) == 0) {
-            skirtLoops = "1";
-        }
-        setting(settings, "skirt_loops", skirtLoops);
+        // The pinned Bambu resolved recipe may use legacy `skirts`, while the
+        // Orca core consumes `skirt_loops`. Preserve the resolved count
+        // exactly: auto-brim is not evidence that the desktop output adds a
+        // fallback skirt (the strict G3 desktop fixtures resolve skirt_loops=0).
+        setting(settings, "skirt_loops", config.nativeSettings.getOrDefault("skirts", "0"));
         String defaultLineWidth = config.nativeSettings.getOrDefault("extrusion_width", number(config.nozzle));
         setting(settings, "line_width", defaultLineWidth);
         setting(settings, "outer_wall_line_width",
