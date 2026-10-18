@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from validate_machine_template_probe_output import FIXTURES, SOURCE, validate
+from validate_machine_template_probe_output import FIXTURES, SOURCE, expected_template_digests, validate
 from machine_template_probe_attempt import record
 
 
@@ -18,9 +18,7 @@ class MachineTemplateProbeOutputTests(unittest.TestCase):
             "source_commit": SOURCE,
             "scope": "template-rendering-only",
             "qualified": False,
-            "template_sha256": {key: "a" * 64 for key in (
-                "machine_start_gcode", "machine_end_gcode", "layer_change_gcode", "time_lapse_gcode"
-            )},
+            "template_sha256": expected_template_digests(),
             "fixtures": [],
         }
         for name in sorted(FIXTURES):
@@ -51,6 +49,12 @@ class MachineTemplateProbeOutputTests(unittest.TestCase):
         del self.manifest["template_sha256"]["time_lapse_gcode"]
         self.write_manifest()
         with self.assertRaisesRegex(ValueError, "all four"):
+            validate(self.directory)
+
+    def test_rejects_well_formed_but_unpinned_template_digests(self):
+        self.manifest["template_sha256"]["machine_start_gcode"] = "a" * 64
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "pinned source bundle"):
             validate(self.directory)
 
     def test_rejects_duplicate_unexpected_and_path_traversal_fixture(self):

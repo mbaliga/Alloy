@@ -8,9 +8,27 @@ import json
 from pathlib import Path
 
 SOURCE = "07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4"
+PROFILE = "Bambu Lab A1 mini 0.4 nozzle"
 FIXTURES = {
     "cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle"
 }
+ROOT = Path(__file__).resolve().parents[1]
+BUNDLE = ROOT / "app/src/androidTest/assets/profiles/a1-mini-machine-template-probe.json"
+
+
+def expected_template_digests() -> dict:
+    bundle = json.loads(BUNDLE.read_text(encoding="utf-8"))
+    if (bundle.get("schema_version") != 1 or bundle.get("source_commit") != SOURCE
+            or bundle.get("profile_name") != PROFILE):
+        raise ValueError("pinned template probe bundle identity mismatch")
+    templates, digests = bundle.get("templates"), bundle.get("sha256")
+    keys = {"machine_start_gcode", "machine_end_gcode", "layer_change_gcode", "time_lapse_gcode"}
+    if not isinstance(templates, dict) or set(templates) != keys or not isinstance(digests, dict) or set(digests) != keys:
+        raise ValueError("pinned template probe bundle must contain exactly four templates and digests")
+    actual = {key: hashlib.sha256(templates[key].encode("utf-8")).hexdigest() for key in keys}
+    if actual != digests:
+        raise ValueError("pinned template probe bundle digest mismatch")
+    return actual
 
 
 def validate(directory: Path) -> dict:
@@ -25,9 +43,8 @@ def validate(directory: Path) -> dict:
         "machine_start_gcode", "machine_end_gcode", "layer_change_gcode", "time_lapse_gcode"
     }:
         raise ValueError("template probe must identify all four source template digests")
-    if any(not isinstance(value, str) or len(value) != 64 or any(c not in "0123456789abcdef" for c in value)
-           for value in template_digests.values()):
-        raise ValueError("invalid template digest")
+    if template_digests != expected_template_digests():
+        raise ValueError("template probe digests do not match the pinned source bundle")
     fixtures = manifest.get("fixtures")
     if not isinstance(fixtures, list) or len(fixtures) != len(FIXTURES):
         raise ValueError("template probe must contain exactly four fixture records")

@@ -88,8 +88,14 @@ public final class BambuMachineTemplateProbeTest {
                     Assert.assertFalse("unresolved template command: " + command,
                             command.matches(".*[{}\\[\\]].*"));
                 }
-                Assert.assertTrue("layer notification must be rendered", gcode.contains("M991 S0 P0"));
-                Assert.assertTrue("per-layer template must be rendered", gcode.contains("; SKIPPABLE_START"));
+                Assert.assertTrue("layer notification must be rendered",
+                        containsGcodeLine(gcode, "M991 S0 P0"));
+                Assert.assertTrue("time-lapse template must be rendered",
+                        containsGcodeLine(gcode, "; SKIPPABLE_START"));
+                Assert.assertTrue("machine-start template must be rendered",
+                        containsGcodeLine(gcode, "M1002 gcode_claim_action : 2"));
+                Assert.assertTrue("machine-end template must be rendered",
+                        containsGcodeLine(gcode, ";=====printer finish  sound========="));
                 Assert.assertFalse("unqualified upstream output must fail the production template policy",
                         A1MiniTemplatePolicy.inspect(gcode).isValid());
                 Slicer.Result parsed = NativeSlicerEngine.parseGcode(output, config,
@@ -155,5 +161,11 @@ public final class BambuMachineTemplateProbeTest {
         for (byte value : MessageDigest.getInstance("SHA-256").digest(bytes))
             hex.append(String.format(Locale.US, "%02x", value & 255));
         return hex.toString();
+    }
+
+    private static boolean containsGcodeLine(String gcode, String expected) {
+        for (String line : gcode.split("\\r?\\n"))
+            if (line.trim().equals(expected)) return true;
+        return false;
     }
 }
