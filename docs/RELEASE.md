@@ -30,6 +30,17 @@ default because their current files do not document public redistribution
 rights. The private visual-review flow may opt in with
 `-PalloyIncludeSuppliedReferenceVisuals=true`; production promotion rejects
 that option until the required rights are documented and reviewed.
+ 
+The material/feed-route/spool review correlates the three bundled Bambu
+planning profiles (`bambu.a1-mini`, `bambu.a1`, and `bambu.p1s`) with the
+separate capability-catalog IDs (`a1-mini`, `a1`, and `p1s`). Imported profiles
+are correlated only when their source-reported Bambu model slug names one of
+those reviewed models (including the recognized 0.4 mm nozzle form). Unknown
+imported models stay unmapped. This correlation is informational: it does not
+verify an imported profile, identify the physically attached printer, change
+any material recipe, or qualify direct send. All printers and materials remain
+subject to the existing release and physical-acceptance gates.
+
 
 Release-candidate dispatch requires the organization-owned Android signing
 key, protected CI secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEY_ALIAS`,

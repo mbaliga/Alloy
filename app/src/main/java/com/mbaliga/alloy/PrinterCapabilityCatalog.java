@@ -83,6 +83,30 @@ public final class PrinterCapabilityCatalog {
         } catch (Exception error) { throw new IOException("Invalid capability catalog: " + error.getMessage(), error); }
     }
     public Printer byId(String id) { for (Printer printer : printers) if (printer.id.equals(id)) return printer; return null; }
+    /**
+     * Resolve the sourced material/feed/spool record for a planning profile.
+     * Planning profile IDs and capability-catalog IDs are separate namespaces;
+     * imported profiles are mapped only when their exact model slug is one of
+     * the three reviewed printers. This is an information lookup, not send
+     * approval and not proof that the attached printer matches the profile.
+     */
+    public Printer forProfile(ProfileCatalog.Profile profile) {
+        if (profile == null) return null;
+        if ("bambu.a1-mini".equals(profile.printerId)) return byId("a1-mini");
+        if ("bambu.a1".equals(profile.printerId)) return byId("a1");
+        if ("bambu.p1s".equals(profile.printerId)) return byId("p1s");
+        if (!"Bambu JSON preset import".equals(profile.provenanceSource)
+                || !profile.printerId.startsWith("bambu.imported.")) return null;
+        String model = profile.printerId.substring("bambu.imported.".length()).toLowerCase(Locale.US);
+        if (modelMatches(model, "bambu-lab-a1-mini")) return byId("a1-mini");
+        if (modelMatches(model, "bambu-lab-a1")) return byId("a1");
+        if (modelMatches(model, "bambu-lab-p1s")) return byId("p1s");
+        return null;
+    }
+
+    private static boolean modelMatches(String model, String base) {
+        return model.equals(base) || model.matches(java.util.regex.Pattern.quote(base) + "-0-[0-9]+-nozzle");
+    }
     private static boolean has(List<Printer> printers, String id) { for (Printer p : printers) if (p.id.equals(id)) return true; return false; }
     /**
      * CI validates the source file too, but this check keeps a malformed or

@@ -241,6 +241,36 @@ public final class LearningAndCapabilityCatalogTest {
         }
     }
 
+    @Test public void materialReviewResolvesOnlyTheThreeKnownProfileModelIdentities() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(context.getAssets());
+        java.util.List<ProfileCatalog.Profile> bundled = ProfileCatalog.loadInitial(context.getAssets());
+        Assert.assertEquals("a1-mini", catalog.forProfile(bundled.get(0)).id);
+        Assert.assertEquals("a1", catalog.forProfile(bundled.get(1)).id);
+        Assert.assertEquals("p1s", catalog.forProfile(bundled.get(2)).id);
+
+        for (String[] model : new String[][]{
+                {"Bambu Lab A1 mini", "a1-mini"}, {"Bambu Lab A1 0.4 nozzle", "a1"},
+                {"Bambu Lab P1S", "p1s"}, {"Workshop Printer", null},
+                {"Bambu Lab A1 mini variant", null}}) {
+            ProfileCatalog.Profile imported = importModel(context, model[0]);
+            PrinterCapabilityCatalog.Printer capability = catalog.forProfile(imported);
+            if (model[1] == null) Assert.assertNull("unknown model must remain unmapped: " + model[0], capability);
+            else Assert.assertEquals(model[1], capability.id);
+            Assert.assertFalse("capability lookup must not verify an imported profile", imported.verified);
+        }
+        Assert.assertTrue("the A1 Mini compatibility panel must not unlock Alloy send",
+                catalog.forProfile(importModel(context, "Bambu Lab A1 mini")).directSendState.startsWith("Not qualified"));
+    }
+
+    private static ProfileCatalog.Profile importModel(Context context, String model) throws Exception {
+        ProfileCatalog.Profile baseline = ProfileCatalog.loadDefault(context.getAssets());
+        String project = "{\"name\":\"project_settings\",\"printer_model\":\"" + model
+                + "\",\"default_filament_profile\":\"PLA Basic\",\"filament_type\":\"PLA\"}";
+        return ProfileCatalog.importBambu(baseline,
+                new byte[][]{project.getBytes(StandardCharsets.UTF_8)});
+    }
+
     @Test public void a1AndP1sExposeIndividualSourcedMaterialClassesWithoutSendQualification() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(context.getAssets());
