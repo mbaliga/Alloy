@@ -27,6 +27,34 @@ build and instrumentation are verified; G3, physical A1 Mini printing, Handy
 handoff, A1/P1S runtime parity, production signing and release remain
 unqualified. Keep send/print/release controls fail-closed.
 
+The same run's separate, **non-gating** Bambu template probe
+[diagnostic artifact 12140727585](https://github.com/mbaliga/Alloy/actions/runs/39132914352/artifacts/12140727585)
+(SHA-256 `691b641f079c941bc3ac7d92fe83efd10e1842ae61eb4a11a8db523d8fd490d5`)
+successfully rendered the four pinned template hooks through the native test
+harness. The diagnostic's template-probe estimates are worse—not better—than
+desktop Orca:
+
+| Fixture | Desktop (s) | Template probe (s) | Delta |
+| --- | ---: | ---: | ---: |
+| Cube | 1,775 | 2,406 | +35.55% |
+| Supported overhang | 2,048 | 2,851 | +39.21% |
+| Thin-wall frame | 1,330 | 1,764 | +32.63% |
+| Travel obstacle | 3,393 | 4,211 | +24.11% |
+
+The cube's filament length is within 0.01% and its total XYZ path within 2.63%,
+but nominal motion time is 20.44% higher; other fixtures show different
+motion/time behavior. This is a rendered-template diagnostic, not printer
+firmware execution. It proves that copying the raw Bambu hooks into the
+current engine is not a validated fix; retain the neutral production policy
+until conditionals, firmware semantics, and actual device behavior are
+resolved. The strict G3 thresholds and send gate are unchanged.
+
+The comparator now records `print_time_source` (`model_printing_time`,
+`estimated_printing_time`, or `total_estimated_time`) and emits a warning when
+the two slicers report different estimate kinds. This diagnostic does not
+change the hard numeric check; the current G3 comparisons still fail their
+unchanged tolerance.
+
 ## 2026-10-18 exact-head CI and native provenance checkpoint
 
 On PR source head `07c9dc0c4bfe1bbaa5ab8c1a91828fecf950ee30`, parity tooling

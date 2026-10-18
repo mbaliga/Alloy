@@ -430,8 +430,17 @@ G1 Z0.40
             self.assertEqual(desktop.layer_count, 100)
             self.assertEqual(android.layer_count, 2)
             self.assertEqual(desktop.print_time_seconds, 1730.0)
+            self.assertEqual(desktop.print_time_source, "model_printing_time")
+            self.assertEqual(android.print_time_source, "estimated_printing_time")
             self.assertAlmostEqual(desktop.filament_mm, 1257.28)
             self.assertAlmostEqual(desktop.filament_g, 0.0)
+            report = compare(desktop, android, tolerance=0.02)
+            source_check = next(
+                check for check in report["checks"]
+                if check["name"] == "print_time_metric_source"
+            )
+            self.assertEqual(source_check["status"], "warn")
+            self.assertIn("the unchanged numeric tolerance still applies", source_check["detail"])
 
 
 if __name__ == "__main__":
