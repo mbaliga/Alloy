@@ -392,6 +392,34 @@ public final class NativeEngineSmokeTest {
         Assert.assertFalse(result.gcode.contains("M109 S999"));
     }
 
+    @Test
+    public void importedAutoBrimPreservesResolvedSkirtCount() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
+        ProfileCatalog.Profile profile = loadG3ReferenceProfile(context, testContext);
+        Slicer.Config config = new Slicer.Config();
+        profile.applyTo(config);
+        Assert.assertEquals("0", config.nativeSettings.get("skirts"));
+
+        File configFile = new File(context.getCacheDir(), "native-config-resolved-skirt-count.ini");
+        try {
+            NativeSlicerEngine.writeConfig(config, configFile);
+            String serialized = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.US_ASCII);
+            Assert.assertTrue(serialized.contains("brim_type = auto_brim\n"));
+            Assert.assertTrue(serialized.contains("brim_width = 5\n"));
+            Assert.assertTrue("the desktop's explicit zero skirt count must not be synthesized into a skirt",
+                    serialized.contains("skirt_loops = 0\n"));
+
+            config.nativeSettings.put("skirts", "2");
+            NativeSlicerEngine.writeConfig(config, configFile);
+            serialized = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.US_ASCII);
+            Assert.assertTrue("an explicitly requested skirt count must still be preserved",
+                    serialized.contains("skirt_loops = 2\n"));
+        } finally {
+            if (configFile.exists()) Assert.assertTrue(configFile.delete());
+        }
+    }
+
     @Test(timeout = 30_000)
     public void nativeArcOutputRemainsInspectableAndSafe() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
@@ -557,7 +585,7 @@ public final class NativeEngineSmokeTest {
                     StandardCharsets.UTF_8);
             Assert.assertFalse("auto-brim must not force a fixed outer brim on the stable obstacle fixture",
                     obstacleGcode.contains(";TYPE:Brim"));
-            Assert.assertTrue("auto-brim must preserve Bambu's fallback skirt",
+            Assert.assertFalse("the exact desktop fixture resolves skirt_loops=0",
                     obstacleGcode.contains(";TYPE:Skirt"));
         }
         Slicer.Config supportConfig = config.copy();

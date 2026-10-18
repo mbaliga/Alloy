@@ -44,6 +44,7 @@ def desktop_settings():
         "brim_object_gap": 0.1,
         "brim_type": "auto_brim",
         "brim_width": 5,
+        "skirts": 0,
         "nozzle_temperature": ["220"],
         "nozzle_temperature_initial_layer": ["220"],
         "hot_plate_temp": ["60"],
@@ -123,6 +124,7 @@ def native_settings():
         "support_interface_not_for_body": "1",
         "support_remove_small_overhang": "1",
         "brim_object_gap": "0.1", "brim_type": "auto_brim", "brim_width": "5",
+        "skirt_loops": "0",
         "temperature": "220", "first_layer_temperature": "220",
         "bed_temperature": "60", "first_layer_bed_temperature": "60",
         "filament_diameter": "1.75000", "extrusion_multiplier": "0.98000",
@@ -142,6 +144,22 @@ class G3ProfileTests(unittest.TestCase):
         report = verify(desktop_settings(), native_settings())
         self.assertEqual("pass", report["result"], report)
         self.assertEqual([], report["failed_fields"])
+
+    def test_resolved_skirt_count_is_a_hard_profile_identity_field(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        matching = verify(desktop, native)
+        self.assertEqual("pass", matching["result"], matching)
+        self.assertEqual(63, matching["checked_fields"])
+
+        native["skirt_loops"] = "1"
+        drifted = verify(desktop, native)
+        self.assertEqual("fail", drifted["result"])
+        self.assertEqual(["skirt_loops"], drifted["failed_fields"])
+        check = next(item for item in drifted["checks"]
+                     if item["field"] == "skirt_loops")
+        self.assertEqual("0", check["desktop"])
+        self.assertEqual("1", check["native"])
 
     def test_real_profile_drift_fails_closed(self):
         desktop = desktop_settings()
