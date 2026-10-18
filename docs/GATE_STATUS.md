@@ -1,6 +1,52 @@
 # Alloy engine gate status
 
-Date: 2026-10-16
+Date: 2026-10-18
+
+## 2026-10-18 exact-head CI and native provenance checkpoint
+
+On PR source head `07c9dc0c4bfe1bbaa5ab8c1a91828fecf950ee30`, parity tooling
+([39088667769](https://github.com/mbaliga/Alloy/actions/runs/39088667769)),
+the A1 Mini/A1/P1S profile pre-gate
+([39088667762](https://github.com/mbaliga/Alloy/actions/runs/39088667762)),
+official Orca source snapshot
+([39088667772](https://github.com/mbaliga/Alloy/actions/runs/39088667772)),
+and desktop reference slices
+([39088667804](https://github.com/mbaliga/Alloy/actions/runs/39088667804))
+passed. Android acceptance ([39088667774](https://github.com/mbaliga/Alloy/actions/runs/39088667774))
+passed with 203 tests, 0 failures, 0 errors, and 12 skipped. The skipped tests
+include native-engine and template-probe cases, so this result does not show
+native G-code rendering. The CI APK is `com.mbaliga.alloy` v1.0, target SDK
+35, SHA-256
+`5fb8b00d91e19f9743d1836867df597792074179a164bd3d3e6e934e113ac439`.
+This is software acceptance evidence only.
+
+At this checkpoint the optional-native run
+([39088667780](https://github.com/mbaliga/Alloy/actions/runs/39088667780))
+and the immediately preceding native run
+([39087573937](https://github.com/mbaliga/Alloy/actions/runs/39087573937))
+were still in native dependency compilation; neither had produced native
+instrumentation, template-render, G3, or physical-pilot evidence. The older
+native run [39086220594](https://github.com/mbaliga/Alloy/actions/runs/39086220594)
+retained only an `initialized` template-probe attempt and a diagnostic saying
+the rendered manifest was missing. It is **unavailable**, not a measurement.
+The source-level Android compile failure was the invalid
+`Material.alloyDirectSend` reference, corrected to `directSendState`; that is
+the likely same-source cause for native instrumentation compilation, but the
+native job log itself was not retrievable. Treat this native failure cause as
+inferred, not directly confirmed.
+
+The native build workflow now records a deterministic, hash-bound inventory
+of declared source/dependency pins, Alloy patch scripts and available patched
+checkout diffs, local native input files, repository license/notice files,
+APK/test-APK hashes, packaged license assets, and every `.so` hash inside the
+APK. This is audit evidence only: the manifest is explicitly ineligible to
+pass `native_engine_source_provenance_and_license`, and source-lineage/legal
+review remain pending. G2 remains **FAIL / NO-GO**: the latest retained local
+comparison is 314/479 common engine files (65.55%) versus the unchanged 85%
+threshold. The pinned OrcaSlicer-Mobile root license is AGPL-3.0, but complete
+source mapping, transitive dependency/notice review, distribution obligations,
+and named legal signoff are still outstanding. Keep all production, print,
+Handy, and release claims fail-closed.
 
 ## 2026-10-16 restore native smoke-test source and rerun exact-head gates
 
