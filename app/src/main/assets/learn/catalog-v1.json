@@ -198,3 +198,81 @@
           "Keep generated supports review-only until the support gate passes."
         ]
       },
+    {
+        "id": "faq-printer-profile",
+        "kind": "faq",
+        "title": "How do I choose between A1 mini, A1 and P1S?",
+        "summary": "Choose the model that is physically in front of you, then confirm its plate, nozzle and feed route. A1 mini has the smaller build area; never select another printer just to make an oversized object appear to fit.",
+        "safety": "Review",
+        "scope": "A loaded profile is not proof of the printer’s firmware, configuration or physical condition.",
+        "source": "Alloy initial Bambu profile contract v1",
+        "artwork": "learn/build-plate-boundary-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Read the printer label in the app and compare it with the machine.",
+          "Check the selected plate and build-envelope warnings.",
+          "If the model does not fit, scale or split it only when that change is intended."
+        ]
+      },
+    {
+        "id": "faq-spools",
+        "kind": "faq",
+        "title": "Which spool and material should I use?",
+        "summary": "Use the printer’s Materials & compatibility guide to review Bambu-listed material capability, spool form and feed-route notes. A material being listed does not prove that a particular spool fits, is dry, or is qualified for Alloy direct-send.",
+        "safety": "Review",
+        "scope": "A1 mini material/spool records are planning guidance; unknown fit or feed routes must stay blocked.",
+        "source": "Alloy capability-catalog safety contract v1",
+        "artwork": "learn/material-feed-route-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Identify the exact material and spool form.",
+          "Confirm the feed route and any drying requirement.",
+          "Do not force a spool or route that is not listed for the selected setup."
+        ]
+      },
+    {
+        "id": "faq-send-share",
+        "kind": "faq",
+        "title": "Can Alloy send this directly or open it in Bambu Handy?",
+        "summary": "Not yet as a validated production handoff. Alloy’s direct-send path remains fail-closed while native slicing, job packaging and printer acceptance are being qualified. An export or share action must not be mistaken for Bambu Handy acceptance.",
+        "safety": "Hard stop",
+        "scope": "Direct-send, validated Bambu-ready export and Bambu Handy import require separate completed evidence gates.",
+        "source": "Alloy release gate status v1",
+        "artwork": "learn/printer-phone-recovery-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Use only the currently available review/export actions.",
+          "Check the current release gate status before relying on an output file.",
+          "Do not bypass the send lock or treat a generic 3MF as a validated printer job."
+        ]
+      },
+    {
+        "id": "faq-unsafe",
+        "kind": "faq",
+        "title": "What should I do if the printer behaves unexpectedly?",
+        "summary": "Stop and supervise if it is safe to do so. Smoke, unusual odor, collisions, damaged cables, leaking material, or unknown motion state are not problems to solve by blindly changing slicer settings.",
+        "safety": "Hard stop",
+        "scope": "Alloy learning content is not a remote diagnosis or a repair guide for hot, moving or electrical parts.",
+        "source": "Alloy universal safety boundary v1",
+        "artwork": "learn/printer-phone-recovery-v1.png",
+        "keywords": [
+          "faq",
+          "beginner"
+        ],
+        "steps": [
+          "Use the printer’s physical controls if safe.",
+          "Keep clear of hot and moving parts.",
+          "Follow current manufacturer support guidance."
+        ]
+      }
+  ]
+}
