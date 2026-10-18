@@ -2305,6 +2305,14 @@ public final class AndroidPipelineTest {
                 "A1 Mini", "192.168.1.2", "01S123", "1234",
                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "N1");
         Assert.assertTrue(discovered.isA1Mini());
+        PrinterCredentialStore.Credentials a1 = new PrinterCredentialStore.Credentials(
+                "A1", "192.168.1.3", "039123", "1234",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "N2S");
+        PrinterCredentialStore.Credentials p1s = new PrinterCredentialStore.Credentials(
+                "P1S", "192.168.1.4", "01P123", "1234",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "C12");
+        Assert.assertFalse("A1 model N2S must not enter the separately qualified A1 Mini lane", a1.isA1Mini());
+        Assert.assertFalse("P1S model C12 must not enter the separately qualified A1 Mini lane", p1s.isA1Mini());
         String preferencesName = "printer-credentials-model-test-" + System.nanoTime();
         android.content.SharedPreferences preferences = InstrumentationRegistry.getInstrumentation()
                 .getTargetContext().getSharedPreferences(preferencesName, Context.MODE_PRIVATE);

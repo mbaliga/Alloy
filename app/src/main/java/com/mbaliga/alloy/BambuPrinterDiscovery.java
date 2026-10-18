@@ -231,6 +231,7 @@ public final class BambuPrinterDiscovery {
     private static String modelName(String model) {
         if ("N1".equalsIgnoreCase(model)) return "A1 Mini";
         if ("N2S".equalsIgnoreCase(model)) return "A1";
+        if ("C12".equalsIgnoreCase(model)) return "P1S";
         return "Bambu printer";
     }
 
