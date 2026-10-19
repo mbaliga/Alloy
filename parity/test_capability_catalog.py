@@ -63,7 +63,7 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value = self.current_catalog()
         route = next(route for route in value["printers"][0]["feed_routes"] if route["id"] == "ams-ht")
         route["note"] = "Supported."
-        self.assert_rejected(value, "must retain firmware, AMS Lite separation and Alloy qualification caveats")
+        self.assert_rejected(value, "must distinguish beta introduction from stable firmware and retain route/qualification caveats")
 
     def test_rejects_missing_a1_mini_spool_form(self):
         value = self.current_catalog()
