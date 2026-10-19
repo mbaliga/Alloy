@@ -4,27 +4,29 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Verified software checkpoint (2026-10-18):** application source
-[`d7f5d330f01d21f8f08821a780c16aae6cebe18c`](https://github.com/mbaliga/Alloy/commit/d7f5d330f01d21f8f08821a780c16aae6cebe18c).
+**Verified software checkpoint (2026-10-19):** application source
+[`b6a979bcc25d995ede75c691d19123245effd825`](https://github.com/mbaliga/Alloy/commit/b6a979bcc25d995ede75c691d19123245effd825).
 
-- [Android acceptance 39132914351](https://github.com/mbaliga/Alloy/actions/runs/39132914351)
-  passed: 216 tests reported, 0 failures, 12 skipped (204 executed). This
-  exact-head run built the app and includes the offline learning catalog and
-  its first-layer visual-caption regression check.
-- [Parity tooling 39132914391](https://github.com/mbaliga/Alloy/actions/runs/39132914391),
-  [three-printer profile pre-gate 39132914355](https://github.com/mbaliga/Alloy/actions/runs/39132914355),
-  [desktop A1 Mini references 39132914354](https://github.com/mbaliga/Alloy/actions/runs/39132914354),
-  and [official Orca source snapshot 39132914386](https://github.com/mbaliga/Alloy/actions/runs/39132914386)
+- [Android acceptance 39270869641](https://github.com/mbaliga/Alloy/actions/runs/39270869641)
+  passed: 216 instrumentation tests reported, 0 failures, 12 skipped (204
+  executed). This exact-head run built the CI/debug-signed QA APK and exercised
+  the app on an Android emulator. The skips are native-engine-dependent tests;
+  their behavior is not covered by this ordinary APK run.
+- [Parity tooling 39270869845](https://github.com/mbaliga/Alloy/actions/runs/39270869845),
+  [three-printer profile pre-gate 39270869565](https://github.com/mbaliga/Alloy/actions/runs/39270869565),
+  [desktop A1 Mini references 39270869575](https://github.com/mbaliga/Alloy/actions/runs/39270869575),
+  and [official Orca source snapshot 39270869564](https://github.com/mbaliga/Alloy/actions/runs/39270869564)
   passed at this source.
 - The exact-head optional native run
-  [39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352)
-  completed its native build, instrumentation, template rendering, and G3
-  export successfully, then **failed** strict G3 comparison. The physical
-  pilot was skipped. The 12 Android skips include native-dependent tests.
+  [39270869597](https://github.com/mbaliga/Alloy/actions/runs/39270869597)
+  is still building its source-pinned native dependency closure. It has not yet
+  produced native instrumentation, current-head G3, or physical-pilot evidence.
 
-The exact-head strict G3 comparison
-[39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352)
-fails the unchanged 2% tolerance:
+The latest completed native G3 comparison is from the immediately preceding
+source checkpoint
+[`d7f5d330f01d21f8f08821a780c16aae6cebe18c`](https://github.com/mbaliga/Alloy/commit/d7f5d330f01d21f8f08821a780c16aae6cebe18c),
+run [39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352),
+and fails the unchanged 2% tolerance:
 
 | Fixture | Print-time difference | Other failed checks |
 | --- | ---: | --- |
@@ -51,12 +53,13 @@ Bambu Handy acceptance, and production signing remain unverified.
 
 ## 1. Install the matching artifacts
 
-For phone-only QA, use the ordinary APK from the exact source checkpoint above:
+For phone-only software QA, use the CI/debug-signed APK from the exact source
+checkpoint above:
 
-- [Ordinary CI QA APK, artifact 12138349322](https://github.com/mbaliga/Alloy/actions/runs/39132914351/artifacts/12138349322).
-  Archive SHA-256: `1d652efa864ae5fcac729fa971e07055c96ec39c93315d234caceb3483f5ff53`.
-  It is a debug-signed software QA build, not the optional native review build
-  and not a production release.
+- [CI/debug-signed Android QA APK, artifact 12195809972](https://github.com/mbaliga/Alloy/actions/runs/39270869641/artifacts/12195809972).
+  Archive SHA-256: `85ba05d8aaa38aedbc3d84b61b6194a4e76c7a12f14bad6c9c1d798ae52321a3`.
+  It is an ordinary Android software-acceptance build, not the optional native
+  review build and not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
 the extracted APK digest. This CI-debug-signed software QA artifact is not a
