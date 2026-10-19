@@ -131,8 +131,8 @@ def validate_catalog(path):
             note = route["note"].lower()
             if route["state"] != "Requires A1 Series AMS Hub" or not route.get("source_url", "").strip():
                 raise ValueError(f"A1 {route['id']} must have a sourced hub requirement")
-            if "01.06.10.33" not in note or "do not mix ams lite" not in note or "alloy send remains unqualified" not in note:
-                raise ValueError(f"A1 {route['id']} must retain firmware, AMS Lite separation and Alloy qualification caveats")
+            if "public-beta firmware 01.06.10.33" not in note or "stable 01.07.01.00" not in note or "do not mix ams lite" not in note or "alloy send remains unqualified" not in note:
+                raise ValueError(f"A1 {route['id']} must distinguish beta introduction from stable firmware and retain route/qualification caveats")
     a1_ams_spool = next((form for form in a1["spool_forms"] if form["id"] == "ams-hub-spool"), None)
     if a1_ams_spool is None or a1_ams_spool["state"] != "Manual review required":
         raise ValueError("A1 must disclose hub-enabled AMS spool fit as manual review only")
@@ -225,8 +225,8 @@ def validate_catalog(path):
             note = route["note"].lower()
             if route["state"] != "Requires A1 Series AMS Hub" or not route.get("source_url", "").strip():
                 raise ValueError(f"A1 mini {route['id']} must have a sourced hub requirement")
-            if "01.06.10.33" not in note or "do not mix ams lite" not in note or "alloy send remains unqualified" not in note:
-                raise ValueError(f"A1 mini {route['id']} must retain firmware, AMS Lite separation and Alloy qualification caveats")
+            if "public-beta firmware 01.06.10.33" not in note or "stable 01.07.01.00" not in note or "do not mix ams lite" not in note or "alloy send remains unqualified" not in note:
+                raise ValueError(f"A1 mini {route['id']} must distinguish beta introduction from stable firmware and retain route/qualification caveats")
     regular_ams_spool = next(form for form in mini["spool_forms"] if form["id"] == "regular-ams-spool")
     if regular_ams_spool["state"] != "Manual review required" or not all(
         name in regular_ams_spool["compatible_routes"] for name in ("Original AMS", "AMS 2 Pro", "AMS HT")
