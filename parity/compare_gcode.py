@@ -107,6 +107,8 @@ class Metrics:
     travel_segments: list[tuple]
     print_time_seconds: float | None
     print_time_source: str | None
+    total_print_time_seconds: float | None
+    total_print_time_source: str | None
     filament_mm: float | None
     filament_g: float | None
 
@@ -500,20 +502,27 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                     if feedrate_mm_min > 0 else 0.0
                 )
 
-    # Prefer total estimated time when the file exposes it. Orca's generic
-    # "estimated printing time" is the same total-time scope; Bambu separately
-    # exposes a shorter model-only estimate alongside its total.
+    # Keep the hard G3 check on model time when Bambu exposes it. Its total
+    # includes machine preparation/start-template time that the generic Alloy
+    # start sequence does not yet model equivalently. Preserve total estimates
+    # separately for visibility instead of comparing unlike preparation scopes.
     print_time = None
     print_time_source = None
     for source, patterns in (
-        ("total_estimated_time", TOTAL_TIME_PATTERNS),
-        ("estimated_printing_time", TIME_PATTERNS),
         ("model_printing_time", MODEL_TIME_PATTERNS),
+        ("estimated_printing_time", TIME_PATTERNS),
+        ("total_estimated_time", TOTAL_TIME_PATTERNS),
     ):
         print_time = last_matching(lines, patterns, parse_duration)
         if print_time is not None:
             print_time_source = source
             break
+    total_print_time_seconds = last_matching(lines, TOTAL_TIME_PATTERNS, parse_duration)
+    total_print_time_source = "total_estimated_time" if total_print_time_seconds is not None else None
+    if total_print_time_seconds is None:
+        total_print_time_seconds = last_matching(lines, TIME_PATTERNS, parse_duration)
+        if total_print_time_seconds is not None:
+            total_print_time_source = "estimated_printing_time"
     filament_mm = last_matching(lines, FILAMENT_MM_PATTERNS, parse_number_list)
     filament_g = last_matching(lines, FILAMENT_G_PATTERNS, parse_number_list)
 
@@ -546,6 +555,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         travel_segments=travel_segments,
         print_time_seconds=print_time,
         print_time_source=print_time_source,
+        total_print_time_seconds=total_print_time_seconds,
+        total_print_time_source=total_print_time_source,
         filament_mm=filament_mm,
         filament_g=filament_g,
     )
@@ -773,10 +784,8 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
         )
 
-    # Orca's generic estimated time and Bambu's total estimated time describe
-    # the total-time scope. Bambu's model-only estimate is not directly
-    # comparable to either, so report a warning when that is the only available
-    # metric on one side. The hard numeric tolerance is unchanged.
+    # The hard print-time check prefers Bambu's model-only estimate; a generic
+    # estimate remains the fallback when no model-only value exists.
     if desktop.print_time_source is None or android.print_time_source is None:
         add(
             "print_time_metric_source",
@@ -789,20 +798,35 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             "pass",
             f"both use {desktop.print_time_source}",
         )
-    elif {desktop.print_time_source, android.print_time_source} <= {
-            "total_estimated_time", "estimated_printing_time"}:
-        add(
-            "print_time_metric_source",
-            "pass",
-            f"comparable total-time estimates: desktop={desktop.print_time_source}, "
-            f"Android={android.print_time_source}",
-        )
     else:
         add(
             "print_time_metric_source",
             "warn",
             f"desktop={desktop.print_time_source}, Android={android.print_time_source}; "
             "the unchanged numeric tolerance still applies",
+        )
+
+    if (desktop.total_print_time_seconds is None
+            or android.total_print_time_seconds is None):
+        add(
+            "total_print_time_diagnostic",
+            "unavailable",
+            f"desktop={desktop.total_print_time_seconds}, "
+            f"Android={android.total_print_time_seconds}",
+        )
+    else:
+        total_diff = relative_diff(
+            desktop.total_print_time_seconds, android.total_print_time_seconds
+        )
+        add(
+            "total_print_time_diagnostic",
+            "warn",
+            "diagnostic only: total-time estimates include start/preparation "
+            "policies that are not yet equivalent; no qualification is inferred. "
+            f"desktop={desktop.total_print_time_seconds:.6g} "
+            f"({desktop.total_print_time_source}), Android="
+            f"{android.total_print_time_seconds:.6g} "
+            f"({android.total_print_time_source}), delta={total_diff:.2%}",
         )
 
     # Move counts are diagnostics because slicers can segment identical paths
