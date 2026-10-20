@@ -203,6 +203,21 @@ G1 X4 Y5 E0.6 F1200
         self.assertEqual("after_or_no_extrusion", layers[2]["timelapse_relative_to_first_extrusion"])
         self.assertIsNone(layers[1]["layer_notification_line_1based"])
 
+    def test_counterfactual_hook_order_uses_absolute_e_deltas_not_raw_positive_words(self):
+        text = """M82
+G92 E0
+G1 E0.5 F1200
+;LAYER_CHANGE
+G1 E0.2 F1800
+; SKIPPABLE_START
+G1 E0.4 F1200
+"""
+        report = counterfactual_gcode_structure(text)
+        layer = report["per_layer_hook_location"][0]
+        self.assertEqual("before", layer["timelapse_relative_to_first_extrusion"])
+        self.assertEqual(6, layer["timelapse_start_line_1based"])
+        self.assertEqual(7, layer["first_positive_extrusion_line_1based"])
+
     def test_report_is_explicitly_non_gating_and_unqualified(self):
         report = diagnostic_report(
             head_sha="head", base_sha="base", merge_sha="merge",

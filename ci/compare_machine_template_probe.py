@@ -191,6 +191,39 @@ def counterfactual_gcode_structure(text: str) -> dict[str, Any]:
             travel_path += distance
             travel_moves += 1
 
+    # Determine actual positive-E extrusion lines across the whole file. Raw E
+    # words are not deltas in M82 absolute mode: an E word can be positive
+    # while the move is still retracting. Track mode and G92 resets so the
+    # per-layer hook-order diagnostic does not mislabel that case.
+    positive_extrusion_lines = set()
+    layer_relative_e = True
+    layer_e_position = 0.0
+    for line_index, line in enumerate(lines):
+        command = line.split(";", 1)[0].strip()
+        upper = command.upper()
+        if upper.startswith("M82"):
+            layer_relative_e = False
+            continue
+        if upper.startswith("M83"):
+            layer_relative_e = True
+            continue
+        match = command_re.match(command)
+        if not match:
+            continue
+        opcode, args = match.group(1).upper(), match.group(2)
+        words = {name.upper(): float(value) for name, value in word_re.findall(args)}
+        if opcode == "G92":
+            if "E" in words:
+                layer_e_position = words["E"]
+            continue
+        if opcode not in {"G0", "G1"} or "E" not in words:
+            continue
+        e_word = words["E"]
+        e_delta = e_word if layer_relative_e else e_word - layer_e_position
+        layer_e_position = layer_e_position + e_word if layer_relative_e else e_word
+        if e_delta > 0:
+            positive_extrusion_lines.add(line_index)
+
     layer_records = []
     for layer_index, start in enumerate(markers):
         end = markers[layer_index + 1] if layer_index + 1 < len(markers) else len(lines)
@@ -199,14 +232,8 @@ def counterfactual_gcode_structure(text: str) -> dict[str, Any]:
                            if "; SKIPPABLE_START" in line]
         notification_lines = [start + offset for offset, line in enumerate(segment)
                              if re.match(r"\s*M991\b", line, re.I)]
-        extrusion_lines = []
-        for offset, line in enumerate(segment):
-            command = line.split(";", 1)[0]
-            if not re.match(r"\s*G[01]\b", command, re.I):
-                continue
-            if any(float(value) > 0 for value in re.findall(
-                    r"\bE\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))", command, re.I)):
-                extrusion_lines.append(start + offset)
+        extrusion_lines = [line_index for line_index in range(start, end)
+                           if line_index in positive_extrusion_lines]
         first_hook = timelapse_lines[0] if timelapse_lines else None
         first_extrusion = extrusion_lines[0] if extrusion_lines else None
         layer_records.append({
