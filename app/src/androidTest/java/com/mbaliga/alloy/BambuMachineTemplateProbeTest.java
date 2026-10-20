@@ -179,7 +179,7 @@ public final class BambuMachineTemplateProbeTest {
                             command.matches(".*[{}\\[\\]].*"));
                 }
                 Assert.assertTrue("counterfactual BBL identity must select the BBL layer marker",
-                        containsGcodeLine(gcode, "; Z_HEIGHT:"));
+                        containsGcodeLine(gcode, "; CHANGE_LAYER"));
                 Assert.assertTrue("counterfactual render must retain imported layer notification",
                         containsGcodeCommand(gcode, "M991 S0 P0"));
                 Assert.assertTrue("counterfactual render must include the imported timelapse hook",
