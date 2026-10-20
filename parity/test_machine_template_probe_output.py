@@ -4,7 +4,9 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from validate_machine_template_probe_output import FIXTURES, SOURCE, expected_template_digests, validate
+from validate_machine_template_probe_output import (
+    FIXTURES, SOURCE, expected_template_digests, validate, validate_end_only,
+)
 from machine_template_probe_attempt import record
 
 
@@ -30,12 +32,55 @@ class MachineTemplateProbeOutputTests(unittest.TestCase):
                 "rendered": True, "qualified": False,
             })
         self.write_manifest()
+        self.end_only = self.directory / "end-only"
+        self.end_only.mkdir()
+        self.end_manifest = {
+            "schema_version": 1,
+            "source_commit": SOURCE,
+            "scope": "machine-end-template-only-render-diagnostic",
+            "qualified": False,
+            "template_sha256": expected_template_digests()["machine_end_gcode"],
+            "fixtures": [],
+        }
+        for name in sorted(FIXTURES):
+            data = f"; end-only unqualified probe: {name}\nG1 X10 Y10 E1 F600\n".encode()
+            filename = f"{name}.gcode"
+            (self.end_only / filename).write_bytes(data)
+            self.end_manifest["fixtures"].append({
+                "fixture": name, "file": filename, "sha256": hashlib.sha256(data).hexdigest(),
+                "rendered": True, "qualified": False,
+            })
+        self.write_end_manifest()
 
     def write_manifest(self):
         (self.directory / "manifest.json").write_text(json.dumps(self.manifest), encoding="utf-8")
 
+    def write_end_manifest(self):
+        (self.directory / "end-only-manifest.json").write_text(
+            json.dumps(self.end_manifest), encoding="utf-8"
+        )
+
     def test_valid_probe_output_and_hashes(self):
         self.assertEqual(SOURCE, validate(self.directory)["source_commit"])
+        self.assertEqual(SOURCE, validate_end_only(self.end_only)["source_commit"])
+
+    def test_end_only_probe_rejects_wrong_scope_digest_and_outputs(self):
+        for field, value in (("scope", "template-rendering-only"), ("qualified", True),
+                             ("template_sha256", "0" * 64)):
+            with self.subTest(field=field):
+                old = self.end_manifest[field]
+                self.end_manifest[field] = value
+                self.write_end_manifest()
+                with self.assertRaises(ValueError):
+                    validate_end_only(self.end_only)
+                self.end_manifest[field] = old
+        self.write_end_manifest()
+        output = self.end_only / self.end_manifest["fixtures"][0]["file"]
+        data = output.read_bytes()
+        output.write_bytes(data + b"G28\n")
+        with self.assertRaisesRegex(ValueError, "digest mismatch"):
+            validate_end_only(self.end_only)
+        output.write_bytes(data)
 
     def test_rejects_wrong_identity_scope_and_missing_hooks(self):
         for field, value in (("source_commit", "0" * 40), ("qualified", True), ("scope", "production")):

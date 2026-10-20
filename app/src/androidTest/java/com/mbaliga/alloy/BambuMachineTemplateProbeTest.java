@@ -118,6 +118,80 @@ public final class BambuMachineTemplateProbeTest {
         Files.write(manifest.toPath(), evidence.toString(2).getBytes(StandardCharsets.UTF_8));
     }
 
+    @Test(timeout = 480_000)
+    public void rendersPinnedMachineEndTemplateInIsolationWithoutQualifyingOutput() throws Exception {
+        Assume.assumeTrue("native rendering requires the ARM64 engine", BuildConfig.NATIVE_ENGINE_ENABLED);
+        Context app = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context test = InstrumentationRegistry.getInstrumentation().getContext();
+        JSONObject bundle = loadBundle();
+        ProfileCatalog.Profile profile;
+        try (InputStream input = test.getAssets().open("profiles/g3-bambu-a1mini-project-settings.json")) {
+            profile = ProfileCatalog.importBambu(ProfileCatalog.loadDefault(app.getAssets()),
+                    new byte[][]{ProfileCatalog.readProfileDocument(input)});
+        }
+        File root = new File(app.getExternalFilesDir(null), "alloy-bambu-template-probe");
+        File directory = new File(root, "end-only");
+        if (!directory.exists()) Assert.assertTrue(directory.mkdirs());
+        File manifest = new File(root, "end-only-manifest.json");
+        if (manifest.exists()) Assert.assertTrue("stale end-only manifest must be removed", manifest.delete());
+        String[][] fixtures = {
+                {"box-20mm.stl", "cube_20mm"}, {"overhang-support-fixture.stl", "overhang_support"},
+                {"thin-wall-frame-fixture.stl", "thin_wall_frame"}, {"travel_obstacle.stl", "travel_obstacle"}
+        };
+        JSONArray results = new JSONArray();
+        for (String[] fixture : fixtures) {
+            Slicer.Config config = new Slicer.Config();
+            profile.applyTo(config);
+            MeshModel mesh;
+            try (InputStream input = app.getAssets().open("models/" + fixture[0])) {
+                mesh = MeshModel.read(fixture[0], input);
+            }
+            File model = new File(directory, fixture[1] + ".stl");
+            File ini = new File(directory, fixture[1] + ".config.ini");
+            File output = new File(directory, fixture[1] + ".gcode");
+            if (output.exists()) Assert.assertTrue(output.delete());
+            NativeSlicerEngine.writeAsciiStl(mesh, config, model);
+            NativeSlicerEngine.writeConfig(config, ini);
+            installTestEndTemplate(ini, bundle.getJSONObject("templates").getString("machine_end_gcode"));
+            long modelPtr = 0L, resultPtr = 0L;
+            try {
+                modelPtr = Native.model_read_from_file(model.getAbsolutePath(), fixture[1], 0);
+                Assert.assertNotEquals("native model handle", 0L, modelPtr);
+                resultPtr = Native.model_slice(modelPtr, ini.getAbsolutePath(), output.getAbsolutePath(),
+                        (progress, message) -> { }, 1, new int[]{0xFFFFFF}, 0, 0.0, 0.0, 0.0);
+                Assert.assertNotEquals("native slice handle", 0L, resultPtr);
+                byte[] bytes = Files.readAllBytes(output.toPath());
+                Assert.assertTrue("rendered output must exist", bytes.length > 0);
+                String gcode = new String(bytes, StandardCharsets.UTF_8);
+                Assert.assertTrue("isolated machine-end template must be rendered",
+                        containsGcodeLine(gcode, ";=====printer finish  sound========="));
+                Assert.assertFalse("upstream machine-start template must not be installed",
+                        containsGcodeLine(gcode, "M1002 gcode_claim_action : 2"));
+                Assert.assertFalse("upstream layer-change template must not be installed",
+                        containsGcodeCommand(gcode, "M991 S0 P0"));
+                Assert.assertFalse("upstream time-lapse hook must not be installed",
+                        containsGcodeLine(gcode, "; SKIPPABLE_START"));
+                Assert.assertFalse("unqualified upstream output must fail the production template policy",
+                        A1MiniTemplatePolicy.inspect(gcode).isValid());
+                Slicer.Result parsed = NativeSlicerEngine.parseGcode(output, config,
+                        NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, false);
+                Assert.assertFalse(parsed.engineVerified);
+                Assert.assertFalse("rendered output must retain model layers", parsed.layers.isEmpty());
+                results.put(new JSONObject().put("fixture", fixture[1]).put("file", output.getName())
+                        .put("sha256", sha256(bytes)).put("rendered", true).put("qualified", false));
+            } finally {
+                if (resultPtr != 0L) Native.gcoderesult_release(resultPtr);
+                if (modelPtr != 0L) Native.model_release(modelPtr);
+                if (model.exists()) Assert.assertTrue(model.delete());
+            }
+        }
+        JSONObject evidence = new JSONObject().put("schema_version", 1).put("source_commit", SOURCE)
+                .put("scope", "machine-end-template-only-render-diagnostic").put("qualified", false)
+                .put("template_sha256", bundle.getJSONObject("sha256").getString("machine_end_gcode"))
+                .put("fixtures", results);
+        Files.write(manifest.toPath(), evidence.toString(2).getBytes(StandardCharsets.UTF_8));
+    }
+
     private static JSONObject loadBundle() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         JSONObject bundle;
@@ -168,6 +242,20 @@ public final class BambuMachineTemplateProbeTest {
                 patched.append(key).append(" = ").append(templates.getString(key).replace("\n", "\\n")).append('\n');
             }
         }
+        Files.write(ini.toPath(), patched.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void installTestEndTemplate(File ini, String template) throws Exception {
+        String original = new String(Files.readAllBytes(ini.toPath()), StandardCharsets.UTF_8);
+        StringBuilder patched = new StringBuilder();
+        int replacements = 0;
+        for (String line : original.split("\\r?\\n")) {
+            if (line.startsWith("machine_end_gcode = ")) {
+                replacements++;
+                patched.append("machine_end_gcode = ").append(template.replace("\n", "\\n")).append('\n');
+            } else patched.append(line).append('\n');
+        }
+        Assert.assertEquals("baseline config must contain one machine end hook", 1, replacements);
         Files.write(ini.toPath(), patched.toString().getBytes(StandardCharsets.UTF_8));
     }
 

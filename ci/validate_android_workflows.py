@@ -164,6 +164,14 @@ def main() -> None:
         "logcat-tail.txt",
     ):
         require(template_probe_script_text, token, template_probe_script)
+    template_probe_validator = ROOT / "ci/validate_machine_template_probe_output.py"
+    template_probe_validator_text = template_probe_validator.read_text(encoding="utf-8")
+    for token in (
+        "def validate_end_only(",
+        "machine-end-template-only-render-diagnostic",
+        "validate_end_only(args.directory / \"end-only\")",
+    ):
+        require(template_probe_validator_text, token, template_probe_validator)
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
