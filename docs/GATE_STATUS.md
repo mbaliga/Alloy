@@ -47,6 +47,32 @@ deltas show a genuine motion-planning mismatch as well, so estimate-source
 semantics alone cannot explain or waive the failure. Do not add a blanket time
 multiplier or relax tolerances. No fixture result qualifies production output.
 
+### Follow-up: conditional-motion sensitivity (diagnostic only)
+
+Inspection of the retained raw cube G-code found a second possible source of
+the travel discrepancy, not a justified planner fix. The desktop program emits
+12,636 mm of motion inside `SKIPTYPE` blocks (`timelapse` and
+`head_wrap_detect`); Alloy's neutral output has no such tagged moves. The
+desktop block ends near X0 after visiting X0/Y90 and X-13, then the next
+unconditional move targets X97.692/Y99.064. If firmware skips that entire
+conditional block, the unconditional move's assumed starting point may differ
+from the printer's actual position. Alloy instead moves from its nearby wipe
+endpoint (about 0.81 mm to that target). This is a conditional-state ambiguity:
+G-code alone does not establish whether, when, or how the A1 mini firmware
+executes the tagged blocks.
+
+The bounded raw travel diagnostic reports 2,435 desktop vs 1,059 Alloy travel
+moves and approximately 27,194 mm vs 4,678 mm of travel. Subtracting tagged
+desktop motion leaves roughly 9,880 mm of additional travel unexplained; these
+are program-level distances, not firmware-executed paths. The resolved
+`reduce_crossing_wall` value is false in both configs, so the inspected
+`GCode::travel_to` planner branch is not evidence for changing that setting or
+the planner. Next evidence step: create a separate, non-gating matched re-slice
+with timelapse/head-wrap hooks disabled on both sides, verify both effective
+configs, then compare per-layer travel. Independently determine the firmware
+conditional behavior before drawing a runtime conclusion. Strict G3 results,
+tolerances, and print/send eligibility remain unchanged.
+
 The exact-head CI-signed QA APK is artifact
 [12199639681](https://github.com/mbaliga/Alloy/actions/runs/39278128756/artifacts/12199639681),
 archive SHA-256 `6544bd3a60690c5495c3a3dba4b409a275f069f3b0c92d96483f5183aa996ff2`,
