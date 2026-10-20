@@ -85,6 +85,33 @@ acceptance, physical print, and production release remain unqualified. The
 updated device protocol is in
 [`ON_DEVICE_MVP_CHECKLIST.md`](ON_DEVICE_MVP_CHECKLIST.md).
 
+### Follow-up: preliminary three-way travel decomposition (cross-run diagnostic)
+
+A bounded local analysis compared the exact-head desktop references for
+`76f0be33` with a retained native G3 artifact from the earlier `0a1d525` run.
+The slicer/native source was unchanged between those app revisions, but this
+is **not a same-head hosted comparison** and is not parity evidence. With
+desktop time-lapse and wrapping-detection hooks disabled and verified, the
+very large cube travel delta fell from 22,516 mm (strict desktop vs native)
+to about 1,283 mm. The other three fixtures similarly retain about 0.52–1.88 m
+of travel-path difference after hook neutralization. This indicates that the
+optional hooks explain much of the extreme strict difference, but do not
+explain the remaining planner/template mismatch.
+
+Across all four fixtures, the largest residual cluster is on the final model
+layer: approximately 0.55–0.60 m more desktop travel than native in each case.
+Inspection of the cube tails shows the desktop's Bambu machine-end template
+emitting park/unload motions absent from Alloy's current end template. This is
+a plausible attribution for much of the repeatable tail delta, **not** proof
+of firmware execution, safety, exact per-layer accounting (the report groups
+post-model moves into its terminal layer bucket), or a qualified Bambu end
+sequence. The native render's current template probe applies all four upstream
+hooks together, so it cannot isolate the end hook's contribution. Next
+diagnostic: add a test-only end-template-only render and compare its tail and
+travel metrics separately; do not ship upstream macros, alter production
+templates, or change G3 thresholds/send gates based on this lead. Firmware
+conditional behavior and physical pilot remain open.
+
 ## 2026-10-18 exact-head native G3 result — FAIL / NO-GO
 
 Application source `d7f5d330f01d21f8f08821a780c16aae6cebe18c` passed the
