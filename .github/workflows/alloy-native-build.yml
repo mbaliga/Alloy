@@ -444,6 +444,8 @@ jobs:
         run: python3 ci/machine_template_probe_attempt.py path-b-template-probe initialized
       # Run the narrow probe independently so a failure in the broad suite
       # cannot prevent collection of template-rendering evidence.
+      # Its artifact includes rendered/counterfactual-bbl/ separately from the
+      # default-false and end-only renders.
       - name: Render pinned Bambu templates independently
         if: always() && !cancelled()
         uses: reactivecircus/android-emulator-runner@v2
@@ -456,9 +458,10 @@ jobs:
           disable-animations: false
           disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: bash ci/run_machine_template_probe.sh
-      # Compare the captured unqualified template renders with the exact-PR-
-      # head desktop reference as a separate diagnostic. This never gates G3.
-      - name: Compare Bambu template probe with exact-head desktop reference (diagnostic only)
+      # Compare default-false and test-only BBL-mode renders with the exact-PR-
+      # head reference as a separate diagnostic. The BBL-mode output is
+      # counterfactual/unqualified and never gates G3 or production behavior.
+      - name: Compare Bambu template modes with exact-head reference (diagnostic only)
         if: always() && !cancelled() && github.event_name == 'pull_request'
         continue-on-error: true
         env:

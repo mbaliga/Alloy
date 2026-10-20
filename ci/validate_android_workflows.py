@@ -170,8 +170,37 @@ def main() -> None:
         "def validate_end_only(",
         "machine-end-template-only-render-diagnostic",
         "validate_end_only(args.directory / \"end-only\")",
+        "def validate_counterfactual_bbl(",
+        "counterfactual-bbl-identity-template-render-diagnostic",
+        "validate_counterfactual_bbl(args.directory / \"counterfactual-bbl\")",
     ):
         require(template_probe_validator_text, token, template_probe_validator)
+    native_java_root = ROOT / "app/src/main/java"
+    counterfactual_call = re.compile(r"\bNative\.model_slice_counterfactual_bbl\s*\(")
+    production_callers = [
+        path for path in native_java_root.rglob("*.java")
+        if counterfactual_call.search(path.read_text(encoding="utf-8"))
+    ]
+    if production_callers:
+        raise SystemExit(
+            "counterfactual BBL JNI method must have no production call sites: "
+            + ", ".join(str(path.relative_to(ROOT)) for path in production_callers)
+        )
+    native_bridge = ROOT / "app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/Native.java"
+    native_bridge_text = native_bridge.read_text(encoding="utf-8")
+    require(native_bridge_text, "model_slice_counterfactual_bbl(", native_bridge)
+    require(native_bridge_text, "whose JNI wrapper always passes false", native_bridge)
+    native_engine = ROOT / "app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java"
+    require(native_engine.read_text(encoding="utf-8"), "Native.model_slice(", native_engine)
+    bridge_source = ROOT / "app/src/main/jni/slicebeam/beam_native.cpp"
+    bridge_source_text = bridge_source.read_text(encoding="utf-8")
+    require(bridge_source_text, "calibEnd, calibStep, false);", bridge_source)
+    require(bridge_source_text, "Java_ru_ytkab0bp_slicebeam_slic3r_Native_model_1slice_1counterfactual_1bbl", bridge_source)
+    require(bridge_source_text, "print.is_BBL_printer() = counterfactualBblMode;", bridge_source)
+    probe_test = ROOT / "app/src/androidTest/java/com/mbaliga/alloy/BambuMachineTemplateProbeTest.java"
+    probe_test_text = probe_test.read_text(encoding="utf-8")
+    require(probe_test_text, "Native.model_slice_counterfactual_bbl(", probe_test)
+    require(probe_test_text, "put(\"counterfactual\", true).put(\"bbl_printer_mode\", true)", probe_test)
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
@@ -188,15 +217,17 @@ def main() -> None:
         "python3 ci/verify_machine_template_probe.py orca-profile-source",
         "Initialize standalone Bambu template probe evidence",
         "Render pinned Bambu templates independently",
+        "Compare Bambu template modes with exact-head reference (diagnostic only)",
         "Test Bambu template probe evidence and failure collection",
         "parity/test_machine_template_probe_output.py",
         "parity/test_machine_template_probe_script.py",
         "parity/test_machine_template_probe_diagnostic.py",
-        "Compare Bambu template probe with exact-head desktop reference (diagnostic only)",
+        "Compare Bambu template modes with exact-head reference (diagnostic only)",
         "continue-on-error: true",
         "ci/compare_machine_template_probe.py",
         "ci/compare_hook_neutralized_g3.py",
         "alloy-bambu-template-probe-diagnostic",
+        "counterfactual-bbl",
         "if: always() && !cancelled()",
         "script: bash ci/run_machine_template_probe.sh",
         "name: alloy-bambu-template-rendering-probe",

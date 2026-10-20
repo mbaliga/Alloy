@@ -24,6 +24,7 @@ import ru.ytkab0bp.slicebeam.slic3r.Native;
 public final class BambuMachineTemplateProbeTest {
     private static final String ASSET = "profiles/a1-mini-machine-template-probe.json";
     private static final String SOURCE = "07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4";
+    private static final String PROFILE_SHA256 = "d638086d0c669959f9406010c4b360f98df429ae5aa9d9ec13b493ca9cbaf32e";
     private static final String[] KEYS = {
             "machine_start_gcode", "machine_end_gcode", "layer_change_gcode", "time_lapse_gcode"
     };
@@ -105,7 +106,10 @@ public final class BambuMachineTemplateProbeTest {
                 Assert.assertFalse(parsed.engineVerified);
                 Assert.assertFalse("rendered output must retain model layers", parsed.layers.isEmpty());
                 results.put(new JSONObject().put("fixture", fixture[1]).put("file", output.getName())
-                        .put("sha256", sha256(bytes)).put("rendered", true).put("qualified", false));
+                        .put("sha256", sha256(bytes)).put("rendered", true).put("qualified", false)
+                        .put("counterfactual", false).put("bbl_printer_mode", false)
+                        .put("config_file", ini.getName())
+                        .put("config_sha256", sha256(Files.readAllBytes(ini.toPath()))));
             } finally {
                 if (resultPtr != 0L) Native.gcoderesult_release(resultPtr);
                 if (modelPtr != 0L) Native.model_release(modelPtr);
@@ -113,7 +117,96 @@ public final class BambuMachineTemplateProbeTest {
             }
         }
         JSONObject evidence = new JSONObject().put("schema_version", 1).put("source_commit", SOURCE)
-                .put("scope", "template-rendering-only").put("qualified", false)
+                .put("scope", "template-rendering-only").put("default_bbl_printer_mode", false)
+                .put("counterfactual", false).put("non_gating", true).put("qualified", false)
+                .put("profile_name", "Bambu Lab A1 mini 0.4 nozzle")
+                .put("profile_sha256", PROFILE_SHA256)
+                .put("template_sha256", bundle.getJSONObject("sha256")).put("fixtures", results);
+        Files.write(manifest.toPath(), evidence.toString(2).getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test(timeout = 480_000)
+    public void rendersCounterfactualBblIdentityWithoutChangingProductionDefault() throws Exception {
+        Assume.assumeTrue("native rendering requires the ARM64 engine", BuildConfig.NATIVE_ENGINE_ENABLED);
+        Context app = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context test = InstrumentationRegistry.getInstrumentation().getContext();
+        JSONObject bundle = loadBundle();
+        ProfileCatalog.Profile profile;
+        try (InputStream input = test.getAssets().open("profiles/g3-bambu-a1mini-project-settings.json")) {
+            byte[] profileBytes = ProfileCatalog.readProfileDocument(input);
+            Assert.assertEquals("counterfactual profile identity", PROFILE_SHA256, sha256(profileBytes));
+            profile = ProfileCatalog.importBambu(ProfileCatalog.loadDefault(app.getAssets()),
+                    new byte[][]{profileBytes});
+        }
+        File root = new File(app.getExternalFilesDir(null), "alloy-bambu-template-probe");
+        File directory = new File(root, "counterfactual-bbl");
+        if (!directory.exists()) Assert.assertTrue(directory.mkdirs());
+        File manifest = new File(directory, "manifest.json");
+        if (manifest.exists()) Assert.assertTrue("stale counterfactual manifest must be removed", manifest.delete());
+        String[][] fixtures = {
+                {"box-20mm.stl", "cube_20mm"}, {"overhang-support-fixture.stl", "overhang_support"},
+                {"thin-wall-frame-fixture.stl", "thin_wall_frame"}, {"travel_obstacle.stl", "travel_obstacle"}
+        };
+        JSONArray results = new JSONArray();
+        for (String[] fixture : fixtures) {
+            Slicer.Config config = new Slicer.Config();
+            profile.applyTo(config);
+            MeshModel mesh;
+            try (InputStream input = app.getAssets().open("models/" + fixture[0])) {
+                mesh = MeshModel.read(fixture[0], input);
+            }
+            File model = new File(directory, fixture[1] + ".stl");
+            File ini = new File(directory, fixture[1] + ".config.ini");
+            File output = new File(directory, fixture[1] + ".gcode");
+            if (output.exists()) Assert.assertTrue(output.delete());
+            NativeSlicerEngine.writeAsciiStl(mesh, config, model);
+            NativeSlicerEngine.writeConfig(config, ini);
+            installTestTemplates(ini, bundle.getJSONObject("templates"));
+            long modelPtr = 0L, resultPtr = 0L;
+            try {
+                modelPtr = Native.model_read_from_file(model.getAbsolutePath(), fixture[1], 0);
+                Assert.assertNotEquals("native model handle", 0L, modelPtr);
+                resultPtr = Native.model_slice_counterfactual_bbl(modelPtr, ini.getAbsolutePath(),
+                        output.getAbsolutePath(), (progress, message) -> { }, 1,
+                        new int[]{0xFFFFFF}, 0, 0.0, 0.0, 0.0, true);
+                Assert.assertNotEquals("counterfactual native slice handle", 0L, resultPtr);
+                byte[] bytes = Files.readAllBytes(output.toPath());
+                Assert.assertTrue("counterfactual render must exist", bytes.length > 0);
+                String gcode = new String(bytes, StandardCharsets.UTF_8);
+                for (String raw : gcode.split("\\r?\\n")) {
+                    String command = raw.split(";", 2)[0];
+                    Assert.assertFalse("unresolved counterfactual template command: " + command,
+                            command.matches(".*[{}\\[\\]].*"));
+                }
+                Assert.assertTrue("counterfactual BBL identity must select the BBL layer marker",
+                        containsGcodeLine(gcode, "; Z_HEIGHT:"));
+                Assert.assertTrue("counterfactual render must retain imported layer notification",
+                        containsGcodeCommand(gcode, "M991 S0 P0"));
+                Assert.assertTrue("counterfactual render must include the imported timelapse hook",
+                        containsGcodeLine(gcode, "; SKIPPABLE_START"));
+                Assert.assertFalse("counterfactual output remains rejected by production template policy",
+                        A1MiniTemplatePolicy.inspect(gcode).isValid());
+                Slicer.Result parsed = NativeSlicerEngine.parseGcode(output, config,
+                        NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, false);
+                Assert.assertFalse("counterfactual output is not engine-qualified", parsed.engineVerified);
+                Assert.assertFalse("counterfactual output must retain model layers", parsed.layers.isEmpty());
+                results.put(new JSONObject().put("fixture", fixture[1]).put("file", output.getName())
+                        .put("sha256", sha256(bytes)).put("rendered", true).put("qualified", false)
+                        .put("counterfactual", true).put("bbl_printer_mode", true)
+                        .put("config_file", ini.getName())
+                        .put("config_sha256", sha256(Files.readAllBytes(ini.toPath()))));
+            } finally {
+                if (resultPtr != 0L) Native.gcoderesult_release(resultPtr);
+                if (modelPtr != 0L) Native.model_release(modelPtr);
+                if (model.exists()) Assert.assertTrue(model.delete());
+            }
+        }
+        JSONObject evidence = new JSONObject().put("schema_version", 1).put("source_commit", SOURCE)
+                .put("scope", "counterfactual-bbl-identity-template-render-diagnostic")
+                .put("counterfactual", true).put("bbl_printer_mode", true)
+                .put("production_runtime_changed", false).put("non_gating", true).put("qualified", false)
+                .put("profile_name", "Bambu Lab A1 mini 0.4 nozzle")
+                .put("profile_sha256", PROFILE_SHA256)
                 .put("template_sha256", bundle.getJSONObject("sha256")).put("fixtures", results);
         Files.write(manifest.toPath(), evidence.toString(2).getBytes(StandardCharsets.UTF_8));
     }

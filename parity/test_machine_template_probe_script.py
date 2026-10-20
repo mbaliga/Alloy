@@ -6,7 +6,9 @@ import subprocess
 import tempfile
 import unittest
 
-from validate_machine_template_probe_output import FIXTURES, ROOT, SOURCE, expected_template_digests
+from validate_machine_template_probe_output import (
+    FIXTURES, G3_PROFILE_SHA256, PROFILE, ROOT, SOURCE, expected_template_digests,
+)
 
 
 SCRIPT = ROOT / "ci/run_machine_template_probe.sh"
@@ -68,17 +70,26 @@ class MachineTemplateProbeScriptTests(unittest.TestCase):
             filename = f"{name}.gcode"
             data = f"; partial offline rendering: {name}\nG1 X10 Y10 E1\n".encode()
             (self.device / filename).write_bytes(data)
+            config_name = f"{name}.config.ini"
+            config_data = f"config for {name}\n".encode()
+            (self.device / config_name).write_bytes(config_data)
             fixtures.append({
                 "fixture": name, "file": filename,
                 "sha256": hashlib.sha256(data).hexdigest(),
                 "rendered": True, "qualified": False,
+                "counterfactual": False, "bbl_printer_mode": False,
+                "config_file": config_name,
+                "config_sha256": hashlib.sha256(config_data).hexdigest(),
             })
         digests = expected_template_digests()
         if invalid:
             digests["machine_start_gcode"] = "a" * 64
         manifest = {
             "schema_version": 1, "source_commit": SOURCE,
-            "scope": "template-rendering-only", "qualified": False,
+            "scope": "template-rendering-only", "default_bbl_printer_mode": False,
+            "counterfactual": False, "non_gating": True, "profile_name": PROFILE,
+            "profile_sha256": G3_PROFILE_SHA256,
+            "qualified": False,
             "template_sha256": digests, "fixtures": fixtures,
         }
         (self.device / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -102,6 +113,35 @@ class MachineTemplateProbeScriptTests(unittest.TestCase):
         }
         (self.device / "end-only-manifest.json").write_text(
             json.dumps(end_only_manifest), encoding="utf-8"
+        )
+        counterfactual_dir = self.device / "counterfactual-bbl"
+        counterfactual_dir.mkdir(exist_ok=True)
+        counterfactual_fixtures = []
+        for name in sorted(FIXTURES):
+            filename = f"{name}.gcode"
+            data = f"; counterfactual BBL rendering: {name}\nG1 X10 Y10 E1 F600\n".encode()
+            (counterfactual_dir / filename).write_bytes(data)
+            config_name = f"{name}.config.ini"
+            config_data = f"config for {name}\n".encode()
+            (counterfactual_dir / config_name).write_bytes(config_data)
+            counterfactual_fixtures.append({
+                "fixture": name, "file": filename,
+                "sha256": hashlib.sha256(data).hexdigest(),
+                "rendered": True, "qualified": False,
+                "counterfactual": True, "bbl_printer_mode": True,
+                "config_file": config_name,
+                "config_sha256": hashlib.sha256(config_data).hexdigest(),
+            })
+        counterfactual_manifest = {
+            "schema_version": 1, "source_commit": SOURCE,
+            "scope": "counterfactual-bbl-identity-template-render-diagnostic",
+            "counterfactual": True, "bbl_printer_mode": True,
+            "production_runtime_changed": False, "non_gating": True, "qualified": False,
+            "profile_name": PROFILE, "profile_sha256": G3_PROFILE_SHA256,
+            "template_sha256": expected_template_digests(), "fixtures": counterfactual_fixtures,
+        }
+        (counterfactual_dir / "manifest.json").write_text(
+            json.dumps(counterfactual_manifest), encoding="utf-8"
         )
 
     def run_probe(self, mode):
@@ -131,6 +171,8 @@ class MachineTemplateProbeScriptTests(unittest.TestCase):
         self.assert_failed_attempt(result, 17)
         self.assertTrue((self.output / "instrumentation.txt").is_file())
         self.assertIn("partial offline rendering", (self.output / "rendered/cube_20mm.gcode").read_text())
+        self.assertIn("counterfactual BBL rendering",
+                      (self.output / "rendered/counterfactual-bbl/cube_20mm.gcode").read_text())
 
     def test_transient_pull_failure_is_recorded_and_diagnostics_retry_pull(self):
         result = self.run_probe("pull-failure-once")
@@ -140,6 +182,7 @@ class MachineTemplateProbeScriptTests(unittest.TestCase):
         self.assertIn("simulated transient pull failure",
                       (self.output / "adb-pull.txt").read_text(encoding="utf-8"))
         self.assertTrue((self.output / "rendered/cube_20mm.gcode").is_file())
+        self.assertTrue((self.output / "rendered/counterfactual-bbl/cube_20mm.gcode").is_file())
 
     def test_validator_failure_keeps_outputs_and_original_failure_state(self):
         self._write_device_evidence(invalid=True)
