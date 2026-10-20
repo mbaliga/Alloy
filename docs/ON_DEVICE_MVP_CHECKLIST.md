@@ -4,13 +4,11 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Installable software-QA checkpoint:** the last recorded app source with a completed Android acceptance run is `964fbd2df7d28eb99e35e277c4c4bc80412adc96`. The current diagnostic/code checkpoint is [`1a1932db903b6adc47cfeec47922f8b243261d56`](https://github.com/mbaliga/Alloy/commit/1a1932db903b6adc47cfeec47922f8b243261d56); subsequent changes do not modify production slicing or printer-send behavior.
+**Installable software-QA checkpoint:** the latest Android acceptance run for app source `964fbd2df7d28eb99e35e277c4c4bc80412adc96` succeeded on current diagnostic/code checkpoint [`1a1932db903b6adc47cfeec47922f8b243261d56`](https://github.com/mbaliga/Alloy/commit/1a1932db903b6adc47cfeec47922f8b243261d56). The changes after app source are diagnostic/documentation only; they do not alter production slicing or send behavior.
 
-- Android acceptance [39365705397](https://github.com/mbaliga/Alloy/actions/runs/39365705397) is still in progress. A new current-head QA APK is not available until that workflow completes and uploads its artifact.
-- The previously recorded APK artifact 12237002115 is no longer retrievable through GitHub's artifact endpoint. Do not use its stale link. Wait for a fresh APK, verify its SHA-256, and retain the extracted APK digest before device testing.
-- Current-code parity tooling [39365705084](https://github.com/mbaliga/Alloy/actions/runs/39365705084) passed (178 tests), as did all three printer profile audits [39365705077](https://github.com/mbaliga/Alloy/actions/runs/39365705077), official Orca snapshot [39365705086](https://github.com/mbaliga/Alloy/actions/runs/39365705086), and desktop A1 Mini references [39365705109](https://github.com/mbaliga/Alloy/actions/runs/39365705109). Android acceptance [39365705397](https://github.com/mbaliga/Alloy/actions/runs/39365705397) and native build/G3 [39365705522](https://github.com/mbaliga/Alloy/actions/runs/39365705522) remain in progress.
-- The last completed strict G3 comparison, native run [39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954), failed the unchanged 2% tolerance. Its prior artifact is no longer retrievable. The physical pilot was skipped. No exact-head G3 result, Handy acceptance, physical print, or production release is claimed.
-
+- Android acceptance [39365705397](https://github.com/mbaliga/Alloy/actions/runs/39365705397) passed and published QA artifact [12239627731](https://github.com/mbaliga/Alloy/actions/runs/39365705397/artifacts/12239627731). Archive SHA-256: `56c7eccfe331f61972e69a2a8c6942cb12881784271732b5825ceb8ead5f97f9`; extracted APK SHA-256: `85bc8844b004d6450af58cc9b9ae50b4361d48cc9b70f2c731d6f6e2daa1b55e`.
+- Current-code parity tooling [39365705084](https://github.com/mbaliga/Alloy/actions/runs/39365705084) passed (178 tests), as did all three printer profile audits [39365705077](https://github.com/mbaliga/Alloy/actions/runs/39365705077), official Orca snapshot [39365705086](https://github.com/mbaliga/Alloy/actions/runs/39365705086), and desktop A1 Mini references [39365705109](https://github.com/mbaliga/Alloy/actions/runs/39365705109).
+- Native build and API-35 ARM64 instrumentation succeeded in [39365705522](https://github.com/mbaliga/Alloy/actions/runs/39365705522), but its strict G3 comparison failed at the unchanged 2% tolerance. Report: [artifact 12242487066](https://github.com/mbaliga/Alloy/actions/runs/39365705522/artifacts/12242487066), ZIP SHA-256 `688cea2cf151d138c37abbf33f4b9a9723b62f821c5270a291b1ffa5a701b38c`. The physical pilot was skipped. See [`GATE_STATUS.md`](GATE_STATUS.md) for per-fixture metrics and diagnostic limits.
 
 **Do not send or print unqualified generated jobs.** Direct-send and
 external-share gates remain fail-closed. The physical-pilot stages were
@@ -22,9 +20,9 @@ Bambu Handy acceptance, and production signing remain unverified.
 For phone-only software QA, use the CI-signed APK from the exact source
 checkpoint above:
 
-- [CI-signed Android QA APK, artifact 12237002115](https://github.com/mbaliga/Alloy/actions/runs/39357977923/artifacts/12237002115).
-  Archive SHA-256: `b149ae266fd6f524f9c3e0e779fad1fbbadfcc71fedd80af6b36511796abc165`.
-  After extracting, record the APK's SHA-256 as part of the device test record.
+- [CI-signed Android QA APK, artifact 12239627731](https://github.com/mbaliga/Alloy/actions/runs/39365705397/artifacts/12239627731).
+  Archive SHA-256: `56c7eccfe331f61972e69a2a8c6942cb12881784271732b5825ceb8ead5f97f9`.
+  Extracted `app-release.apk` SHA-256: `85bc8844b004d6450af58cc9b9ae50b4361d48cc9b70f2c731d6f6e2daa1b55e`.
   This is the ordinary software-acceptance build, not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
