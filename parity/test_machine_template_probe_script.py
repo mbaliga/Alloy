@@ -82,6 +82,27 @@ class MachineTemplateProbeScriptTests(unittest.TestCase):
             "template_sha256": digests, "fixtures": fixtures,
         }
         (self.device / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        end_only_dir = self.device / "end-only"
+        end_only_dir.mkdir(exist_ok=True)
+        end_only_fixtures = []
+        for name in sorted(FIXTURES):
+            filename = f"{name}.gcode"
+            data = f"; end-only offline rendering: {name}\nG1 X10 Y10 E1 F600\n".encode()
+            (end_only_dir / filename).write_bytes(data)
+            end_only_fixtures.append({
+                "fixture": name, "file": filename,
+                "sha256": hashlib.sha256(data).hexdigest(),
+                "rendered": True, "qualified": False,
+            })
+        end_only_manifest = {
+            "schema_version": 1, "source_commit": SOURCE,
+            "scope": "machine-end-template-only-render-diagnostic", "qualified": False,
+            "template_sha256": expected_template_digests()["machine_end_gcode"],
+            "fixtures": end_only_fixtures,
+        }
+        (self.device / "end-only-manifest.json").write_text(
+            json.dumps(end_only_manifest), encoding="utf-8"
+        )
 
     def run_probe(self, mode):
         env = os.environ.copy()

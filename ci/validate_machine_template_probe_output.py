@@ -78,12 +78,54 @@ def validate(directory: Path) -> dict:
     return manifest
 
 
+def validate_end_only(directory: Path) -> dict:
+    root = directory.parent
+    manifest = json.loads((root / "end-only-manifest.json").read_text(encoding="utf-8"))
+    if manifest.get("schema_version") != 1 or manifest.get("source_commit") != SOURCE:
+        raise ValueError("end-only template manifest identity mismatch")
+    if manifest.get("scope") != "machine-end-template-only-render-diagnostic" or manifest.get("qualified") is not False:
+        raise ValueError("end-only evidence must remain explicitly unqualified")
+    if manifest.get("template_sha256") != expected_template_digests()["machine_end_gcode"]:
+        raise ValueError("end-only evidence does not identify the pinned machine-end template")
+    fixtures = manifest.get("fixtures")
+    if not isinstance(fixtures, list) or len(fixtures) != len(FIXTURES):
+        raise ValueError("end-only probe must contain exactly four fixture records")
+    seen = set()
+    expected_files = set()
+    for fixture in fixtures:
+        if not isinstance(fixture, dict):
+            raise ValueError("invalid end-only fixture record")
+        name = fixture.get("fixture")
+        if name not in FIXTURES or name in seen:
+            raise ValueError("unexpected or duplicate end-only fixture")
+        seen.add(name)
+        if fixture.get("rendered") is not True or fixture.get("qualified") is not False:
+            raise ValueError(f"end-only fixture {name} is not an unqualified rendering result")
+        filename = fixture.get("file")
+        if filename != f"{name}.gcode":
+            raise ValueError(f"end-only fixture {name} has an unexpected output filename")
+        digest = fixture.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError(f"end-only fixture {name} has an invalid output digest")
+        output = directory / filename
+        if not output.is_file() or output.is_symlink():
+            raise ValueError(f"end-only fixture {name} output is missing or not a regular file")
+        if hashlib.sha256(output.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"end-only fixture {name} output digest mismatch")
+        expected_files.add(filename)
+    actual_files = {p.name for p in directory.iterdir() if p.is_file() and p.name.endswith(".gcode")}
+    if actual_files != expected_files:
+        raise ValueError("end-only probe directory contains unexpected G-code files")
+    return manifest
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
     args = parser.parse_args()
     validate(args.directory)
-    print("validated four unqualified offline machine-template renderings and SHA-256 digests")
+    validate_end_only(args.directory / "end-only")
+    print("validated four full-hook and four end-only unqualified offline template renderings")
 
 
 if __name__ == "__main__":
