@@ -6,54 +6,14 @@ printer safety, Bambu Handy acceptance, or production signing.
 
 **Installable software-QA checkpoint (2026-10-20):** application source
 [`964fbd2df7d28eb99e35e277c4c4bc80412adc96`](https://github.com/mbaliga/Alloy/commit/964fbd2df7d28eb99e35e277c4c4bc80412adc96).
-The PR branch now also contains documentation-only follow-ups; this source
-includes slicer diagnostic tooling but no change to the app's printing path.
-The ordinary Android acceptance workflow passed on this exact source; it does
-not include or verify the optional native slicer.
+The current PR head is [`6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785`](https://github.com/mbaliga/Alloy/commit/6bfe6f985d69c9a3ff0fdca1cd8f8b7875).
+Changes after the application source are documentation and non-gating diagnostics; they do not change the production printing path.
 
-- [Android acceptance 39357977923](https://github.com/mbaliga/Alloy/actions/runs/39357977923)
-  passed, including release-APK build and emulator acceptance tests.
-- [CI-signed QA APK artifact 12237002115](https://github.com/mbaliga/Alloy/actions/runs/39357977923/artifacts/12237002115).
-  Artifact ZIP SHA-256: `b149ae266fd6f524f9c3e0e779fad1fbbadfcc71fedd80af6b36511796abc165`.
-  This is for software/device QA, not production signing.
-- [Parity tooling 39357978113](https://github.com/mbaliga/Alloy/actions/runs/39357978113),
-  [three-printer profile pre-gate 39357977979](https://github.com/mbaliga/Alloy/actions/runs/39357977979),
-  [desktop A1 Mini references 39357978160](https://github.com/mbaliga/Alloy/actions/runs/39357978160),
-  and [official Orca source snapshot 39357977967](https://github.com/mbaliga/Alloy/actions/runs/39357977967)
-  passed at this source.
-- [Native build and instrumentation run 39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954)
-  is still building the optional native-enabled app. It has not yet produced
-  native instrumentation or a same-head G3 result. The previous completed
-  comparison [39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752)
-  failed strict G3; see [`GATE_STATUS.md`](GATE_STATUS.md). Physical pilot steps
-  were skipped.
+- The latest installable CI-signed QA APK is artifact [12237002115](https://github.com/mbaliga/Alloy/actions/runs/39357977923/artifacts/12237002115), from Android acceptance [39357977923](https://github.com/mbaliga/Alloy/actions/runs/39357977923). ZIP SHA-256: `b149ae266fd6f524f9c3e0e779fad1fbbadfcc71fedd80af6b36511796abc165`. This is for software/device QA, not production signing.
+- Current-head parity tooling [39364587162](https://github.com/mbaliga/Alloy/actions/runs/39364587162), three-printer profile pre-gate [39364587184](https://github.com/mbaliga/Alloy/actions/runs/39364587184), desktop A1 Mini references [39364587176](https://github.com/mbaliga/Alloy/actions/runs/39364587176), and official Orca source snapshot [39364587199](https://github.com/mbaliga/Alloy/actions/runs/39364587199) passed.
+- Current-head Android acceptance [39364587207](https://github.com/mbaliga/Alloy/actions/runs/39364587207) and native build/G3 [39364587179](https://github.com/mbaliga/Alloy/actions/runs/39364587179) are still running; no current-head APK or G3 report is available yet.
+- The latest completed strict G3 comparison, native run [39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954), failed its unchanged 2% tolerance. Its comparison report is artifact [12238270864](https://github.com/mbaliga/Alloy/actions/runs/39357977954/artifacts/12238270864); the native G-code/config evidence is [12238141158](https://github.com/mbaliga/Alloy/actions/runs/39357977954/artifacts/12238141158). The failure is not waived and is not a current-head pass. Physical pilot steps were skipped.
 
-The latest completed exact-head native G3 comparison (run
-[39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752))
-fails the unchanged 2% tolerance. The
-comparison report is
-[artifact 12202999737](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12202999737);
-raw G-code and configs are
-[artifact 12204021145](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12204021145).
-Results:
-
-| Fixture | Print-time difference | Additional failed checks / large discrepancies |
-| --- | ---: | --- |
-| Cube | 14.37% | Filament length 2.10%; mass 2.03%; travel moves 56.51% |
-| Supported overhang | 17.87% | Filament length 2.61%; mass 2.47%; travel moves 33.72% |
-| Thin-wall frame | 13.23% | Filament length 2.65%; mass 2.58%; travel moves 37.96% |
-| Travel obstacle | 9.52% | Travel moves 37.23% |
-
-The current comparison reports profile identity for 63 fields per fixture.
-For cube, extrusion-motion time is nearly identical (1337.09 s Android vs
-1337.18 s desktop), while nominal travel time is 20.97 s vs 111.26 s and
-travel moves are 1,059 vs 2,435. This is evidence of toolpath/time-estimation
-behavior that still needs investigation—not grounds for a blanket time
-multiplier or relaxed tolerance. Aggregate geometry diagnostics do not prove
-spatial equivalence or physical print quality. Remaining work must account for
-engine behavior and Bambu machine-template motions, including per-layer
-inspection/timelapse moves. See
-[Bambu template policy](BAMBU_A1_MINI_TEMPLATE_POLICY.md).
 
 **Do not send or print unqualified generated jobs.** Direct-send and
 external-share gates remain fail-closed. The physical-pilot stages were
