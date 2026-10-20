@@ -96,6 +96,11 @@ class Metrics:
     feature_extrusion_path_mm: dict[str, float]
     feature_positive_e_mm: dict[str, float]
     extrusion_accounting: dict[str, dict[str, float]]
+    # Bambu emits SKIPTYPE-tagged firmware-conditional moves (for example
+    # timelapse and head-wrap detection). Record them separately, but retain
+    # them in the raw program metrics because G-code alone cannot prove the
+    # printer's runtime flag state.
+    conditional_motion_by_type: dict[str, dict[str, float]]
     # Diagnostic inputs only. The ordered segment stream is omitted from the
     # JSON report; compare() reduces it to a bounded first-difference sample.
     travel_by_layer_feedrate: dict[str, dict[str, float]]
@@ -267,6 +272,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     # conditional macros or that every positive E movement deposits plastic.
     # Do not subtract this ledger from the strict header/geometry checks.
     extrusion_accounting: dict[str, Counter[str]] = {}
+    conditional_motion_by_type: dict[str, Counter[str]] = {}
     active_feature: str | None = None
     z_levels: list[float] = []
     seen_z: set[float] = set()
@@ -283,6 +289,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     travel_by_layer_feedrate: dict[str, Counter[str]] = {}
     travel_segments: list[tuple] = []
     active_layer = -1
+    active_skiptype: str | None = None
 
     xyz = {"X": 0.0, "Y": 0.0, "Z": 0.0}
     e_value = 0.0
@@ -303,6 +310,13 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
             active_layer += 1
             continue
         lower = line.lower()
+        skiptype = re.match(r";\s*skiptype:\s*([a-z0-9_-]+)", line, re.I)
+        if skiptype:
+            active_skiptype = skiptype.group(1).lower()
+            continue
+        if re.match(r";\s*skippable_end\b", line, re.I):
+            active_skiptype = None
+            continue
         if lower.startswith(VOLATILE_PREFIXES):
             continue
 
@@ -474,6 +488,17 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                     round(xyz["X"], 3), round(xyz["Y"], 3), round(xyz["Z"], 3),
                     round(motion_distance, 3), motion_kind,
                 ))
+            if active_skiptype is not None and motion_distance is not None:
+                conditional = conditional_motion_by_type.setdefault(
+                    active_skiptype, Counter()
+                )
+                conditional["moves"] += 1
+                conditional["path_mm"] += motion_distance
+                conditional["positive_e_mm"] += max(positive_e, 0.0)
+                conditional["nominal_seconds"] += (
+                    motion_distance * 60.0 / feedrate_mm_min
+                    if feedrate_mm_min > 0 else 0.0
+                )
 
     # Bambu's total estimate includes machine warm-up and other orchestration
     # time that the native slicer does not report. Prefer model time when it is
@@ -514,6 +539,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         feature_positive_e_mm=dict(feature_positive_e_mm),
         extrusion_accounting={scope: dict(values)
                               for scope, values in extrusion_accounting.items()},
+        conditional_motion_by_type={scope: dict(values)
+                                     for scope, values in conditional_motion_by_type.items()},
         travel_by_layer_feedrate={scope: dict(values)
                                   for scope, values in travel_by_layer_feedrate.items()},
         travel_segments=travel_segments,
@@ -700,6 +727,19 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             for source, targets in sorted(equivalent.items())
         ),
     )
+
+    if desktop.conditional_motion_by_type or android.conditional_motion_by_type:
+        # This is intentionally diagnostic only. SKIPTYPE comments identify
+        # emitted firmware-conditional motion, but the slicer comparison does
+        # not emulate Bambu's runtime flags or firmware macro interpreter.
+        add(
+            "conditional_motion_scope",
+            "warn",
+            "raw motion metrics include SKIPTYPE-tagged conditional G-code; "
+            "runtime execution is not inferred. "
+            f"desktop={json.dumps(desktop.conditional_motion_by_type, sort_keys=True)}, "
+            f"Android={json.dumps(android.conditional_motion_by_type, sort_keys=True)}",
+        )
 
     # Exact transition order is useful evidence but overly strict across harmless emitter changes.
     # Record it as pass/warn, while missing feature classes is the hard failure above.
