@@ -4,15 +4,12 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Installable software-QA checkpoint (2026-10-20):** application source
-[`964fbd2df7d28eb99e35e277c4c4bc80412adc96`](https://github.com/mbaliga/Alloy/commit/964fbd2df7d28eb99e35e277c4c4bc80412adc96).
-The current PR head is [`6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785`](https://github.com/mbaliga/Alloy/commit/6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785).
-Changes after the application source are documentation and non-gating diagnostics; they do not change the production printing path.
+**Installable software-QA checkpoint:** the last recorded app source with a completed Android acceptance run is `964fbd2df7d28eb99e35e277c4c4bc80412adc96`. The current diagnostic/code checkpoint is [`1a1932db903b6adc47cfeec47922f8b243261d56`](https://github.com/mbaliga/Alloy/commit/1a1932db903b6adc47cfeec47922f8b243261d56); subsequent changes do not modify production slicing or printer-send behavior.
 
-- The latest installable CI-signed QA APK is artifact [12237002115](https://github.com/mbaliga/Alloy/actions/runs/39357977923/artifacts/12237002115), from Android acceptance [39357977923](https://github.com/mbaliga/Alloy/actions/runs/39357977923). ZIP SHA-256: `b149ae266fd6f524f9c3e0e779fad1fbbadfcc71fedd80af6b36511796abc165`. This is for software/device QA, not production signing.
-- Current-head parity tooling [39364587162](https://github.com/mbaliga/Alloy/actions/runs/39364587162), three-printer profile pre-gate [39364587184](https://github.com/mbaliga/Alloy/actions/runs/39364587184), desktop A1 Mini references [39364587176](https://github.com/mbaliga/Alloy/actions/runs/39364587176), and official Orca source snapshot [39364587199](https://github.com/mbaliga/Alloy/actions/runs/39364587199) passed.
-- Current-head Android acceptance [39364587207](https://github.com/mbaliga/Alloy/actions/runs/39364587207) and native build/G3 [39364587179](https://github.com/mbaliga/Alloy/actions/runs/39364587179) are still running; no current-head APK or G3 report is available yet.
-- The latest completed strict G3 comparison, native run [39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954), failed its unchanged 2% tolerance. Its comparison report is artifact [12238270864](https://github.com/mbaliga/Alloy/actions/runs/39357977954/artifacts/12238270864); the native G-code/config evidence is [12238141158](https://github.com/mbaliga/Alloy/actions/runs/39357977954/artifacts/12238141158). The failure is not waived and is not a current-head pass. Physical pilot steps were skipped.
+- Android acceptance [39365705397](https://github.com/mbaliga/Alloy/actions/runs/39365705397) is still in progress. A new current-head QA APK is not available until that workflow completes and uploads its artifact.
+- The previously recorded APK artifact 12237002115 is no longer retrievable through GitHub's artifact endpoint. Do not use its stale link. Wait for a fresh APK, verify its SHA-256, and retain the extracted APK digest before device testing.
+- Current-head parity tooling [39365705084](https://github.com/mbaliga/Alloy/actions/runs/39365705084) passed (178 tests), as did the A1 Mini/A1/P1S profile audits. Official Orca snapshot [39365705086](https://github.com/mbaliga/Alloy/actions/runs/39365705086), desktop A1 Mini references [39365705109](https://github.com/mbaliga/Alloy/actions/runs/39365705109), and native build/G3 [39365705522](https://github.com/mbaliga/Alloy/actions/runs/39365705522) remain in progress.
+- The last completed strict G3 comparison, native run [39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954), failed the unchanged 2% tolerance. Its prior artifact is no longer retrievable. The physical pilot was skipped. No exact-head G3 result, Handy acceptance, physical print, or production release is claimed.
 
 
 **Do not send or print unqualified generated jobs.** Direct-send and
