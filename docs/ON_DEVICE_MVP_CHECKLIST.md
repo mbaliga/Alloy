@@ -4,7 +4,7 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Installable software-QA checkpoint:** Android acceptance passed against current PR source [`63f53724775d4f5e7a2641f7a95b3dadbf379cf1`](https://github.com/mbaliga/Alloy/commit/63f53724775d4f5e7a2641f7a95b3dadbf379cf1). This update changes only CI diagnostics; production slicing behavior and the hard G3 tolerance remain unchanged.
+**Installable software-QA checkpoint:** Android acceptance passed for source checkpoint [`63f53724775d4f5e7a2641f7a95b3dadbf379cf1`](https://github.com/mbaliga/Alloy/commit/63f53724775d4f5e7a2641f7a95b3dadbf379cf1). The PR head has since advanced through checklist-only commits; application/runtime source is unchanged from the tested checkpoint.
 
 - Android acceptance [39420155791](https://github.com/mbaliga/Alloy/actions/runs/39420155791) reported 220 tests, 0 failures, and 14 skipped (native-dependent cases are skipped in this ordinary lane). Software-QA artifact: [12264346365](https://github.com/mbaliga/Alloy/actions/runs/39420155791/artifacts/12264346365); archive SHA-256 `eb5b0cc70919e11784324bc44fa4dcfbf858860632f18ccc7d6dc8b7c4c40c48`.
 - The exact-head native workflow [39420155810](https://github.com/mbaliga/Alloy/actions/runs/39420155810) is still running. The most recent completed strict G3 result remains a **NO-GO**: parity exceeded the unchanged 2% tolerance, and the physical pilot was skipped. See [`GATE_STATUS.md`](GATE_STATUS.md) for the measured deltas and diagnostic limits. Do not use a native-enabled or ordinary QA APK to print; both are QA artifacts only.
