@@ -39,6 +39,7 @@ NO_HOOK_MARKERS = (
     "M1004 S5 P1",
     "G39.3 S1",
 )
+SOURCE_HOOK_MARKERS = ("; SKIPTYPE: timelapse", "; SKIPTYPE: head_wrap_detect")
 EMPTY_HOOK_ASSIGNMENTS = ("; time_lapse_gcode =", "; wrapping_detection_gcode =")
 
 
@@ -50,7 +51,7 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def validate_neutral_profile_bundle(reference_dir: Path) -> dict[str, Any]:
+def validate_neutral_profile_bundle(reference_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     profile_path = reference_dir / "profiles" / "hook-neutralized" / "machine-hooks-neutralized.json"
     manifest_path = reference_dir / "profiles" / "hook-neutralized" / "machine-hooks-neutralized-manifest.json"
     source_path = reference_dir / "profiles" / "machine.json"
@@ -82,7 +83,7 @@ def validate_neutral_profile_bundle(reference_dir: Path) -> dict[str, Any]:
                              if key not in {"time_lapse_gcode", "wrapping_detection_gcode"}}
     if source_without_hooks != neutral_without_hooks:
         _fail("counterfactual desktop profile changed a setting other than the two hook keys")
-    return neutral
+    return source, neutral
 
 
 def _desktop_input(path: Path, neutral_profile: dict[str, Any] | None = None) -> tuple[str, str]:
@@ -109,6 +110,28 @@ def _desktop_input(path: Path, neutral_profile: dict[str, Any] | None = None) ->
     return gcode_names[0], gcode
 
 
+def _strict_desktop_input(path: Path, source_profile: dict[str, Any]) -> tuple[str, str]:
+    try:
+        with ZipFile(path) as archive:
+            settings = json.loads(archive.read("Metadata/project_settings.config"))
+            gcode_names = sorted(
+                name for name in archive.namelist()
+                if name.startswith("Metadata/plate_") and name.endswith(".gcode")
+            )
+            if len(gcode_names) != 1:
+                _fail(f"{path.name} must contain exactly one plate G-code")
+            gcode = archive.read(gcode_names[0]).decode("utf-8", errors="replace")
+    except (BadZipFile, KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        _fail(f"cannot inspect strict desktop reference {path.name}: {error}")
+    for key in ("time_lapse_gcode", "wrapping_detection_gcode"):
+        if settings.get(key) != source_profile.get(key):
+            _fail(f"strict desktop reference does not match resolved source setting {key}")
+    for marker in SOURCE_HOOK_MARKERS:
+        if marker not in settings.get("time_lapse_gcode", "") or marker not in gcode:
+            _fail(f"strict desktop reference lacks expected embedded hook {marker!r}")
+    return gcode_names[0], gcode
+
+
 def _native_input(path: Path) -> str:
     if not path.is_file() or path.stat().st_size == 0:
         _fail(f"native counterfactual is missing: {path.name}")
@@ -130,43 +153,61 @@ def compare_neutralized_fixtures(
     reference_run_id: int,
 ) -> dict[str, Any]:
     report_dir.mkdir(parents=True, exist_ok=True)
-    neutral_profile = validate_neutral_profile_bundle(reference_dir)
+    source_profile, neutral_profile = validate_neutral_profile_bundle(reference_dir)
     fixtures: list[dict[str, Any]] = []
     for fixture in FIXTURES:
+        strict_desktop_path = reference_dir / "orca-reference" / fixture / f"{fixture}.gcode.3mf"
         desktop_path = reference_dir / NEUTRAL_REFERENCE_ROOT / fixture / f"{fixture}.gcode.3mf"
         native_path = native_dir / f"{fixture}.gcode"
+        _, strict_desktop_gcode = _strict_desktop_input(strict_desktop_path, source_profile)
         _, desktop_gcode = _desktop_input(desktop_path, neutral_profile)
         native_gcode = _native_input(native_path)
+        strict_desktop = parse_metrics(strict_desktop_path, None)
         desktop = parse_metrics(desktop_path, None)
         native = parse_metrics(native_path, None)
-        desktop_travel = sum(v.get("distance_mm", 0.0) for v in desktop.travel_by_layer_feedrate.values())
-        native_travel = sum(v.get("distance_mm", 0.0) for v in native.travel_by_layer_feedrate.values())
-        desktop_travel_seconds = sum(v.get("nominal_seconds", 0.0) for v in desktop.travel_by_layer_feedrate.values())
-        native_travel_seconds = sum(v.get("nominal_seconds", 0.0) for v in native.travel_by_layer_feedrate.values())
+
+        def travel_totals(metrics: Any) -> dict[str, Any]:
+            return {
+                "travel_moves": metrics.travel_moves,
+                "travel_path_mm": sum(v.get("distance_mm", 0.0)
+                                       for v in metrics.travel_by_layer_feedrate.values()),
+                "nominal_travel_seconds": sum(v.get("nominal_seconds", 0.0)
+                                               for v in metrics.travel_by_layer_feedrate.values()),
+                "linear_xyz_path_mm": metrics.linear_xyz_path_mm,
+                "nominal_linear_extrusion_seconds": metrics.nominal_linear_extrusion_seconds,
+            }
+
+        strict_travel = travel_totals(strict_desktop)
+        neutral_travel = travel_totals(desktop)
+        native_travel = travel_totals(native)
+
+        def delta(after: dict[str, Any], before: dict[str, Any]) -> dict[str, float]:
+            return {key: float(after[key]) - float(before[key]) for key in after}
+
         fixtures.append({
             "fixture": fixture,
             "hooks_disabled_verified": True,
+            "strict_desktop_gcode_sha256": hashlib.sha256(strict_desktop_gcode.encode("utf-8")).hexdigest(),
             "desktop_gcode_sha256": hashlib.sha256(desktop_gcode.encode("utf-8")).hexdigest(),
             "native_gcode_sha256": hashlib.sha256(native_gcode.encode("utf-8")).hexdigest(),
-            "desktop": {
-                "travel_moves": desktop.travel_moves,
-                "travel_path_mm": desktop_travel,
-                "nominal_travel_seconds": desktop_travel_seconds,
-                "linear_xyz_path_mm": desktop.linear_xyz_path_mm,
-                "nominal_linear_extrusion_seconds": desktop.nominal_linear_extrusion_seconds,
-            },
-            "native": {
-                "travel_moves": native.travel_moves,
-                "travel_path_mm": native_travel,
-                "nominal_travel_seconds": native_travel_seconds,
-                "linear_xyz_path_mm": native.linear_xyz_path_mm,
-                "nominal_linear_extrusion_seconds": native.nominal_linear_extrusion_seconds,
-            },
+            "strict_desktop": strict_travel,
+            "hook_neutral_desktop": neutral_travel,
+            "native": native_travel,
+            "desktop_hook_effect_strict_minus_neutral": delta(strict_travel, neutral_travel),
+            "residual_hook_neutral_desktop_minus_native": delta(neutral_travel, native_travel),
+            "conditional_motion_by_type": strict_desktop.conditional_motion_by_type,
+            "hook_effect_travel_diagnostic": travel_diagnostic(strict_desktop, desktop),
             "travel_delta_diagnostic": travel_diagnostic(desktop, native),
         })
     result = {
         "scope": "hook-neutralized-counterfactual-diagnostic-only",
         "qualification": "not-a-production-parity-result",
+        "neutralization_scope": ["time_lapse_gcode", "wrapping_detection_gcode"],
+        "other_profile_controls_unchanged": ["retract_when_changing_layer"],
+        "interpretation_limit": (
+            "This measures slicer output after clearing profile hook text; it does not model "
+            "firmware execution of conditional blocks or disable other Bambu layer-change policy."
+        ),
         "g3_gate_modified": False,
         "thresholds_applied": False,
         "desktop_reference_run_id": reference_run_id,
