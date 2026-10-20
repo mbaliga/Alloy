@@ -5,35 +5,36 @@ only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
 **Verified software checkpoint (2026-10-19):** application source
-[`b6a979bcc25d995ede75c691d19123245effd825`](https://github.com/mbaliga/Alloy/commit/b6a979bcc25d995ede75c691d19123245effd825).
+[`0a1d52530ae73ef92baa72fb62ccaf2207892b03`](https://github.com/mbaliga/Alloy/commit/0a1d52530ae73ef92baa72fb62ccaf2207892b03).
 
-- [Android acceptance 39270869641](https://github.com/mbaliga/Alloy/actions/runs/39270869641)
+- [Android acceptance 39278128756](https://github.com/mbaliga/Alloy/actions/runs/39278128756)
   passed: 216 instrumentation tests reported, 0 failures, 12 skipped (204
   executed). This exact-head run built the CI/debug-signed QA APK and exercised
   the app on an Android emulator. The skips are native-engine-dependent tests;
   their behavior is not covered by this ordinary APK run.
-- [Parity tooling 39270869845](https://github.com/mbaliga/Alloy/actions/runs/39270869845),
-  [three-printer profile pre-gate 39270869565](https://github.com/mbaliga/Alloy/actions/runs/39270869565),
-  [desktop A1 Mini references 39270869575](https://github.com/mbaliga/Alloy/actions/runs/39270869575),
-  and [official Orca source snapshot 39270869564](https://github.com/mbaliga/Alloy/actions/runs/39270869564)
+- [Parity tooling 39278128589](https://github.com/mbaliga/Alloy/actions/runs/39278128589),
+  [three-printer profile pre-gate 39278128784](https://github.com/mbaliga/Alloy/actions/runs/39278128784),
+  [desktop A1 Mini references 39278128700](https://github.com/mbaliga/Alloy/actions/runs/39278128700),
+  and [official Orca source snapshot 39278128743](https://github.com/mbaliga/Alloy/actions/runs/39278128743)
   passed at this source.
-- The exact-head optional native run
-  [39270869597](https://github.com/mbaliga/Alloy/actions/runs/39270869597)
-  is still building its source-pinned native dependency closure. It has not yet
-  produced native instrumentation, current-head G3, or physical-pilot evidence.
+- [Native build and instrumentation 39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752)
+  built the engine and ran API-35 ARM64 instrumentation, but its strict G3
+  slicer comparison failed. See [`GATE_STATUS.md`](GATE_STATUS.md) for exact
+  fixture deltas and retained artifacts. Physical pilot steps were skipped.
 
-The latest completed native G3 comparison is from the immediately preceding
-source checkpoint
-[`d7f5d330f01d21f8f08821a780c16aae6cebe18c`](https://github.com/mbaliga/Alloy/commit/d7f5d330f01d21f8f08821a780c16aae6cebe18c),
-run [39132914352](https://github.com/mbaliga/Alloy/actions/runs/39132914352),
-and fails the unchanged 2% tolerance:
+The exact-head native G3 comparison fails the unchanged 2% tolerance. The
+comparison report is
+[artifact 12202999737](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12202999737);
+raw G-code and configs are
+[artifact 12204021145](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12204021145).
+Results:
 
-| Fixture | Print-time difference | Other failed checks |
+| Fixture | Print-time difference | Additional failed checks / large discrepancies |
 | --- | ---: | --- |
-| Cube | 14.37% | Filament length 2.10%; mass 2.03% |
-| Supported overhang | 17.87% | Filament length 2.61%; mass 2.47% |
-| Thin-wall frame | 13.23% | Filament length 2.65%; mass 2.58% |
-| Travel obstacle | 9.43% | Print time only |
+| Cube | 14.37% | Filament length 2.10%; mass 2.03%; travel moves 56.51% |
+| Supported overhang | 17.87% | Filament length 2.61%; mass 2.47%; travel moves 33.72% |
+| Thin-wall frame | 13.23% | Filament length 2.65%; mass 2.58%; travel moves 37.96% |
+| Travel obstacle | 9.52% | Travel moves 37.23% |
 
 The current comparison reports profile identity for 63 fields per fixture.
 For cube, extrusion-motion time is nearly identical (1337.09 s Android vs
@@ -53,13 +54,13 @@ Bambu Handy acceptance, and production signing remain unverified.
 
 ## 1. Install the matching artifacts
 
-For phone-only software QA, use the CI/debug-signed APK from the exact source
+For phone-only software QA, use the CI-signed APK from the exact source
 checkpoint above:
 
-- [CI/debug-signed Android QA APK, artifact 12195809972](https://github.com/mbaliga/Alloy/actions/runs/39270869641/artifacts/12195809972).
-  Archive SHA-256: `85ba05d8aaa38aedbc3d84b61b6194a4e76c7a12f14bad6c9c1d798ae52321a3`.
-  It is an ordinary Android software-acceptance build, not the optional native
-  review build and not a production release.
+- [CI-signed Android QA APK, artifact 12199639681](https://github.com/mbaliga/Alloy/actions/runs/39278128756/artifacts/12199639681).
+  Archive SHA-256: `6544bd3a60690c5495c3a3dba4b409a275f069f3b0c92d96483f5183aa996ff2`;
+  extracted APK SHA-256: `0d538621b9632d77e2781db7405e9602ffe761ba52045f3a3fa8962afbcca6ab`.
+  This is the ordinary software-acceptance build, not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
 the extracted APK digest. This CI-debug-signed software QA artifact is not a
