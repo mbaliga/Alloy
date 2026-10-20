@@ -7,9 +7,12 @@ printer safety, Bambu Handy acceptance, or production signing.
 **Installable software-QA checkpoint (2026-10-20):** application source
 [`76f0be33a4df27ffd1a7a9c6475a057e94fb2789`](https://github.com/mbaliga/Alloy/commit/76f0be33a4df27ffd1a7a9c6475a057e94fb2789).
 The current PR head
+[`216cd8f426c1a443718fc6938365912295a1d11d`](https://github.com/mbaliga/Alloy/commit/216cd8f426c1a443718fc6938365912295a1d11d)
+has no app-code changes since this APK: intervening commits add G3 diagnostic
+code/tests and refresh this verification record. The native and Android CI runs
+for diagnostic head
 [`964fbd2df7d28eb99e35e277c4c4bc80412adc96`](https://github.com/mbaliga/Alloy/commit/964fbd2df7d28eb99e35e277c4c4bc80412adc96)
-adds only G3 diagnostic code and tests after this APK; it does not change app
-code. Its Android acceptance run is still in progress.
+are still running; they have not produced a new G3 result yet.
 
 - [Android acceptance 39356822732](https://github.com/mbaliga/Alloy/actions/runs/39356822732)
   passed: 216 instrumentation tests reported, 0 failures, 12 native-dependent
@@ -24,7 +27,9 @@ code. Its Android acceptance run is still in progress.
   [desktop A1 Mini references 39356822865](https://github.com/mbaliga/Alloy/actions/runs/39356822865),
   and [official Orca source snapshot 39356822722](https://github.com/mbaliga/Alloy/actions/runs/39356822722)
   passed at this source.
-- [Native build and instrumentation 39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752)
+- [Latest native build and instrumentation run 39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954)
+  is still compiling pinned dependencies; no native/G3 result is available yet.
+  The previous completed run [39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752)
   built the engine and ran API-35 ARM64 instrumentation, but its strict G3
   slicer comparison failed. See [`GATE_STATUS.md`](GATE_STATUS.md) for exact
   fixture deltas and retained artifacts. Physical pilot steps were skipped.
