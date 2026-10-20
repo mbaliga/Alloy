@@ -149,7 +149,7 @@ def _travel_by_layer(metrics: Any) -> dict[int, dict[str, float]]:
     """Aggregate emitted travel by model layer for bounded counterfactual review."""
     layers: dict[int, dict[str, float]] = {}
     for key, values in metrics.travel_by_layer_feedrate.items():
-        match = re.match(r"layer=(\\d+),feedrate_mm_min=", key)
+        match = re.match(r"layer=(\d+),feedrate_mm_min=", key)
         if not match:
             _fail(f"unexpected travel grouping key {key!r}")
         layer = int(match.group(1))
