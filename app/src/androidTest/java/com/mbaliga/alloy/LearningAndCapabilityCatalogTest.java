@@ -103,6 +103,21 @@ public final class LearningAndCapabilityCatalogTest {
             if (!"Hard stop".equals(article.safety)) routineAdviceSeen = true;
             else Assert.assertFalse("hard-stop guidance must appear before routine advice", routineAdviceSeen);
         }
+
+        java.util.List<LearningCatalog.Article> safetyDetailMatches = catalog.searchTroubleshooting("hot nozzle");
+        Assert.assertTrue("searching safety wording from an article scope must find its hard-stop card",
+                containsArticle(safetyDetailMatches, "symptom-first-layer-bunched"));
+        Assert.assertEquals("the hot-nozzle result must retain its stop classification",
+                "Hard stop", articleById(safetyDetailMatches, "symptom-first-layer-bunched").safety);
+    }
+
+    private static boolean containsArticle(java.util.List<LearningCatalog.Article> articles, String id) {
+        return articleById(articles, id) != null;
+    }
+
+    private static LearningCatalog.Article articleById(java.util.List<LearningCatalog.Article> articles, String id) {
+        for (LearningCatalog.Article article : articles) if (id.equals(article.id)) return article;
+        return null;
     }
 
     private static String article(String id, String kind, String artwork) {

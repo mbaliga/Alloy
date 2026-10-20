@@ -62,7 +62,11 @@ public final class LearningCatalog {
         public boolean matches(String query) {
             String q = query == null ? "" : query.trim().toLowerCase(Locale.US);
             if (q.length() == 0) return true;
-            String haystack = (title + " " + summary + " " + kind + " " + keywords).toLowerCase(Locale.US);
+            // Search the complete offline guidance, not just the headline. Safety
+            // terms such as "hot nozzle" may appear only in scope or next steps.
+            String haystack = (title + " " + summary + " " + kind + " " + safety + " "
+                    + scope + " " + keywords + " " + steps + " " + visualNote)
+                    .toLowerCase(Locale.US);
             return haystack.contains(q);
         }
     }
