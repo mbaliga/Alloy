@@ -500,15 +500,15 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                     if feedrate_mm_min > 0 else 0.0
                 )
 
-    # Bambu's total estimate includes machine warm-up and other orchestration
-    # time that the native slicer does not report. Prefer model time when it is
-    # available; retain total time as a diagnostic fallback only.
+    # Prefer total estimated time when the file exposes it. Orca's generic
+    # "estimated printing time" is the same total-time scope; Bambu separately
+    # exposes a shorter model-only estimate alongside its total.
     print_time = None
     print_time_source = None
     for source, patterns in (
-        ("model_printing_time", MODEL_TIME_PATTERNS),
-        ("estimated_printing_time", TIME_PATTERNS),
         ("total_estimated_time", TOTAL_TIME_PATTERNS),
+        ("estimated_printing_time", TIME_PATTERNS),
+        ("model_printing_time", MODEL_TIME_PATTERNS),
     ):
         print_time = last_matching(lines, patterns, parse_duration)
         if print_time is not None:
@@ -773,9 +773,10 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             f"desktop={a:.6g}, Android={b:.6g}, delta={diff:.2%}, tolerance={tolerance:.2%}",
         )
 
-    # Keep the hard numeric estimate comparison unchanged, but make its
-    # provenance visible: Bambu's model-printing estimate and SliceBeam's
-    # generic estimate are not necessarily calculated from the same scope.
+    # Orca's generic estimated time and Bambu's total estimated time describe
+    # the total-time scope. Bambu's model-only estimate is not directly
+    # comparable to either, so report a warning when that is the only available
+    # metric on one side. The hard numeric tolerance is unchanged.
     if desktop.print_time_source is None or android.print_time_source is None:
         add(
             "print_time_metric_source",
@@ -787,6 +788,14 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             "print_time_metric_source",
             "pass",
             f"both use {desktop.print_time_source}",
+        )
+    elif {desktop.print_time_source, android.print_time_source} <= {
+            "total_estimated_time", "estimated_printing_time"}:
+        add(
+            "print_time_metric_source",
+            "pass",
+            f"comparable total-time estimates: desktop={desktop.print_time_source}, "
+            f"Android={android.print_time_source}",
         )
     else:
         add(
