@@ -145,6 +145,53 @@ def _native_input(path: Path) -> str:
     return gcode
 
 
+def _travel_by_layer(metrics: Any) -> dict[int, dict[str, float]]:
+    """Aggregate emitted travel by model layer for bounded counterfactual review."""
+    layers: dict[int, dict[str, float]] = {}
+    for key, values in metrics.travel_by_layer_feedrate.items():
+        match = re.match(r"layer=(\\d+),feedrate_mm_min=", key)
+        if not match:
+            _fail(f"unexpected travel grouping key {key!r}")
+        layer = int(match.group(1))
+        total = layers.setdefault(layer, {
+            "moves": 0.0,
+            "distance_mm": 0.0,
+            "nominal_seconds": 0.0,
+        })
+        total["moves"] += values.get("moves", 0.0)
+        total["distance_mm"] += values.get("distance_mm", 0.0)
+        total["nominal_seconds"] += values.get("nominal_seconds", 0.0)
+    return layers
+
+
+def _largest_layer_travel_deltas(
+    before: Any, after: Any, limit: int = 12
+) -> list[dict[str, Any]]:
+    """Return the largest per-layer travel-path deltas; diagnostic only."""
+    before_layers = _travel_by_layer(before)
+    after_layers = _travel_by_layer(after)
+    rows = []
+    for layer in sorted(set(before_layers) | set(after_layers)):
+        left = before_layers.get(layer, {})
+        right = after_layers.get(layer, {})
+        left = {key: float(left.get(key, 0.0)) for key in
+                ("moves", "distance_mm", "nominal_seconds")}
+        right = {key: float(right.get(key, 0.0)) for key in
+                 ("moves", "distance_mm", "nominal_seconds")}
+        rows.append({
+            "layer": layer,
+            "before": left,
+            "after": right,
+            "delta_after_minus_before": {
+                key: right[key] - left[key] for key in left
+            },
+        })
+    rows.sort(key=lambda row: (
+        -abs(row["delta_after_minus_before"]["distance_mm"]), row["layer"]
+    ))
+    return rows[:limit]
+
+
 def compare_neutralized_fixtures(
     native_dir: Path,
     reference_dir: Path,
@@ -198,6 +245,20 @@ def compare_neutralized_fixtures(
             "conditional_motion_by_type": strict_desktop.conditional_motion_by_type,
             "hook_effect_travel_diagnostic": travel_diagnostic(strict_desktop, desktop),
             "travel_delta_diagnostic": travel_diagnostic(desktop, native),
+            "largest_layer_travel_deltas": {
+                "strict_desktop_to_hook_neutral_desktop": _largest_layer_travel_deltas(
+                    strict_desktop, desktop
+                ),
+                "hook_neutral_desktop_to_native": _largest_layer_travel_deltas(
+                    desktop, native
+                ),
+                "ordering": "descending absolute path delta; ties by ascending layer",
+                "limit_per_comparison": 12,
+                "interpretation": (
+                    "emitted program travel grouped by parser model-layer markers; "
+                    "not firmware-executed path or a motion-time model"
+                ),
+            },
         })
     result = {
         "scope": "hook-neutralized-counterfactual-diagnostic-only",
