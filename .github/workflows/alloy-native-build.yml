@@ -54,6 +54,11 @@ on:
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
       - 'ci/compare_g3_artifacts.py'
+      - 'ci/neutralize_bambu_motion_hooks.py'
+      - 'ci/compare_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_profile.py'
+      - 'parity/test_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_workflow_contract.py'
       - 'parity/test_g3_artifact_parity.py'
       - 'parity/compare_gcode.py'
       - 'parity/test_compare_gcode.py'
@@ -119,6 +124,11 @@ on:
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
       - 'ci/compare_g3_artifacts.py'
+      - 'ci/neutralize_bambu_motion_hooks.py'
+      - 'ci/compare_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_profile.py'
+      - 'parity/test_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_workflow_contract.py'
       - 'parity/test_g3_artifact_parity.py'
       - 'parity/compare_gcode.py'
       - 'parity/test_compare_gcode.py'
@@ -525,6 +535,34 @@ jobs:
         with:
           name: alloy-native-desktop-g3-parity
           path: path-b-g3-parity
+          if-no-files-found: warn
+          retention-days: 14
+      # This counterfactual uses a separately sliced desktop reference with
+      # profile motion hooks cleared and the normal hook-neutral native output.
+      # It is deliberately non-gating and cannot replace strict G3.
+      - name: Compare hook-neutralized G3 counterfactual (diagnostic only)
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+        run: |
+          python3 ci/compare_hook_neutralized_g3.py \
+            --native-dir path-b-g3-evidence \
+            --report-dir path-b-hook-neutralized-g3-diagnostic \
+            --repository "$GITHUB_REPOSITORY" \
+            --head-sha "$ALLOY_PR_HEAD_SHA" \
+            --base-sha "$ALLOY_PR_BASE_SHA" \
+            --merge-sha "$ALLOY_PR_MERGE_SHA" \
+            --token "$GITHUB_TOKEN"
+      - name: Upload hook-neutralized G3 counterfactual diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-hook-neutralized-g3-counterfactual
+          path: path-b-hook-neutralized-g3-diagnostic
           if-no-files-found: warn
           retention-days: 14
       # A native test failure is the moment its JUnit XML is most valuable.

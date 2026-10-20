@@ -54,6 +54,21 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", text)
         self.assertIn("ALLOY_PR_MERGE_SHA: ${{ github.sha }}", text)
 
+    def test_hook_neutralized_reference_is_separate_and_non_gating(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        strict = text.split("- name: Slice all three fixtures with pinned A1 Mini profiles", 1)[1]
+        strict = strict.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[0]
+        diagnostic = text.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[1]
+        diagnostic = diagnostic.split("- name: Record authoritative baseline manifest", 1)[0]
+        self.assertIn('MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"', strict)
+        self.assertIn('--load-settings "$MACHINE;$PROCESS"', strict)
+        self.assertIn("continue-on-error: true", diagnostic)
+        self.assertIn("neutralize_bambu_motion_hooks.py", diagnostic)
+        self.assertIn("--load-settings \"$MACHINE;$PROCESS\"", diagnostic)
+        self.assertIn("runtime/orca-reference-hook-neutralized", diagnostic)
+        upload = text.split("- name: Upload Orca reference slices", 1)[1]
+        self.assertIn("runtime/orca-reference-hook-neutralized", upload)
+
 
 if __name__ == "__main__":
     unittest.main()
