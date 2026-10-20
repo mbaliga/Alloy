@@ -6,6 +6,14 @@ ROOT = Path(__file__).parents[1]
 
 
 class HookNeutralizedWorkflowContractTests(unittest.TestCase):
+    def test_parity_workflow_executes_diagnostic_tests(self):
+        text = (ROOT / ".github/workflows/parity-tools.yml").read_text(encoding="utf-8")
+        self.assertIn("ci/compare_hook_neutralized_g3.py", text)
+        self.assertIn("ci/neutralize_bambu_motion_hooks.py", text)
+        self.assertIn("test_hook_neutralized_profile.py", text)
+        self.assertIn("test_hook_neutralized_g3.py", text)
+        self.assertIn("test_hook_neutralized_workflow_contract.py", text)
+
     def test_native_diagnostic_is_separate_non_gating_and_after_strict_report(self):
         text = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         strict = text.split("- name: Compare native G3 output with exact-PR-head Orca reference", 1)[1]
