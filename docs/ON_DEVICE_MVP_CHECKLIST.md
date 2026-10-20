@@ -6,7 +6,7 @@ printer safety, Bambu Handy acceptance, or production signing.
 
 **Installable software-QA checkpoint (2026-10-20):** application source
 [`964fbd2df7d28eb99e35e277c4c4bc80412adc96`](https://github.com/mbaliga/Alloy/commit/964fbd2df7d28eb99e35e277c4c4bc80412adc96).
-The current PR head is [`6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785`](https://github.com/mbaliga/Alloy/commit/6bfe6f985d69c9a3ff0fdca1cd8f8b7875).
+The current PR head is [`6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785`](https://github.com/mbaliga/Alloy/commit/6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785).
 Changes after the application source are documentation and non-gating diagnostics; they do not change the production printing path.
 
 - The latest installable CI-signed QA APK is artifact [12237002115](https://github.com/mbaliga/Alloy/actions/runs/39357977923/artifacts/12237002115), from Android acceptance [39357977923](https://github.com/mbaliga/Alloy/actions/runs/39357977923). ZIP SHA-256: `b149ae266fd6f524f9c3e0e779fad1fbbadfcc71fedd80af6b36511796abc165`. This is for software/device QA, not production signing.
