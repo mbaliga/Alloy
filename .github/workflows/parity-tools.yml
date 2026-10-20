@@ -5,6 +5,8 @@ on:
     branches: [stage1-gates-prep, 'codex/alloy-phone-first-mvp']
     paths:
       - 'parity/**'
+      - 'ci/compare_hook_neutralized_g3.py'
+      - 'ci/neutralize_bambu_motion_hooks.py'
       - 'ci/validate_release_readiness.py'
       - 'ci/validate_release_wiring.py'
       - 'release/production-readiness.template.json'
@@ -13,6 +15,8 @@ on:
   pull_request:
     paths:
       - 'parity/**'
+      - 'ci/compare_hook_neutralized_g3.py'
+      - 'ci/neutralize_bambu_motion_hooks.py'
       - 'ci/validate_release_readiness.py'
       - 'ci/validate_release_wiring.py'
       - 'release/production-readiness.template.json'
@@ -34,6 +38,14 @@ jobs:
       - name: Compile Python tools
         run: |
           python3 -m py_compile parity/*.py
+          python3 -m py_compile ci/compare_hook_neutralized_g3.py ci/neutralize_bambu_motion_hooks.py
+
+      - name: Run hook-neutralized counterfactual diagnostic tests
+        run: |
+          PYTHONPATH=parity:ci python3 -m unittest -v \
+            parity/test_hook_neutralized_profile.py \
+            parity/test_hook_neutralized_g3.py \
+            parity/test_hook_neutralized_workflow_contract.py
 
       - name: Run profile resolver tests
         working-directory: parity
