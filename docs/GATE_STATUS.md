@@ -3509,3 +3509,11 @@ G3 export and the software-only physical-pilot build were skipped because
 native instrumentation failed. The new harness fix still needs an exact-head
 native CI run; desktop parity, Bambu Handy acceptance, physical printing,
 legal/source-lineage, production signing, and release gates remain open.
+
+### 2026-10-20 diagnostic correction and current Android QA checkpoint
+
+Application-source checkpoint `63f53724775d4f5e7a2641f7a95b3dadbf379cf1` changes only CI diagnostics relative to the preceding application build; production slicing behavior and the strict G3 tolerance remain unchanged. The template-probe hook-order parser now tracks `M82`/`M83` mode and `G92 E` resets, so an absolute-E retraction is not misidentified as positive extrusion. Its regression and all 184 parity tests pass locally.
+
+The ordinary Android workflow [39420155791](https://github.com/mbaliga/Alloy/actions/runs/39420155791) passed with 220 reported tests, zero failures, and 14 native-dependent skips. The CI QA APK is artifact [12264346365](https://github.com/mbaliga/Alloy/actions/runs/39420155791/artifacts/12264346365), archive SHA-256 `eb5b0cc70919e11784324bc44fa4dcfbf858860632f18ccc7d6dc8b7c4c40c48`. It is for software QA only, not a production release or print artifact.
+
+At the last check, exact-source native run [39420155810](https://github.com/mbaliga/Alloy/actions/runs/39420155810) had passed native dependency compilation and was building the optional native engine. No fresh G3 comparison or physical-pilot result was available yet. The latest completed strict G3 comparison remains **NO-GO** at the existing tolerance; direct-send, Bambu Handy, physical-print, and production-release qualification remain closed. Subsequent PR commits update documentation only; the application/runtime source is unchanged from checkpoint `63f5372`.
