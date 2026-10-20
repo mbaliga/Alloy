@@ -1,6 +1,19 @@
 # Alloy engine gate status
 
-Date: 2026-10-20 (local review of 2026-10-19 exact-head CI)
+Date: 2026-10-20 (current PR-head checkpoint)
+
+## Current PR head 6bfe6f9 — software checks pass; G3 pending
+
+The current PR head is [6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785](https://github.com/mbaliga/Alloy/commit/6bfe6f985d69c9a3ff0fdca1cd8f8b7873fc8785). Changes after application source `964fbd2df7d28eb99e35e277c4c4bc80412adc96` are test/diagnostic and documentation changes only; they do not modify the production slicing or printer-send path.
+
+At this head, parity tooling passed ([39364587162](https://github.com/mbaliga/Alloy/actions/runs/39364587162)), as did the three-printer profile pre-gate ([39364587184](https://github.com/mbaliga/Alloy/actions/runs/39364587184)), desktop A1 Mini reference slices ([39364587176](https://github.com/mbaliga/Alloy/actions/runs/39364587176)), and pinned Orca source snapshot ([39364587199](https://github.com/mbaliga/Alloy/actions/runs/39364587199)). Android acceptance [39364587207](https://github.com/mbaliga/Alloy/actions/runs/39364587207) and native engine/G3 [39364587179](https://github.com/mbaliga/Alloy/actions/runs/39364587179) are still in progress. No same-head G3 result is available yet.
+
+The latest completed strict native G3 report remains artifact [12238270864](https://github.com/mbaliga/Alloy/actions/runs/39357977954/artifacts/12238270864) from run [39357977954](https://github.com/mbaliga/Alloy/actions/runs/39357977954), built from the same production application source. It failed the unchanged 2% tolerance on all four fixtures; profile identity passed for 63 fields on each. The exact-head strict result remains required, and no G3 pass is claimed. The isolated end-template-only diagnostic is newly present in the current test harness but awaits the current native run.
+
+The new per-layer hook-neutralization diagnostic is non-gating. The current-head desktop artifact shows a repeatable large strict-to-neutral travel delta cluster beginning at model layer 2 across the four fixtures; this measures emitted G-code only and is not a firmware execution model or a production-planner fix. The diagnostic test initially caught an over-escaped parser in commit 7f82748; commit 6bfe6f9 corrected it, and current-head parity CI passes. Do not change planner policy, templates, G3 tolerance, or print/send eligibility from this diagnostic alone.
+
+The latest installable software-QA APK remains artifact [12237002115](https://github.com/mbaliga/Alloy/actions/runs/39357977923/artifacts/12237002115), from app source 964f; it is not a production release. Physical A1 Mini testing, Bambu Handy acceptance, source/license clearance, A1/P1S runtime qualification, production signing, and release remain open. Keep send/print/release claims fail-closed.
+
 
 ## 2026-10-19 exact-head native G3 result — FAIL / NO-GO
 
