@@ -130,6 +130,19 @@ class HookNeutralizedG3Tests(unittest.TestCase):
         self.assertEqual(row["strict_desktop"]["travel_moves"], row["hook_neutral_desktop"]["travel_moves"] + 1)
         self.assertEqual(row["desktop_hook_effect_strict_minus_neutral"]["travel_moves"], 1.0)
         self.assertIn("timelapse", row["conditional_motion_by_type"])
+        layer_diagnostics = row["largest_layer_travel_deltas"]
+        self.assertEqual(layer_diagnostics["limit_per_comparison"], 12)
+        self.assertIn("not firmware-executed", layer_diagnostics["interpretation"])
+        strict_neutral = layer_diagnostics["strict_desktop_to_hook_neutral_desktop"]
+        self.assertLessEqual(len(strict_neutral), 12)
+        self.assertEqual(strict_neutral[0]["layer"], 0)
+        self.assertEqual(strict_neutral[0]["delta_after_minus_before"]["moves"], -1.0)
+        neutral_native = layer_diagnostics["hook_neutral_desktop_to_native"]
+        self.assertEqual(len(neutral_native), 1)
+        self.assertTrue(all(
+            value == 0.0
+            for value in neutral_native[0]["delta_after_minus_before"].values()
+        ))
 
     def test_rejects_remaining_skiptype_or_hook_motion(self):
         with tempfile.TemporaryDirectory() as directory:
