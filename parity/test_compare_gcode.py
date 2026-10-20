@@ -449,8 +449,8 @@ G1 Z0.40
             android = parse_metrics(self.write(root, "android.gcode", slicebeam), None)
             self.assertEqual(desktop.layer_count, 100)
             self.assertEqual(android.layer_count, 2)
-            self.assertEqual(desktop.print_time_seconds, 1730.0)
-            self.assertEqual(desktop.print_time_source, "model_printing_time")
+            self.assertEqual(desktop.print_time_seconds, 1731.0)
+            self.assertEqual(desktop.print_time_source, "total_estimated_time")
             self.assertEqual(android.print_time_source, "estimated_printing_time")
             self.assertAlmostEqual(desktop.filament_mm, 1257.28)
             self.assertAlmostEqual(desktop.filament_g, 0.0)
@@ -459,8 +459,25 @@ G1 Z0.40
                 check for check in report["checks"]
                 if check["name"] == "print_time_metric_source"
             )
+            self.assertEqual(source_check["status"], "pass")
+            self.assertIn("comparable total-time estimates", source_check["detail"])
+
+    def test_model_only_estimate_is_not_treated_as_total_time(self):
+        model_only = "; model printing time: 28m 50s\nG90\nG1 X1\n"
+        total_only = "; estimated printing time = 28m 51s\nG90\nG1 X1\n"
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "model-only.gcode", model_only), None)
+            android = parse_metrics(self.write(root, "total-only.gcode", total_only), None)
+            self.assertEqual(desktop.print_time_source, "model_printing_time")
+            self.assertEqual(android.print_time_source, "estimated_printing_time")
+            report = compare(desktop, android, tolerance=0.02)
+            source_check = next(
+                check for check in report["checks"]
+                if check["name"] == "print_time_metric_source"
+            )
             self.assertEqual(source_check["status"], "warn")
-            self.assertIn("the unchanged numeric tolerance still applies", source_check["detail"])
+            self.assertIn("model_printing_time", source_check["detail"])
 
 
 if __name__ == "__main__":
