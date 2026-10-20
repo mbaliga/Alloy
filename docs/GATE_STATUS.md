@@ -106,12 +106,14 @@ emitting park/unload motions absent from Alloy's current end template. This is
 a plausible attribution for much of the repeatable tail delta, **not** proof
 of firmware execution, safety, exact per-layer accounting (the report groups
 post-model moves into its terminal layer bucket), or a qualified Bambu end
-sequence. The native render's current template probe applies all four upstream
-hooks together, so it cannot isolate the end hook's contribution. Next
-diagnostic: add a test-only end-template-only render and compare its tail and
-travel metrics separately; do not ship upstream macros, alter production
-templates, or change G3 thresholds/send gates based on this lead. Firmware
-conditional behavior and physical pilot remain open.
+sequence. The native template probe now has a separate test-only
+end-template-only render, alongside its existing all-hooks render. It asserts
+that the start, layer-change, and time-lapse hooks are not imported into that
+isolated case. Its outputs remain explicitly unqualified and are validated
+separately; exact-head native CI must still render and compare them. Do not
+ship upstream macros, alter production templates, or change G3 thresholds/send
+gates based on this lead. Firmware conditional behavior and physical pilot
+remain open.
 
 ## 2026-10-18 exact-head native G3 result — FAIL / NO-GO
 
