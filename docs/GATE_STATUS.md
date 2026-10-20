@@ -2,7 +2,26 @@
 
 Date: 2026-10-20 (current PR-head checkpoint)
 
-## Current PR head 1a1932d — software checks pass; strict G3 FAIL / NO-GO
+## Exact PR head 853f222 — native instrumentation PASS; strict G3 FAIL / NO-GO
+
+The current PR head is [853f2221b20c76e6ef0b6eff286b6a9ab04573f1](https://github.com/mbaliga/Alloy/commit/853f2221b20c76e6ef0b6eff286b6a9ab04573f1). Production app source remains `964fbd2df7d28eb99e35e277c4c4bc80412adc96`; the added Bambu identity entry point is called only by instrumentation. The production slice entry point continues to use the non-BBL default. No production slicing/send behavior or hard tolerance changed.
+
+The exact-head Android acceptance run [39398116342](https://github.com/mbaliga/Alloy/actions/runs/39398116342) passed: 220 reported tests, 0 failures, 14 skipped. Those skips are native-engine-dependent cases. The native run [39398116512](https://github.com/mbaliga/Alloy/actions/runs/39398116512) successfully built the engine, passed API-35 ARM-translation instrumentation, rendered and validated the pinned templates, and completed the test-only A/B probe. Its strict G3 comparator failed, so both physical-pilot steps were skipped.
+
+The strict G3 report is [artifact 12258296482](https://github.com/mbaliga/Alloy/actions/runs/39398116512/artifacts/12258296482) (ZIP SHA-256 `cfd5540c5a657c073d90c518e73aef4fcd228bfc7c0496f29b926f47cbf8b5e3`). At the unchanged 2% tolerance, 63/63 profile-identity fields pass per fixture, but all four fail print-time comparison:
+
+| Fixture | Time (desktop / Alloy) | Time delta | Filament length delta | Filament mass delta |
+| --- | ---: | ---: | ---: | ---: |
+| Cube | 1775 / 1521 s | 14.31% | 2.09% | 2.03% |
+| Supported overhang | 2048 / 1684 s | 17.77% | 2.59% | 2.47% |
+| Thin-wall frame | 1330 / 1154 s | 13.23% | 2.65% | 2.58% |
+| Travel obstacle | 3393 / 3074 s | 9.40% | within 2% | within 2% |
+
+The A/B Bambu template diagnostic is [artifact 12258785816](https://github.com/mbaliga/Alloy/actions/runs/39398116512/artifacts/12258785816) (SHA-256 `901f1a99669998044352a11edabcb53235f2a00ea6c03d0101acabc7775ec7aa`); its rendered G-code bundle is [artifact 12258256554](https://github.com/mbaliga/Alloy/actions/runs/39398116512/artifacts/12258256554) (SHA-256 `a70ef4aaff8cef0437fb851af4afba02fed4819e5b0cacc4cdb21de9929b9cda`). This is an explicitly non-gating, unqualified, instrumentation-only comparison using identical configs while toggling internal BBL-printer identity; it does not change production runtime. Across the four fixtures it lowers the engine-reported estimate by 427–440 seconds, but leaves it 11.32% high for the cube, 18.36% high for the supported overhang, and 11.41% high for the travel obstacle. Thin-wall time lands within 0.46% of desktop. Filament length remains within 0.21% for all four; layer and extrusion-move counts are unchanged. This points to a time-estimation/template-policy effect, not a validated production fix or firmware parity. Keep the default unchanged.
+
+The native instrumentation report is [artifact 12259135616](https://github.com/mbaliga/Alloy/actions/runs/39398116512/artifacts/12259135616) (SHA-256 `de61b32e761950985c99fb17c2b7572d5ab95a5412d4528b5d0c2e3682bbe154`). The ordinary Android software-QA APK is [artifact 12253604604](https://github.com/mbaliga/Alloy/actions/runs/39398116342/artifacts/12253604604), archive SHA-256 `e11816fc146700f02d1bfb1d42d85f32ab60e3e30cafbf842969b6f77b50ce47`, extracted APK SHA-256 `68adb2f0eaf0e60e2a7fb00c1be56c6ac3a4645036f0877f7887f499d2bbec67`. The native-enabled APK pair is available as artifacts [12257885728](https://github.com/mbaliga/Alloy/actions/runs/39398116512/artifacts/12257885728) and [12257800815](https://github.com/mbaliga/Alloy/actions/runs/39398116512/artifacts/12257800815), but the engine is not G3-qualified. These are QA artifacts, not release packages. Do not send/share/print generated jobs or import them into Bambu Handy for printing. Direct send, physical A1 Mini pilot, A1/P1S runtime qualification, Bambu Handy acceptance, production signing, and release remain open.
+
+## Historical 1a1932d checkpoint — software checks pass; strict G3 FAIL / NO-GO
 
 The current PR head is [1a1932db903b6adc47cfeec47922f8b243261d56](https://github.com/mbaliga/Alloy/commit/1a1932db903b6adc47cfeec47922f8b243261d56). The production app source remains `964fbd2df7d28eb99e35e277c4c4bc80412adc96`; subsequent changes are diagnostic and documentation only and do not modify production slicing, printer-send behavior, or qualification thresholds.
 
