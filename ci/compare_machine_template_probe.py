@@ -32,7 +32,10 @@ from ci.compare_g3_artifacts import (  # noqa: E402
     validate_reference_manifest,
     wait_for_reference_run,
 )
-from ci.validate_machine_template_probe_output import validate as validate_probe  # noqa: E402
+from ci.validate_machine_template_probe_output import (  # noqa: E402
+    validate as validate_probe,
+    validate_end_only,
+)
 from compare_gcode import parse_metrics, relative_diff  # noqa: E402
 from verify_g3_profile import merged_desktop_settings, read_native_settings, verify  # noqa: E402
 
@@ -136,25 +139,51 @@ def compare_probe_to_reference(
     reference_dir: Path,
 ) -> tuple[list[dict[str, Any]], dict[str, str]]:
     manifest = validate_probe(probe_dir)
+    end_only_manifest = validate_end_only(probe_dir / "end-only")
+    end_only_fixtures = {
+        item["fixture"]: item for item in end_only_manifest["fixtures"]
+    }
     reports: list[dict[str, Any]] = []
     for fixture in FIXTURES:
         desktop_path = reference_dir / "orca-reference" / fixture / f"{fixture}.gcode.3mf"
         probe_path = probe_dir / f"{fixture}.gcode"
         config_path = probe_dir / f"{fixture}.config.ini"
-        for path in (desktop_path, probe_path, config_path):
+        end_only_path = probe_dir / "end-only" / f"{fixture}.gcode"
+        end_only_config_path = probe_dir / "end-only" / f"{fixture}.config.ini"
+        for path in (desktop_path, probe_path, config_path, end_only_path, end_only_config_path):
             if not path.is_file() or path.stat().st_size == 0:
                 raise RuntimeError(f"template diagnostic input missing or empty: {path.name}")
         desktop = parse_metrics(desktop_path, None)
         rendered = parse_metrics(probe_path, None)
-        profile_identity = verify(
-            merged_desktop_settings(desktop_path), read_native_settings(config_path)
+        end_only_rendered = parse_metrics(end_only_path, None)
+        desktop_settings = merged_desktop_settings(desktop_path)
+        profile_identity = verify(desktop_settings, read_native_settings(config_path))
+        end_only_profile_identity = verify(
+            desktop_settings, read_native_settings(end_only_config_path)
         )
+        if end_only_profile_identity != profile_identity:
+            raise RuntimeError(f"end-only render profile identity differs for {fixture}")
         reports.append({
             "fixture": fixture,
             "probe_gcode_sha256": next(
                 item["sha256"] for item in manifest["fixtures"] if item["fixture"] == fixture
             ),
             "measurements": fixture_diagnostic(desktop, rendered, profile_identity),
+            "end_only_render_vs_desktop_full_hook_reference": {
+                "comparison_kind": "measurement-only",
+                "render_scope": "machine-end-template-only-render-diagnostic",
+                "template_sha256": end_only_manifest["template_sha256"],
+                "probe_gcode_sha256": end_only_fixtures[fixture]["sha256"],
+                "profile_identity": end_only_profile_identity,
+                "measurements": fixture_diagnostic(
+                    desktop, end_only_rendered, end_only_profile_identity
+                ),
+                "interpretation_limit": (
+                    "The native render installs the pinned machine-end template while retaining "
+                    "the native baseline for other hooks; the desktop reference contains its full "
+                    "hook set. This comparison does not isolate machine-end contribution or establish parity."
+                ),
+            },
         })
     return reports, manifest["template_sha256"]
 

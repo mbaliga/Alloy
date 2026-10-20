@@ -8,7 +8,9 @@ import tempfile
 from pathlib import Path
 
 from ci.compare_machine_template_probe import (
+    FIXTURES,
     SCOPE,
+    compare_probe_to_reference,
     diagnostic_report,
     fixture_diagnostic,
     main,
@@ -39,6 +41,77 @@ def metrics(**overrides):
 
 
 class MachineTemplateProbeDiagnosticTests(unittest.TestCase):
+    def _probe_inputs(self, root: Path, omit_end_only=None):
+        probe_dir = root / "probe"
+        reference_dir = root / "reference"
+        (probe_dir / "end-only").mkdir(parents=True)
+        for fixture in FIXTURES:
+            desktop_dir = reference_dir / "orca-reference" / fixture
+            desktop_dir.mkdir(parents=True)
+            (desktop_dir / f"{fixture}.gcode.3mf").write_text("reference", encoding="utf-8")
+            for relative in (
+                f"{fixture}.gcode", f"{fixture}.config.ini",
+                f"end-only/{fixture}.gcode", f"end-only/{fixture}.config.ini",
+            ):
+                path = probe_dir / relative
+                if relative == f"end-only/{omit_end_only}.gcode":
+                    continue
+                path.write_text("probe", encoding="utf-8")
+        return probe_dir, reference_dir
+
+    def _comparison_patches(self):
+        identity = {"result": "pass", "checked_fields": 62, "failed_fields": []}
+        manifest = {
+            "template_sha256": {"machine_end_gcode": "a" * 64},
+            "fixtures": [{"fixture": fixture, "sha256": "b" * 64} for fixture in FIXTURES],
+        }
+        end_manifest = {
+            "template_sha256": "c" * 64,
+            "fixtures": [{"fixture": fixture, "sha256": "d" * 64} for fixture in FIXTURES],
+        }
+
+        def parse(path, _member):
+            path_text = str(path)
+            if "/end-only/" in path_text:
+                return metrics(print_time_seconds=120.0)
+            if path_text.endswith(".gcode"):
+                return metrics(print_time_seconds=110.0)
+            return metrics()
+
+        return (
+            patch("ci.compare_machine_template_probe.validate_probe", return_value=manifest),
+            patch("ci.compare_machine_template_probe.validate_end_only", return_value=end_manifest),
+            patch("ci.compare_machine_template_probe.parse_metrics", side_effect=parse),
+            patch("ci.compare_machine_template_probe.merged_desktop_settings", return_value={}),
+            patch("ci.compare_machine_template_probe.read_native_settings", return_value={}),
+            patch("ci.compare_machine_template_probe.verify", return_value=identity),
+        )
+
+    def test_comparator_reports_four_labeled_end_only_measurements(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            probe_dir, reference_dir = self._probe_inputs(Path(temporary))
+            patches = self._comparison_patches()
+            with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+                reports, _digests = compare_probe_to_reference(probe_dir, reference_dir)
+        self.assertEqual(list(FIXTURES), [row["fixture"] for row in reports])
+        for row in reports:
+            end_only = row["end_only_render_vs_desktop_full_hook_reference"]
+            self.assertEqual("measurement-only", end_only["comparison_kind"])
+            self.assertEqual("machine-end-template-only-render-diagnostic", end_only["render_scope"])
+            self.assertEqual("c" * 64, end_only["template_sha256"])
+            self.assertEqual("d" * 64, end_only["probe_gcode_sha256"])
+            self.assertEqual(20.0, end_only["measurements"]["metrics"]["print_time_seconds"]["delta"])
+            self.assertIn("does not isolate machine-end contribution", end_only["interpretation_limit"])
+
+    def test_comparator_fails_if_any_end_only_gcode_or_config_is_absent(self):
+        for missing_name in ("cube_20mm.gcode", "cube_20mm.config.ini"):
+            with self.subTest(missing=missing_name), tempfile.TemporaryDirectory() as temporary:
+                probe_dir, reference_dir = self._probe_inputs(Path(temporary))
+                (probe_dir / "end-only" / missing_name).unlink()
+                patches = self._comparison_patches()
+                with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+                    with self.assertRaisesRegex(RuntimeError, "template diagnostic input missing"):
+                        compare_probe_to_reference(probe_dir, reference_dir)
     def test_fixture_reports_deltas_without_a_pass_fail_decision(self):
         report = fixture_diagnostic(
             metrics(),
