@@ -4,25 +4,34 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Verified software checkpoint (2026-10-19):** application source
-[`0a1d52530ae73ef92baa72fb62ccaf2207892b03`](https://github.com/mbaliga/Alloy/commit/0a1d52530ae73ef92baa72fb62ccaf2207892b03).
+**Installable software-QA checkpoint (2026-10-20):** application source
+[`76f0be33a4df27ffd1a7a9c6475a057e94fb2789`](https://github.com/mbaliga/Alloy/commit/76f0be33a4df27ffd1a7a9c6475a057e94fb2789).
+The current PR head
+[`964fbd2df7d28eb99e35e277c4c4bc80412adc96`](https://github.com/mbaliga/Alloy/commit/964fbd2df7d28eb99e35e277c4c4bc80412adc96)
+adds only G3 diagnostic code and tests after this APK; it does not change app
+code. Its Android acceptance run is still in progress.
 
-- [Android acceptance 39278128756](https://github.com/mbaliga/Alloy/actions/runs/39278128756)
-  passed: 216 instrumentation tests reported, 0 failures, 12 skipped (204
-  executed). This exact-head run built the CI/debug-signed QA APK and exercised
-  the app on an Android emulator. The skips are native-engine-dependent tests;
-  their behavior is not covered by this ordinary APK run.
-- [Parity tooling 39278128589](https://github.com/mbaliga/Alloy/actions/runs/39278128589),
-  [three-printer profile pre-gate 39278128784](https://github.com/mbaliga/Alloy/actions/runs/39278128784),
-  [desktop A1 Mini references 39278128700](https://github.com/mbaliga/Alloy/actions/runs/39278128700),
-  and [official Orca source snapshot 39278128743](https://github.com/mbaliga/Alloy/actions/runs/39278128743)
+- [Android acceptance 39356822732](https://github.com/mbaliga/Alloy/actions/runs/39356822732)
+  passed: 216 instrumentation tests reported, 0 failures, 12 native-dependent
+  tests skipped (204 executed). The exact-head run built the CI-signed QA APK
+  and exercised the app on an Android emulator. This does not cover the skipped
+  native-engine behavior.
+- [CI-signed QA APK artifact 12235039810](https://github.com/mbaliga/Alloy/actions/runs/39356822732/artifacts/12235039810).
+  Artifact ZIP SHA-256: `c677214ff937ce9ec5478a34d76d98f3393022e59695744289286ceeeea991c3`.
+  This is for software/device QA, not production signing.
+- [Parity tooling 39356822762](https://github.com/mbaliga/Alloy/actions/runs/39356822762),
+  [three-printer profile pre-gate 39356822695](https://github.com/mbaliga/Alloy/actions/runs/39356822695),
+  [desktop A1 Mini references 39356822865](https://github.com/mbaliga/Alloy/actions/runs/39356822865),
+  and [official Orca source snapshot 39356822722](https://github.com/mbaliga/Alloy/actions/runs/39356822722)
   passed at this source.
 - [Native build and instrumentation 39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752)
   built the engine and ran API-35 ARM64 instrumentation, but its strict G3
   slicer comparison failed. See [`GATE_STATUS.md`](GATE_STATUS.md) for exact
   fixture deltas and retained artifacts. Physical pilot steps were skipped.
 
-The exact-head native G3 comparison fails the unchanged 2% tolerance. The
+The latest completed exact-head native G3 comparison (run
+[39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752))
+fails the unchanged 2% tolerance. The
 comparison report is
 [artifact 12202999737](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12202999737);
 raw G-code and configs are
@@ -57,13 +66,13 @@ Bambu Handy acceptance, and production signing remain unverified.
 For phone-only software QA, use the CI-signed APK from the exact source
 checkpoint above:
 
-- [CI-signed Android QA APK, artifact 12199639681](https://github.com/mbaliga/Alloy/actions/runs/39278128756/artifacts/12199639681).
-  Archive SHA-256: `6544bd3a60690c5495c3a3dba4b409a275f069f3b0c92d96483f5183aa996ff2`;
-  extracted APK SHA-256: `0d538621b9632d77e2781db7405e9602ffe761ba52045f3a3fa8962afbcca6ab`.
+- [CI-signed Android QA APK, artifact 12235039810](https://github.com/mbaliga/Alloy/actions/runs/39356822732/artifacts/12235039810).
+  Archive SHA-256: `c677214ff937ce9ec5478a34d76d98f3393022e59695744289286ceeeea991c3`.
+  After extracting, record the APK's SHA-256 as part of the device test record.
   This is the ordinary software-acceptance build, not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
-the extracted APK digest. This CI-debug-signed software QA artifact is not a
+the extracted APK digest. This CI-signed software QA artifact is not a
 production release. Do not substitute an older native APK or send generated
 packages to the printer or Bambu Handy while qualification is incomplete.
 
