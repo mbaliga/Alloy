@@ -1,6 +1,63 @@
 # Alloy engine gate status
 
-Date: 2026-10-18
+Date: 2026-10-20 (local review of 2026-10-19 exact-head CI)
+
+## 2026-10-19 exact-head native G3 result — FAIL / NO-GO
+
+PR source [`0a1d52530ae73ef92baa72fb62ccaf2207892b03`](https://github.com/mbaliga/Alloy/commit/0a1d52530ae73ef92baa72fb62ccaf2207892b03)
+passed parity tooling ([39278128589](https://github.com/mbaliga/Alloy/actions/runs/39278128589)),
+the official Orca source snapshot
+([39278128743](https://github.com/mbaliga/Alloy/actions/runs/39278128743)),
+desktop A1 Mini reference slices
+([39278128700](https://github.com/mbaliga/Alloy/actions/runs/39278128700)),
+the three-printer static profile pre-gate
+([39278128784](https://github.com/mbaliga/Alloy/actions/runs/39278128784)),
+and ordinary Android acceptance
+([39278128756](https://github.com/mbaliga/Alloy/actions/runs/39278128756)).
+Android acceptance reported 216 tests, 0 failures, 12 skipped (204 executed).
+The native workflow built the engine and ran API-35 ARM64 instrumentation
+(203 passed, 2 intentionally ignored), rendered the template diagnostic, and
+exported G3 evidence. Its strict comparator failed; the isolated physical
+pilot was skipped. The native run is
+[39278128752](https://github.com/mbaliga/Alloy/actions/runs/39278128752).
+
+The exact-head G3 comparison is artifact
+[12202999737](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12202999737)
+(SHA-256 `20c1604e02222fbe44232f61e35f304a30d1fcf9b05e0dcb99f5993d4028b88e`);
+raw native G-code and configs are artifact
+[12204021145](https://github.com/mbaliga/Alloy/actions/runs/39278128752/artifacts/12204021145)
+(SHA-256 `71e7089f3e002bc089c3d05a38df6433990d1ebf9c69fb0c6417d5731238b67b`).
+All fixtures pass 63 checked profile-identity fields and retain the 2%
+hard tolerance. Results:
+
+| Fixture | Time delta (desktop / Alloy) | Filament length delta | Travel-move delta |
+| --- | ---: | ---: | ---: |
+| Cube | 14.37% (1775 / 1520 s) | 2.10% | 56.51% |
+| Supported overhang | 17.87% (2048 / 1682 s) | 2.61% | 33.72% |
+| Thin-wall frame | 13.23% (1330 / 1154 s) | 2.65% | 37.96% |
+| Travel obstacle | 9.52% (3393 / 3070 s) | 1.07% | 37.23% |
+
+For the cube, extrusion-motion time is effectively identical (1337.18 s
+desktop vs 1337.09 s Alloy), while estimated travel time is 111.27 s vs 20.97 s
+and travel moves are 2435 vs 1059. Travel-path distance differs 35.16%.
+The obstacle's time source also differs
+(`model_printing_time` vs `estimated_printing_time`); the comparator warns but
+keeps the hard numeric tolerance unchanged. The larger travel-path and move
+deltas show a genuine motion-planning mismatch as well, so estimate-source
+semantics alone cannot explain or waive the failure. Do not add a blanket time
+multiplier or relax tolerances. No fixture result qualifies production output.
+
+The exact-head CI-signed QA APK is artifact
+[12199639681](https://github.com/mbaliga/Alloy/actions/runs/39278128756/artifacts/12199639681),
+archive SHA-256 `6544bd3a60690c5495c3a3dba4b409a275f069f3b0c92d96483f5183aa996ff2`,
+extracted APK SHA-256
+`0d538621b9632d77e2781db7405e9602ffe761ba52045f3a3fa8962afbcca6ab`.
+It is for software/device QA, not production signing. The ordinary Android
+run's native-dependent cases were skipped; use native instrumentation results
+only for the runtime behavior they actually cover. Direct send, Bambu Handy
+acceptance, physical print, and production release remain unqualified. The
+updated device protocol is in
+[`ON_DEVICE_MVP_CHECKLIST.md`](ON_DEVICE_MVP_CHECKLIST.md).
 
 ## 2026-10-18 exact-head native G3 result — FAIL / NO-GO
 
