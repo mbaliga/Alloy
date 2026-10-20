@@ -72,6 +72,26 @@ class CompareGcodeTests(unittest.TestCase):
                 check for check in report["checks"] if check["name"] == "profile_identity"
             )["status"])
 
+    def test_bambu_skiptype_moves_are_reported_separately_without_predicting_execution(self):
+        with tempfile.TemporaryDirectory() as td:
+            text = (
+                "; timelapse_type = 0\n;LAYER_CHANGE\nG90\n"
+                "G1 X1 Y1 F600\n; SKIPPABLE_START\n; SKIPTYPE: timelapse\n"
+                "M622 J1\nG1 X11 Y1 F600\nM623\n; SKIPPABLE_END\n"
+                "G1 X21 Y1 F600\n"
+            )
+            metrics = parse_metrics(self.write(Path(td), "bambu.gcode", text), None)
+            self.assertEqual(3, metrics.travel_moves)
+            self.assertAlmostEqual(20.0 + 2.0 ** 0.5, metrics.linear_xyz_path_mm)
+            self.assertEqual(1, metrics.conditional_motion_by_type["timelapse"]["moves"])
+            self.assertAlmostEqual(10.0, metrics.conditional_motion_by_type["timelapse"]["path_mm"])
+            self.assertIn("timelapse", metrics_report(metrics)["conditional_motion_by_type"])
+            report = compare(metrics, metrics, 0.02)
+            warning = next(check for check in report["checks"]
+                           if check["name"] == "conditional_motion_scope")
+            self.assertEqual("warn", warning["status"])
+            self.assertIn("runtime execution is not inferred", warning["detail"])
+
     def write(self, root: Path, name: str, content: str) -> Path:
         path = root / name
         path.write_text(content)
