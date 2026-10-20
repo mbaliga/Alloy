@@ -6,7 +6,7 @@ printer safety, Bambu Handy acceptance, or production signing.
 
 **Installable software-QA checkpoint:** Android acceptance passed against current PR source [`63f53724775d4f5e7a2641f7a95b3dadbf379cf1`](https://github.com/mbaliga/Alloy/commit/63f53724775d4f5e7a2641f7a95b3dadbf379cf1). This update changes only CI diagnostics; production slicing behavior and the hard G3 tolerance remain unchanged.
 
-- Android acceptance [39420155791](https://github.com/mbaliga/Alloy/actions/runs/39420155791) reported 220 tests, 0 failures, and 14 skipped (native-dependent cases are skipped in this ordinary lane). Software-QA artifact: [12264346365](https://github.com/mbaliga/Alloy/actions/runs/39420155791/artifacts/12264346365); archive SHA-256 `eb5b0cc70919e11784324bc44fa4dcfbf858632f6f77f7887f499d2bbec67`.
+- Android acceptance [39420155791](https://github.com/mbaliga/Alloy/actions/runs/39420155791) reported 220 tests, 0 failures, and 14 skipped (native-dependent cases are skipped in this ordinary lane). Software-QA artifact: [12264346365](https://github.com/mbaliga/Alloy/actions/runs/39420155791/artifacts/12264346365); archive SHA-256 `eb5b0cc70919e11784324bc44fa4dcfbf858860632f18ccc7d6dc8b7c4c40c48`.
 - The exact-head native workflow [39420155810](https://github.com/mbaliga/Alloy/actions/runs/39420155810) is still running. The most recent completed strict G3 result remains a **NO-GO**: parity exceeded the unchanged 2% tolerance, and the physical pilot was skipped. See [`GATE_STATUS.md`](GATE_STATUS.md) for the measured deltas and diagnostic limits. Do not use a native-enabled or ordinary QA APK to print; both are QA artifacts only.
 
 **Do not send or print unqualified generated jobs.** Direct-send and
@@ -20,7 +20,7 @@ For phone-only software QA, use the CI-signed ordinary APK from the exact
 source checkpoint above:
 
 - [CI-signed Android QA APK, artifact 12264346365](https://github.com/mbaliga/Alloy/actions/runs/39420155791/artifacts/12264346365).
-  Archive SHA-256: `eb5b0cc70919e11784324bc44fa4dcfbf858632f6f77f7887f499d2bbec67`.
+  Archive SHA-256: `eb5b0cc70919e11784324bc44fa4dcfbf858860632f18ccc7d6dc8b7c4c40c48`.
   This is the ordinary software-acceptance build, not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
