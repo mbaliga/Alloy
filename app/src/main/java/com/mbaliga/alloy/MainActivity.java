@@ -3121,9 +3121,9 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private void showA1MiniMaterialPicker() {
-        if (profile == null || !"bambu.a1-mini".equals(profile.printerId)) {
-            Toast.makeText(this, "Bundled material recipes are currently for the A1 Mini only", Toast.LENGTH_LONG).show();
+    private void showMaterialRecipePicker() {
+        if (profile == null) {
+            Toast.makeText(this, "Select a planning printer first", Toast.LENGTH_LONG).show();
             return;
         }
         if (importedProfileActive()) {
@@ -3131,22 +3131,40 @@ public final class MainActivity extends Activity {
             return;
         }
         try {
-            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadA1MiniMaterialProfiles(getAssets());
+            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadMaterialProfiles(getAssets(), profile.printerId);
             String[] labels = new String[choices.size()];
             for (int index = 0; index < choices.size(); index++) {
-                labels[index] = a1MiniMaterialPickerLabel(choices.get(index));
+                labels[index] = materialRecipePickerLabel(choices.get(index));
             }
+            String printerName = profile.printerId.equals("bambu.a1-mini") ? "A1 Mini"
+                    : profile.printerId.equals("bambu.a1") ? "A1" : "P1S";
             new AlertDialog.Builder(this)
-                    .setTitle("A1 Mini material recipe")
-                    .setMessage(a1MiniMaterialPickerGuidance())
+                    .setTitle(printerName + " material recipe")
+                    .setMessage(materialRecipePickerGuidance(profile.printerId))
                     .setItems(labels, (ignored, which) -> {
                         if (which >= 0 && which < choices.size()) applyBundledProfile(choices.get(which));
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
         } catch (Exception error) {
-            Toast.makeText(this, "A1 Mini material recipes are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Material recipes are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    static String materialRecipePickerLabel(ProfileCatalog.Profile choice) {
+        if (choice != null && "bambu.a1-mini".equals(choice.printerId))
+            return a1MiniMaterialPickerLabel(choice);
+        if (choice == null) return "Unknown recipe · planning only";
+        return choice.filamentName + "\n" + choice.material
+                + " · check material route and spool compatibility · 0.4 mm nozzle · planning only";
+    }
+
+    static String materialRecipePickerGuidance(String printerId) {
+        if ("bambu.a1-mini".equals(printerId)) return a1MiniMaterialPickerGuidance();
+        return "Choose a source-backed 0.4 mm starter recipe for the selected printer. "
+                + "Material suitability does not confirm the exact spool, feeder route, temperature, or printer condition. "
+                + "Review the material and feed route before slicing. This recipe is for planning and inspection only; "
+                + "Alloy print/send actions remain unqualified.";
     }
 
     static String a1MiniMaterialPickerLabel(ProfileCatalog.Profile choice) {
@@ -5880,14 +5898,12 @@ public final class MainActivity extends Activity {
             TextView boundary = label("Compatibility is not a recipe. To change filament, select or import a source-backed material profile, then re-slice and review. Direct send remains " + printer.directSendState + ".", 12, RED);
             boundary.setPadding(0, dp(10), 0, dp(6)); boundary.setLineSpacing(dp(2), 1f);
             page.addView(boundary);
-            if ("a1-mini".equals(printer.id)) {
-                Button recipeButton = dialogButton("Choose A1 Mini material recipe", v -> showA1MiniMaterialPicker());
-                LinearLayout.LayoutParams recipeLp = new LinearLayout.LayoutParams(-1, dp(44));
-                recipeLp.topMargin = dp(6); page.addView(recipeButton, recipeLp);
-                Button importButton = dialogButton("Import a reviewed Bambu preset", v -> openBambuProfile());
-                LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(-1, dp(44));
-                importLp.topMargin = dp(6); page.addView(importButton, importLp);
-            }
+            Button recipeButton = dialogButton("Choose material recipe", v -> showMaterialRecipePicker());
+            LinearLayout.LayoutParams recipeLp = new LinearLayout.LayoutParams(-1, dp(44));
+            recipeLp.topMargin = dp(6); page.addView(recipeButton, recipeLp);
+            Button importButton = dialogButton("Import a reviewed Bambu preset", v -> openBambuProfile());
+            LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(-1, dp(44));
+            importLp.topMargin = dp(6); page.addView(importButton, importLp);
             TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
             materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
             for (PrinterCapabilityCatalog.Material material : printer.materials) {

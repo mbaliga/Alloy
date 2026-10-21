@@ -72,6 +72,33 @@ public final class ProfileCatalogImportTest {
     }
 
     @Test
+    public void exposesSourcePinnedPetgRecipesForA1AndP1sWithoutQualifyingSend() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
+        for (String[] printer : new String[][]{
+                {"bambu.a1", "a1", "Bambu PETG Basic"},
+                {"bambu.p1s", "p1s", "Bambu PETG HF"}
+        }) {
+            java.util.List<ProfileCatalog.Profile> profiles =
+                    ProfileCatalog.loadMaterialProfiles(context.getAssets(), printer[0]);
+            Assert.assertEquals(2, profiles.size());
+            Assert.assertEquals("PLA", profiles.get(0).material);
+            ProfileCatalog.Profile petg = profiles.get(1);
+            Assert.assertEquals(printer[0], petg.printerId);
+            Assert.assertEquals("PETG", petg.material);
+            Assert.assertTrue(petg.filamentName, petg.filamentName.contains(printer[2]));
+            Assert.assertEquals(0.4f, petg.nozzle, 0.001f);
+            Assert.assertEquals(40, petg.provenanceRevision.length());
+            Assert.assertFalse("source-backed planning recipes are not print qualification", petg.verified);
+            Assert.assertTrue(capabilities.forProfile(petg).directSendState.contains("Not qualified"));
+            Assert.assertEquals(petg.id, ProfileCatalog.loadPlanningById(context.getAssets(), petg.id).id);
+            Assert.assertTrue(MainActivity.materialRecipePickerLabel(petg).contains("planning only"));
+            Assert.assertTrue(MainActivity.materialRecipePickerGuidance(printer[0])
+                    .contains("Alloy print/send actions remain unqualified"));
+        }
+    }
+
+    @Test
     public void importsMachineProcessAndFilamentPresetsWithSafeProjection() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ProfileCatalog.Profile baseline = ProfileCatalog.loadDefault(context.getAssets());

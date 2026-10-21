@@ -45,6 +45,7 @@ on:
       - 'docs/LEARNING_ASSET_MANIFEST.md'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/export_a1mini_material_profiles.py'
+      - 'ci/export_a1_p1s_material_profiles.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/export_official_orca_sources.py'
@@ -116,6 +117,7 @@ on:
       - 'docs/LEARNING_ASSET_MANIFEST.md'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/export_a1mini_material_profiles.py'
+      - 'ci/export_a1_p1s_material_profiles.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/export_official_orca_sources.py'
@@ -168,6 +170,7 @@ env:
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
   BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
+  BAMBU_MATERIAL_PROFILE_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
   OPENCV_VERSION: 4.6.0
@@ -225,6 +228,13 @@ jobs:
           test "$(git -C bambu-profile-source rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json
+          git clone --filter=blob:none --sparse --no-checkout "$BAMBU_PROFILE_REPO" bambu-material-profile-source
+          git -C bambu-material-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
+          git -C bambu-material-profile-source checkout --detach "$BAMBU_MATERIAL_PROFILE_SHA"
+          test "$(git -C bambu-material-profile-source rev-parse HEAD)" = "$BAMBU_MATERIAL_PROFILE_SHA"
+          python3 ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json
       - name: Validate native engine wiring
         run: |
           python3 ci/validate_native_wiring.py

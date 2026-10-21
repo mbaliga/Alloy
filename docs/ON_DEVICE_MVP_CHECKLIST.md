@@ -104,6 +104,11 @@ Expected: learning is readable offline and is never a gate-bypass path.
   Do not treat the TPU recipe as generic; other grades need their own reviewed
   profile. Treat material compatibility and feeder route as separate questions
   from recipe availability.
+- With the A1 active, choose the A1 PETG Basic recipe; with the P1S active,
+  choose P1S PETG HF. Confirm the displayed printer/material combination is
+  correct, the new recipe persists across app restart, and an existing slice
+  is cleared. These two profiles are also planning-only; their feeder route,
+  physical spool fit and printer readiness must be reviewed independently.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.

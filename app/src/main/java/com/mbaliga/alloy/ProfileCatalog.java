@@ -32,6 +32,12 @@ public final class ProfileCatalog {
             "profiles/a1-mini-0.4-tpu-95a-hf.json",
             "profiles/a1-mini-0.4-pva.json"
     };
+    private static final String[] A1_MATERIAL_ASSETS = {
+            INITIAL_ASSETS[1], "profiles/a1-0.4-petg-basic.json"
+    };
+    private static final String[] P1S_MATERIAL_ASSETS = {
+            INITIAL_ASSETS[2], "profiles/p1s-0.4-petg-hf.json"
+    };
     private static final int MAX_PROFILE_BYTES = 256 * 1024;
 
     private ProfileCatalog() { }
@@ -75,31 +81,54 @@ public final class ProfileCatalog {
             Profile profile = loadAsset(assets, asset);
             if (requested.equals(profile.id)) return profile;
         }
-        for (String asset : A1_MINI_MATERIAL_ASSETS) {
-            Profile profile = loadAsset(assets, asset);
-            if (requested.equals(profile.id)) return profile;
+        for (String[] group : new String[][]{A1_MINI_MATERIAL_ASSETS, A1_MATERIAL_ASSETS, P1S_MATERIAL_ASSETS}) {
+            for (String asset : group) {
+                Profile profile = loadAsset(assets, asset);
+                if (requested.equals(profile.id)) return profile;
+            }
         }
         return loadDefault(assets);
     }
 
-    /** Source-backed A1 Mini 0.4 mm / 0.20 mm recipes available without a PC. */
+    /** Retained compatibility entry point for A1 Mini 0.4 mm material recipes. */
     public static List<Profile> loadA1MiniMaterialProfiles(AssetManager assets) throws IOException {
+        return loadMaterialProfiles(assets, "bambu.a1-mini");
+    }
+
+    /** Source-backed planning recipes for a selected printer; never send-qualified. */
+    public static List<Profile> loadMaterialProfiles(AssetManager assets, String printerId) throws IOException {
+        String[] selectedAssets;
+        int expectedCount;
+        if ("bambu.a1-mini".equals(printerId)) {
+            selectedAssets = A1_MINI_MATERIAL_ASSETS;
+            expectedCount = 6;
+        } else if ("bambu.a1".equals(printerId)) {
+            selectedAssets = A1_MATERIAL_ASSETS;
+            expectedCount = 2;
+        } else if ("bambu.p1s".equals(printerId)) {
+            selectedAssets = P1S_MATERIAL_ASSETS;
+            expectedCount = 2;
+        } else {
+            throw new IOException("No bundled material recipes for this printer");
+        }
         ArrayList<Profile> profiles = new ArrayList<>();
-        for (String asset : A1_MINI_MATERIAL_ASSETS) {
+        for (String asset : selectedAssets) {
             Profile profile = loadAsset(assets, asset);
-            if (!"bambu.a1-mini".equals(profile.printerId) || profile.nozzle != 0.4f
+            if (!printerId.equals(profile.printerId) || profile.nozzle != 0.4f
                     || profile.verified || profile.provenanceRevision.length() != 40)
-                throw new IOException("A1 Mini material recipes must remain source-backed, planning-only 0.4 mm profiles");
+                throw new IOException("Bundled material recipes must remain source-backed, planning-only 0.4 mm profiles");
             profiles.add(profile);
         }
-        if (profiles.size() != 6
-                || !"PLA".equalsIgnoreCase(profiles.get(0).material)
-                || !"PETG".equalsIgnoreCase(profiles.get(1).material)
+        if (profiles.size() != expectedCount || !"PLA".equalsIgnoreCase(profiles.get(0).material)
+                || ("bambu.a1-mini".equals(printerId)
+                && (!"PETG".equalsIgnoreCase(profiles.get(1).material)
                 || !"PETG".equalsIgnoreCase(profiles.get(2).material)
                 || !"PETG".equalsIgnoreCase(profiles.get(3).material)
                 || !"TPU".equalsIgnoreCase(profiles.get(4).material)
-                || !"PVA".equalsIgnoreCase(profiles.get(5).material))
-            throw new IOException("A1 Mini material recipe coverage is incomplete");
+                || !"PVA".equalsIgnoreCase(profiles.get(5).material)))
+                || ("bambu.a1".equals(printerId) && !"PETG".equalsIgnoreCase(profiles.get(1).material))
+                || ("bambu.p1s".equals(printerId) && !"PETG".equalsIgnoreCase(profiles.get(1).material)))
+            throw new IOException("Bundled printer material recipe coverage is incomplete");
         return Collections.unmodifiableList(profiles);
     }
 
