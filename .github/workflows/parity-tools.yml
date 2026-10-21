@@ -85,6 +85,9 @@ jobs:
       - name: Run native dependency wiring tests
         run: python3 -m unittest -v parity/test_native_dependency_wiring.py
 
+      - name: Run tree-support floating-region contract tests
+        run: python3 -m unittest -v parity/test_tree_support_floating_pruning.py
+
       - name: Run release evidence and promotion guard tests
         run: |
           python3 -m unittest -v parity/test_release_readiness.py
