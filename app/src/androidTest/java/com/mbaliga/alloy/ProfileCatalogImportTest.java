@@ -81,7 +81,7 @@ public final class ProfileCatalogImportTest {
         }) {
             java.util.List<ProfileCatalog.Profile> profiles =
                     ProfileCatalog.loadMaterialProfiles(context.getAssets(), printer[0]);
-            Assert.assertEquals(2, profiles.size());
+            Assert.assertEquals(3, profiles.size());
             Assert.assertEquals("PLA", profiles.get(0).material);
             ProfileCatalog.Profile petg = profiles.get(1);
             Assert.assertEquals(printer[0], petg.printerId);
@@ -95,6 +95,14 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(MainActivity.materialRecipePickerLabel(petg).contains("planning only"));
             Assert.assertTrue(MainActivity.materialRecipePickerGuidance(printer[0])
                     .contains("Alloy print/send actions remain unqualified"));
+            ProfileCatalog.Profile tpu = profiles.get(2);
+            Assert.assertEquals(printer[0], tpu.printerId);
+            Assert.assertEquals("TPU", tpu.material);
+            Assert.assertEquals(40, tpu.provenanceRevision.length());
+            Assert.assertFalse(tpu.verified);
+            Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu)
+                    .contains("external/direct feed only · do not infer AMS compatibility"));
+            Assert.assertEquals(tpu.id, ProfileCatalog.loadPlanningById(context.getAssets(), tpu.id).id);
         }
     }
 

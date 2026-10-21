@@ -73,6 +73,8 @@ jobs:
           python3 ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check
           python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json
           python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json
 
       - name: Validate release inputs
         shell: bash

@@ -72,6 +72,16 @@ SELECTIONS = {
         "process": "0.20mm Standard @BBL X1C",
         "filament": "Bambu PETG HF @BBL P1S 0.4 nozzle",
     },
+    "bambu.a1.0.4.tpu-95a": {
+        "machine": "Bambu Lab A1 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1",
+        "filament": "Bambu TPU 95A @BBL A1",
+    },
+    "bambu.p1s.0.4.tpu-95a-hf": {
+        "machine": "Bambu Lab P1S 0.4 nozzle",
+        "process": "0.20mm Standard @BBL X1C",
+        "filament": "Bambu TPU 95A HF @BBL P1S",
+    },
 }
 # Kept as a compatibility import for existing focused fixture tests.
 SELECTION = SELECTIONS["bambu.a1-mini.0.4.pla-basic"]

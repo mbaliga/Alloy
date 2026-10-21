@@ -41,6 +41,8 @@ def main() -> None:
         "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
         "ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
         "ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
         '"ndk;${NDK_VERSION}"',
         '"cmake;3.22.1"',
         "build_all_deps_android.sh",

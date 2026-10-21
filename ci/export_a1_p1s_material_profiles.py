@@ -17,18 +17,30 @@ RECIPES = {
         "baseline": "a1-0.4-pla-basic.json",
         "filament_id": "bambu.petg-basic.a1",
         "filament_base": "Bambu PETG Basic @base",
+        "filament_parents": ["fdm_filament_pet.json", "fdm_filament_common.json"],
     },
     "bambu.p1s.0.4.petg-hf": {
         "asset": "p1s-0.4-petg-hf.json",
         "baseline": "p1s-0.4-pla-basic.json",
         "filament_id": "bambu.petg-hf.p1s",
         "filament_base": "Bambu PETG HF @base",
+        "filament_parents": ["fdm_filament_pet.json", "fdm_filament_common.json"],
+    },
+    "bambu.a1.0.4.tpu-95a": {
+        "asset": "a1-0.4-tpu-95a.json",
+        "baseline": "a1-0.4-pla-basic.json",
+        "filament_id": "bambu.tpu-95a.a1",
+        "filament_base": "Bambu TPU 95A @base",
+        "filament_parents": ["fdm_filament_tpu.json", "fdm_filament_common.json"],
+    },
+    "bambu.p1s.0.4.tpu-95a-hf": {
+        "asset": "p1s-0.4-tpu-95a-hf.json",
+        "baseline": "p1s-0.4-pla-basic.json",
+        "filament_id": "bambu.tpu-95a-hf.p1s",
+        "filament_base": "Bambu TPU 95A HF @base",
+        "filament_parents": ["fdm_filament_tpu.json", "fdm_filament_common.json"],
     },
 }
-FILAMENT_PARENTS = [
-    "resources/profiles/BBL/filament/fdm_filament_pet.json",
-    "resources/profiles/BBL/filament/fdm_filament_common.json",
-]
 PRINTER_NAMES = {"bambu.a1": "Bambu Lab A1", "bambu.p1s": "Bambu Lab P1S"}
 
 
@@ -70,7 +82,7 @@ def build(repo: Path, profile_id: str) -> dict:
     filament_paths = [
         f"resources/profiles/BBL/filament/{filament_leaf}.json",
         f"resources/profiles/BBL/filament/{recipe['filament_base']}.json",
-        *FILAMENT_PARENTS,
+        *(f"resources/profiles/BBL/filament/{path}" for path in recipe["filament_parents"]),
     ]
     asset["provenance"]["files"] = []
     for path in [*retained_paths, *filament_paths]:

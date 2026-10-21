@@ -141,7 +141,9 @@ acceptance evidence passes.
 The active **Profile** surface offers source-pinned 0.4 mm / PLA Basic
 planning profiles for these same three models. Material review can also select
 A1 Mini PLA Basic, PETG Basic/HF/Translucent, TPU 95A HF, or PVA; A1 PETG
-Basic; and P1S PETG HF. Each recipe is pinned to its upstream inheritance
+Basic and TPU 95A; and P1S PETG HF and TPU 95A HF. The A1/P1S TPU recipes
+are explicitly external/direct-feed planning profiles; they do not imply AMS
+compatibility. Each recipe is pinned to its upstream inheritance
 chain and changes the active typed material values, while remaining
 unverified. Selecting one clears a prior slice so it must be reviewed again.
 These are planning profiles—not a promise of native-slicer parity, printer

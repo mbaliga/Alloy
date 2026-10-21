@@ -115,6 +115,8 @@ def main() -> None:
         "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
         "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
         "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
         "python3 ci/validate_learning_assets.py",
         "name: Upload Android acceptance diagnostics\n        if: always()\n        uses: actions/upload-artifact@v4",
         "name: alloy-android-acceptance-diagnostics",
@@ -282,6 +284,8 @@ def main() -> None:
         "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
         "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
         "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
         "python3 ci/validate_learning_assets.py",
     ):
         require(native_text, token, native)
@@ -359,6 +363,8 @@ def main() -> None:
         "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
         "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
         "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
         "python3 ci/validate_learning_assets.py",
     ):
         require(release_text, token, release)

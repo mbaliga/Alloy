@@ -3155,15 +3155,19 @@ public final class MainActivity extends Activity {
         if (choice != null && "bambu.a1-mini".equals(choice.printerId))
             return a1MiniMaterialPickerLabel(choice);
         if (choice == null) return "Unknown recipe · planning only";
+        String routeNote = "TPU".equalsIgnoreCase(choice.material)
+                ? "external/direct feed only · do not infer AMS compatibility"
+                : "check material route and spool compatibility";
         return choice.filamentName + "\n" + choice.material
-                + " · check material route and spool compatibility · 0.4 mm nozzle · planning only";
+                + " · " + routeNote + " · 0.4 mm nozzle · planning only";
     }
 
     static String materialRecipePickerGuidance(String printerId) {
         if ("bambu.a1-mini".equals(printerId)) return a1MiniMaterialPickerGuidance();
         return "Choose a source-backed 0.4 mm starter recipe for the selected printer. "
                 + "Material suitability does not confirm the exact spool, feeder route, temperature, or printer condition. "
-                + "Review the material and feed route before slicing. This recipe is for planning and inspection only; "
+                + "Flexible TPU recipes require external/direct feed; do not infer powered-AMS compatibility. "
+                + "Review material and feed route before slicing. These recipes are for planning and inspection only; "
                 + "Alloy print/send actions remain unqualified.";
     }
 

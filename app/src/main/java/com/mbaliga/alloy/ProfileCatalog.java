@@ -33,10 +33,10 @@ public final class ProfileCatalog {
             "profiles/a1-mini-0.4-pva.json"
     };
     private static final String[] A1_MATERIAL_ASSETS = {
-            INITIAL_ASSETS[1], "profiles/a1-0.4-petg-basic.json"
+            INITIAL_ASSETS[1], "profiles/a1-0.4-petg-basic.json", "profiles/a1-0.4-tpu-95a.json"
     };
     private static final String[] P1S_MATERIAL_ASSETS = {
-            INITIAL_ASSETS[2], "profiles/p1s-0.4-petg-hf.json"
+            INITIAL_ASSETS[2], "profiles/p1s-0.4-petg-hf.json", "profiles/p1s-0.4-tpu-95a-hf.json"
     };
     private static final int MAX_PROFILE_BYTES = 256 * 1024;
 
@@ -104,10 +104,10 @@ public final class ProfileCatalog {
             expectedCount = 6;
         } else if ("bambu.a1".equals(printerId)) {
             selectedAssets = A1_MATERIAL_ASSETS;
-            expectedCount = 2;
+            expectedCount = 3;
         } else if ("bambu.p1s".equals(printerId)) {
             selectedAssets = P1S_MATERIAL_ASSETS;
-            expectedCount = 2;
+            expectedCount = 3;
         } else {
             throw new IOException("No bundled material recipes for this printer");
         }
@@ -126,8 +126,9 @@ public final class ProfileCatalog {
                 || !"PETG".equalsIgnoreCase(profiles.get(3).material)
                 || !"TPU".equalsIgnoreCase(profiles.get(4).material)
                 || !"PVA".equalsIgnoreCase(profiles.get(5).material)))
-                || ("bambu.a1".equals(printerId) && !"PETG".equalsIgnoreCase(profiles.get(1).material))
-                || ("bambu.p1s".equals(printerId) && !"PETG".equalsIgnoreCase(profiles.get(1).material)))
+                || (("bambu.a1".equals(printerId) || "bambu.p1s".equals(printerId))
+                && (!"PETG".equalsIgnoreCase(profiles.get(1).material)
+                || !"TPU".equalsIgnoreCase(profiles.get(2).material))))
             throw new IOException("Bundled printer material recipe coverage is incomplete");
         return Collections.unmodifiableList(profiles);
     }
