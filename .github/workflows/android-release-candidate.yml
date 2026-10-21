@@ -52,6 +52,7 @@ jobs:
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-basic.json
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-hf.json
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-translucent.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-tpu-95a-hf.json
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pva.json
 
       - name: Verify pinned Bambu planning profiles

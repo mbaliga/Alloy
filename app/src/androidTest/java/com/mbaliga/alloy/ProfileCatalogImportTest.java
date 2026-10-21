@@ -22,15 +22,16 @@ public final class ProfileCatalogImportTest {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         java.util.List<ProfileCatalog.Profile> profiles =
                 ProfileCatalog.loadA1MiniMaterialProfiles(context.getAssets());
-        Assert.assertEquals(5, profiles.size());
+        Assert.assertEquals(6, profiles.size());
         String[] ids = {
                 "bambu.a1-mini.0.4.pla-basic",
                 "bambu.a1-mini.0.4.petg-basic",
                 "bambu.a1-mini.0.4.petg-hf",
                 "bambu.a1-mini.0.4.petg-translucent",
+                "bambu.a1-mini.0.4.tpu-95a-hf",
                 "bambu.a1-mini.0.4.pva"
         };
-        String[] materials = {"PLA", "PETG", "PETG", "PETG", "PVA"};
+        String[] materials = {"PLA", "PETG", "PETG", "PETG", "TPU", "PVA"};
         PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
         for (int index = 0; index < profiles.size(); index++) {
             ProfileCatalog.Profile profile = profiles.get(index);

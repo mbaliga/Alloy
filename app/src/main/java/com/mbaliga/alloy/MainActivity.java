@@ -3139,7 +3139,7 @@ public final class MainActivity extends Activity {
             }
             new AlertDialog.Builder(this)
                     .setTitle("A1 Mini material recipe")
-                    .setMessage("Choose a source-backed 0.4 mm recipe. This replaces the active recipe and clears the current slice. TPU is printer-compatible but has no A1 Mini-specific preset in the pinned source; import and review a suitable profile before using it. All Alloy print/send actions remain unqualified.")
+                    .setMessage("Choose a source-backed 0.4 mm recipe. This replaces the active recipe and clears the current slice. The bundled TPU option is specifically Bambu TPU 95A HF for A1 Mini; it is not a generic TPU recipe and must use external/direct feed, not AMS Lite. Other TPU grades need their own reviewed profile. All Alloy print/send actions remain unqualified.")
                     .setItems(labels, (ignored, which) -> {
                         if (which >= 0 && which < choices.size()) applyBundledProfile(choices.get(which));
                     })

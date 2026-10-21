@@ -211,6 +211,11 @@ def validate_catalog(path):
     }.items():
         if expected_text not in mini_materials[material_id]["ams_lite_status"].lower():
             raise ValueError(f"A1 mini AMS Lite exception is missing for {material_id}")
+    tpu_95a = mini_materials["tpu-95a"]
+    if ("95a hf" not in tpu_95a["bambu_status"].lower()
+            or "other grades need review" not in tpu_95a["note"].lower()
+            or "unsupported" not in tpu_95a["ams_lite_status"].lower()):
+        raise ValueError("A1 Mini TPU guidance must remain specific to Bambu TPU 95A HF and exclude AMS Lite")
     if not any("40–68 mm" in item and "53–58 mm" in item for item in mini["spool_guidance"]):
         raise ValueError("A1 mini must retain the documented AMS Lite spool-fit dimensions")
     if {form["id"] for form in mini["spool_forms"]} != {

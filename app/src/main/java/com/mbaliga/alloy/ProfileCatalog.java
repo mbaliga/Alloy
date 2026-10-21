@@ -29,6 +29,7 @@ public final class ProfileCatalog {
             "profiles/a1-mini-0.4-petg-basic.json",
             "profiles/a1-mini-0.4-petg-hf.json",
             "profiles/a1-mini-0.4-petg-translucent.json",
+            "profiles/a1-mini-0.4-tpu-95a-hf.json",
             "profiles/a1-mini-0.4-pva.json"
     };
     private static final int MAX_PROFILE_BYTES = 256 * 1024;
@@ -91,12 +92,13 @@ public final class ProfileCatalog {
                 throw new IOException("A1 Mini material recipes must remain source-backed, planning-only 0.4 mm profiles");
             profiles.add(profile);
         }
-        if (profiles.size() != 5
+        if (profiles.size() != 6
                 || !"PLA".equalsIgnoreCase(profiles.get(0).material)
                 || !"PETG".equalsIgnoreCase(profiles.get(1).material)
                 || !"PETG".equalsIgnoreCase(profiles.get(2).material)
                 || !"PETG".equalsIgnoreCase(profiles.get(3).material)
-                || !"PVA".equalsIgnoreCase(profiles.get(4).material))
+                || !"TPU".equalsIgnoreCase(profiles.get(4).material)
+                || !"PVA".equalsIgnoreCase(profiles.get(5).material))
             throw new IOException("A1 Mini material recipe coverage is incomplete");
         return Collections.unmodifiableList(profiles);
     }
