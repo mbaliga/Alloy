@@ -2,15 +2,26 @@
 
 Date: 2026-10-21 (current PR branch checkpoint)
 
-## Exact PR branch head 622b8c5 — docs-only updates; software gates partial PASS; print/release NO-GO
+## Exact PR branch head 6500ef8 — Android/native instrumentation PASS; strict G3 FAIL; print/release NO-GO
 
-The current PR branch head is [622b8c587d45e5e90fd4aab90d3a79afbfa71e53](https://github.com/mbaliga/Alloy/commit/622b8c587d45e5e90fd4aab90d3a79afbfa71e53). Since the app/test source checkpoint [3e2947d1cc29e3f72ae1866565cb1b114ed34b30](https://github.com/mbaliga/Alloy/commit/3e2947d1cc29e3f72ae1866565cb1b114ed34b30), these commits only correct the release-candidate test import path, guard that workflow contract, and make the README's local parity command reproducible. No app, slicer, print/send, or qualification behavior changed.
+The current PR branch head is [6500ef85c6bf9c52dc139ecc5ff65e9d2a945373](https://github.com/mbaliga/Alloy/commit/6500ef85c6bf9c52dc139ecc5ff65e9d2a945373). Since app/test source checkpoint [3e2947d1cc29e3f72ae1866565cb1b114ed34b30](https://github.com/mbaliga/Alloy/commit/3e2947d1cc29e3f72ae1866565cb1b114ed34b30), changes only fix the release-candidate test import path, guard that workflow contract, make the README parity command reproducible, and refresh QA evidence. No app, slicer, print/send, or qualification behavior changed.
 
-Local parity passed: 191 tests with `PYTHONPATH=parity:ci`; Android workflow, profile, capability, learning, native, release, and transport validators also passed. At exact PR head 622b8c5, parity tooling [39561649991](https://github.com/mbaliga/Alloy/actions/runs/39561649991), official Orca source snapshot [39561649959](https://github.com/mbaliga/Alloy/actions/runs/39561649959), desktop A1 Mini references [39561649949](https://github.com/mbaliga/Alloy/actions/runs/39561649949), and all three profile compatibility jobs [39561650004](https://github.com/mbaliga/Alloy/actions/runs/39561650004) passed. Android acceptance [39561649956](https://github.com/mbaliga/Alloy/actions/runs/39561649956) and optional native engine build [39561649964](https://github.com/mbaliga/Alloy/actions/runs/39561649964) are still running; no result is claimed for them yet.
+At this exact head, parity tooling [39562063868](https://github.com/mbaliga/Alloy/actions/runs/39562063868), official Orca source snapshot [39562063881](https://github.com/mbaliga/Alloy/actions/runs/39562063881), desktop A1 Mini reference slices [39562063875](https://github.com/mbaliga/Alloy/actions/runs/39562063875), and the three-printer profile compatibility pre-gate [39562063839](https://github.com/mbaliga/Alloy/actions/runs/39562063839) passed. Android acceptance [39562063866](https://github.com/mbaliga/Alloy/actions/runs/39562063866) passed. Its retained JUnit XML reports 210 tests, 0 failures/errors and 15 native-dependent skips (195 passed). The CI QA APK is artifact [12328868647](https://github.com/mbaliga/Alloy/actions/runs/39562063866/artifacts/12328868647); its ZIP SHA-256 is `ed5403265c15becb60b3afe3ca04775ef01ff1ce58ab2c9986e777beb00c0b26`, and extracted APK SHA-256 is `9355ba2b40ec29366e3d860938e9def8e60e9c2aec745d06b7d3b29cefe1729a`. It is software-QA only, not a production or print-qualified build.
 
-The latest completed installable software-QA artifact remains [12325242196](https://github.com/mbaliga/Alloy/actions/runs/39554193220/artifacts/12325242196), from app/test source 3e2947d. Its retained JUnit XML reports 210 tests, 0 failures/errors and 15 native-dependent skips (195 passed); the extracted APK SHA-256 is `0913f9af2c4c8965118846f98d1df61ef7d2a5326aa27ad2261569c9416e1e25`. The Gradle progress counter overshot the suite total, so the JUnit XML is authoritative. This is a CI-signed QA APK, not a production release.
+Native workflow [39562063843](https://github.com/mbaliga/Alloy/actions/runs/39562063843) built the optional engine, passed API-35 ARM-translation instrumentation (210 scheduled; 208 passed, 2 skipped, 0 failed), rendered the pinned Bambu templates, and exported all four G3 fixtures. The strict G3 comparator then **failed**; the dedicated physical-pilot APK and device-pilot stages were correctly skipped.
 
-No G3 parity result exists for the current source checkpoint. The last completed native G3 run remains the exact-head failure at [39527385446](https://github.com/mbaliga/Alloy/actions/runs/39527385446), detailed below, with the unchanged strict 2% gate. Do not treat active workflows as passes until complete. No job is cleared for Bambu Handy or physical printing; physical A1 Mini acceptance, A1/P1S runtime qualification, Handy acceptance, and production signing remain open.
+The exact-head parity report is artifact [12332679109](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332679109), ZIP SHA-256 `683559f99d4c99d428f19c4109d74ced6dd842c33b690723b3db9650df17bb40`. At the unchanged 2% tolerance:
+
+| Fixture | Print time (desktop / Alloy) | Time delta | Filament length delta | Filament mass delta |
+| --- | ---: | ---: | ---: | ---: |
+| Cube | 1775 / 1521 s | 14.31% | 2.09% | 2.03% |
+| Supported overhang | 2048 / 1684 s | 17.77% | 2.59% | 2.47% |
+| Thin wall | 1330 / 1154 s | 13.23% | 2.65% | 2.58% |
+| Travel obstacle | 3393 / 3072 s | 9.46% | within tolerance | within tolerance |
+
+The comparator also warns that desktop time uses `model_printing_time` while Alloy uses `estimated_printing_time`; the time figures therefore need a source-matched interpretation, not just a tolerance change. Travel moves/path remain materially different. The instrumentation-only Bambu-identity/template counterfactual is explicitly non-gating and still does not establish strict G3 or firmware behavior. Preserve the hard gate and do not ship its settings into production. The native instrumentation report is artifact [12332902600](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332902600), ZIP SHA-256 `1c585158f180220368671e6c9e00401818ba9926e63081a39dad6f33f154f0b7`.
+
+No job is cleared for Bambu Handy or physical printing. Physical A1 Mini acceptance, A1/P1S runtime qualification, Handy acceptance, and production signing remain open.
 
 Date: 2026-10-21 (latest exact-head evidence)
 
