@@ -214,6 +214,12 @@ public final class LearningAndCapabilityCatalogTest {
                 external && amsLite && regularAms && ams2Pro && amsHt);
         Assert.assertTrue("A1 mini must disclose physical AMS lite spool dimensions", mini.spoolGuidance.toString().contains("40–68 mm"));
         Assert.assertTrue("A1 mini must disclose TPU/PVA AMS lite exclusions", mini.spoolGuidance.toString().contains("PVA"));
+        PrinterCapabilityCatalog.Material miniPva = materialById(mini, "pva");
+        Assert.assertTrue("A1 mini AMS Lite must distinguish dry PVA from wet/damp PVA",
+                miniPva.amsLiteStatus.toLowerCase(java.util.Locale.US).contains("dry pva only")
+                        && miniPva.amsLiteStatus.toLowerCase(java.util.Locale.US).contains("wet/damp pva is unsupported"));
+        Assert.assertTrue("A1 mini PVA remains unqualified by Alloy",
+                miniPva.directSendState.equals("Not qualified"));
         boolean completeSpool = false, refill = false, thirdParty = false, regularAmsSpool = false;
         for (PrinterCapabilityCatalog.SpoolForm form : mini.spoolForms) {
             completeSpool |= form.id.equals("bambu-spooled") && form.compatibleRoutes.contains("AMS lite");
