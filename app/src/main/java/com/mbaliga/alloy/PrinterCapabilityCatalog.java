@@ -179,6 +179,7 @@ public final class PrinterCapabilityCatalog {
             else if ("cf-gf-filled".equals(material.id)) genericFiber = material;
         }
         if (pva == null || !pva.amsLiteStatus.toLowerCase(Locale.US).contains("dry pva only")
+                || !pva.amsLiteStatus.toLowerCase(Locale.US).contains("wet/damp pva is unsupported")
                 || bvoh == null || !bvoh.amsLiteStatus.toLowerCase(Locale.US).contains("dry bvoh only")
                 || genericTpu == null || !genericTpu.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
                 || tpu95a == null || !tpu95a.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
