@@ -96,9 +96,11 @@ Expected: learning is readable offline and is never a gate-bypass path.
   and survives closing/reopening Alloy. Every profile must remain marked
   review-required and direct send must remain unavailable. Also select the
   specific Bambu TPU 95A HF recipe and confirm its feed guidance is
-  external/direct only, not AMS Lite. Do not treat that recipe as generic TPU;
-  other grades need their own reviewed profile. Treat material compatibility
-  and the AMS Lite route as separate questions from recipe availability.
+  external/direct only, not AMS Lite. Confirm PVA is also labeled external-only,
+  while PLA/PETG recipes show AMS Lite or external feed. Do not treat that
+  recipe as generic TPU; other grades need their own reviewed profile. Treat
+  material compatibility and the AMS Lite route as separate questions from
+  recipe availability.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.
