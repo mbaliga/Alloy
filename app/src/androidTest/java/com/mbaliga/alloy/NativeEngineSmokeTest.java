@@ -176,6 +176,33 @@ public final class NativeEngineSmokeTest {
         assertSlicesAndStages(context, config, "travel_obstacle.stl", "native-smoke-travel-obstacle");
     }
 
+    @Test(timeout = 480_000)
+    public void nonOrganicTreeSupportPruningKeepsOverhangToolpathsValid() throws Exception {
+        Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
+        Slicer.Config config = new Slicer.Config();
+        profile.applyTo(config);
+        config.supports = true;
+        // The ordinary "tree" choice maps to tree_slim and enters TreeSupport::draw_circles();
+        // organic remains on the separate TreeSupport3D path.
+        config.nativeSettings.put("support_material_style", "tree");
+
+        MeshModel mesh;
+        try (InputStream input = context.getAssets().open("models/overhang-support-fixture.stl")) {
+            mesh = MeshModel.read("overhang-support-fixture.stl", input);
+        }
+        NativeSlicerEngine engine = new NativeSlicerEngine(context.getCacheDir(), false);
+        Slicer.Result result = engine.slice(mesh, config, null);
+        Assert.assertEquals(NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
+        Assert.assertFalse("software regression output must remain unqualified", result.engineVerified);
+        Assert.assertTrue("tree-style overhang must produce support geometry",
+                result.gcode.contains(";TYPE:Support"));
+        GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
+        Assert.assertTrue(safety.summary(), safety.isValid());
+        Assert.assertTrue("tree-style overhang output must contain printable motion", safety.hasPrintableMotion);
+    }
+
     @Test
     public void typedRecipeOwnsOverlappingNativeSettings() throws Exception {
         // Config projection is pure Java and must be covered by the ordinary
