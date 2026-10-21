@@ -23,7 +23,11 @@ public final class InitialMaterialInventoryTest {
             if ("pla-basic".equals(item.id)) pla |= unknownStock(item);
             if ("petg-basic".equals(item.id)) petg |= unknownStock(item);
             if ("tpu".equals(item.id)) tpu |= unknownStock(item);
-            if ("pva".equals(item.id)) pva |= unknownStock(item);
+            if ("pva".equals(item.id)) {
+                pva |= unknownStock(item);
+                Assert.assertTrue(item.care.contains("dry PVA only may use AMS Lite"));
+                Assert.assertTrue(item.care.contains("wet/absorbent PVA stays external/direct"));
+            }
             if ("support-pla".equals(item.id)) plaSupport |= unknownStock(item);
             if ("support-petg".equals(item.id)) petgSupport |= unknownStock(item);
             if (restrictedFamilies.remove(item.id)) {

@@ -579,7 +579,7 @@ public final class InventoryStore {
                 builtin("pla-basic", "Bambu PLA Basic", "Filament", "g", 250, 0, "Record measured stock · dry storage · confirm feed route"),
                 builtin("petg-basic", "Bambu PETG", "Filament", "g", 250, 0, "Record measured stock · confirm plate, route and dry storage"),
                 builtin("tpu", "Bambu TPU", "Filament", "g", 250, 0, "Record measured stock · external/direct path only; do not assume AMS lite compatibility"),
-                builtin("pva", "Bambu PVA", "Filament", "g", 250, 0, "Record measured stock · external/direct path only; keep dry and confirm the exact recipe"),
+                builtin("pva", "Bambu PVA", "Filament", "g", 250, 0, "Record measured stock · dry PVA only may use AMS Lite; wet/absorbent PVA stays external/direct · keep dry and confirm the exact recipe"),
                 builtin("support-pla", "Support material for PLA", "Filament", "g", 250, 0, "Record measured stock · confirm selected support material and feed route"),
                 builtin("support-petg", "Support material for PETG", "Filament", "g", 250, 0, "Record measured stock · confirm selected support material and feed route"),
                 builtin("abs", "ABS · printer-specific review", "Filament", "g", 0, 0, "Track only · not recommended on A1 Mini; check the active printer before use"),
