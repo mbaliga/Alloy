@@ -1,3 +1,22 @@
+# Current exact-head gate update — 2026-10-21
+
+PR head: [b0261a88c28317e69cffa235a3608559f2646361](https://github.com/mbaliga/Alloy/commit/b0261a88c28317e69cffa235a3608559f2646361). Runtime/app source checkpoint remains [411bc3499d4ef864347e68e6b5f0df14a9544cc9](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9); the intervening changes are verification/documentation, not slicer behavior.
+
+## Exact-head verification
+
+- Android acceptance run [39587772168](https://github.com/mbaliga/Alloy/actions/runs/39587772168): passed, 0 failures, 15 native-dependent skips. QA APK artifact [12341606245](https://github.com/mbaliga/Alloy/actions/runs/39587772168/artifacts/12341606245), ZIP SHA-256 `1c56101d669f61ae3955987e9391248627eb163beb59d7f5fbee0bef37e6f89b`. Software QA only.
+- Profile compatibility [39587772205](https://github.com/mbaliga/Alloy/actions/runs/39587772205), parity suite [39587772109](https://github.com/mbaliga/Alloy/actions/runs/39587772109), Orca source snapshot [39587772106](https://github.com/mbaliga/Alloy/actions/runs/39587772106), and desktop reference slices [39587772194](https://github.com/mbaliga/Alloy/actions/runs/39587772194): passed.
+- Native run [39587772192](https://github.com/mbaliga/Alloy/actions/runs/39587772192): native instrumentation passed on API 35 (0 failures); exact-head G3 comparison failed. QA APK artifact [12341173326](https://github.com/mbaliga/Alloy/actions/runs/39587772192/artifacts/12341173326), ZIP SHA-256 `bae1da64997fbf615247d13636baae6d31fad174a31798293416b1b3a7167480`. Not print-qualified.
+- G3 comparator artifact [12343320626](https://github.com/mbaliga/Alloy/actions/runs/39587772192/artifacts/12343320626), SHA-256 `b6b4418ed43c64d5420ba5db3392a3cc58e2ae3fc65a2cba0fdbec01a3c04ae2`; tolerance remains 2%, unchanged. Cube, supported overhang, thin wall, and travel obstacle all fail. Time deltas: 14.31%, 17.77%, 13.23%, 9.46%. Filament-length deltas: 2.09%, 2.59%, 2.65%, and within 2%; mass deltas: 2.03%, 2.47%, 2.58%, and within 2%. Do not relax tolerances.
+- The separate pinned-template probe completed diagnostically: artifact [12343590257](https://github.com/mbaliga/Alloy/actions/runs/39587772192/artifacts/12343590257), SHA-256 `e512f939797e8e09e78175dd73c095cb998a2ea3ad824ba44e733d4620369438`. It confirms template/startup accounting materially affects filament totals, but its output is unqualified and must not be enabled as production output.
+- Diagnostic report: desktop startup includes 23.742 mm of positive first-layer purge/prime extrusion that Alloy does not model, explaining the first three filament deltas in part, not all G3 failures. Toolpath/travel differences are also material (e.g. cube total XYZ path is 35.15% lower in Alloy; supported-overhang path is about 47% lower). Desktop and Alloy time metrics use different fields, but their observed deltas still fail the unchanged gate. This is an implementation/parity gap, not a header-only discrepancy.
+
+## Decision and next work
+
+Slicer output remains **NO-GO for print/share**. Keep direct send, Bambu Handy handoff, physical-pilot, and release gates fail-closed. The next engineering work is to diagnose and close the real motion/travel/toolpath parity gap and model startup purge from the pinned, verified machine sequence (never add a fixed filament constant); then rerun the same four fixtures and unchanged thresholds. Physical A1 Mini acceptance, A1/P1S qualification, G2 lineage review, Bambu Handy import/print acceptance, and production signing remain open.
+
+---
+
 # Alloy engine gate status
 
 Date: 2026-10-21 (current PR branch checkpoint)
