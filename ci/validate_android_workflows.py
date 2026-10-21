@@ -366,6 +366,7 @@ def main() -> None:
         "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
         "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
         "python3 ci/validate_learning_assets.py",
+        "PYTHONPATH=parity:ci python3 -B -m unittest discover -s parity -p 'test_*.py' -v",
     ):
         require(release_text, token, release)
     release_bootstrap = release_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
