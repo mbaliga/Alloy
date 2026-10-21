@@ -89,6 +89,14 @@ Expected: learning is readable offline and is never a gate-bypass path.
   not override the more conservative profile limit.
 - Confirm switching profiles clears an existing slice and labels the profile
   `review required` rather than verified.
+- With the A1 Mini active, open the material/feed/spool review and choose each
+  bundled recipe: PLA Basic, PETG Basic, PETG HF, PETG Translucent, and PVA.
+  Verify each selection updates the active recipe, clears the existing slice,
+  and survives closing/reopening Alloy. Every profile must remain marked
+  review-required and direct send must remain unavailable. TPU should have no
+  bundled A1 Mini recipe; only use it after importing and reviewing a matching
+  profile. Treat material compatibility and the AMS Lite route as separate
+  questions from recipe availability.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.

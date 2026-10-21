@@ -48,6 +48,11 @@ jobs:
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/export_a1mini_material_profiles.py orca-profile-source --check
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-translucent.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pva.json
 
       - name: Verify pinned Bambu planning profiles
         shell: bash

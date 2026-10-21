@@ -18,6 +18,43 @@ import java.nio.charset.StandardCharsets;
 @RunWith(AndroidJUnit4.class)
 public final class ProfileCatalogImportTest {
     @Test
+    public void exposesPinnedA1MiniMaterialRecipesAsPlanningOnlyProfiles() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        java.util.List<ProfileCatalog.Profile> profiles =
+                ProfileCatalog.loadA1MiniMaterialProfiles(context.getAssets());
+        Assert.assertEquals(5, profiles.size());
+        String[] ids = {
+                "bambu.a1-mini.0.4.pla-basic",
+                "bambu.a1-mini.0.4.petg-basic",
+                "bambu.a1-mini.0.4.petg-hf",
+                "bambu.a1-mini.0.4.petg-translucent",
+                "bambu.a1-mini.0.4.pva"
+        };
+        String[] materials = {"PLA", "PETG", "PETG", "PETG", "PVA"};
+        PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
+        for (int index = 0; index < profiles.size(); index++) {
+            ProfileCatalog.Profile profile = profiles.get(index);
+            Assert.assertEquals(ids[index], profile.id);
+            Assert.assertEquals(materials[index], profile.material);
+            Assert.assertEquals("bambu.a1-mini", profile.printerId);
+            Assert.assertEquals(180f, profile.bedX, 0.001f);
+            Assert.assertEquals(180f, profile.bedY, 0.001f);
+            Assert.assertEquals(180f, profile.buildZ, 0.001f);
+            Assert.assertEquals(0.4f, profile.nozzle, 0.001f);
+            Assert.assertEquals(0.2f, profile.layerHeight, 0.001f);
+            Assert.assertFalse("upstream profiles are not physical qualification", profile.verified);
+            Assert.assertEquals(40, profile.provenanceRevision.length());
+            Assert.assertTrue(profile.nativeSettings.containsKey("printer_model"));
+            PrinterCapabilityCatalog.Printer printer = capabilities.forProfile(profile);
+            Assert.assertNotNull(printer);
+            Assert.assertEquals("a1-mini", printer.id);
+            Assert.assertTrue(printer.directSendState, printer.directSendState.contains("Not qualified"));
+            Assert.assertEquals(profile.id, ProfileCatalog.loadPlanningById(
+                    context.getAssets(), profile.id).id);
+        }
+    }
+
+    @Test
     public void importsMachineProcessAndFilamentPresetsWithSafeProjection() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ProfileCatalog.Profile baseline = ProfileCatalog.loadDefault(context.getAssets());

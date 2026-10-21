@@ -24,6 +24,26 @@ SELECTIONS = {
         "process": "0.20mm Standard @BBL A1M",
         "filament": "Bambu PLA Basic @BBL A1M",
     },
+    "bambu.a1-mini.0.4.petg-basic": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PETG Basic @BBL A1M 0.4 nozzle",
+    },
+    "bambu.a1-mini.0.4.petg-hf": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PETG HF @BBL A1M",
+    },
+    "bambu.a1-mini.0.4.petg-translucent": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PETG Translucent @BBL A1M",
+    },
+    "bambu.a1-mini.0.4.pva": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PVA @BBL A1M",
+    },
     # A1 and P1S remain planning-only profiles. They nevertheless need the
     # same source/blob and scalar projection discipline as the A1 Mini rather
     # than being trusted merely because their UI cards are present.
