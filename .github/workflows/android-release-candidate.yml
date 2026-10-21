@@ -92,7 +92,7 @@ jobs:
           python3 ci/validate_native_prebuilts.py arm64-v8a
           python3 ci/validate_transport_wiring.py
           python3 ci/validate_release_wiring.py
-          python3 -B -m unittest discover -s parity -p 'test_*.py' -v
+          PYTHONPATH=parity:ci python3 -B -m unittest discover -s parity -p 'test_*.py' -v
 
       - name: Validate production evidence before a tag release
         if: github.event_name == 'push'
