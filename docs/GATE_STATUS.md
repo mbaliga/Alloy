@@ -1,5 +1,15 @@
 # Alloy engine gate status
 
+Date: 2026-10-21 (current PR branch checkpoint)
+
+## Exact PR branch head 94afae8 — software QA in progress; print/release NO-GO
+
+The current PR branch head is [94afae820cc984821708a7844caaf334202e76e6](https://github.com/mbaliga/Alloy/commit/94afae820cc984821708a7844caaf334202e76e6). It contains the latest on-device checklist update; the latest app/test source change is [c7031947](https://github.com/mbaliga/Alloy/commit/c7031947b792002fe58130a68d6fe1de159a3ded), clarifying A1 Mini feed routing for the six source-backed planning recipes.
+
+On that code head, parity tooling [39542108049](https://github.com/mbaliga/Alloy/actions/runs/39542108049), Bambu profile compatibility [39542107978](https://github.com/mbaliga/Alloy/actions/runs/39542107978), and desktop A1 Mini reference slicing [39542107993](https://github.com/mbaliga/Alloy/actions/runs/39542107993) passed. Android acceptance [39542108426](https://github.com/mbaliga/Alloy/actions/runs/39542108426) is building the QA APK; the optional clean native build [39542108061](https://github.com/mbaliga/Alloy/actions/runs/39542108061) is compiling pinned OpenCV for ARM64. Both were active at the latest status check, with no reported failed steps.
+
+No G3 parity result exists yet for this source head. The last completed native G3 run remains the exact-head failure at [39527385446](https://github.com/mbaliga/Alloy/actions/runs/39527385446), detailed below; it failed the unchanged strict 2% parity gate. Do not treat the current active workflows as a pass until they complete. Alloy's send action remains unqualified: no job is cleared for Bambu Handy or physical printing. Physical A1 Mini acceptance, A1/P1S runtime qualification, Bambu Handy acceptance, and production signing remain open.
+
 Date: 2026-10-21 (latest exact-head evidence)
 
 ## Exact PR head 60e1784 — native instrumentation PASS; strict G3 FAIL / NO-GO
