@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.app.Activity;
+import android.app.Instrumentation;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -2747,13 +2748,23 @@ public final class AndroidPipelineTest {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Intent intent = new Intent(context, MainActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        Activity activity = InstrumentationRegistry.getInstrumentation().startActivitySync(intent);
+        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        // MainActivity owns a continuously animated GLES viewport, so its
+        // main looper may never become idle. startActivitySync waits for idle
+        // and can time out even after the Activity has started. Wait for the
+        // actual Activity launch instead, then keep the capture assertion real.
+        Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor(
+                MainActivity.class.getName(), null, false);
+        context.startActivity(intent);
+        Activity activity = monitor.waitForActivityWithTimeout(45_000L);
+        instrumentation.removeMonitor(monitor);
+        Assert.assertNotNull("main activity should launch for a live GLES capture", activity);
         try {
             Field viewportField = MainActivity.class.getDeclaredField("viewport");
             viewportField.setAccessible(true);
             ViewportView viewport = (ViewportView) viewportField.get(activity);
             Assert.assertNotNull("main activity should expose its 3D viewport", viewport);
-            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> viewport.setMachineStudy(true));
+            instrumentation.runOnMainSync(() -> viewport.setMachineStudy(true));
             SystemClock.sleep(750L);
             CountDownLatch captured = new CountDownLatch(1);
             byte[][] holder = new byte[1][];
@@ -2770,7 +2781,7 @@ public final class AndroidPipelineTest {
             Assert.assertTrue(bitmap.getWidth() <= 512 && bitmap.getHeight() <= 512);
             bitmap.recycle();
         } finally {
-            InstrumentationRegistry.getInstrumentation().runOnMainSync(activity::finish);
+            instrumentation.runOnMainSync(activity::finish);
         }
     }
 
