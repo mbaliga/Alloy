@@ -3134,12 +3134,11 @@ public final class MainActivity extends Activity {
             List<ProfileCatalog.Profile> choices = ProfileCatalog.loadA1MiniMaterialProfiles(getAssets());
             String[] labels = new String[choices.size()];
             for (int index = 0; index < choices.size(); index++) {
-                ProfileCatalog.Profile choice = choices.get(index);
-                labels[index] = choice.filamentName + "\n" + choice.material + " · 0.4 mm nozzle · planning only";
+                labels[index] = a1MiniMaterialPickerLabel(choices.get(index));
             }
             new AlertDialog.Builder(this)
                     .setTitle("A1 Mini material recipe")
-                    .setMessage("Choose a source-backed 0.4 mm recipe. This replaces the active recipe and clears the current slice. The bundled TPU option is specifically Bambu TPU 95A HF for A1 Mini; it is not a generic TPU recipe and must use external/direct feed, not AMS Lite. Other TPU grades need their own reviewed profile. All Alloy print/send actions remain unqualified.")
+                    .setMessage(a1MiniMaterialPickerGuidance())
                     .setItems(labels, (ignored, which) -> {
                         if (which >= 0 && which < choices.size()) applyBundledProfile(choices.get(which));
                     })
@@ -3148,6 +3147,19 @@ public final class MainActivity extends Activity {
         } catch (Exception error) {
             Toast.makeText(this, "A1 Mini material recipes are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    static String a1MiniMaterialPickerLabel(ProfileCatalog.Profile choice) {
+        if (choice == null) return "Unknown recipe · planning only";
+        String feedNote = "TPU".equalsIgnoreCase(choice.material)
+                || "PVA".equalsIgnoreCase(choice.material)
+                ? "external spool" : "AMS Lite or external spool";
+        return choice.filamentName + "\n" + choice.material + " · " + feedNote
+                + " · 0.4 mm nozzle · planning only";
+    }
+
+    static String a1MiniMaterialPickerGuidance() {
+        return "Choose a source-backed 0.4 mm recipe. Bambu lists PLA, PETG, TPU and PVA as ideal for A1 Mini; ABS, ASA, PC, PA, PET and fiber-reinforced materials are not recommended. AMS Lite must not be used with TPU or absorbent PVA—use an external spool. The bundled TPU recipe is specifically Bambu TPU 95A HF for A1 Mini, not a generic TPU profile. Choosing a recipe replaces the active recipe and clears the current slice. Alloy print/send actions remain unqualified.";
     }
 
     private void applyBundledProfile(ProfileCatalog.Profile selected) {
