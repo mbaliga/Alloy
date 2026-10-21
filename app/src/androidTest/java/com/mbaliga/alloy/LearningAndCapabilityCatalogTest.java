@@ -214,6 +214,12 @@ public final class LearningAndCapabilityCatalogTest {
                 external && amsLite && regularAms && ams2Pro && amsHt);
         Assert.assertTrue("A1 mini must disclose physical AMS lite spool dimensions", mini.spoolGuidance.toString().contains("40–68 mm"));
         Assert.assertTrue("A1 mini must disclose TPU/PVA AMS lite exclusions", mini.spoolGuidance.toString().contains("PVA"));
+        PrinterCapabilityCatalog.Material miniPva = materialById(mini, "pva");
+        Assert.assertTrue("A1 mini AMS Lite must distinguish dry PVA from wet/damp PVA",
+                miniPva.amsLiteStatus.toLowerCase(java.util.Locale.US).contains("dry pva only")
+                        && miniPva.amsLiteStatus.toLowerCase(java.util.Locale.US).contains("wet/damp pva is unsupported"));
+        Assert.assertTrue("A1 mini PVA remains unqualified by Alloy",
+                miniPva.directSendState.equals("Not qualified"));
         boolean completeSpool = false, refill = false, thirdParty = false, regularAmsSpool = false;
         for (PrinterCapabilityCatalog.SpoolForm form : mini.spoolForms) {
             completeSpool |= form.id.equals("bambu-spooled") && form.compatibleRoutes.contains("AMS lite");
@@ -242,6 +248,25 @@ public final class LearningAndCapabilityCatalogTest {
             Assert.fail("A packaged catalog must not be able to promote direct send");
         } catch (java.io.IOException expected) {
             Assert.assertTrue(expected.getMessage().contains("not qualified"));
+        }
+    }
+
+    @Test public void capabilityCatalogRejectsBroadeningMiniPvaAmsLiteRouteAtRuntime() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        byte[] source;
+        try (java.io.InputStream input = context.getAssets().open("capabilities/bambu-initial-v1.json")) {
+            source = readAll(input);
+        }
+        String broadened = new String(source, StandardCharsets.UTF_8).replace(
+                "Dry PVA only is listed for AMS Lite; wet/damp PVA is unsupported.",
+                "PVA is listed for AMS Lite.");
+        Assert.assertNotEquals("the PVA guard mutation must change the fixture",
+                new String(source, StandardCharsets.UTF_8), broadened);
+        try {
+            PrinterCapabilityCatalog.parse(broadened.getBytes(StandardCharsets.UTF_8));
+            Assert.fail("A packaged catalog must not broaden the A1 Mini PVA AMS Lite route");
+        } catch (java.io.IOException expected) {
+            Assert.assertTrue(expected.getMessage().contains("AMS Lite exceptions"));
         }
     }
 

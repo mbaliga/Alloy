@@ -19,7 +19,7 @@ The repository now contains a runnable Android application. It can:
 - prepare assemblies with persisted global scale/X/Y tilt/Z-rotation plus per-part scale, tilt, Z-rotation and X/Y placement on the bed;
 - calibrate unitless STL/OBJ imports with a known physical dimension, using a bounded 10%–10,000% plate scale and the same fit gate used before slicing;
 - undo and redo printable primitive, sketch, boolean, transform, arrange and repair edits with bounded per-plate history that survives process reload and portable project export/import;
-- edit the versioned A1 Mini/PLA recipe on the phone (layer heights, infill, shell counts, temperatures, flow, volumetric limit, motion, cooling and supports);
+- select source-backed 0.4 mm planning profiles for A1 Mini, A1 and P1S, including material recipes (A1 Mini PLA/PETG/TPU/PVA, A1 PETG Basic, P1S PETG HF), then edit typed process values on the phone;
 - slice offline on-device into deterministic perimeter and clipped scanline-infill G-code;
 - inspect the generated toolpath one layer at a time; and
 - export an inspectable `.gcode.3mf` package for the active plate through Android Storage Access Framework;
@@ -139,10 +139,15 @@ say **Not qualified** for Alloy direct send until their independent physical
 acceptance evidence passes.
 
 The active **Profile** surface offers source-pinned 0.4 mm / PLA Basic
-planning profiles for these same three models. Selecting one changes the real
-build envelope and clears a prior slice so it must be reviewed again. These
-are unverified planning profiles—not a promise of native-slicer parity,
-printer pairing, Bambu Handy compatibility, or physical-print approval.
+planning profiles for these same three models. Material review can also select
+A1 Mini PLA Basic, PETG Basic/HF/Translucent, TPU 95A HF, or PVA; A1 PETG
+Basic and TPU 95A; and P1S PETG HF and TPU 95A HF. The A1/P1S TPU recipes
+are explicitly external/direct-feed planning profiles; they do not imply AMS
+compatibility. Each recipe is pinned to its upstream inheritance
+chain and changes the active typed material values, while remaining
+unverified. Selecting one clears a prior slice so it must be reviewed again.
+These are planning profiles—not a promise of native-slicer parity, printer
+pairing, Bambu Handy compatibility, or physical-print approval.
 
 After slicing, **Print plan** separates what Alloy has actually measured from
 what it cannot yet know: model filament length and an explicitly approximate

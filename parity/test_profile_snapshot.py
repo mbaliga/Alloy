@@ -18,6 +18,16 @@ PROFILE_DIRECTORY = ROOT / "app/src/main/assets/profiles"
 
 
 class ProfileSnapshotTests(unittest.TestCase):
+    def test_percent_acceleration_projection_handles_mixed_extruder_arrays(self):
+        resolved = {"process": {"default_acceleration": ["10000", "8000"]}}
+        self.assertEqual(
+            "10000,100",
+            verify_profile_snapshot.normalize_native_projection(
+                "infill_acceleration", "process", "sparse_infill_acceleration",
+                "100%,100", resolved,
+            ),
+        )
+
     def test_every_packaged_planning_profile_has_a_declared_source_selection(self):
         profile_ids = {
             json.loads(path.read_text(encoding="utf-8"))["id"]
