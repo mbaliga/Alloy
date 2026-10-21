@@ -39,6 +39,11 @@ SELECTIONS = {
         "process": "0.20mm Standard @BBL A1M",
         "filament": "Bambu PETG Translucent @BBL A1M",
     },
+    "bambu.a1-mini.0.4.tpu-95a-hf": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu TPU 95A HF @BBL A1M",
+    },
     "bambu.a1-mini.0.4.pva": {
         "machine": "Bambu Lab A1 mini 0.4 nozzle",
         "process": "0.20mm Standard @BBL A1M",

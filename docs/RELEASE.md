@@ -41,13 +41,15 @@ verify an imported profile, identify the physically attached printer, change
 any material recipe, or qualify direct send. All printers and materials remain
 subject to the existing release and physical-acceptance gates.
 
-The bundled A1 Mini planner now offers five selectable source-pinned 0.4 mm /
-0.20 mm recipes: PLA Basic, PETG Basic, PETG HF, PETG Translucent, and PVA.
+The bundled A1 Mini planner now offers six selectable source-pinned 0.4 mm /
+0.20 mm recipes: PLA Basic, PETG Basic, PETG HF, PETG Translucent,
+TPU 95A HF, and PVA.
 They are derived from the pinned Orca inheritance chain and remain explicitly
 unverified for physical use; this is recipe coverage for planning, not a claim
-that every feed route or material is safe for every job. No A1 Mini-specific
-TPU recipe is included in that pin, so TPU still requires an imported and
-reviewed preset. The app keeps direct send locked for all five.
+that every feed route or material is safe for every job. The sixth recipe is
+specifically Bambu TPU 95A HF for A1 Mini; it is external/direct-feed only and
+not compatible with AMS Lite. Other TPU grades still require an imported and
+reviewed preset. The app keeps direct send locked for all six.
 
 LAN discovery's display-only aliases use Bambu Studio's current printer
 metadata: [N1 (A1 mini)](https://github.com/bambulab/BambuStudio/blob/master/resources/printers/N1.json),
