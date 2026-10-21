@@ -251,6 +251,25 @@ public final class LearningAndCapabilityCatalogTest {
         }
     }
 
+    @Test public void capabilityCatalogRejectsBroadeningMiniPvaAmsLiteRouteAtRuntime() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        byte[] source;
+        try (java.io.InputStream input = context.getAssets().open("capabilities/bambu-initial-v1.json")) {
+            source = readAll(input);
+        }
+        String broadened = new String(source, StandardCharsets.UTF_8).replace(
+                "Dry PVA only is listed for AMS Lite; wet/damp PVA is unsupported.",
+                "PVA is listed for AMS Lite.");
+        Assert.assertNotEquals("the PVA guard mutation must change the fixture",
+                new String(source, StandardCharsets.UTF_8), broadened);
+        try {
+            PrinterCapabilityCatalog.parse(broadened.getBytes(StandardCharsets.UTF_8));
+            Assert.fail("A packaged catalog must not broaden the A1 Mini PVA AMS Lite route");
+        } catch (java.io.IOException expected) {
+            Assert.assertTrue(expected.getMessage().contains("AMS Lite exceptions"));
+        }
+    }
+
     @Test public void initialPlanningProfilesMatchTheThreeDisclosedPrinterEnvelopes() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         java.util.List<ProfileCatalog.Profile> profiles = ProfileCatalog.loadInitial(context.getAssets());

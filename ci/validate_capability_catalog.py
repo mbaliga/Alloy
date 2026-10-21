@@ -211,6 +211,8 @@ def validate_catalog(path):
     }.items():
         if expected_text not in mini_materials[material_id]["ams_lite_status"].lower():
             raise ValueError(f"A1 mini AMS Lite exception is missing for {material_id}")
+    if "wet/damp pva is unsupported" not in mini_materials["pva"]["ams_lite_status"].lower():
+        raise ValueError("A1 mini PVA must explicitly exclude wet/damp material from AMS Lite")
     tpu_95a = mini_materials["tpu-95a"]
     if ("95a hf" not in tpu_95a["bambu_status"].lower()
             or "other grades need review" not in tpu_95a["note"].lower()
