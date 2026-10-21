@@ -96,6 +96,12 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(MainActivity.materialRecipePickerLabel(petg).contains("planning only"));
             Assert.assertTrue(MainActivity.materialRecipePickerGuidance(printer[0])
                     .contains("Alloy print/send actions remain unqualified"));
+            String guidance = MainActivity.materialRecipePickerGuidance(printer[0]);
+            if ("bambu.p1s".equals(printer[0])) {
+                Assert.assertTrue(guidance.contains("Bambu TPU 95A HF should be dried before use (70 °C for 8 hours)"));
+            } else {
+                Assert.assertFalse(guidance.contains("70 °C for 8 hours"));
+            }
             ProfileCatalog.Profile tpu = profiles.get(2);
             Assert.assertEquals(printer[0], tpu.printerId);
             Assert.assertEquals("TPU", tpu.material);
