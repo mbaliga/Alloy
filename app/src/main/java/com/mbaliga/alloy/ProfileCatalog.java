@@ -24,6 +24,13 @@ public final class ProfileCatalog {
     private static final String[] INITIAL_ASSETS = {
             DEFAULT_ASSET, "profiles/a1-0.4-pla-basic.json", "profiles/p1s-0.4-pla-basic.json"
     };
+    private static final String[] A1_MINI_MATERIAL_ASSETS = {
+            DEFAULT_ASSET,
+            "profiles/a1-mini-0.4-petg-basic.json",
+            "profiles/a1-mini-0.4-petg-hf.json",
+            "profiles/a1-mini-0.4-petg-translucent.json",
+            "profiles/a1-mini-0.4-pva.json"
+    };
     private static final int MAX_PROFILE_BYTES = 256 * 1024;
 
     private ProfileCatalog() { }
@@ -57,6 +64,45 @@ public final class ProfileCatalog {
         String requested = printerId == null ? "" : printerId.trim();
         for (Profile profile : loadInitial(assets)) if (profile.printerId.equals(requested)) return profile;
         return loadDefault(assets);
+    }
+
+    /** Load a persisted planning profile from the bundled, source-backed catalog. */
+    public static Profile loadPlanningById(AssetManager assets, String profileId) throws IOException {
+        String requested = profileId == null ? "" : profileId.trim();
+        if (requested.isEmpty()) return loadDefault(assets);
+        for (String asset : INITIAL_ASSETS) {
+            Profile profile = loadAsset(assets, asset);
+            if (requested.equals(profile.id)) return profile;
+        }
+        for (String asset : A1_MINI_MATERIAL_ASSETS) {
+            Profile profile = loadAsset(assets, asset);
+            if (requested.equals(profile.id)) return profile;
+        }
+        return loadDefault(assets);
+    }
+
+    /** Source-backed A1 Mini 0.4 mm / 0.20 mm recipes available without a PC. */
+    public static List<Profile> loadA1MiniMaterialProfiles(AssetManager assets) throws IOException {
+        ArrayList<Profile> profiles = new ArrayList<>();
+        for (String asset : A1_MINI_MATERIAL_ASSETS) {
+            Profile profile = loadAsset(assets, asset);
+            if (!"bambu.a1-mini".equals(profile.printerId) || profile.nozzle != 0.4f
+                    || profile.verified || profile.provenanceRevision.length() != 40)
+                throw new IOException("A1 Mini material recipes must remain source-backed, planning-only 0.4 mm profiles");
+            profiles.add(profile);
+        }
+        if (profiles.size() != 5
+                || !"PLA".equalsIgnoreCase(profiles.get(0).material)
+                || !"PETG".equalsIgnoreCase(profiles.get(1).material)
+                || !"PETG".equalsIgnoreCase(profiles.get(2).material)
+                || !"PETG".equalsIgnoreCase(profiles.get(3).material)
+                || !"PVA".equalsIgnoreCase(profiles.get(4).material))
+            throw new IOException("A1 Mini material recipe coverage is incomplete");
+        return Collections.unmodifiableList(profiles);
+    }
+
+    private static Profile loadAsset(AssetManager assets, String asset) throws IOException {
+        try (InputStream input = assets.open(asset)) { return load(input); }
     }
 
     /** Load an Alloy-normalized profile from the app's private profile store. */

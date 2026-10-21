@@ -67,6 +67,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_VISUALIZATION_EXPORT = 50;
     private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
     private static final String BUNDLED_PROFILE_PRINTER_ID = "bundled_profile_printer_id";
+    private static final String BUNDLED_PROFILE_ID = "bundled_profile_id";
     private static final int HISTORY_RESET = 0;
     private static final int HISTORY_RESTORE = 1;
     private static final int HISTORY_MUTATION = 2;
@@ -259,9 +260,12 @@ public final class MainActivity extends Activity {
             batchSlicing = true;
         }
         try {
-            String bundledPrinterId = getPreferences(MODE_PRIVATE)
-                    .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
-            profile = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
+            android.content.SharedPreferences profilePreferences = getPreferences(MODE_PRIVATE);
+            String bundledPrinterId = profilePreferences.getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+            String bundledProfileId = profilePreferences.getString(BUNDLED_PROFILE_ID, "");
+            profile = bundledProfileId.isEmpty()
+                    ? ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId)
+                    : ProfileCatalog.loadPlanningById(getAssets(), bundledProfileId);
             java.io.File importedProfileFile = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
             if (importedProfileFile.isFile()) {
                 try {
@@ -3117,12 +3121,42 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void showA1MiniMaterialPicker() {
+        if (profile == null || !"bambu.a1-mini".equals(profile.printerId)) {
+            Toast.makeText(this, "Bundled material recipes are currently for the A1 Mini only", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (importedProfileActive()) {
+            Toast.makeText(this, "Reset the imported preset before choosing a bundled recipe", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadA1MiniMaterialProfiles(getAssets());
+            String[] labels = new String[choices.size()];
+            for (int index = 0; index < choices.size(); index++) {
+                ProfileCatalog.Profile choice = choices.get(index);
+                labels[index] = choice.filamentName + "\n" + choice.material + " · 0.4 mm nozzle · planning only";
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("A1 Mini material recipe")
+                    .setMessage("Choose a source-backed 0.4 mm recipe. This replaces the active recipe and clears the current slice. TPU is printer-compatible but has no A1 Mini-specific preset in the pinned source; import and review a suitable profile before using it. All Alloy print/send actions remain unqualified.")
+                    .setItems(labels, (ignored, which) -> {
+                        if (which >= 0 && which < choices.size()) applyBundledProfile(choices.get(which));
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } catch (Exception error) {
+            Toast.makeText(this, "A1 Mini material recipes are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void applyBundledProfile(ProfileCatalog.Profile selected) {
         if (selected == null) return;
         profile = selected;
         profile.applyTo(config);
         getPreferences(MODE_PRIVATE).edit()
-                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId).apply();
+                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId)
+                .putString(BUNDLED_PROFILE_ID, selected.id).apply();
         projectStore.saveRecipe(config);
         slice = null;
         stagedArtifact = null;
@@ -3212,9 +3246,12 @@ public final class MainActivity extends Activity {
                         return;
                     }
                     try {
-                        String bundledPrinterId = getPreferences(MODE_PRIVATE)
-                                .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
-                        ProfileCatalog.Profile restored = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
+                        android.content.SharedPreferences profilePreferences = getPreferences(MODE_PRIVATE);
+                        String bundledPrinterId = profilePreferences.getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+                        String bundledProfileId = profilePreferences.getString(BUNDLED_PROFILE_ID, "");
+                        ProfileCatalog.Profile restored = bundledProfileId.isEmpty()
+                                ? ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId)
+                                : ProfileCatalog.loadPlanningById(getAssets(), bundledProfileId);
                         profile = restored;
                         profile.applyTo(config);
                         projectStore.saveRecipe(config);
@@ -5826,6 +5863,14 @@ public final class MainActivity extends Activity {
             TextView boundary = label("Compatibility is not a recipe. To change filament, select or import a source-backed material profile, then re-slice and review. Direct send remains " + printer.directSendState + ".", 12, RED);
             boundary.setPadding(0, dp(10), 0, dp(6)); boundary.setLineSpacing(dp(2), 1f);
             page.addView(boundary);
+            if ("a1-mini".equals(printer.id)) {
+                Button recipeButton = dialogButton("Choose A1 Mini material recipe", v -> showA1MiniMaterialPicker());
+                LinearLayout.LayoutParams recipeLp = new LinearLayout.LayoutParams(-1, dp(44));
+                recipeLp.topMargin = dp(6); page.addView(recipeButton, recipeLp);
+                Button importButton = dialogButton("Import a reviewed Bambu preset", v -> openBambuProfile());
+                LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(-1, dp(44));
+                importLp.topMargin = dp(6); page.addView(importButton, importLp);
+            }
             TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
             materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
             for (PrinterCapabilityCatalog.Material material : printer.materials) {
