@@ -47,7 +47,7 @@ public final class PrintPlanEstimate {
                         config.nativeSettings.get("filament_density")),
                 scope,
                 support,
-                "Not available. This is not a verified multi-material or printer-telemetry estimate.",
+                "Not included in this estimate. Printer startup priming, purge and cleaning waste are not currently modeled.",
                 time);
     }
 
