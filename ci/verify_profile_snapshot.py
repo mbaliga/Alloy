@@ -62,6 +62,26 @@ SELECTIONS = {
         "process": "0.20mm Standard @BBL X1C",
         "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
     },
+    "bambu.a1.0.4.petg-basic": {
+        "machine": "Bambu Lab A1 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1",
+        "filament": "Bambu PETG Basic @BBL A1",
+    },
+    "bambu.p1s.0.4.petg-hf": {
+        "machine": "Bambu Lab P1S 0.4 nozzle",
+        "process": "0.20mm Standard @BBL X1C",
+        "filament": "Bambu PETG HF @BBL P1S 0.4 nozzle",
+    },
+    "bambu.a1.0.4.tpu-95a": {
+        "machine": "Bambu Lab A1 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1",
+        "filament": "Bambu TPU 95A @BBL A1",
+    },
+    "bambu.p1s.0.4.tpu-95a-hf": {
+        "machine": "Bambu Lab P1S 0.4 nozzle",
+        "process": "0.20mm Standard @BBL X1C",
+        "filament": "Bambu TPU 95A HF @BBL P1S",
+    },
 }
 # Kept as a compatibility import for existing focused fixture tests.
 SELECTION = SELECTIONS["bambu.a1-mini.0.4.pla-basic"]
@@ -340,11 +360,20 @@ def normalize_native_projection(target: str, kind: str, source_key: str,
     # Orca expresses sparse-infill acceleration relative to the process
     # default; SliceBeam/Prusa expects an absolute mm/s² value.
     if target == "infill_acceleration" and kind == "process" and source_key == "sparse_infill_acceleration":
-        if value.strip().endswith("%"):
-            percent = float(value.strip()[:-1])
-            default = float(native_string(resolved["process"], "default_acceleration"))
+        values = value.split(",")
+        defaults = native_string(resolved["process"], "default_acceleration").split(",")
+        normalized = []
+        for index, item in enumerate(values):
+            item = item.strip()
+            if not item.endswith("%"):
+                normalized.append(item)
+                continue
+            percent = float(item[:-1])
+            default = float(defaults[min(index, len(defaults) - 1)])
             resolved_value = default * percent / 100.0
-            return str(int(resolved_value)) if resolved_value.is_integer() else f"{resolved_value:.6f}".rstrip("0").rstrip(".")
+            normalized.append(str(int(resolved_value)) if resolved_value.is_integer()
+                              else f"{resolved_value:.6f}".rstrip("0").rstrip("."))
+        return ",".join(normalized)
     return value
 
 

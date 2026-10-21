@@ -91,6 +91,20 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value["printers"][0]["materials"][0]["alloy_direct_send"] = "Qualified"
         self.assert_rejected(value, "material must stay unavailable for Alloy direct send")
 
+    def test_rejects_broad_a1_mini_pva_ams_lite_compatibility(self):
+        value = self.current_catalog()
+        pva = next(material for material in value["printers"][0]["materials"]
+                   if material["id"] == "pva")
+        pva["ams_lite_status"] = "Dry PVA only is listed for AMS Lite."
+        self.assert_rejected(value, "must explicitly exclude wet/damp material from AMS Lite")
+
+    def test_rejects_generic_ams_lite_source_for_dry_pva_exception(self):
+        value = self.current_catalog()
+        pva = next(material for material in value["printers"][0]["materials"]
+                   if material["id"] == "pva")
+        pva["ams_lite_source_url"] = "https://ca.store.bambulab.com/products/ams-lite"
+        self.assert_rejected(value, "must cite Bambu's PVA product guidance")
+
 
 if __name__ == "__main__":
     unittest.main()

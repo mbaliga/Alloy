@@ -4,31 +4,35 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Latest installable software-QA checkpoint:** source [`60e178429e75da31de06596871e2d9c9089efea3`](https://github.com/mbaliga/Alloy/commit/60e178429e75da31de06596871e2d9c9089efea3). The ordinary Android acceptance lane [39527385460](https://github.com/mbaliga/Alloy/actions/runs/39527385460) passed and produced a CI-signed QA APK.
+**Latest installable PR software-QA checkpoint:** source [`d89f9737b0f86b9b1900aff6b754de35d5e06803`](https://github.com/mbaliga/Alloy/commit/d89f9737b0f86b9b1900aff6b754de35d5e06803). The ordinary Android acceptance lane [39542482024](https://github.com/mbaliga/Alloy/actions/runs/39542482024) built the APK and completed emulator acceptance with 0 failures and 15 native-dependent skips.
 
-- Latest ordinary software-QA artifact: [12315230269](https://github.com/mbaliga/Alloy/actions/runs/39527385460/artifacts/12315230269), archive SHA-256 `e173406926485a81c87424d8d5424aae1349f411a7df9750c9293d2d3f7f03b6`.
-- Latest native workflow [39527385446](https://github.com/mbaliga/Alloy/actions/runs/39527385446) passed all 207 instrumentation tests but failed strict G3 at the unchanged 2% tolerance. Therefore physical-pilot build/test stages were skipped. See [`GATE_STATUS.md`](GATE_STATUS.md) for measured deltas and diagnostic limits. Do not use a native-enabled or ordinary QA APK to print; both are QA artifacts only.
+**Latest local implementation checkpoint:** `2bc37139` adds source-pinned A1 PETG Basic / TPU 95A and P1S PETG HF / TPU 95A HF recipes to the earlier A1 Mini recipe work, exposes all three printers' recipes in the picker, and surfaces the dry-before-use instruction for the exact TPU 95A HF grade. Each of the four A1/P1S profiles verifies 26 typed fields, 131 native projections and 11 provenance blobs against Bambu Studio revision `926a7192574bcb9b3a732e1ec59a46d79cb45466`. The local parity suite (191 tests) and profile/Android/release wiring validators pass, but this checkpoint is not yet on the GitHub PR branch and has no Android APK or instrumentation result; do not treat these recipes as device-tested.
+
+- Ordinary software-QA artifact: [12320399519](https://github.com/mbaliga/Alloy/actions/runs/39542482024/artifacts/12320399519), archive SHA-256 `e4fc88ad46269eb3175eafb5a65209f84a5394eebb1ab8f659ceaea38da20498`.
+- This APK predates the local A1 Mini PVA routing correction in commits `8be99b3a`, `aaab46c6`, and `62ca4642`; do not use it to verify that correction. It is a CI-signed software-QA artifact, not a production release.
+- The exact-head native workflow [39542482010](https://github.com/mbaliga/Alloy/actions/runs/39542482010) is still building pinned native dependencies. Native engine tests, strict G3 parity, and physical-pilot stages have not run on this head. The last completed strict G3 result remains **FAIL / NO-GO** at the unchanged 2% tolerance; see [`GATE_STATUS.md`](GATE_STATUS.md) for measured deltas and limits. Do not use either QA APK to print.
 
 **Do not send or print unqualified generated jobs.** Direct-send and
-external-share gates remain fail-closed. The physical-pilot stages were
-skipped after G3 failed. A1/P1S runtime qualification, real-printer testing,
-Bambu Handy acceptance, and production signing remain unverified.
+external-share gates remain fail-closed. The prior native checkpoint's
+physical-pilot stages were skipped after G3 failed; this exact head has not
+reached G3 or the pilot stages yet. A1 Mini physical acceptance, A1/P1S runtime
+qualification, real-printer testing, Bambu Handy acceptance, and production
+signing remain unverified.
 
 ## 1. Install the matching artifacts
 
 For phone-only software QA, use the CI-signed ordinary APK from the exact
 source checkpoint above:
 
-- [CI-signed Android QA APK, artifact 12315230269](https://github.com/mbaliga/Alloy/actions/runs/39527385460/artifacts/12315230269).
-  Archive SHA-256: `e173406926485a81c87424d8d5424aae1349f411a7df9750c9293d2d3f7f03b6`.
+- [CI-signed Android QA APK, artifact 12320399519](https://github.com/mbaliga/Alloy/actions/runs/39542482024/artifacts/12320399519).
+  Archive SHA-256: `e4fc88ad46269eb3175eafb5a65209f84a5394eebb1ab8f659ceaea38da20498`.
   This is the ordinary software-acceptance build, not a production release.
 
 Before installing, verify the artifact identity and archive digest, and retain
 the extracted APK digest. This CI-signed software QA artifact is not a
-production release. The native-enabled APK pair (artifacts 12257885728 and
-12257800815) exists for native instrumentation only; the strict G3 gate still
-fails. Do not send generated packages to the printer or Bambu Handy while
-qualification is incomplete.
+production release and predates the local PVA correction. No exact-head native
+APK pair has been produced yet. Do not send generated packages to the printer
+or Bambu Handy while qualification is incomplete.
 
 ## 1a. Phone navigation and visual system
 
@@ -96,11 +100,21 @@ Expected: learning is readable offline and is never a gate-bypass path.
   and survives closing/reopening Alloy. Every profile must remain marked
   review-required and direct send must remain unavailable. Also select the
   specific Bambu TPU 95A HF recipe and confirm its feed guidance is
-  external/direct only, not AMS Lite. Confirm PVA is also labeled external-only,
-  while PLA/PETG recipes show AMS Lite or external feed. Do not treat that
-  recipe as generic TPU; other grades need their own reviewed profile. Treat
-  material compatibility and the AMS Lite route as separate questions from
-  recipe availability.
+  external/direct only, not AMS Lite, and says to dry before use. Bambu's
+  current guidance specifies 70 °C for 8 hours for this HF grade. Confirm PVA
+  distinguishes dry PVA
+  (listed as AMS Lite compatible) from wet/absorbent PVA (not for AMS Lite);
+  PLA/PETG labels must still require checking physical AMS Lite spool fit.
+  Do not treat the TPU recipe as generic; other grades need their own reviewed
+  profile. Treat material compatibility and feeder route as separate questions
+  from recipe availability.
+- With the A1 active, choose A1 PETG Basic and TPU 95A; with the P1S active,
+  choose P1S PETG HF and TPU 95A HF. Confirm the displayed printer/material
+  combination is correct, each choice persists across app restart, and an
+  existing slice is cleared. The TPU profiles must be labelled external/direct
+  feed only and must not imply AMS compatibility. All four profiles remain
+  planning-only; review exact material, route, physical spool fit, and printer
+  readiness independently.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.

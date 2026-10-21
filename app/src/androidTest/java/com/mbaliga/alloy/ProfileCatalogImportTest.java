@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 12259)
+Total output lines: 729
+
 package com.mbaliga.alloy;
 
 import android.content.Context;
@@ -36,7 +39,9 @@ public final class ProfileCatalogImportTest {
         String guidance = MainActivity.a1MiniMaterialPickerGuidance();
         Assert.assertTrue(guidance.contains("PLA, PETG, TPU and PVA as ideal"));
         Assert.assertTrue(guidance.contains("ABS, ASA, PC, PA, PET"));
-        Assert.assertTrue(guidance.contains("AMS Lite must not be used with TPU or absorbent PVA"));
+        Assert.assertTrue(guidance.contains("AMS Lite does not support TPU or wet/absorbent PVA"));
+        Assert.assertTrue(guidance.contains("dry PVA is listed as compatible"));
+        Assert.assertTrue(guidance.contains("Check that every spool physically fits the AMS Lite"));
         Assert.assertTrue(guidance.contains("Alloy print/send actions remain unqualified"));
         for (int index = 0; index < profiles.size(); index++) {
             ProfileCatalog.Profile profile = profiles.get(index);
@@ -57,14 +62,56 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(printer.directSendState, printer.directSendState.contains("Not qualified"));
             String pickerLabel = MainActivity.a1MiniMaterialPickerLabel(profile);
             Assert.assertTrue(pickerLabel.contains("0.4 mm nozzle · planning only"));
-            if ("TPU".equals(materials[index]) || "PVA".equals(materials[index])) {
-                Assert.assertTrue(pickerLabel, pickerLabel.contains("external spool"));
-                Assert.assertFalse(pickerLabel, pickerLabel.contains("AMS Lite or external spool"));
+            if ("TPU".equals(materials[index])) {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("external/direct feed only"));
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("dry before use"));
+            } else if ("PVA".equals(materials[index])) {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("dry PVA only in AMS Lite; otherwise external"));
             } else {
-                Assert.assertTrue(pickerLabel, pickerLabel.contains("AMS Lite or external spool"));
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("AMS Lite-compatible spool (check fit) or external"));
             }
             Assert.assertEquals(profile.id, ProfileCatalog.loadPlanningById(
                     context.getAssets(), profile.id).id);
+        }
+    }
+
+    @Test
+    public void exposesSourcePinnedPetgRecipesForA1AndP1sWithoutQualifyingSend() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
+        for (String[] printer : new String[][]{
+                {"bambu.a1", "a1", "Bambu PETG Basic"},
+                {"bambu.p1s", "p1s", "Bambu PETG HF"}
+        }) {
+            java.util.List<ProfileCatalog.Profile> profiles =
+                    ProfileCatalog.loadMaterialProfiles(context.getAssets(), printer[0]);
+            Assert.assertEquals(3, profiles.size());
+            Assert.assertEquals("PLA", profiles.get(0).material);
+            ProfileCatalog.Profile petg = profiles.get(1);
+            Assert.assertEquals(printer[0], petg.printerId);
+            Assert.assertEquals("PETG", petg.material);
+            Assert.assertTrue(petg.filamentName, petg.filamentName.contains(printer[2]));
+            Assert.assertEquals(0.4f, petg.nozzle, 0.001f);
+            Assert.assertEquals(40, petg.provenanceRevision.length());
+            Assert.assertFalse("source-backed planning recipes are not print qualification", petg.verified);
+            Assert.assertTrue(capabilities.forProfile(petg).directSendState.contains("Not qualified"));
+            Assert.assertEquals(petg.id, ProfileCatalog.loadPlanningById(context.getAssets(), petg.id).id);
+            Assert.assertTrue(MainActivity.materialRecipePickerLabel(petg).contains("planning only"));
+            Assert.assertTrue(MainActivity.materialRecipePickerGuidance(printer[0])
+                    .contains("Alloy print/send actions remain unqualified"));
+            ProfileCatalog.Profile tpu = profiles.get(2);
+            Assert.assertEquals(printer[0], tpu.printerId);
+            Assert.assertEquals("TPU", tpu.material);
+            Assert.assertEquals(40, tpu.provenanceRevision.length());
+            Assert.assertFalse(tpu.verified);
+            Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu)
+                    .contains("external/direct feed only · do not infer AMS compatibility"));
+            if (tpu.filamentName.contains("95A HF")) {
+                Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu).contains("dry before use"));
+            } else {
+                Assert.assertFalse(MainActivity.materialRecipePickerLabel(tpu).contains("dry before use"));
+            }
+            Assert.assertEquals(tpu.id, ProfileCatalog.loadPlanningById(context.getAssets(), tpu.id).id);
         }
     }
 
@@ -301,22 +348,7 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_distance"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_tree_branch_distance_organic"));
         Assert.assertEquals("2", imported.nativeSettings.get("support_tree_branch_diameter_organic"));
-        Assert.assertEquals("0.2", imported.nativeSettings.get("support_object_first_layer_gap"));
-        Assert.assertEquals("1", imported.nativeSettings.get("support_interface_not_for_body"));
-        Assert.assertEquals("cubic", imported.nativeSettings.get("fill_pattern"));
-        Assert.assertEquals("rectilinear", imported.nativeSettings.get("internal_solid_infill_pattern"));
-        Assert.assertEquals("1500,1250", imported.nativeSettings.get("machine_max_acceleration_retracting"));
-    }
-
-    @Test
-    public void g3ReferenceFixtureWritesEffectiveMotionRecipeToNativeConfig() throws Exception {
-        Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
-        ProfileCatalog.Profile baseline = ProfileCatalog.loadDefault(targetContext.getAssets());
-        ProfileCatalog.Profile imported;
-        try (java.io.InputStream input = testContext.getAssets().open(
-                "profiles/g3-bambu-a1mini-project-settings.json")) {
-            imported = ProfileCatalog.importBambu(baseline,
+        Assert.assertEquals("0.2", imported.nativeSettings.get("support_o…259 tokens truncated…g.importBambu(baseline,
                     new byte[][]{ProfileCatalog.readProfileDocument(input)});
         }
         Slicer.Config config = new Slicer.Config();
