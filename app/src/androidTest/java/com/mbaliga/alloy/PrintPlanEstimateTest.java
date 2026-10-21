@@ -31,7 +31,8 @@ public final class PrintPlanEstimateTest {
         Assert.assertEquals(0f, estimate.approximateReportedFilamentGrams, 0f);
         Assert.assertTrue(estimate.supportMaterial.contains("Not reported separately"));
         Assert.assertEquals("ENGINE FILAMENT TOTAL", estimate.filamentScope);
-        Assert.assertTrue(estimate.primePurgeCleaning.startsWith("Not available"));
+        Assert.assertTrue(estimate.primePurgeCleaning.startsWith("Not included in this estimate"));
+        Assert.assertTrue(estimate.primePurgeCleaning.contains("startup priming, purge and cleaning waste"));
         Assert.assertEquals("Not reported by engine", estimate.time);
     }
 }
