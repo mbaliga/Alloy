@@ -3158,6 +3158,7 @@ public final class MainActivity extends Activity {
         String routeNote = "TPU".equalsIgnoreCase(choice.material)
                 ? "external/direct feed only · do not infer AMS compatibility"
                 : "check material route and spool compatibility";
+        if (isTpu95aHf(choice)) routeNote += " · dry before use";
         return choice.filamentName + "\n" + choice.material
                 + " · " + routeNote + " · 0.4 mm nozzle · planning only";
     }
@@ -3176,6 +3177,7 @@ public final class MainActivity extends Activity {
         String feedNote;
         if ("TPU".equalsIgnoreCase(choice.material)) {
             feedNote = "external/direct feed only";
+            if (isTpu95aHf(choice)) feedNote += " · dry before use";
         } else if ("PVA".equalsIgnoreCase(choice.material)) {
             feedNote = "dry PVA only in AMS Lite; otherwise external";
         } else {
@@ -3186,7 +3188,13 @@ public final class MainActivity extends Activity {
     }
 
     static String a1MiniMaterialPickerGuidance() {
-        return "Choose a source-backed 0.4 mm recipe. Bambu lists PLA, PETG, TPU and PVA as ideal for A1 Mini; ABS, ASA, PC, PA, PET and fiber-reinforced materials are not recommended. AMS Lite does not support TPU or wet/absorbent PVA; dry PVA is listed as compatible, but keep it dry. Check that every spool physically fits the AMS Lite. The bundled TPU recipe is specifically Bambu TPU 95A HF for A1 Mini and requires external/direct feed; it is not a generic TPU profile. Choosing a recipe replaces the active recipe and clears the current slice. Alloy print/send actions remain unqualified.";
+        return "Choose a source-backed 0.4 mm recipe. Bambu lists PLA, PETG, TPU and PVA as ideal for A1 Mini; ABS, ASA, PC, PA, PET and fiber-reinforced materials are not recommended. AMS Lite does not support TPU or wet/absorbent PVA; dry PVA is listed as compatible, but keep it dry. Check that every spool physically fits the AMS Lite. The bundled TPU recipe is specifically Bambu TPU 95A HF for A1 Mini and requires external/direct feed; it is not a generic TPU profile. Bambu says TPU 95A HF should be dried before use (70 °C for 8 hours). Choosing a recipe replaces the active recipe and clears the current slice. Alloy print/send actions remain unqualified.";
+    }
+
+    private static boolean isTpu95aHf(ProfileCatalog.Profile choice) {
+        return choice != null && "TPU".equalsIgnoreCase(choice.material)
+                && choice.filamentName != null
+                && choice.filamentName.toUpperCase(java.util.Locale.ROOT).contains("95A HF");
     }
 
     private void applyBundledProfile(ProfileCatalog.Profile selected) {

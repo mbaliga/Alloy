@@ -61,6 +61,7 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(pickerLabel.contains("0.4 mm nozzle · planning only"));
             if ("TPU".equals(materials[index])) {
                 Assert.assertTrue(pickerLabel, pickerLabel.contains("external/direct feed only"));
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("dry before use"));
             } else if ("PVA".equals(materials[index])) {
                 Assert.assertTrue(pickerLabel, pickerLabel.contains("dry PVA only in AMS Lite; otherwise external"));
             } else {
@@ -102,6 +103,11 @@ public final class ProfileCatalogImportTest {
             Assert.assertFalse(tpu.verified);
             Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu)
                     .contains("external/direct feed only · do not infer AMS compatibility"));
+            if (tpu.filamentName.contains("95A HF")) {
+                Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu).contains("dry before use"));
+            } else {
+                Assert.assertFalse(MainActivity.materialRecipePickerLabel(tpu).contains("dry before use"));
+            }
             Assert.assertEquals(tpu.id, ProfileCatalog.loadPlanningById(context.getAssets(), tpu.id).id);
         }
     }

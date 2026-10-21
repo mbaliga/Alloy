@@ -100,7 +100,9 @@ Expected: learning is readable offline and is never a gate-bypass path.
   and survives closing/reopening Alloy. Every profile must remain marked
   review-required and direct send must remain unavailable. Also select the
   specific Bambu TPU 95A HF recipe and confirm its feed guidance is
-  external/direct only, not AMS Lite. Confirm PVA distinguishes dry PVA
+  external/direct only, not AMS Lite, and says to dry before use. Bambu's
+  current guidance specifies 70 °C for 8 hours for this HF grade. Confirm PVA
+  distinguishes dry PVA
   (listed as AMS Lite compatible) from wet/absorbent PVA (not for AMS Lite);
   PLA/PETG labels must still require checking physical AMS Lite spool fit.
   Do not treat the TPU recipe as generic; other grades need their own reviewed
