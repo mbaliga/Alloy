@@ -236,9 +236,9 @@
         {
           "id": "tpu-95a",
           "name": "TPU 95A",
-          "bambu_status": "TPU grade needs exact product/printer review; generic TPU family capability is not a grade approval.",
+          "bambu_status": "A1 Mini profile exists for Bambu TPU 95A HF; this is grade-specific, not generic TPU approval.",
           "alloy_direct_send": "Not qualified",
-          "note": "Unsupported for AMS Lite per Bambu guidance.",
+          "note": "Use the A1 Mini-specific Bambu TPU 95A HF profile only; other grades need review. Unsupported for AMS Lite.",
           "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
           "ams_lite_status": "Unsupported for AMS Lite (TPU 95A); follow exact A1 mini/product guidance for printer use.",
           "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"

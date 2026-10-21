@@ -32,6 +32,7 @@ def main() -> None:
         "ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-basic.json",
         "ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-hf.json",
         "ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-translucent.json",
+        "ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-tpu-95a-hf.json",
         "ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pva.json",
         "Verify pinned Bambu planning profiles",
         "ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",

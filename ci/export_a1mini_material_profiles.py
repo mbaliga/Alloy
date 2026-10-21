@@ -40,6 +40,15 @@ RECIPES = {
             "resources/profiles/BBL/filament/fdm_filament_common.json",
         ],
     },
+    "bambu.a1-mini.0.4.tpu-95a-hf": {
+        "asset": "a1-mini-0.4-tpu-95a-hf.json",
+        "leaf": "resources/profiles/BBL/filament/Bambu TPU 95A HF @BBL A1M.json",
+        "parents": [
+            "resources/profiles/BBL/filament/Bambu TPU 95A HF @base.json",
+            "resources/profiles/BBL/filament/fdm_filament_tpu.json",
+            "resources/profiles/BBL/filament/fdm_filament_common.json",
+        ],
+    },
     "bambu.a1-mini.0.4.pva": {
         "asset": "a1-mini-0.4-pva.json",
         "leaf": "resources/profiles/BBL/filament/Bambu PVA @BBL A1M.json",
