@@ -32,6 +32,15 @@ extracted `app-release.apk` SHA-256:
 and layer-review diagnostics. Native instrumentation passed, but strict G3
 failed; do not print, share, or send its generated job to Bambu Handy.
 
+**Current native-engine candidate:** APK artifact
+[12337998464](https://github.com/mbaliga/Alloy/actions/runs/39578080512/artifacts/12337998464),
+archive SHA-256
+`6db76e1d2eb590ec23aad677dbf22d14b52dbaf551c30e0aaecb5064c6e58a47`
+(60,064,192-byte archive). Native APK build completed, but API-35
+instrumentation is still running and exact-head G3 has not run. This candidate
+may be used for model-import/arrangement/slicing diagnostics only. Do not print,
+share, or send any generated job to Bambu Handy.
+
 **Latest published implementation checkpoint:** [`3e2947d`](https://github.com/mbaliga/Alloy/commit/3e2947d1cc29e3f72ae1866565cb1b114ed34b30)
 includes source-pinned A1 PETG Basic / TPU 95A and P1S PETG HF / TPU 95A HF
 recipes, the three-printer recipe picker, and grade-specific TPU drying
@@ -57,13 +66,19 @@ app-source-equivalent checkpoint above:
   your device. The retained JUnit report records 210 passed, 0 failed and 15
   native-dependent skipped tests. This is the ordinary software-acceptance
   build, not a production release.
-- For real-model local slicing, use the native-engine QA APK from artifact
-  [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410).
+- Newest app-source native candidate: artifact
+  [12337998464](https://github.com/mbaliga/Alloy/actions/runs/39578080512/artifacts/12337998464).
+  Archive SHA-256:
+  `6db76e1d2eb590ec23aad677dbf22d14b52dbaf551c30e0aaecb5064c6e58a47`.
+  Build is complete, but native instrumentation/G3 are pending. Use only for
+  local import, arrangement, slicing and layer-review diagnostics; never
+  dispatch its G-code.
+- Previously completed native diagnostic APK:
+  artifact [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410).
   Extracted `app-release.apk` SHA-256:
   `d6c20906198e7ca8764646ef32d046376103d5c1d614bd0b8e20687a69373362`.
-  This approximately 144 MiB CI build passed API-35 native instrumentation,
-  but its strict G3 comparison failed. It is for import, arrangement, slicing
-  and layer-review diagnostics only; never dispatch its G-code.
+  It passed API-35 native instrumentation but failed strict G3; use only for
+  local diagnostics and never dispatch its G-code.
 
 Before installing, verify the artifact identity and archive digest, and retain
 the extracted APK digest. This software QA artifact is not a production
