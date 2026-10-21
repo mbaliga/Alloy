@@ -11,9 +11,11 @@ printer safety, Bambu Handy acceptance, or production signing.
 - The exact-head native workflow [39542482010](https://github.com/mbaliga/Alloy/actions/runs/39542482010) is still building pinned native dependencies. Native engine tests, strict G3 parity, and physical-pilot stages have not run on this head. The last completed strict G3 result remains **FAIL / NO-GO** at the unchanged 2% tolerance; see [`GATE_STATUS.md`](GATE_STATUS.md) for measured deltas and limits. Do not use either QA APK to print.
 
 **Do not send or print unqualified generated jobs.** Direct-send and
-external-share gates remain fail-closed. The physical-pilot stages were
-skipped after G3 failed. A1/P1S runtime qualification, real-printer testing,
-Bambu Handy acceptance, and production signing remain unverified.
+external-share gates remain fail-closed. The prior native checkpoint's
+physical-pilot stages were skipped after G3 failed; this exact head has not
+reached G3 or the pilot stages yet. A1 Mini physical acceptance, A1/P1S runtime
+qualification, real-printer testing, Bambu Handy acceptance, and production
+signing remain unverified.
 
 ## 1. Install the matching artifacts
 
