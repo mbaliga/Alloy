@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 13301)
-Total output lines: 945
-
 package com.mbaliga.alloy;
 
 import android.content.res.AssetManager;
@@ -410,7 +407,97 @@ public final class ProfileCatalog {
                 process.getInt("bottom_layers"),
                 process.getBoolean("support_enabled"),
                 process.getDouble("support_threshold_degrees"),
-                process.…1301 tokens truncated…return "support_tree_branch_diameter";
+                process.getDouble("travel_speed_mm_s"),
+                process.getDouble("outer_wall_speed_mm_s"),
+                process.getDouble("inner_wall_speed_mm_s"),
+                process.getDouble("infill_speed_mm_s"),
+                process.getDouble("initial_layer_speed_mm_s"),
+                filament.getString("id"),
+                filament.getString("name"),
+                filament.getString("material"),
+                filament.getDouble("diameter_mm"),
+                filament.getDouble("nozzle_temperature_c"),
+                filament.getDouble("first_layer_nozzle_temperature_c"),
+                filament.getDouble("bed_temperature_c"),
+                filament.getDouble("first_layer_bed_temperature_c"),
+                filament.getDouble("flow_ratio"),
+                filament.getDouble("max_volumetric_speed_mm3_s"),
+                filament.getDouble("fan_min_percent"),
+                filament.getDouble("fan_max_percent"),
+                nativeSettings);
+    }
+
+    /**
+     * Read only scalar settings that are safe to project into the
+     * Prusa/SliceBeam config. Machine and layer G-code templates deliberately
+     * stay Alloy-owned so Bambu-specific commands cannot leak into a generic
+     * native job.
+     */
+    private static Map<String, String> parseNativeSettings(JSONObject object) throws JSONException {
+        return NativeSettings.parse(object, true);
+    }
+
+    /**
+     * Translate the current Bambu/Orca vocabulary into the bounded legacy
+     * names consumed by Alloy's typed native adapter. The importer must do
+     * this explicitly: silently dropping these keys makes an imported Bambu
+     * support recipe look valid while changing its generated toolpaths.
+     */
+    private static String importedNativeKey(String key, Map<String, Object> all) {
+        if (key == null) return null;
+        if (NativeSettings.isApprovedKey(key)) {
+            // A current Bambu preset's "support_style=default" is not a
+            // standalone style. With tree(auto), Orca resolves it to its
+            // organic implementation; retain that meaning in Alloy's
+            // legacy profile field.
+            if ("support_style".equals(key)) {
+                String value = scalar(all.get(key)).trim().toLowerCase(Locale.US);
+                if ("default".equals(value)) {
+                    String type = scalar(all.get("support_type")).trim().toLowerCase(Locale.US);
+                    if (type.startsWith("tree")) return "support_material_style";
+                }
+            }
+            return key;
+        }
+        switch (key) {
+            case "support_type": {
+                // When the provider supplies both keys, support_style is the
+                // more specific value. Avoid making JSON member order change
+                // the resulting recipe.
+                if (all.containsKey("support_style")) return null;
+                String value = scalar(all.get(key)).trim().toLowerCase(Locale.US);
+                return value.startsWith("tree") ? "support_material_style" : null;
+            }
+            case "support_style": {
+                String value = scalar(all.get(key)).trim().toLowerCase(Locale.US);
+                if ("default".equals(value)) {
+                    String type = scalar(all.get("support_type")).trim().toLowerCase(Locale.US);
+                    if (type.startsWith("tree")) return "support_material_style";
+                    return null;
+                }
+                if ("tree_slim".equals(value) || "tree_strong".equals(value)
+                        || "tree_hybrid".equals(value)) return "support_material_style";
+                if ("tree_organic".equals(value)) return "support_material_style";
+                if ("snug".equals(value) || "grid".equals(value)
+                        || "organic".equals(value) || "tree".equals(value))
+                    return "support_material_style";
+                return null;
+            }
+            case "support_base_pattern": return "support_material_pattern";
+            case "support_base_pattern_spacing": return "support_material_spacing";
+            case "support_interface_pattern": return "support_material_interface_pattern";
+            case "support_interface_spacing": return "support_material_interface_spacing";
+            case "support_interface_speed": return "support_material_interface_speed";
+            case "support_interface_top_layers": return "support_material_interface_layers";
+            case "support_interface_bottom_layers": return "support_material_bottom_interface_layers";
+            case "support_top_z_distance": return "support_material_contact_distance";
+            case "support_bottom_z_distance": return "support_material_bottom_contact_distance";
+            case "support_line_width": return "support_material_extrusion_width";
+            case "support_object_xy_distance": return "support_material_xy_spacing";
+            case "support_on_build_plate_only": return "support_material_buildplate_only";
+            case "support_speed": return "support_material_speed";
+            case "tree_support_branch_angle": return "support_tree_angle";
+            case "tree_support_branch_diameter": return "support_tree_branch_diameter";
             case "tree_support_branch_distance": return "support_tree_branch_distance";
             case "tree_support_branch_diameter_organic": return "support_tree_branch_diameter_organic";
             case "tree_support_branch_distance_organic": return "support_tree_branch_distance_organic";

@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 12259)
-Total output lines: 729
-
 package com.mbaliga.alloy;
 
 import android.content.Context;
@@ -348,7 +345,22 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_distance"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_tree_branch_distance_organic"));
         Assert.assertEquals("2", imported.nativeSettings.get("support_tree_branch_diameter_organic"));
-        Assert.assertEquals("0.2", imported.nativeSettings.get("support_o…259 tokens truncated…g.importBambu(baseline,
+        Assert.assertEquals("0.2", imported.nativeSettings.get("support_object_first_layer_gap"));
+        Assert.assertEquals("1", imported.nativeSettings.get("support_interface_not_for_body"));
+        Assert.assertEquals("cubic", imported.nativeSettings.get("fill_pattern"));
+        Assert.assertEquals("rectilinear", imported.nativeSettings.get("internal_solid_infill_pattern"));
+        Assert.assertEquals("1500,1250", imported.nativeSettings.get("machine_max_acceleration_retracting"));
+    }
+
+    @Test
+    public void g3ReferenceFixtureWritesEffectiveMotionRecipeToNativeConfig() throws Exception {
+        Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
+        ProfileCatalog.Profile baseline = ProfileCatalog.loadDefault(targetContext.getAssets());
+        ProfileCatalog.Profile imported;
+        try (java.io.InputStream input = testContext.getAssets().open(
+                "profiles/g3-bambu-a1mini-project-settings.json")) {
+            imported = ProfileCatalog.importBambu(baseline,
                     new byte[][]{ProfileCatalog.readProfileDocument(input)});
         }
         Slicer.Config config = new Slicer.Config();
