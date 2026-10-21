@@ -185,7 +185,7 @@ python3 ci/validate_transport_wiring.py
 python3 ci/audit_bambu_treesupport3d.py <bambu-studio-v02.08.02.61-checkout> . <audit-output-dir>
 python3 parity/verify_g3_profile.py <bambu-reference.gcode.3mf> <native.config.ini>
 bash -n ci/sign_android_release.sh
-python3 -m unittest discover -s parity -p 'test_*.py' -v
+PYTHONPATH=parity:ci python3 -m unittest discover -s parity -p 'test_*.py' -v
 python3 -m unittest -v tools/test_alloy_linux.py
 python3 tools/alloy_linux_gui.py --help
 ```
