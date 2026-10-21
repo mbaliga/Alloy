@@ -33,6 +33,11 @@ public final class ProfileCatalogImportTest {
         };
         String[] materials = {"PLA", "PETG", "PETG", "PETG", "TPU", "PVA"};
         PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
+        String guidance = MainActivity.a1MiniMaterialPickerGuidance();
+        Assert.assertTrue(guidance.contains("PLA, PETG, TPU and PVA as ideal"));
+        Assert.assertTrue(guidance.contains("ABS, ASA, PC, PA, PET"));
+        Assert.assertTrue(guidance.contains("AMS Lite must not be used with TPU or absorbent PVA"));
+        Assert.assertTrue(guidance.contains("Alloy print/send actions remain unqualified"));
         for (int index = 0; index < profiles.size(); index++) {
             ProfileCatalog.Profile profile = profiles.get(index);
             Assert.assertEquals(ids[index], profile.id);
@@ -50,6 +55,14 @@ public final class ProfileCatalogImportTest {
             Assert.assertNotNull(printer);
             Assert.assertEquals("a1-mini", printer.id);
             Assert.assertTrue(printer.directSendState, printer.directSendState.contains("Not qualified"));
+            String pickerLabel = MainActivity.a1MiniMaterialPickerLabel(profile);
+            Assert.assertTrue(pickerLabel.contains("0.4 mm nozzle · planning only"));
+            if ("TPU".equals(materials[index]) || "PVA".equals(materials[index])) {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("external spool"));
+                Assert.assertFalse(pickerLabel, pickerLabel.contains("AMS Lite or external spool"));
+            } else {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("AMS Lite or external spool"));
+            }
             Assert.assertEquals(profile.id, ProfileCatalog.loadPlanningById(
                     context.getAssets(), profile.id).id);
         }
