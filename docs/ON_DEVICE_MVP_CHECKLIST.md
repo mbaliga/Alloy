@@ -112,9 +112,11 @@ Expected: learning is readable offline and is never a gate-bypass path.
   choose P1S PETG HF and TPU 95A HF. Confirm the displayed printer/material
   combination is correct, each choice persists across app restart, and an
   existing slice is cleared. The TPU profiles must be labelled external/direct
-  feed only and must not imply AMS compatibility. All four profiles remain
-  planning-only; review exact material, route, physical spool fit, and printer
-  readiness independently.
+  feed only and must not imply AMS compatibility. For P1S TPU 95A HF, confirm
+  the picker guidance says to dry before use (Bambu's 70 °C / 8 hour setting);
+  do not show that HF-specific advice for A1's standard TPU 95A profile. All
+  four profiles remain planning-only; review exact material, route, physical
+  spool fit, and printer readiness independently.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.

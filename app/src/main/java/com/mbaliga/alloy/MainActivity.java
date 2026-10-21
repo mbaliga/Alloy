@@ -3165,11 +3165,16 @@ public final class MainActivity extends Activity {
 
     static String materialRecipePickerGuidance(String printerId) {
         if ("bambu.a1-mini".equals(printerId)) return a1MiniMaterialPickerGuidance();
-        return "Choose a source-backed 0.4 mm starter recipe for the selected printer. "
+        String guidance = "Choose a source-backed 0.4 mm starter recipe for the selected printer. "
                 + "Material suitability does not confirm the exact spool, feeder route, temperature, or printer condition. "
                 + "Flexible TPU recipes require external/direct feed; do not infer powered-AMS compatibility. "
                 + "Review material and feed route before slicing. These recipes are for planning and inspection only; "
                 + "Alloy print/send actions remain unqualified.";
+        if ("bambu.p1s".equals(printerId)) {
+            guidance += " Bambu TPU 95A HF should be dried before use (70 °C for 8 hours); "
+                    + "that advice is specific to the HF recipe, not a generic TPU preset.";
+        }
+        return guidance;
     }
 
     static String a1MiniMaterialPickerLabel(ProfileCatalog.Profile choice) {
