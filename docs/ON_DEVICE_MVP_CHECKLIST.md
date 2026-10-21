@@ -4,12 +4,16 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Latest installable PR software-QA checkpoint:** exact PR head [`6500ef85c6bf9c52dc139ecc5ff65e9d2a945373`](https://github.com/mbaliga/Alloy/commit/6500ef85c6bf9c52dc139ecc5ff65e9d2a945373), with the same app/test source as the prior checkpoint. Android acceptance [39562063866](https://github.com/mbaliga/Alloy/actions/runs/39562063866) passed. Its retained JUnit XML reports 210 tests, 0 failures/errors, 15 native-dependent skips (195 passed). QA APK artifact [12328868647](https://github.com/mbaliga/Alloy/actions/runs/39562063866/artifacts/12328868647), archive SHA-256 `ed5403265c15becb60b3afe3ca04775ef01ff1ce58ab2c9986e777beb00c0b26`; extracted `app-release.apk` SHA-256: `9355ba2b40ec29366e3d860938e9def8e60e9c2aec745d06b7d3b29cefe1729a`. This is a CI-signed software-QA package, not a production release.
+**Latest installable QA package:** source checkpoint `05dc0116a8606090eec8e43d5d1d756b5dca2479`, before current copy-only source update `411bc3499d4ef864347e68e6b5f0df14a9544cc9`. The current update makes the print plan explicitly say that startup priming, purge and cleaning waste are excluded from Alloy's current filament estimate; Android and native CI are running on that head. The previous Android acceptance run [39574055386](https://github.com/mbaliga/Alloy/actions/runs/39574055386) passed: 210 tests, 0 failures/errors, 15 native-dependent skips (195 passed). QA APK artifact [12333433836](https://github.com/mbaliga/Alloy/actions/runs/39574055386/artifacts/12333433836), archive SHA-256 `3b382707bb99e14ffd279d2245f6781ee93a86e6e6376ab239d9634f91d0f824`; extracted `app-release.apk` SHA-256: `74ae30ad04bf550f9d9a4c3ec8f7b32b16576f017982f7249b45ea8948360e93`. This is a CI-signed software-QA package, not a production release.
 
-**Latest published implementation checkpoint:** [`3e2947d`](https://github.com/mbaliga/Alloy/commit/3e2947d1cc29e3f72ae1866565cb1b114ed34b30) includes source-pinned A1 PETG Basic / TPU 95A and P1S PETG HF / TPU 95A HF recipes, the three-printer recipe picker, and grade-specific TPU drying guidance: P1S TPU 95A HF shows Bambu's 70 °C / 8 hour note, while A1 standard TPU 95A does not. Each of the four A1/P1S profiles verifies 26 typed fields, 131 native projections and 11 provenance blobs against Bambu Studio revision `926a7192574bcb9b3a732e1ec59a46d79cb45466`. Local parity (191 tests) and wiring/profile/learning validators pass. The current PR tip is `6500ef8`; Android acceptance passed with 210 tests, 0 failures/errors and 15 native-dependent skips. The exact-head native workflow [39562063843](https://github.com/mbaliga/Alloy/actions/runs/39562063843) built the engine, passed API-35 ARM-translation instrumentation (210 scheduled; 208 passed, 2 skipped), and exported the G3 fixtures. Strict G3 failed the unchanged 2% gate, so the physical-pilot APK and pilot run were skipped. These are software checks, not physical or print qualification.
+The prior-tip native rerun [39574055417](https://github.com/mbaliga/Alloy/actions/runs/39574055417) is building Alloy with the optional native engine; it has not yet rerun instrumentation or G3. The current-head native workflow [39578080512](https://github.com/mbaliga/Alloy/actions/runs/39578080512) is building pinned native dependencies. Current-head Android acceptance [39578080505](https://github.com/mbaliga/Alloy/actions/runs/39578080505) is running its instrumentation acceptance tests. The last completed exact-source native run passed native instrumentation but failed strict G3; see [`GATE_STATUS.md`](GATE_STATUS.md). Do not infer a fresh native pass from the Android-only result.
 
-- The CI-signed Android QA APK [artifact 12328868647](https://github.com/mbaliga/Alloy/actions/runs/39562063866/artifacts/12328868647) has extracted `app-release.apk` SHA-256 `9355ba2b40ec29366e3d860938e9def8e60e9c2aec745d06b7d3b29cefe1729a`. It is a software-QA artifact, not a production release.
-- Native CI release and instrumentation APK artifacts [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410) and [12332180772](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332180772) were produced for test evidence only. The dedicated isolated physical-pilot APK pair and pilot run were skipped after strict G3 failed. The latest G3 report is artifact [12332679109](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332679109); see [`GATE_STATUS.md`](GATE_STATUS.md) for fixture deltas. Do not use any QA APK to print or hand off a job.
+**Native-engine QA package for import/slice diagnostics:** artifact [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410), archive SHA-256 `d61dcf7e973099a142fa4299cb712719872cb42bfe4b73ed45c51ef27ead70a2`; extracted `app-release.apk` SHA-256: `d6c20906198e7ca8764646ef32d046376103d5c1d614bd0b8e20687a69373362` (about 144 MiB). Use this build only to test real-model import, plate planning, local slicing and layer review. Its native instrumentation passed, but strict G3 failed; do not print, share, or send its generated job to Bambu Handy.
+
+**Latest published implementation checkpoint:** [`3e2947d`](https://github.com/mbaliga/Alloy/commit/3e2947d1cc29e3f72ae1866565cb1b114ed34b30) includes source-pinned A1 PETG Basic / TPU 95A and P1S PETG HF / TPU 95A HF recipes, the three-printer recipe picker, and grade-specific TPU drying guidance: P1S TPU 95A HF shows Bambu's 70 °C / 8 hour note, while A1 standard TPU 95A does not. Each of the four A1/P1S profiles verifies 26 typed fields, 131 native projections and 11 provenance blobs against Bambu Studio revision `926a7192574bcb9b3a732e1ec59a46d79cb45466`. Local parity (191 tests) and wiring/profile/learning validators pass. At slicer-source checkpoint `6500ef8`, Android acceptance passed with 210 tests, 0 failures/errors and 15 native-dependent skips; native instrumentation passed 208 tests with 2 skipped. Strict G3 failed the unchanged 2% gate, so the physical-pilot APK and pilot run were skipped. These are software checks, not physical or print qualification. The copy-only update at source 411 is awaiting Android/parity/native verification.
+
+- The CI-signed Android QA APK [artifact 12333433836](https://github.com/mbaliga/Alloy/actions/runs/39574055386/artifacts/12333433836) has extracted `app-release.apk` SHA-256 `74ae30ad04bf550f9d9a4c3ec8f7b32b16576f017982f7249b45ea8948360e93`. It is a software-QA artifact, not a production release.
+- The native-engine QA APK [artifact 12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410) has extracted `app-release.apk` SHA-256 `d6c20906198e7ca8764646ef32d046376103d5c1d614bd0b8e20687a69373362`. It is suitable only for local import/slice diagnostics. Native instrumentation passed; strict G3 failed, so the dedicated isolated physical-pilot APK pair and pilot run were skipped. The latest G3 report is artifact [12332679109](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332679109); see [`GATE_STATUS.md`](GATE_STATUS.md) for fixture deltas. Do not use any QA APK to print or hand off a job.
 
 **Do not send or print unqualified generated jobs.** Direct-send and
 external-share gates remain fail-closed. The prior native checkpoint's
@@ -23,12 +27,19 @@ signing remain unverified.
 For phone-only software QA, use the CI-signed ordinary APK from the
 app-source-equivalent checkpoint above:
 
-- [CI-signed Android QA APK, artifact 12328868647](https://github.com/mbaliga/Alloy/actions/runs/39562063866/artifacts/12328868647).
+- [CI-signed Android QA APK, artifact 12333433836](https://github.com/mbaliga/Alloy/actions/runs/39574055386/artifacts/12333433836).
   Extracted `app-release.apk` SHA-256:
-  `9355ba2b40ec29366e3d860938e9def8e60e9c2aec745d06b7d3b29cefe1729a`.
+  `74ae30ad04bf550f9d9a4c3ec8f7b32b16576f017982f7249b45ea8948360e93`.
   The retained JUnit report records 195 passed, 0 failed and 15 native-dependent
   skipped tests. This is the ordinary software-acceptance build, not a
   production release.
+- For real-model local slicing, use the native-engine QA APK from artifact
+  [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410).
+  Extracted `app-release.apk` SHA-256:
+  `d6c20906198e7ca8764646ef32d046376103d5c1d614bd0b8e20687a69373362`.
+  This approximately 144 MiB CI build passed API-35 native instrumentation,
+  but its strict G3 comparison failed. It is for import, arrangement, slicing
+  and layer-review diagnostics only; never dispatch its G-code.
 
 Before installing, verify the artifact identity and archive digest, and retain
 the extracted APK digest. This software QA artifact is not a production
@@ -196,8 +207,10 @@ part of the first physical pilot.
 - Confirm separate support material is `0 g` only when supports are off.
   When supports are on, the total may include support material, but the support
   portion itself must say separately unreported rather than inventing a value.
-- Confirm prime/purge/cleaning and live printer temperature/idle state say
-  unavailable/not reported unless a qualified engine or printer supplied them.
+- Confirm prime/purge/cleaning explicitly says it is **not included in the
+  estimate**; never present Alloy's current total as complete printer-side
+  consumption. Live printer temperature/idle state must remain unavailable
+  unless supplied by a qualified printer connection.
 - Export the `.gcode.3mf`; reopen it in a compatible desktop verifier if
   available and retain its SHA-256.
 - While the engine/profile/support gates are unverified, tap both **Share
