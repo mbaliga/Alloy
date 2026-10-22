@@ -24,7 +24,7 @@ import ru.ytkab0bp.slicebeam.slic3r.Native;
 public final class BambuMachineTemplateProbeTest {
     private static final String ASSET = "profiles/a1-mini-machine-template-probe.json";
     private static final String SOURCE = "07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4";
-    private static final String PROFILE_SHA256 = "d638086d0c669959f9406010c4b360f98df429ae5aa9d9ec13b493ca9cbaf32e";
+    private static final String PROFILE_SHA256 = "6ea072f761a3a50dd33caafe5a6c44b0da4011698c97d34e20011849b231fd18";
     private static final String[] KEYS = {
             "machine_start_gcode", "machine_end_gcode", "layer_change_gcode", "time_lapse_gcode"
     };
