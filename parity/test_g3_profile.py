@@ -49,6 +49,7 @@ def desktop_settings():
         "nozzle_temperature_initial_layer": ["220"],
         "hot_plate_temp": ["60"],
         "hot_plate_temp_initial_layer": ["60"],
+        "first_layer_bed_temperature": ["35"],
         "filament_diameter": ["1.75"],
         "filament_flow_ratio": ["0.98"],
         "filament_max_volumetric_speed": ["21"],
@@ -126,7 +127,7 @@ def native_settings():
         "brim_object_gap": "0.1", "brim_type": "auto_brim", "brim_width": "5",
         "skirt_loops": "0",
         "temperature": "220", "first_layer_temperature": "220",
-        "bed_temperature": "60", "first_layer_bed_temperature": "60",
+        "bed_temperature": "35", "first_layer_bed_temperature": "35",
         "filament_diameter": "1.75000", "extrusion_multiplier": "0.98000",
         "travel_acceleration": "10000", "default_acceleration": "6000",
         "slowdown_below_layer_time": "6", "min_print_speed": "20",
@@ -144,6 +145,21 @@ class G3ProfileTests(unittest.TestCase):
         report = verify(desktop_settings(), native_settings())
         self.assertEqual("pass", report["result"], report)
         self.assertEqual([], report["failed_fields"])
+
+    def test_cool_plate_effective_temperature_overrides_nominal_hot_plate(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        report = verify(desktop, native)
+        self.assertEqual("pass", report["result"], report)
+        checks = {check["field"]: check for check in report["checks"]}
+        self.assertEqual("first_layer_bed_temperature", checks["bed_temperature"]["desktop_key"])
+        self.assertEqual("35", checks["bed_temperature"]["desktop"])
+        self.assertEqual("35", checks["bed_temperature"]["native"])
+
+        native["bed_temperature"] = "60"
+        drifted = verify(desktop, native)
+        self.assertEqual("fail", drifted["result"])
+        self.assertIn("bed_temperature", drifted["failed_fields"])
 
     def test_resolved_skirt_count_is_a_hard_profile_identity_field(self):
         desktop = desktop_settings()
