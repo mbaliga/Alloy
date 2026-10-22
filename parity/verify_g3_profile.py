@@ -63,8 +63,12 @@ FIELDS = OrderedDict([
     ("skirt_loops", ("skirt_loops", "skirt_loops")),
     ("temperature", ("nozzle_temperature", "temperature")),
     ("first_layer_temperature", ("nozzle_temperature_initial_layer", "first_layer_temperature")),
-    ("bed_temperature", ("hot_plate_temp", "bed_temperature")),
-    ("first_layer_bed_temperature", ("hot_plate_temp_initial_layer", "first_layer_bed_temperature")),
+    # Bambu's hot_plate_temp fields are nominal profile values. With the
+    # selected Cool Plate and PLA preset, the effective value emitted in the
+    # desktop CONFIG_BLOCK is first_layer_bed_temperature (35 C); that is the
+    # value the native bed_temperature fields must match.
+    ("bed_temperature", ("first_layer_bed_temperature", "bed_temperature")),
+    ("first_layer_bed_temperature", ("first_layer_bed_temperature", "first_layer_bed_temperature")),
     ("filament_diameter", ("filament_diameter", "filament_diameter")),
     ("extrusion_multiplier", ("filament_flow_ratio", "extrusion_multiplier")),
     ("filament_max_volumetric_speed", ("filament_max_volumetric_speed", "filament_max_volumetric_speed")),
