@@ -4,8 +4,9 @@ import unittest
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from verify_g3_profile import (FIELDS, merged_desktop_settings, read_desktop_settings,
-                                read_desktop_gcode_settings, read_native_settings, verify)
+from verify_g3_profile import (FIELDS, bed_temperature_commands, merged_desktop_settings,
+                                read_desktop_settings, read_desktop_gcode_settings,
+                                read_native_settings, verify)
 
 
 def desktop_settings():
@@ -128,6 +129,7 @@ def native_settings():
         "skirt_loops": "0",
         "temperature": "220", "first_layer_temperature": "220",
         "bed_temperature": "35", "first_layer_bed_temperature": "35",
+        "hot_plate_temp": "60",
         "filament_diameter": "1.75000", "extrusion_multiplier": "0.98000",
         "travel_acceleration": "10000", "default_acceleration": "6000",
         "slowdown_below_layer_time": "6", "min_print_speed": "20",
@@ -152,14 +154,38 @@ class G3ProfileTests(unittest.TestCase):
         report = verify(desktop, native)
         self.assertEqual("pass", report["result"], report)
         checks = {check["field"]: check for check in report["checks"]}
-        self.assertEqual("first_layer_bed_temperature", checks["bed_temperature"]["desktop_key"])
-        self.assertEqual("35", checks["bed_temperature"]["desktop"])
-        self.assertEqual("35", checks["bed_temperature"]["native"])
+        self.assertEqual("hot_plate_temp", checks["bed_temperature"]["desktop_key"])
+        self.assertEqual("60", checks["bed_temperature"]["desktop"])
+        self.assertEqual("60", checks["bed_temperature"]["native"])
 
-        native["bed_temperature"] = "60"
+        native["hot_plate_temp"] = "35"
         drifted = verify(desktop, native)
         self.assertEqual("fail", drifted["result"])
         self.assertIn("bed_temperature", drifted["failed_fields"])
+
+    def test_profile_identity_checks_emitted_bed_targets_not_only_config_blocks(self):
+        desktop_gcode = "M140 S35\nM190 S35 ; wait for bed\nM140 S0\n"
+        native_gcode = "M140 S60\nM190 S60\nM140 S0\n"
+        report = verify(
+            desktop_settings(),
+            native_settings(),
+            desktop_gcode=desktop_gcode,
+            native_gcode=native_gcode,
+        )
+        self.assertEqual("fail", report["result"], report)
+        self.assertIn("bed_temperature_commands", report["failed_fields"])
+        command_check = next(check for check in report["checks"]
+                             if check["field"] == "bed_temperature_commands")
+        self.assertEqual(["M140 S35", "M190 S35", "M140 S0"], command_check["desktop"])
+        self.assertEqual(["M140 S60", "M190 S60", "M140 S0"], command_check["native"])
+
+    def test_bed_command_parser_ignores_comments_and_normalizes_numbers(self):
+        self.assertEqual(
+            ["M140 S35", "M190 S35", "M140 S0"],
+            bed_temperature_commands(
+                "; M140 S99\nM140 S35.0\nM190 S35;wait\nM140 S0\n"
+            ),
+        )
 
     def test_resolved_skirt_count_is_a_hard_profile_identity_field(self):
         desktop = desktop_settings()
