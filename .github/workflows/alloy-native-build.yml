@@ -502,6 +502,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Export native G3 evidence through API-35 ARM translation
+        if: always() && !cancelled()
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -537,12 +538,13 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - uses: actions/upload-artifact@v4
+        if: always() && !cancelled()
         with:
           name: alloy-native-g3-evidence
           path: path-b-g3-evidence
           if-no-files-found: error
       - name: Compare native G3 output with exact-PR-head Orca reference
-        if: github.event_name == 'pull_request'
+        if: always() && !cancelled() && github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
