@@ -155,6 +155,78 @@ class CompareGcodeTests(unittest.TestCase):
             public_metrics = metrics_report(desktop)
             self.assertIn("travel_by_layer_feedrate", public_metrics)
             self.assertNotIn("travel_segments", public_metrics)
+            self.assertNotIn("feature_motion_events", public_metrics)
+
+    def test_ordered_deposition_anchors_compare_only_adjacent_matched_travel_spans(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prefix = (
+                "; estimated printing time = 10s\n; filament used [mm] = 3\n"
+                "G90\nM83\n;LAYER_CHANGE\nG1 X5 Y5 F600\n;TYPE:Outer wall\n"
+            )
+            desktop_text = prefix + (
+                "G1 X10 Y0 E1\nG1 X20 Y0 F600\nG1 X20 Y10 E1\n"
+                "; SKIPTYPE: timelapse\nG1 X25 Y10 F1200\n; SKIPPABLE_END\n"
+                "G1 X20 Y10 F600\n"
+                "G1 X20 Y20 E1\n"
+            )
+            android_text = prefix + (
+                "G1 X10 Y0 E1\nG1 X15 Y0 F600\nG1 X20 Y0 F600\n"
+                "G1 X20 Y10 E1\n; SKIPTYPE: timelapse\nG1 X24 Y10 F1200\n"
+                "; SKIPPABLE_END\nG1 X20 Y10 F600\nG1 X20 Y20 E1\n"
+            )
+            android_text = android_text.replace("time = 10s", "time = 12s")
+            desktop = parse_metrics(self.write(root, "desktop.gcode", desktop_text), None)
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+            report = compare(desktop, android, 0.02)
+            diagnostic = next(
+                check for check in report["checks"]
+                if check["name"] == "ordered_deposition_anchor_diagnostic"
+            )
+
+            self.assertEqual("warn", diagnostic["status"])
+            self.assertIn("anchors desktop/Android=3/3, matched=3", diagnostic["detail"])
+            self.assertIn("adjacent spans compared=2", diagnostic["detail"])
+            self.assertIn("spans with differing travel=2", diagnostic["detail"])
+            self.assertIn("SKIPTYPE travel 1/1 moves", diagnostic["detail"])
+            self.assertIn("unlabelled motion is not anchor-aligned", diagnostic["detail"])
+            self.assertIn("unlabelled travel desktop=[unlabelled=1 moves/", diagnostic["detail"])
+            self.assertLessEqual(len(diagnostic["detail"]), 2500)
+            # Adding a warning-only anchor diagnostic cannot change the G3 result.
+            self.assertEqual("fail", report["result"])
+
+    def test_ordered_anchor_alignment_reports_deposition_divergence_not_cross_gap_routes(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop_text = (
+                "G90\nM83\n;LAYER_CHANGE\n;TYPE:Outer wall\n"
+                "G1 X10 Y0 E1\nG1 X20 Y0 F600\nG1 X20 Y10 E1\n"
+            )
+            android_text = desktop_text.replace("X20 Y10 E1", "X20 Y11 E1")
+            desktop = parse_metrics(self.write(root, "desktop.gcode", desktop_text), None)
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+            from compare_gcode import ordered_deposition_anchor_diagnostic
+            detail = ordered_deposition_anchor_diagnostic(desktop, android)
+
+            self.assertIn("first deposit-anchor opcode=replace", detail)
+            self.assertIn("adjacent spans compared=0", detail)
+
+    def test_ordered_anchor_alignment_retains_repeated_signatures_after_prefix_edit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prefix = "G90\nM83\n;LAYER_CHANGE\n;TYPE:Outer wall\n"
+            repeated = "G1 X0 Y0 F600\nG1 X10 Y0 E1\n" * 220
+            desktop_text = prefix + "G1 X1 Y1 E0.2\n" + repeated
+            android_text = prefix + "G1 X2 Y2 E0.2\n" + repeated
+            desktop = parse_metrics(self.write(root, "desktop.gcode", desktop_text), None)
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+            from compare_gcode import ordered_deposition_anchor_diagnostic
+            detail = ordered_deposition_anchor_diagnostic(desktop, android)
+
+            # The repeated anchor occurs more than SequenceMatcher's default
+            # popularity threshold. It must still align after the prefix edit.
+            self.assertIn("anchors desktop/Android=221/221, matched=220", detail)
+            self.assertIn("first deposit-anchor opcode=replace", detail)
 
     def test_passing_comparison_does_not_add_travel_failure_diagnostic(self):
         with tempfile.TemporaryDirectory() as td:
