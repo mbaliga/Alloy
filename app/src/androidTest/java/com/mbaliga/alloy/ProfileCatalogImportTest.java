@@ -340,6 +340,16 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("Cool Plate", imported.nativeSettings.get("curr_bed_type"));
         Assert.assertEquals("35", imported.nativeSettings.get("cool_plate_temp"));
         Assert.assertEquals("35", imported.nativeSettings.get("cool_plate_temp_initial_layer"));
+        Assert.assertEquals("0.28", imported.nativeSettings.get("max_layer_height"));
+        Assert.assertEquals("0.08", imported.nativeSettings.get("min_layer_height"));
+        Assert.assertEquals("disabled", imported.nativeSettings.get("draft_shield"));
+        Assert.assertEquals("0.01", imported.nativeSettings.get("resolution"));
+        Assert.assertEquals("0,0", imported.nativeSettings.get("machine_min_extruding_rate"));
+        Assert.assertEquals("0,0", imported.nativeSettings.get("machine_min_travel_rate"));
+        Assert.assertFalse("project machine templates must never be projected",
+                imported.nativeSettings.containsKey("machine_start_gcode")
+                        || imported.nativeSettings.containsKey("machine_end_gcode")
+                        || imported.nativeSettings.containsKey("start_gcode"));
         Assert.assertEquals("400%", imported.nativeSettings.get("infill_anchor"));
         Assert.assertEquals("20", imported.nativeSettings.get("infill_anchor_max"));
         Assert.assertEquals("auto_brim", imported.nativeSettings.get("brim_type"));
