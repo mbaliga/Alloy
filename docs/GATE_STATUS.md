@@ -1,3 +1,26 @@
+# Exact-head Android/native result — 2026-10-22
+
+Verified PR head before this documentation/tooling update: [ecab2f405f9cf9282787b371eac246a3f0cf9fb3](https://github.com/mbaliga/Alloy/commit/ecab2f405f9cf9282787b371eac246a3f0cf9fb3). Application runtime is unchanged from [411bc3499d4ef864347e68e6b5f0df14a9544cc9](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9).
+
+## Exact-head CI results
+
+- Android acceptance [39594704892](https://github.com/mbaliga/Alloy/actions/runs/39594704892) passed. QA APK artifact [12345620998](https://github.com/mbaliga/Alloy/actions/runs/39594704892/artifacts/12345620998), archive SHA-256 `bd881c31c5b60a69f1e1f44735b27b8944de37a76d327ff3a8c477428f48276b`. This is software-QA only.
+- Profile compatibility [39594704034](https://github.com/mbaliga/Alloy/actions/runs/39594704034), parity tooling [39594704073](https://github.com/mbaliga/Alloy/actions/runs/39594704073), desktop references [39594704025](https://github.com/mbaliga/Alloy/actions/runs/39594704025), and official Orca snapshot [39594704035](https://github.com/mbaliga/Alloy/actions/runs/39594704035) passed.
+- Native run [39594704028](https://github.com/mbaliga/Alloy/actions/runs/39594704028) passed native API-35 instrumentation; instrumentation report artifact [12345754697](https://github.com/mbaliga/Alloy/actions/runs/39594704028/artifacts/12345754697), archive SHA-256 `754bb94b31c1bff2f2b033a00eb97e6e9f744e9d9578ab65113b8f5acbd3b95d`. Native QA APK artifact [12344962629](https://github.com/mbaliga/Alloy/actions/runs/39594704028/artifacts/12344962629), archive SHA-256 `04ebfc7c3e7469bc1b7c7441d8a6905d3ca31de8d411e5e4fae7def5c78aa6ee`; not print-qualified.
+- Exact-head G3 **failed** with the strict 2% tolerance unchanged. Comparator bundle [12345669519](https://github.com/mbaliga/Alloy/actions/runs/39594704028/artifacts/12345669519), SHA-256 `a2f6d304bb130ef8ec383a94da7eebe02f4b9cb012d5166776fca625cb6a1c38`. All four time checks failed: cube 14.31%, overhang/support 17.77%, thin wall 13.23%, travel obstacle 9.40%. Filament-length deltas were 2.09%, 2.59%, 2.65%, and 1.06%; first three remain over tolerance. Filament mass deltas were 2.03%, 2.47%, 2.58%, and 1.13%. Do not relax the gate.
+- Toolpath diagnostics continue to show close deposited path totals for most roles but substantially shorter travel in Alloy: travel-move count deltas range from 33.36% to 56.02% lower; nominal total XYZ path is 15.04%–47.00% lower depending on fixture. First-layer startup/prime accounting remains a separate gap, not an explanation for all timing/travel failures.
+- The API-35 native QA APK is not a print/share artifact. Direct-send, Bambu Handy, physical pilot, and release gates remain closed.
+
+## Ordered deposition-anchor analysis
+
+The diagnostic-only ordered-anchor comparator added in this update was run locally against the exact desktop/native G3 artifact pairs above. It aligns feature-labelled positive-E XYZ segments by layer, canonical role, rounded XY endpoints, E, and conditional label; it compares travel only between immediately adjacent matched deposition anchors and reports unlabelled travel separately. This does not prove physical deposition, identify a planner defect, or affect G3 pass/fail.
+
+For the cube, it found 3,841/3,801 labelled segments, 3,195 matching in sequence, 3,160 adjacent matched spans, and 86 spans with different travel. The first broad ordering divergence is layer-0 bottom-surface infill: desktop and Alloy traverse the same area in opposite orders/directions. The supported-overhang and thin-wall fixtures also have substantial unmatched/reshaped segment sequences; the travel-obstacle fixture has zero exact matched anchors, with the first paths traversing the same square in different orientations. This is evidence to investigate feature/path ordering and travel generation—not a basis for enabling wall avoidance or changing slicing policy. The comparator keeps repeated anchors by disabling difflib autojunk and includes regression coverage.
+
+This update adds diagnostics/tests only; it does not change production slicing or qualification. The next production milestone is to resolve deposition ordering and travel parity against pinned Orca behavior, then rerun the same fixtures and unchanged limits. See the prior checkpoints below for the remaining G2, printer, Handy, and release work.
+
+---
+
 # Current exact-head gate update — 2026-10-21
 
 PR head: [b0261a88c28317e69cffa235a3608559f2646361](https://github.com/mbaliga/Alloy/commit/b0261a88c28317e69cffa235a3608559f2646361). Runtime/app source checkpoint remains [411bc3499d4ef864347e68e6b5f0df14a9544cc9](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9); the intervening changes are verification/documentation, not slicer behavior.

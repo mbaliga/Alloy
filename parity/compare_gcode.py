@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from dataclasses import asdict, dataclass, field
+from difflib import SequenceMatcher
 import json
 import math
 from pathlib import Path
@@ -105,6 +106,10 @@ class Metrics:
     # JSON report; compare() reduces it to a bounded first-difference sample.
     travel_by_layer_feedrate: dict[str, dict[str, float]]
     travel_segments: list[tuple]
+    # Feature-labelled ordered motion used only for anchor alignment. Moves
+    # without an active feature label are template/unlabelled and excluded.
+    feature_motion_events: list[tuple]
+    unlabelled_travel_by_type: dict[str, dict[str, float]]
     print_time_seconds: float | None
     print_time_source: str | None
     total_print_time_seconds: float | None
@@ -290,6 +295,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     unsupported_arc_moves = 0
     travel_by_layer_feedrate: dict[str, Counter[str]] = {}
     travel_segments: list[tuple] = []
+    feature_motion_events: list[tuple] = []
+    unlabelled_travel_by_type: dict[str, Counter[str]] = {}
     active_layer = -1
     active_skiptype: str | None = None
 
@@ -310,6 +317,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                 or LAYER_MARKER_RE.match(line)):
             model_started = True
             active_layer += 1
+            # Layer-change templates execute before the next feature marker.
+            active_feature = None
             continue
         lower = line.lower()
         skiptype = re.match(r";\s*skiptype:\s*([a-z0-9_-]+)", line, re.I)
@@ -490,6 +499,27 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                     round(xyz["X"], 3), round(xyz["Y"], 3), round(xyz["Z"], 3),
                     round(motion_distance, 3), motion_kind,
                 ))
+            if model_started and active_feature is not None and motion_distance is not None:
+                if positive_e > 0:
+                    feature_motion_events.append((
+                        "deposit", max(active_layer, 0), active_feature,
+                        round(previous_xyz["X"], 2), round(previous_xyz["Y"], 2),
+                        round(xyz["X"], 2), round(xyz["Y"], 2),
+                        round(positive_e, 3), motion_kind, active_skiptype or "",
+                    ))
+                else:
+                    feature_motion_events.append((
+                        "travel", max(active_layer, 0), active_feature,
+                        round(previous_xyz["X"], 2), round(previous_xyz["Y"], 2),
+                        round(xyz["X"], 2), round(xyz["Y"], 2),
+                        round(motion_distance, 3), round(feedrate_mm_min, 3),
+                        motion_kind, active_skiptype or "",
+                    ))
+            elif model_started and active_feature is None and positive_e <= 0 and motion_distance is not None:
+                scope = active_skiptype or "unlabelled"
+                group = unlabelled_travel_by_type.setdefault(scope, Counter())
+                group["moves"] += 1
+                group["distance_mm"] += motion_distance
             if active_skiptype is not None and motion_distance is not None:
                 conditional = conditional_motion_by_type.setdefault(
                     active_skiptype, Counter()
@@ -553,6 +583,9 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         travel_by_layer_feedrate={scope: dict(values)
                                   for scope, values in travel_by_layer_feedrate.items()},
         travel_segments=travel_segments,
+        feature_motion_events=feature_motion_events,
+        unlabelled_travel_by_type={scope: dict(values)
+                                   for scope, values in unlabelled_travel_by_type.items()},
         print_time_seconds=print_time,
         print_time_source=print_time_source,
         total_print_time_seconds=total_print_time_seconds,
@@ -687,10 +720,134 @@ def travel_diagnostic(desktop: Metrics, android: Metrics) -> str:
     )
 
 
+def ordered_deposition_anchor_diagnostic(desktop: Metrics, android: Metrics) -> str:
+    """Align feature-labelled positive-E XYZ moves and compare travel between exact anchors.
+
+    This is an explanatory diagnostic, not a pass/fail test or a planner model.
+    Positive-E commands are not proof of physical deposition. Unlabelled/template
+    moves are excluded; SKIPTYPE-tagged movement remains separately classified.
+    """
+    left_events = desktop.feature_motion_events
+    right_events = android.feature_motion_events
+    left_positions = [i for i, event in enumerate(left_events) if event[0] == "deposit"]
+    right_positions = [i for i, event in enumerate(right_events) if event[0] == "deposit"]
+    left = [left_events[i] for i in left_positions]
+    right = [right_events[i] for i in right_positions]
+
+    def anchor(event: tuple) -> tuple:
+        # layer, feature role, rounded XY start/end, positive E and conditional
+        # label. Endpoint geometry is not normalized across distinct segments.
+        return event[1:8] + (event[9],)
+
+    matcher = SequenceMatcher(
+        None, [anchor(event) for event in left],
+        [anchor(event) for event in right], autojunk=False,
+    )
+    matching = [(i + offset, j + offset)
+                for i, j, size in matcher.get_matching_blocks()
+                for offset in range(size)]
+    def span_travel(events: list[tuple], start: int, end: int) -> tuple[list[tuple], list[tuple]]:
+        motions = [event for event in events[start + 1:end] if event[0] == "travel"]
+        return ([event for event in motions if not event[10]],
+                [event for event in motions if event[10]])
+
+    compared = 0
+    divergent: list[tuple] = []
+    for (li, ri), (ln, rn) in zip(matching, matching[1:]):
+        # Only compare the travel gap when both streams have the same pair of
+        # immediately adjacent deposition anchors. Never bridge unmatched
+        # geometry or segmentation differences.
+        if ln != li + 1 or rn != ri + 1:
+            continue
+        compared += 1
+        left_normal, left_conditional = span_travel(
+            left_events, left_positions[li], left_positions[ln])
+        right_normal, right_conditional = span_travel(
+            right_events, right_positions[ri], right_positions[rn])
+        left_signature = [event[3:8] + (event[9],) for event in left_normal]
+        right_signature = [event[3:8] + (event[9],) for event in right_normal]
+        left_conditional_signature = [event[3:8] + (event[9],) for event in left_conditional]
+        right_conditional_signature = [event[3:8] + (event[9],) for event in right_conditional]
+        if (left_signature != right_signature
+                or left_conditional_signature != right_conditional_signature):
+            left_distance = sum(event[7] for event in left_normal)
+            right_distance = sum(event[7] for event in right_normal)
+            left_cond_distance = sum(event[7] for event in left_conditional)
+            right_cond_distance = sum(event[7] for event in right_conditional)
+            divergent.append((
+                max(abs(left_distance - right_distance),
+                    abs(left_cond_distance - right_cond_distance)), li, ri,
+                len(left_normal), len(right_normal), left_distance, right_distance,
+                len(left_conditional), len(right_conditional), left_cond_distance,
+                right_cond_distance, left_normal, right_normal,
+            ))
+
+    divergent.sort(key=lambda row: (-row[0], row[1]))
+    examples = []
+    for row in divergent[:4]:
+        _, li, ri, lm, rm, ld, rd, lcm, rcm, lcd, rcd, ltravel, rtravel = row
+        left_anchor = left[li]
+        right_anchor = right[ri]
+
+        def render(moves: list[tuple]) -> str:
+            return "[" + ",".join(
+                f"({move[3]:g},{move[4]:g})->({move[5]:g},{move[6]:g})"
+                for move in moves[:2]
+            ) + (",…" if len(moves) > 2 else "") + "]"
+
+        examples.append(
+            f"anchor {left_anchor[1]}/{left_anchor[2]} "
+            f"({left_anchor[5]:g},{left_anchor[6]:g}) E{left_anchor[7]:g}: "
+            f"ordinary travel {lm}/{rm} moves, {ld:.3f}/{rd:.3f} mm "
+            f"{render(ltravel)}/{render(rtravel)}; "
+            f"SKIPTYPE travel {lcm}/{rcm} moves, {lcd:.3f}/{rcd:.3f} mm"
+        )
+
+    first_nonmatch = next(
+        (opcode for opcode in matcher.get_opcodes() if opcode[0] != "equal"), None)
+    if first_nonmatch is None:
+        first_divergence = "all deposit anchors match in order"
+    else:
+        tag, i1, i2, j1, j2 = first_nonmatch
+
+        def anchor_sample(values: list[tuple], start: int, stop: int) -> str:
+            return "[" + ", ".join(
+                f"L{item[1]}:{item[2]} ({item[3]:g},{item[4]:g})->"
+                f"({item[5]:g},{item[6]:g}) E{item[7]:g}"
+                for item in values[start:min(stop, start + 2)]
+            ) + (", …" if stop - start > 2 else "") + "]"
+
+        first_divergence = (
+            f"first deposit-anchor opcode={tag} at desktop[{i1}:{i2}]="
+            f"{anchor_sample(left, i1, i2)} vs Android[{j1}:{j2}]="
+            f"{anchor_sample(right, j1, j2)}"
+        )
+
+    def unlabelled_summary(metrics: Metrics) -> str:
+        return ", ".join(
+            f"{scope}={int(values.get('moves', 0))} moves/"
+            f"{values.get('distance_mm', 0.0):.3f} mm"
+            for scope, values in sorted(metrics.unlabelled_travel_by_type.items())
+        ) or "none"
+
+    return (
+        "diagnostic only; feature-labelled positive-E XYZ commands aligned by layer, "
+        "canonical role, rounded XY endpoints, E and SKIPTYPE (not proof of physical deposition); "
+        "unlabelled motion is not anchor-aligned (label absence is not proof it is template); "
+        f"unlabelled travel desktop=[{unlabelled_summary(desktop)}], "
+        f"Android=[{unlabelled_summary(android)}]; travel compared only between "
+        "immediately adjacent matched deposits; no planner/firmware inference; "
+        f"anchors desktop/Android={len(left)}/{len(right)}, matched={len(matching)}, "
+        f"adjacent spans compared={compared}, spans with differing travel={len(divergent)}; "
+        f"{first_divergence}; largest travel spans: " + ("; ".join(examples) or "none")
+    )
+
+
 def metrics_report(metrics: Metrics) -> dict:
     """Serialize public metrics while keeping the full comparison stream private."""
     result = asdict(metrics)
     result.pop("travel_segments", None)
+    result.pop("feature_motion_events", None)
     return result
 
 
@@ -942,6 +1099,8 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
     # warning is diagnostic-only and is never part of hard_fail/evidence gates.
     if any(check["status"] == "fail" for check in checks):
         add("travel_path_diagnostic", "warn", travel_diagnostic(desktop, android))
+        add("ordered_deposition_anchor_diagnostic", "warn",
+            ordered_deposition_anchor_diagnostic(desktop, android))
 
     desktop_e = desktop.positive_e_mm
     android_e = android.positive_e_mm
