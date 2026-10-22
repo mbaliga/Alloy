@@ -96,6 +96,8 @@ class Metrics:
     feature_counts: dict[str, int]
     feature_extrusion_path_mm: dict[str, float]
     feature_positive_e_mm: dict[str, float]
+    # Translation/rotation-invariant deposited totals grouped by layer/feature.
+    layer_feature_metrics: dict[str, dict[str, float]]
     extrusion_accounting: dict[str, dict[str, float]]
     # Bambu emits SKIPTYPE-tagged firmware-conditional moves (for example
     # timelapse and head-wrap detection). Record them separately, but retain
@@ -275,6 +277,7 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     feature_counts: Counter[str] = Counter()
     feature_extrusion_path_mm: Counter[str] = Counter()
     feature_positive_e_mm: Counter[str] = Counter()
+    layer_feature_metrics: dict[str, Counter[str]] = {}
     # Emitted-program accounting, not an assertion that firmware executes
     # conditional macros or that every positive E movement deposits plastic.
     # Do not subtract this ledger from the strict header/geometry checks.
@@ -478,6 +481,14 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
                         nominal_linear_extrusion_seconds += nominal_seconds
                     else:
                         nominal_linear_travel_seconds += nominal_seconds
+            if positive_e > 0 and motion_distance is not None:
+                layer = max(active_layer, 0)
+                feature_name = active_feature or "unlabeled"
+                key = f"layer={layer},feature={feature_name}"
+                deposited = layer_feature_metrics.setdefault(key, Counter())
+                deposited["moves"] += 1
+                deposited["path_mm"] += motion_distance
+                deposited["positive_e_mm"] += positive_e
             # This is a program-level diagnostic, not a firmware travel-time
             # model. Positive-E moves stay classified as extrusion as above.
             if positive_e <= 0 and motion_distance is not None:
@@ -576,6 +587,8 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
         feature_counts=dict(feature_counts),
         feature_extrusion_path_mm=dict(feature_extrusion_path_mm),
         feature_positive_e_mm=dict(feature_positive_e_mm),
+        layer_feature_metrics={key: dict(values)
+                               for key, values in layer_feature_metrics.items()},
         extrusion_accounting={scope: dict(values)
                               for scope, values in extrusion_accounting.items()},
         conditional_motion_by_type={scope: dict(values)
@@ -843,6 +856,35 @@ def ordered_deposition_anchor_diagnostic(desktop: Metrics, android: Metrics) -> 
     )
 
 
+def per_layer_toolpath_diagnostic(desktop: Metrics, android: Metrics) -> str:
+    """Compare deposited totals by layer/feature without using coordinates.
+
+    Path lengths, positive E and move counts are invariant to common model
+    translation or rotation. This identifies affected layers but does not
+    prove that the actual paths are spatially equivalent.
+    """
+    keys = set(desktop.layer_feature_metrics) | set(android.layer_feature_metrics)
+    ranked = []
+    for key in keys:
+        left = desktop.layer_feature_metrics.get(key, {})
+        right = android.layer_feature_metrics.get(key, {})
+        path_delta = abs(left.get("path_mm", 0.0) - right.get("path_mm", 0.0))
+        e_delta = abs(left.get("positive_e_mm", 0.0) - right.get("positive_e_mm", 0.0))
+        ranked.append((max(path_delta, e_delta), key, left, right))
+    ranked.sort(key=lambda row: (-row[0], row[1]))
+    details = "; ".join(
+        f"{key}: path={left.get('path_mm', 0.0):.3f}/{right.get('path_mm', 0.0):.3f}mm, "
+        f"E={left.get('positive_e_mm', 0.0):.3f}/{right.get('positive_e_mm', 0.0):.3f}mm, "
+        f"moves={int(left.get('moves', 0))}/{int(right.get('moves', 0))}"
+        for _, key, left, right in ranked[:12]
+    ) or "no feature-labelled deposited moves"
+    return (
+        "diagnostic only; per-layer/per-feature deposited totals are invariant "
+        "to whole-model translation/rotation, but do not prove spatial path "
+        "equivalence; top absolute deltas desktop/Android: " + details
+    )
+
+
 def metrics_report(metrics: Metrics) -> dict:
     """Serialize public metrics while keeping the full comparison stream private."""
     result = asdict(metrics)
@@ -1070,6 +1112,11 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
         "warn" if role_has_large_delta else "pass",
         "diagnostic only; deposited XYZ path excludes travel; "
         "desktop/Android values are deposited path mm then positive E mm: " + role_detail,
+    )
+    add(
+        "per_layer_toolpath_diagnostic",
+        "warn",
+        per_layer_toolpath_diagnostic(desktop, android),
     )
 
     accounting_details = []

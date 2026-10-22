@@ -127,6 +127,25 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertIn("path", diagnostic["detail"])
             self.assertIn("E", diagnostic["detail"])
 
+    def test_layer_toolpath_diagnostic_is_invariant_to_translation_and_quarter_turn(self):
+        rotated = GCODE_B.replace("G92 E0", "G92 X100 Y100 E0")
+        rotated = rotated.replace("G1 X10 Y0 E1.0", "G1 X100 Y110 E1.0")
+        rotated = rotated.replace("G1 X10 Y10 E2.0", "G1 X90 Y110 E2.0")
+        rotated = rotated.replace("G1 X0 Y0 E3.0", "G1 X100 Y100 E3.0")
+        rotated = rotated.replace("G1 X20 Y0 E4.0", "G1 X100 Y120 E4.0")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            reference = parse_metrics(self.write(root, "reference.gcode", GCODE_B), None)
+            transformed = parse_metrics(self.write(root, "transformed.gcode", rotated), None)
+            self.assertEqual(reference.layer_feature_metrics, transformed.layer_feature_metrics)
+            report = compare(reference, transformed, 0.02)
+            diagnostic = next(c for c in report["checks"]
+                              if c["name"] == "per_layer_toolpath_diagnostic")
+            self.assertEqual("warn", diagnostic["status"])
+            self.assertIn("invariant to whole-model translation/rotation", diagnostic["detail"])
+            self.assertIn("path=40.000/40.000mm", diagnostic["detail"])
+            self.assertIn("layer=0,feature=outer_wall", str(metrics_report(transformed)))
+
     def test_failed_comparison_adds_bounded_layer_feedrate_travel_diagnostic_only(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
