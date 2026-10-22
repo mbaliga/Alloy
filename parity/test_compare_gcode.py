@@ -114,7 +114,9 @@ class CompareGcodeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             desktop = parse_metrics(self.write(root, "desktop.gcode", GCODE_A), None)
-            android = parse_metrics(self.write(root, "android.gcode", GCODE_B), None)
+            android = parse_metrics(self.write(
+                root, "android.gcode", GCODE_B.replace("G1 X20 Y0 E4.0", "G1 X30 Y0 E4.0")
+            ), None)
 
             self.assertAlmostEqual(40.0, desktop.feature_extrusion_path_mm["outer_wall"])
             self.assertAlmostEqual(3.0, desktop.feature_positive_e_mm["outer_wall"])
