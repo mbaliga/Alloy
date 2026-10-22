@@ -1058,8 +1058,11 @@ pinned project-settings fixture hashes to
 `6ea072f761a3a50dd33caafe5a6c44b0da4011698c97d34e20011849b231fd18`, not the
 old `d638086d...` value. Commit
 [be3feaf](https://github.com/mbaliga/Alloy/commit/be3feaf9a93889554fd5bc19cfca7bf7fdd7afab)
-updates that test constant. It has not yet been validated by an exact-head
-instrumentation rerun. The corrected bed-temperature identity mapping remains
+updates that test constant. Follow-up commit
+[0c0f17c](https://github.com/mbaliga/Alloy/commit/0c0f17c5c72656eda7ad5fec616af5e628f2960e)
+moves probe artifacts from Android/data to the shared Android/media directory
+so CI can retrieve them on Android 11+; its focused harness test and all 208
+parity tests pass locally. Neither fix has an exact-head native CI rerun yet. The corrected bed-temperature identity mapping remains
 a comparator fix only; it does not resolve the actual G3 path/time differences.
 
 Direct send, Handy handoff, physical printing, and production release therefore
