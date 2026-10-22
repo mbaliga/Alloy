@@ -53,8 +53,15 @@ public final class NativeEngineSmokeTest {
         ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
         Slicer.Config config = new Slicer.Config();
         profile.applyTo(config);
+        config.nativeSettings.put("curr_bed_type", "Cool Plate");
+        config.nativeSettings.put("cool_plate_temp", "35");
+        config.nativeSettings.put("cool_plate_temp_initial_layer", "35");
 
-        assertSlicesAndStages(context, config, "box-20mm.stl", "native-smoke-box");
+        Slicer.Result result = assertSlicesAndStages(context, config, "box-20mm.stl", "native-smoke-box");
+        Assert.assertTrue("native startup must heat the selected Cool Plate, not the generic profile bed",
+                result.gcode.contains("M140 S35\n"));
+        Assert.assertTrue("native startup must wait for the selected Cool Plate temperature",
+                result.gcode.contains("M190 S35\n"));
     }
 
     @Test(timeout = 480_000)
@@ -236,9 +243,16 @@ public final class NativeEngineSmokeTest {
         ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
         Slicer.Config config = new Slicer.Config();
         profile.applyTo(config);
+        config.nativeSettings.put("curr_bed_type", "Cool Plate");
+        config.nativeSettings.put("cool_plate_temp", "35");
+        config.nativeSettings.put("cool_plate_temp_initial_layer", "35");
         File defaultConfigFile = new File(context.getCacheDir(), "native-config-default-brim.ini");
         NativeSlicerEngine.writeConfig(config, defaultConfigFile);
         String defaultSerialized = new String(Files.readAllBytes(defaultConfigFile.toPath()), StandardCharsets.US_ASCII);
+        Assert.assertTrue("machine start must use the selected plate temperature",
+                defaultSerialized.contains("M140 S35\\n"));
+        Assert.assertTrue("machine start wait must use the selected plate temperature",
+                defaultSerialized.contains("M190 S35\\n"));
         Assert.assertTrue(defaultSerialized.contains("brim_type = no_brim"));
         Assert.assertTrue(defaultSerialized.contains("brim_width = 0"));
         Assert.assertTrue(defaultSerialized.contains("brim_object_gap = 0"));
