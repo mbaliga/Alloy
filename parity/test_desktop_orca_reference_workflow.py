@@ -38,6 +38,8 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("parity/test_generate_fixtures.py", pull_request)
         self.assertIn("parity/compare_gcode.py", pull_request)
         self.assertIn("parity/test_compare_gcode.py", pull_request)
+        self.assertIn("ci/compare_g3_artifacts.py", pull_request)
+        self.assertIn("ci/validate_g3_reference_transform.py", pull_request)
         self.assertIn("app/src/main/assets/models/**", pull_request)
 
     def test_export_3mf_uses_filename_relative_to_output_directory(self):

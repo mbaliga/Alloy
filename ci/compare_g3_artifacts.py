@@ -26,9 +26,9 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 from zipfile import BadZipFile, ZipFile
 
 try:
-    from .validate_g3_reference_transform import validate_reference_3mf
+    from .validate_g3_reference_transform import validate_reference_3mf, validate_reference_geometry
 except ImportError:  # Script execution puts ci/ itself on sys.path.
-    from validate_g3_reference_transform import validate_reference_3mf
+    from validate_g3_reference_transform import validate_reference_3mf, validate_reference_geometry
 
 
 REFERENCE_WORKFLOW = "desktop-orca-reference.yml"
@@ -286,9 +286,9 @@ def main() -> int:
             reference_dir = Path(temporary) / "reference"
             safe_extract(artifact_bytes, reference_dir)
             validate_reference_manifest(reference_dir, args.head_sha, args.base_sha, args.merge_sha)
-            validate_reference_3mf(
-                reference_dir / "orca-reference" / "travel_obstacle" / "travel_obstacle.gcode.3mf"
-            )
+            reference_3mf = reference_dir / "orca-reference" / "travel_obstacle" / "travel_obstacle.gcode.3mf"
+            validate_reference_3mf(reference_3mf)
+            validate_reference_geometry(reference_3mf, REPO_ROOT / "app/src/main/assets/models/travel_obstacle.stl")
             print(f"Desktop reference run {run_id} ({args.head_sha}); artifact SHA-256 {digest}")
             summary = compare_fixtures(args.native_dir, reference_dir, args.report_dir, args.tolerance)
         return 0 if summary["result"] == "pass" else 2
