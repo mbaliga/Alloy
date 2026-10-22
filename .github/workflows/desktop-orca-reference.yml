@@ -141,7 +141,7 @@ jobs:
           settings["from"] = "user"
           with open(output, "w", encoding="utf-8") as handle:
               json.dump(settings, handle, indent=2, sort_keys=True)
-              handle.write("\\n")
+              handle.write("\n")
           PY
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference
@@ -193,7 +193,7 @@ jobs:
           settings["from"] = "user"
           with open(output, "w", encoding="utf-8") as handle:
               json.dump(settings, handle, indent=2, sort_keys=True)
-              handle.write("\\n")
+              handle.write("\n")
           PY
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference-hook-neutralized
