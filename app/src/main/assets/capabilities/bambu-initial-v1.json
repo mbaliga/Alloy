@@ -33,7 +33,7 @@
         "Use 1.75 mm filament only.",
         "External/direct feed is the initial route for every material trial; check the spool state, tangles, dryness and remaining material.",
         "AMS lite physical-spool range: 40–68 mm width and 53–58 mm inner diameter.",
-        "Do not use AMS lite for flexible TPU/TPE or absorbent PVA; use external/direct feed instead.",
+      "Use external/direct feed as the default for TPU and PVA. Bambu lists dry PVA as AMS lite-compatible but warns against wet/absorbent PVA; consider AMS lite only when the exact spool is known dry and its material profile explicitly permits that route.",
         "Regular AMS is unsupported on A1 mini."
       ]
     },

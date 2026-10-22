@@ -96,15 +96,21 @@ class NativeDependencyWiringTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn("Run native release instrumentation through API-35 ARM translation", workflow)
         self.assertIn("Export native G3 evidence through API-35 ARM translation", workflow)
-        self.assertEqual(2, workflow.count("target: google_apis"))
-        self.assertEqual(2, workflow.count("arch: x86_64"))
-        self.assertEqual(2, workflow.count("disable-linux-hw-accel: false"))
-        self.assertIn("Enable hosted KVM permissions for native instrumentation", workflow)
+        self.assertIn("Run five-fixture pilot evidence on API-35 ARM translation", workflow)
+        self.assertEqual(3, workflow.count("target: google_apis"))
+        self.assertEqual(3, workflow.count("arch: x86_64"))
+        self.assertEqual(3, workflow.count(
+            "disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}"
+        ))
+        self.assertIn("Configure Android emulator acceleration", workflow)
+        self.assertIn('echo "disable-hw-accel=true" >> "$GITHUB_OUTPUT"', workflow)
+        self.assertIn('echo "disable-hw-accel=false" >> "$GITHUB_OUTPUT"', workflow)
         self.assertIn("99-kvm4all.rules", workflow)
         self.assertIn('MODE="0666"', workflow)
         self.assertIn("sudo udevadm control --reload-rules", workflow)
         self.assertEqual(1, workflow.count("sudo udevadm trigger --name-match=kvm"))
         self.assertIn("arm64-v8a JNI library", workflow)
+        self.assertIn("alloy-a1-mini-physical-pilot-ci", workflow)
 
     def test_native_target_uses_pinned_libnoise_not_the_handwritten_stub(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")

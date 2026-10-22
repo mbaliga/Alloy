@@ -3746,21 +3746,11 @@ public final class MainActivity extends Activity {
             TextView eyebrow = label("LIBRARY", 11, MUTED);
             eyebrow.setLetterSpacing(0.16f);
             page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(28)));
-            TextView title = label("See the object before you slice it", 22, TEXT);
+            TextView title = label("Library", 24, TEXT);
             title.setTypeface(null, android.graphics.Typeface.BOLD);
             page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
-            boolean hasOwnerVisuals = false;
-            for (ModelCatalog.Entry entry : entries) {
-                if (entry.author.toLowerCase(Locale.US).contains("owner-provided")) {
-                    hasOwnerVisuals = true;
-                    break;
-                }
-            }
-            TextView intro = label(hasOwnerVisuals
-                    ? "Every catalog item is a live 3D preview. This private visual-review build includes the supplied owner models; open the A1 Mini study or bring another box, bow or part into the same immersive surface."
-                    : "Every catalog item is a live 3D preview. This ordinary/public build contains Alloy-owned examples; the supplied owner models stay out until you use the private visual-review build or import them from the phone.", 12, MUTED);
-            intro.setLineSpacing(2, 1.0f);
-            page.addView(intro, new LinearLayout.LayoutParams(-1, dp(58)));
+            TextView subtitle = label("Saved models  /  Recently opened", 13, MUTED);
+            page.addView(subtitle, new LinearLayout.LayoutParams(-1, dp(34)));
 
             // Make the supplied/user-owned geometry path obvious at the point
             // where a person is looking for models. The catalog remains
@@ -3803,6 +3793,13 @@ public final class MainActivity extends Activity {
             recent.setPadding(0, 0, dp(4), dp(6));
             ArrayList<ImportedModelStore.Entry> recentEntries = importedModelStore == null
                     ? new ArrayList<>() : importedModelStore.entries(getFilesDir());
+            android.content.SharedPreferences favourites = getSharedPreferences("alloy_model_favourites", MODE_PRIVATE);
+            ArrayList<View> libraryItems = new ArrayList<>();
+            ArrayList<ModelCatalog.Entry> libraryCatalog = new ArrayList<>();
+            final String[] activeFilter = {"All"};
+            final String[] searchQuery = {""};
+            final ArrayList<Button> filterButtons = new ArrayList<>();
+            final Runnable[] refreshFilterCounts = {() -> {}};
             if (recentEntries.isEmpty()) {
                 TextView emptyRecent = label("Import a box, bow part, STEP or 3MF and it will stay here for offline reopen.", 11, MUTED);
                 emptyRecent.setGravity(Gravity.CENTER_VERTICAL);
@@ -3813,6 +3810,7 @@ public final class MainActivity extends Activity {
                     recentChip.setTextSize(11);
                     recentChip.setMinWidth(dp(126));
                     recentChip.setContentDescription("Open imported model " + entry.name);
+                    recentChip.setTag("uri:" + entry.sha256);
                     recentChip.setOnClickListener(v -> {
                         dialog.dismiss();
                         loadUri(entry.uri, false);
@@ -3820,6 +3818,7 @@ public final class MainActivity extends Activity {
                     LinearLayout.LayoutParams recentLp = new LinearLayout.LayoutParams(-2, dp(42));
                     if (recent.getChildCount() > 0) recentLp.leftMargin = dp(6);
                     recent.addView(recentChip, recentLp);
+                    libraryItems.add(recentChip);
                 }
             }
             recentScroll.addView(recent, new HorizontalScrollView.LayoutParams(-2, dp(48)));
@@ -3848,7 +3847,14 @@ public final class MainActivity extends Activity {
             TextView selectedName = label("", 16, TEXT);
             selectedName.setTypeface(null, android.graphics.Typeface.BOLD);
             selectedName.setPadding(dp(2), dp(10), dp(2), 0);
-            page.addView(selectedName, new LinearLayout.LayoutParams(-1, dp(34)));
+            LinearLayout selectedHeader = new LinearLayout(this);
+            selectedHeader.setGravity(Gravity.CENTER_VERTICAL);
+            selectedHeader.addView(selectedName, new LinearLayout.LayoutParams(0, dp(36), 1f));
+            TextView favouriteToggle = label("♡", 26, INK);
+            favouriteToggle.setGravity(Gravity.CENTER);
+            favouriteToggle.setContentDescription("Add to favourites");
+            selectedHeader.addView(favouriteToggle, new LinearLayout.LayoutParams(dp(42), dp(36)));
+            page.addView(selectedHeader, new LinearLayout.LayoutParams(-1, dp(38)));
             TextView selectedProvenance = label("", 11, MUTED);
             selectedProvenance.setLineSpacing(1, 1.0f);
             page.addView(selectedProvenance, new LinearLayout.LayoutParams(-1, dp(46)));
@@ -3861,14 +3867,31 @@ public final class MainActivity extends Activity {
                 }
             }
             final ModelCatalog.Entry[] selected = new ModelCatalog.Entry[]{entries.get(initialIndex)};
+            Runnable refreshFavourite = () -> {
+                boolean isFavourite = favourites.getBoolean("asset:" + selected[0].assetPath, false);
+                favouriteToggle.setText(isFavourite ? "♥" : "♡");
+                favouriteToggle.setTextColor(isFavourite ? GOLD : INK);
+                favouriteToggle.setContentDescription(isFavourite ? "Remove from favourites" : "Add to favourites");
+            };
+            favouriteToggle.setOnClickListener(v -> {
+                String key = "asset:" + selected[0].assetPath;
+                favourites.edit().putBoolean(key, !favourites.getBoolean(key, false)).apply();
+                refreshFavourite.run();
+                filterLibraryItems(libraryItems, searchQuery[0], activeFilter[0], favourites);
+                refreshFilterCounts[0].run();
+            });
             for (int index = 0; index < entries.size(); index++) {
                 ModelCatalog.Entry entry = entries.get(index);
                 Button chip = dialogButton(galleryShortName(entry.name), null);
                 chip.setTextSize(11);
                 chip.setMinWidth(dp(108));
+                chip.setTag("asset:" + entry.assetPath);
+                chip.setContentDescription(entry.name);
                 LinearLayout.LayoutParams chipLp = new LinearLayout.LayoutParams(-2, dp(46));
                 if (index > 0) chipLp.leftMargin = dp(6);
                 chooser.addView(chip, chipLp);
+                libraryItems.add(chip);
+                libraryCatalog.add(entry);
                 final ModelCatalog.Entry chosen = entry;
                 chip.setOnClickListener(v -> {
                     try {
@@ -3879,12 +3902,98 @@ public final class MainActivity extends Activity {
                             preview.setModel(parsed);
                             selectedName.setText(chosen.name);
                             selectedProvenance.setText(chosen.provenanceLabel() + "  ·  checksum verified");
+                            refreshFavourite.run();
                         }
                     } catch (Exception error) {
                         Toast.makeText(this, "Example rejected: " + error.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
             }
+
+            EditText modelSearch = new EditText(this);
+            modelSearch.setSingleLine(true);
+            modelSearch.setTextSize(12);
+            modelSearch.setHint("⌕ Search");
+            modelSearch.setPadding(dp(10), 0, dp(8), 0);
+            modelSearch.setBackground(round(SURFACE, Color.rgb(222, 216, 206), 1, 18));
+            Button sort = dialogButton("☷  Sort", null);
+            sort.setTextSize(11);
+            LinearLayout.LayoutParams sortLp = new LinearLayout.LayoutParams(-2, dp(34));
+            sortLp.leftMargin = dp(6);
+
+            int favCount = 0;
+            for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) favCount++;
+            HorizontalScrollView filterScroll = new HorizontalScrollView(this);
+            filterScroll.setHorizontalScrollBarEnabled(false);
+            LinearLayout filterRow = new LinearLayout(this);
+            filterRow.setGravity(Gravity.CENTER_VERTICAL);
+            filterRow.addView(modelSearch, new LinearLayout.LayoutParams(dp(98), dp(38)));
+            filterScroll.addView(filterRow, new HorizontalScrollView.LayoutParams(-2, dp(40)));
+            page.addView(filterScroll, new LinearLayout.LayoutParams(-1, dp(42)));
+            String[] filterLabels = {"All " + libraryItems.size(), "Favourites " + favCount, "Recent " + recentEntries.size()};
+            for (String filterLabel : filterLabels) {
+                Button filter = dialogButton(filterLabel, null);
+                filter.setTextSize(11);
+                LinearLayout.LayoutParams filterLp = new LinearLayout.LayoutParams(-2, dp(34));
+                if (filterRow.getChildCount() > 0) filterLp.leftMargin = dp(6);
+                filterRow.addView(filter, filterLp);
+                filterButtons.add(filter);
+                filter.setOnClickListener(v -> {
+                    activeFilter[0] = filterLabel.startsWith("Favourites") ? "Favourites" : filterLabel.startsWith("Recent") ? "Recent" : "All";
+                    filterLibraryItems(libraryItems, modelSearch.getText().toString(), activeFilter[0], favourites);
+                    for (int i = 0; i < filterRow.getChildCount(); i++) filterRow.getChildAt(i).setAlpha(filterRow.getChildAt(i) == filter ? 1f : .7f);
+                });
+            }
+            filterRow.addView(sort, sortLp);
+            refreshFilterCounts[0] = () -> {
+                int count = 0;
+                for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) count++;
+                if (filterButtons.size() == 3) {
+                    filterButtons.get(0).setText("All " + libraryItems.size());
+                    filterButtons.get(1).setText("Favourites " + count);
+                    filterButtons.get(2).setText("Recent " + recentEntries.size());
+                }
+            };
+            refreshFilterCounts[0].run();
+            modelSearch.addTextChangedListener(new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    searchQuery[0] = s.toString();
+                    filterLibraryItems(libraryItems, s.toString(), activeFilter[0], favourites);
+                }
+                @Override public void afterTextChanged(android.text.Editable s) {}
+            });
+            sort.setOnClickListener(v -> {
+                boolean ascending = !Boolean.TRUE.equals(sort.getTag());
+                sort.setTag(ascending);
+                sort.setText(ascending ? "☷  A–Z" : "☷  Z–A");
+                java.util.Collections.sort(libraryCatalog, (left, right) -> {
+                    int order = left.name.compareToIgnoreCase(right.name);
+                    return ascending ? order : -order;
+                });
+                // Reorder the existing views rather than relabeling them:
+                // each click listener deliberately captures its verified
+                // catalog entry, so changing only the label would make a
+                // sorted chip open a different model than it names.
+                ArrayList<View> sortedItems = new ArrayList<>();
+                for (ModelCatalog.Entry entry : libraryCatalog) {
+                    String expectedTag = "asset:" + entry.assetPath;
+                    for (View item : libraryItems) {
+                        if (expectedTag.equals(String.valueOf(item.getTag()))) {
+                            sortedItems.add(item);
+                            break;
+                        }
+                    }
+                }
+                chooser.removeAllViews();
+                for (View item : sortedItems) {
+                    LinearLayout.LayoutParams itemLp = new LinearLayout.LayoutParams(-2, dp(46));
+                    if (chooser.getChildCount() > 0) itemLp.leftMargin = dp(6);
+                    chooser.addView(item, itemLp);
+                }
+            });
+            page.removeView(filterScroll);
+            page.addView(filterScroll, 3);
 
             LinearLayout footer = new LinearLayout(this);
             footer.setGravity(Gravity.CENTER_VERTICAL);
@@ -3907,6 +4016,21 @@ public final class MainActivity extends Activity {
             footer.addView(close, closeLp);
             page.addView(footer, new LinearLayout.LayoutParams(-1, dp(58)));
 
+            ArcNavigationBar libraryNavigation = new ArcNavigationBar(this);
+            libraryNavigation.setContextLabel("Open in workshop");
+            libraryNavigation.setSelectedDestination(1);
+            libraryNavigation.setListener(new ArcNavigationBar.Listener() {
+                @Override public void onContext() { dialog.dismiss(); loadAssetModel(selected[0].assetPath, selected[0].name); }
+                @Override public void onSearch() { modelSearch.requestFocus(); }
+                @Override public void onAlerts() { dialog.dismiss(); showPrinterReadiness(); }
+                @Override public void onHome() { dialog.dismiss(); if (viewport != null) viewport.resetView(); }
+                @Override public void onLibrary() { modelSearch.requestFocus(); }
+                @Override public void onPrepare() { dialog.dismiss(); showPrepare(); }
+                @Override public void onHistory() { dialog.dismiss(); showModelHistory(); }
+                @Override public void onMore() { dialog.dismiss(); showMoreActions(); }
+            });
+            page.addView(libraryNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
+
             // Load only the first preview up front; the remaining surfaces are
             // parsed when selected, keeping the phone's initial memory cost
             // bounded while making every catalog entry visible in the atlas.
@@ -3918,6 +4042,7 @@ public final class MainActivity extends Activity {
                 }
                 selectedName.setText(first.name);
                 selectedProvenance.setText(first.provenanceLabel() + "  ·  checksum verified");
+                refreshFavourite.run();
             } catch (Exception error) {
                 selectedName.setText("No preview available");
                 selectedProvenance.setText(error.getMessage());
@@ -3925,6 +4050,7 @@ public final class MainActivity extends Activity {
             dialog.setContentView(page);
             dialog.setOnDismissListener(ignored -> preview.onHostPause());
             dialog.show();
+            filterLibraryItems(libraryItems, "", "All", favourites);
             Window window = dialog.getWindow();
             if (window != null) {
                 window.setBackgroundDrawableResource(android.R.color.transparent);
@@ -3940,6 +4066,21 @@ public final class MainActivity extends Activity {
         int separator = value.indexOf(" · ");
         String shortName = separator > 0 ? value.substring(0, separator) : value;
         return shortName.length() > 18 ? shortName.substring(0, 18) + "…" : shortName;
+    }
+
+    private void filterLibraryItems(ArrayList<View> items, String query, String filter,
+                                    android.content.SharedPreferences favourites) {
+        String needle = query == null ? "" : query.trim().toLowerCase(Locale.US);
+        for (View item : items) {
+            String key = String.valueOf(item.getTag());
+            String name = String.valueOf(item.getContentDescription()).toLowerCase(Locale.US);
+            boolean isRecent = key.startsWith("uri:");
+            boolean visible = "All".equals(filter)
+                    || ("Favourites".equals(filter) && favourites.getBoolean(key, false))
+                    || ("Recent".equals(filter) && isRecent);
+            if (visible && !needle.isEmpty()) visible = name.contains(needle);
+            item.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void showCommunityModelSources() {

@@ -29,6 +29,7 @@ on:
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
+      - 'ci/validate_learning_assets.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
@@ -66,6 +67,7 @@ on:
       - 'ci/validate_android_workflows.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
+      - 'ci/validate_learning_assets.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
@@ -144,6 +146,7 @@ jobs:
           python3 ci/validate_native_prebuilts.py arm64-v8a
           python3 ci/validate_profile_assets.py
           python3 ci/validate_capability_catalog.py
+          python3 ci/validate_learning_assets.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -217,18 +220,23 @@ jobs:
         run: gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Compile native instrumentation smoke test
         run: gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
-      # The hosted runner exposes /dev/kvm with an empty kvm group. Install
-      # the emulator action's documented udev rule before either API-35 test
-      # host starts, rather than silently falling back to software emulation.
-      - name: Enable hosted KVM permissions for native instrumentation
+      # Use hosted KVM where available; some runner pools do not expose it.
+      # In that case keep the test runnable with QEMU's software fallback.
+      - name: Configure Android emulator acceleration
+        id: emulator-acceleration
         shell: bash
         run: |
           set -euxo pipefail
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-          test -r /dev/kvm
-          test -w /dev/kvm
+          if [ -e /dev/kvm ]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+          fi
+          if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+            echo "disable-hw-accel=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "disable-hw-accel=true" >> "$GITHUB_OUTPUT"
+          fi
       # GitHub's Linux hosts are x86_64, and QEMU refuses an arm64 system image
       # there. API 35's Google APIs image provides ARM binary translation, so
       # this is an x86_64 *test host* that still installs and executes Alloy's
@@ -244,7 +252,7 @@ jobs:
           # Do not let the runner's optional post-boot animation settings
           # writes mask the native test result on slow hosted API-35 boots.
           disable-animations: false
-          disable-linux-hw-accel: false
+          disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: gradle :app:connectedReleaseAndroidTest -PalloyNativeEngine=true -PalloyCiDebugSign=true --no-daemon --stacktrace
       - name: Export native G3 evidence through API-35 ARM translation
         uses: reactivecircus/android-emulator-runner@v2
@@ -256,7 +264,7 @@ jobs:
           # Keep this independent emulator boot free of optional ADB settings
           # mutations; the evidence harness is not animation-sensitive.
           disable-animations: false
-          disable-linux-hw-accel: false
+          disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: |
             # android-emulator-runner executes this value through /bin/sh.
             # Keep this POSIX-only: nesting a quoted Bash script causes the
@@ -264,10 +272,7 @@ jobs:
             set -eu
             adb install -r app/build/outputs/apk/release/app-release.apk
             adb install -r app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
-            adb shell am instrument -w \
-              -e class com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested \
-              -e export-g3 true \
-              com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+            adb shell am instrument -w -e class com.mbaliga.alloy.NativeEngineSmokeTest#exportsNativeG3EvidenceWhenRequested -e export-g3 true com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
             mkdir -p path-b-g3-evidence
             adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-g3-evidence/. path-b-g3-evidence/
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
@@ -297,3 +302,40 @@ jobs:
           name: alloy-native-instrumentation-report
           path: app/build/reports/androidTests/connected/release
           if-no-files-found: warn
+      # Produce the narrowly scoped physical-pilot variant only after the
+      # ordinary native runtime/G3 gates have exercised their unmodified APKs.
+      # This artifact remains explicitly unverified and may submit only the
+      # five immutable A1 Mini / PLA Basic / no-support fixtures.
+      - name: Build isolated A1 Mini physical-pilot APK pair
+        run: |
+          set -euxo pipefail
+          gradle :app:assembleRelease :app:assembleReleaseAndroidTest \
+            -PalloyNativeEngine=true \
+            -PalloyPhysicalPilot=true \
+            -PalloyCiDebugSign=true \
+            --no-daemon --stacktrace
+          mkdir -p path-a1-mini-pilot
+          cp app/build/outputs/apk/release/app-release.apk path-a1-mini-pilot/app-release.apk
+          cp app/build/outputs/apk/androidTest/release/app-release-androidTest.apk path-a1-mini-pilot/app-release-androidTest.apk
+      - name: Run five-fixture pilot evidence on API-35 ARM translation
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: false
+          disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
+          script: |
+            set -eu
+            adb install -r path-a1-mini-pilot/app-release.apk
+            adb install -r path-a1-mini-pilot/app-release-androidTest.apk
+            adb shell am instrument -w -e class com.mbaliga.alloy.NoSupportPlaPilotTest#nativeNoSupportPilotFixturesRemainInspectableAndPackageable -e export-no-support-pilot true com.mbaliga.alloy.test/androidx.test.runner.AndroidJUnitRunner
+            mkdir -p path-a1-mini-pilot/evidence
+            adb pull /sdcard/Android/data/com.mbaliga.alloy/files/alloy-no-support-pilot/. path-a1-mini-pilot/evidence/
+            python3 -c 'import json,pathlib,re; files=list(pathlib.Path("path-a1-mini-pilot/evidence").glob("run-*/software-pilot-manifest.json")); assert len(files)==1, "expected one software pilot manifest"; data=json.loads(files[0].read_text()); expected={"box-20mm.stl","mounting-block.stl","thin-wall-frame-fixture.stl","travel_obstacle.stl","box-and-lid.stl"}; fixtures=data.get("fixtures",[]); assert data.get("software_only") is True and data.get("physical_qualification")=="PENDING" and data.get("direct_send_qualification")=="PENDING"; assert {f.get("fixture") for f in fixtures}==expected; assert all(f.get("supports") is False and f.get("package_preflight")=="PASS" and re.fullmatch(r"[0-9a-f]{64}",f.get("package_sha256","")) for f in fixtures); print("validated five-fixture software-only A1 Mini pilot evidence")'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alloy-a1-mini-physical-pilot-ci
+          path: path-a1-mini-pilot
+          if-no-files-found: error

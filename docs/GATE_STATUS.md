@@ -2608,3 +2608,37 @@ passed. The production readiness template correctly fails validation while it
 contains placeholder evidence, and the physical-pilot build guard passes.
 There is still no completed production-readiness or physical-acceptance record;
 these checks confirm that software success does not promote the release gates.
+
+### 2026-10-07 hosted native and Library verification
+
+The hosted `alloy-native-build` run
+[`37610818807`](https://github.com/mbaliga/Alloy/actions/runs/37610818807)
+completed successfully for `30ae0f7360bb8abcdbe9aceee9cf9a7405d4477b`.
+The native-enabled release and instrumentation pair built, the API-35 emulator
+suite completed, and the opt-in G3 evidence export plus its validators passed.
+The native release, instrumentation APK, instrumentation report and G3 evidence
+artifact ZIP SHA-256 values are, respectively:
+`4ec646b366ee4b35411e1122c2a45bd9f77b1f1e04bbf3d17c126452e306a661`,
+`63f85c59f02587e87e556df282546fdd2e15fc35a0207e13935568eb845a1daa`,
+`e3418252cd711a4ed8e49268fc169973423c15ecd6c07cbb87c7481c521d0820`, and
+`5549ca287f317305988966e29d95a2db6fc8540efd2f96ac0c6f3bca14b24a67`.
+These are CI QA artifacts, not production-signed builds.
+
+The follow-on Android v1 run
+[`37613376092`](https://github.com/mbaliga/Alloy/actions/runs/37613376092)
+completed successfully for `4e6723c25e26a058fdc07ba01d335a74bea6ed65` and
+produced `alloy-v1-release-ci-apk` with artifact ZIP SHA-256
+`8a200c561073e49907012ae3fbb647da8001bc081cf64cbe28b507b55acc344b`.
+This is the newest ordinary phone-workflow QA build and includes Library
+search, live favourite counts, filters, sorting and shared arc navigation.
+It is not the native-enabled build; use the matching native pair above for
+native runtime testing.
+
+The G3 evidence export passing means the evidence bundle was generated and
+validated. The independent desktop parity comparison still reports
+pass-with-warnings: transition counts and acceleration sequence differ, even
+though geometry, time, filament and travel metrics are within recorded
+tolerances. Therefore general G3 parity, support parity, physical A1 Mini
+pilot, A1/P1S qualification, Bambu Handy acceptance, production signing and
+visual sign-off all remain open. No direct-send claim is promoted by these CI
+runs.
