@@ -25,6 +25,11 @@ from urllib.parse import urlencode, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 from zipfile import BadZipFile, ZipFile
 
+try:
+    from .validate_g3_reference_transform import validate_reference_3mf
+except ImportError:  # Script execution puts ci/ itself on sys.path.
+    from validate_g3_reference_transform import validate_reference_3mf
+
 
 REFERENCE_WORKFLOW = "desktop-orca-reference.yml"
 REFERENCE_ARTIFACT = "a1mini-orca-2.4.2-reference-slices"
@@ -281,6 +286,9 @@ def main() -> int:
             reference_dir = Path(temporary) / "reference"
             safe_extract(artifact_bytes, reference_dir)
             validate_reference_manifest(reference_dir, args.head_sha, args.base_sha, args.merge_sha)
+            validate_reference_3mf(
+                reference_dir / "orca-reference" / "travel_obstacle" / "travel_obstacle.gcode.3mf"
+            )
             print(f"Desktop reference run {run_id} ({args.head_sha}); artifact SHA-256 {digest}")
             summary = compare_fixtures(args.native_dir, reference_dir, args.report_dir, args.tolerance)
         return 0 if summary["result"] == "pass" else 2
