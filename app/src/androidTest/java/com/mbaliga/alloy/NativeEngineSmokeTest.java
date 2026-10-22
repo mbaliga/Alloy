@@ -973,7 +973,7 @@ public final class NativeEngineSmokeTest {
                 contract.getString("fixture"));
         Assert.assertEquals("transform contract must stay test-only",
                 "test-only strict G3 comparison input transform", contract.getString("scope"));
-        Assert.assertEquals("transform angle must match the pinned desktop 3MF rotation", 90.0,
+        Assert.assertEquals("transform angle must match the pinned desktop 3MF row-vector rotation", -90.0,
                 contract.getDouble("rotation_degrees"), 0.0);
         return mesh.transformed(assetName, 1f, (float) contract.getDouble("rotation_degrees"));
     }
