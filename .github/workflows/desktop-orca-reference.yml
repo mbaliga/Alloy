@@ -11,6 +11,7 @@ on:
       - 'parity/compare_gcode.py'
       - 'parity/test_compare_gcode.py'
       - 'ci/neutralize_bambu_motion_hooks.py'
+      - 'ci/prepare_orca_cli_process_profile.py'
       - 'ci/compare_hook_neutralized_g3.py'
       - 'ci/compare_g3_artifacts.py'
       - 'ci/validate_g3_reference_transform.py'
@@ -19,6 +20,7 @@ on:
       - 'parity/test_hook_neutralized_workflow_contract.py'
       - 'app/src/main/assets/models/**'
       - 'parity/test_desktop_orca_reference_workflow.py'
+      - 'parity/test_prepare_orca_cli_process_profile.py'
       - 'parity/g3-bambu-filament-overlay.json'
       - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
@@ -32,6 +34,7 @@ on:
       - 'parity/compare_gcode.py'
       - 'parity/test_compare_gcode.py'
       - 'ci/neutralize_bambu_motion_hooks.py'
+      - 'ci/prepare_orca_cli_process_profile.py'
       - 'ci/compare_hook_neutralized_g3.py'
       - 'ci/compare_g3_artifacts.py'
       - 'ci/validate_g3_reference_transform.py'
@@ -40,6 +43,7 @@ on:
       - 'parity/test_hook_neutralized_workflow_contract.py'
       - 'app/src/main/assets/models/**'
       - 'parity/test_desktop_orca_reference_workflow.py'
+      - 'parity/test_prepare_orca_cli_process_profile.py'
       - 'parity/g3-bambu-filament-overlay.json'
       - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
       - 'parity/verify_gcode_3mf.py'
@@ -126,22 +130,9 @@ jobs:
           # Normalize its "from: project" provenance only for Orca CLI; all
           # print-setting values remain unchanged.
           PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"
           PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
-          python3 - "$PROJECT_SETTINGS" "$PROCESS" <<'PY'
-          import json
-          import sys
-
-          source, output = sys.argv[1:]
-          with open(source, encoding="utf-8") as handle:
-              settings = json.load(handle)
-          if "type" in settings:
-              raise SystemExit("project_settings fixture must remain a project document")
-          settings["type"] = "process"
-          settings["from"] = "user"
-          with open(output, "w", encoding="utf-8") as handle:
-              json.dump(settings, handle, indent=2, sort_keys=True)
-              handle.write("\n")
-          PY
+          python3 ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference
 
@@ -178,22 +169,9 @@ jobs:
           python3 ci/neutralize_bambu_motion_hooks.py "$SOURCE_MACHINE" "$NEUTRAL_DIR"
           MACHINE="$NEUTRAL_DIR/machine-hooks-neutralized.json"
           PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"
           PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
-          python3 - "$PROJECT_SETTINGS" "$PROCESS" <<'PY'
-          import json
-          import sys
-
-          source, output = sys.argv[1:]
-          with open(source, encoding="utf-8") as handle:
-              settings = json.load(handle)
-          if "type" in settings:
-              raise SystemExit("project_settings fixture must remain a project document")
-          settings["type"] = "process"
-          settings["from"] = "user"
-          with open(output, "w", encoding="utf-8") as handle:
-              json.dump(settings, handle, indent=2, sort_keys=True)
-              handle.write("\n")
-          PY
+          python3 ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference-hook-neutralized
           for stl in runtime/fixtures/*.stl; do

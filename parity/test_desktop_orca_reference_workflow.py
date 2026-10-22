@@ -72,15 +72,11 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("runtime/orca-reference-hook-neutralized", upload)
 
 
-    def test_exact_project_settings_get_only_orca_profile_metadata_wrapper(self):
+    def test_both_orca_slices_use_project_settings_compatibility_wrapper(self):
         text = WORKFLOW.read_text(encoding="utf-8")
-        self.assertEqual(text.count('settings["type"] = "process"'), 2)
-        self.assertEqual(text.count('settings["from"] = "user"'), 2)
-        self.assertEqual(text.count('PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"'), 2)
+        self.assertEqual(text.count('ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"'), 2)
+        self.assertEqual(text.count('COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"'), 2)
         self.assertEqual(text.count('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"'), 2)
-        self.assertEqual(text.count('--load-settings "$MACHINE;$PROCESS"'), 2)
-        self.assertEqual(text.count('raise SystemExit("project_settings fixture must remain a project document")'), 2)
-
 
 
 if __name__ == "__main__":
