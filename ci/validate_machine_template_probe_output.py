@@ -9,6 +9,7 @@ from pathlib import Path
 
 SOURCE = "07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4"
 PROFILE = "Bambu Lab A1 mini 0.4 nozzle"
+G3_PROFILE_SHA256 = "d638086d0c669959f9406010c4b360f98df429ae5aa9d9ec13b493ca9cbaf32e"
 FIXTURES = {
     "cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle"
 }
@@ -31,6 +32,21 @@ def expected_template_digests() -> dict:
     return actual
 
 
+def _validate_config_digest(directory: Path, fixture: dict, name: str, mode: str) -> str:
+    filename = fixture.get("config_file")
+    if filename != f"{name}.config.ini":
+        raise ValueError(f"{mode} fixture {name} has an unexpected config filename")
+    digest = fixture.get("config_sha256")
+    if not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+        raise ValueError(f"{mode} fixture {name} has an invalid config digest")
+    config_path = directory / filename
+    if not config_path.is_file() or config_path.is_symlink():
+        raise ValueError(f"{mode} fixture {name} config is missing or not a regular file")
+    if hashlib.sha256(config_path.read_bytes()).hexdigest() != digest:
+        raise ValueError(f"{mode} fixture {name} config digest mismatch")
+    return digest
+
+
 def validate(directory: Path) -> dict:
     manifest_path = directory / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -38,6 +54,12 @@ def validate(directory: Path) -> dict:
         raise ValueError("template probe manifest identity mismatch")
     if manifest.get("scope") != "template-rendering-only" or manifest.get("qualified") is not False:
         raise ValueError("template probe evidence must remain explicitly unqualified")
+    if (manifest.get("default_bbl_printer_mode") is not False
+            or manifest.get("counterfactual") is not False
+            or manifest.get("non_gating") is not True
+            or manifest.get("profile_name") != PROFILE
+            or manifest.get("profile_sha256") != G3_PROFILE_SHA256):
+        raise ValueError("default template probe must identify false BBL mode and remain non-gating")
     template_digests = manifest.get("template_sha256")
     if not isinstance(template_digests, dict) or set(template_digests) != {
         "machine_start_gcode", "machine_end_gcode", "layer_change_gcode", "time_lapse_gcode"
@@ -57,7 +79,9 @@ def validate(directory: Path) -> dict:
         if name not in FIXTURES or name in seen:
             raise ValueError("unexpected or duplicate fixture")
         seen.add(name)
-        if fixture.get("rendered") is not True or fixture.get("qualified") is not False:
+        if (fixture.get("rendered") is not True or fixture.get("qualified") is not False
+                or fixture.get("counterfactual") is not False
+                or fixture.get("bbl_printer_mode") is not False):
             raise ValueError(f"fixture {name} is not an unqualified rendering result")
         filename = fixture.get("file")
         if filename != f"{name}.gcode":
@@ -71,6 +95,7 @@ def validate(directory: Path) -> dict:
         actual = hashlib.sha256(output.read_bytes()).hexdigest()
         if actual != digest:
             raise ValueError(f"fixture {name} output digest mismatch")
+        _validate_config_digest(directory, fixture, name, "template probe")
         expected_files.add(filename)
     actual_files = {p.name for p in directory.iterdir() if p.is_file() and p.name.endswith(".gcode")}
     if actual_files != expected_files:
@@ -119,13 +144,68 @@ def validate_end_only(directory: Path) -> dict:
     return manifest
 
 
+def validate_counterfactual_bbl(directory: Path) -> dict:
+    """Validate the test-only BBL mode render; never treat it as a qualified slice."""
+    manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+    expected = {
+        "schema_version": 1,
+        "source_commit": SOURCE,
+        "scope": "counterfactual-bbl-identity-template-render-diagnostic",
+        "counterfactual": True,
+        "bbl_printer_mode": True,
+        "production_runtime_changed": False,
+        "non_gating": True,
+        "qualified": False,
+        "profile_name": PROFILE,
+        "profile_sha256": G3_PROFILE_SHA256,
+        "template_sha256": expected_template_digests(),
+    }
+    for key, value in expected.items():
+        if manifest.get(key) != value:
+            raise ValueError(f"counterfactual BBL manifest {key} mismatch")
+    fixtures = manifest.get("fixtures")
+    if not isinstance(fixtures, list) or len(fixtures) != len(FIXTURES):
+        raise ValueError("counterfactual BBL probe must contain exactly four fixture records")
+    seen = set()
+    expected_files = set()
+    for fixture in fixtures:
+        if not isinstance(fixture, dict):
+            raise ValueError("invalid counterfactual BBL fixture record")
+        name = fixture.get("fixture")
+        if name not in FIXTURES or name in seen:
+            raise ValueError("unexpected or duplicate counterfactual BBL fixture")
+        seen.add(name)
+        if (fixture.get("rendered") is not True or fixture.get("qualified") is not False
+                or fixture.get("counterfactual") is not True
+                or fixture.get("bbl_printer_mode") is not True):
+            raise ValueError(f"counterfactual BBL fixture {name} has invalid qualification labels")
+        filename = fixture.get("file")
+        if filename != f"{name}.gcode":
+            raise ValueError(f"counterfactual BBL fixture {name} has an unexpected output filename")
+        digest = fixture.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError(f"counterfactual BBL fixture {name} has an invalid output digest")
+        output = directory / filename
+        if not output.is_file() or output.is_symlink():
+            raise ValueError(f"counterfactual BBL fixture {name} output is missing or not a regular file")
+        if hashlib.sha256(output.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"counterfactual BBL fixture {name} output digest mismatch")
+        _validate_config_digest(directory, fixture, name, "counterfactual BBL")
+        expected_files.add(filename)
+    actual_files = {p.name for p in directory.iterdir() if p.is_file() and p.name.endswith(".gcode")}
+    if actual_files != expected_files:
+        raise ValueError("counterfactual BBL directory contains unexpected G-code files")
+    return manifest
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
     args = parser.parse_args()
     validate(args.directory)
     validate_end_only(args.directory / "end-only")
-    print("validated four full-hook and four end-only unqualified offline template renderings")
+    validate_counterfactual_bbl(args.directory / "counterfactual-bbl")
+    print("validated default, end-only, and counterfactual BBL unqualified template renderings")
 
 
 if __name__ == "__main__":
