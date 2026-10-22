@@ -126,6 +126,12 @@ class CompareGcodeTests(unittest.TestCase):
             self.assertIn("outer_wall", diagnostic["detail"])
             self.assertIn("path", diagnostic["detail"])
             self.assertIn("E", diagnostic["detail"])
+            layer_diagnostic = next(
+                check for check in compare(desktop, android, 0.02)["checks"]
+                if check["name"] == "per_layer_toolpath_diagnostic"
+            )
+            self.assertIn("Δpath=", layer_diagnostic["detail"])
+            self.assertIn("ΔE=", layer_diagnostic["detail"])
 
     def test_layer_toolpath_diagnostic_is_invariant_to_translation_and_quarter_turn(self):
         rotated = GCODE_B.replace("G92 E0", "G92 X100 Y100 E0")
@@ -143,7 +149,7 @@ class CompareGcodeTests(unittest.TestCase):
                               if c["name"] == "per_layer_toolpath_diagnostic")
             self.assertEqual("warn", diagnostic["status"])
             self.assertIn("invariant to whole-model translation/rotation", diagnostic["detail"])
-            self.assertIn("path=40.000/40.000mm", diagnostic["detail"])
+            self.assertIn("no per-layer/per-feature deposited-total delta", diagnostic["detail"])
             self.assertIn("layer=0,feature=outer_wall", str(metrics_report(transformed)))
 
     def test_failed_comparison_adds_bounded_layer_feedrate_travel_diagnostic_only(self):

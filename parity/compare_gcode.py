@@ -870,14 +870,18 @@ def per_layer_toolpath_diagnostic(desktop: Metrics, android: Metrics) -> str:
         right = android.layer_feature_metrics.get(key, {})
         path_delta = abs(left.get("path_mm", 0.0) - right.get("path_mm", 0.0))
         e_delta = abs(left.get("positive_e_mm", 0.0) - right.get("positive_e_mm", 0.0))
-        ranked.append((max(path_delta, e_delta), key, left, right))
+        ranked.append((max(path_delta, e_delta), key, left, right,
+                       path_delta, e_delta))
     ranked.sort(key=lambda row: (-row[0], row[1]))
     details = "; ".join(
-        f"{key}: path={left.get('path_mm', 0.0):.3f}/{right.get('path_mm', 0.0):.3f}mm, "
-        f"E={left.get('positive_e_mm', 0.0):.3f}/{right.get('positive_e_mm', 0.0):.3f}mm, "
+        f"{key}: Δpath={path_delta:.3f}mm "
+        f"(desktop/Android {left.get('path_mm', 0.0):.3f}/{right.get('path_mm', 0.0):.3f}), "
+        f"ΔE={e_delta:.3f}mm "
+        f"(desktop/Android {left.get('positive_e_mm', 0.0):.3f}/{right.get('positive_e_mm', 0.0):.3f}), "
         f"moves={int(left.get('moves', 0))}/{int(right.get('moves', 0))}"
-        for _, key, left, right in ranked[:12]
-    ) or "no feature-labelled deposited moves"
+        for _, key, left, right, path_delta, e_delta in ranked[:12]
+        if path_delta > 1e-9 or e_delta > 1e-9
+    ) or "no per-layer/per-feature deposited-total delta"
     return (
         "diagnostic only; per-layer/per-feature deposited totals are invariant "
         "to whole-model translation/rotation, but do not prove spatial path "
