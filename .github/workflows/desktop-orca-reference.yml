@@ -126,7 +126,23 @@ jobs:
           # process/filament snapshots. The latter are useful provenance
           # artifacts, but they can silently reintroduce a different nozzle
           # temperature or volumetric cap into a parity reference.
-          PROCESS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
+          python3 - "$PROJECT_SETTINGS" "$PROCESS" <<'PY'
+          import json
+          import sys
+
+          source, output = sys.argv[1:]
+          with open(source, encoding="utf-8") as handle:
+              settings = json.load(handle)
+          if "type" in settings or "from" in settings:
+              raise SystemExit("project_settings fixture must remain an exact project document")
+          settings["type"] = "process"
+          settings["from"] = "user"
+          with open(output, "w", encoding="utf-8") as handle:
+              json.dump(settings, handle, indent=2, sort_keys=True)
+              handle.write("\\n")
+          PY
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference
 
@@ -162,7 +178,23 @@ jobs:
           NEUTRAL_DIR="$GITHUB_WORKSPACE/runtime/profiles/hook-neutralized"
           python3 ci/neutralize_bambu_motion_hooks.py "$SOURCE_MACHINE" "$NEUTRAL_DIR"
           MACHINE="$NEUTRAL_DIR/machine-hooks-neutralized.json"
-          PROCESS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
+          python3 - "$PROJECT_SETTINGS" "$PROCESS" <<'PY'
+          import json
+          import sys
+
+          source, output = sys.argv[1:]
+          with open(source, encoding="utf-8") as handle:
+              settings = json.load(handle)
+          if "type" in settings or "from" in settings:
+              raise SystemExit("project_settings fixture must remain an exact project document")
+          settings["type"] = "process"
+          settings["from"] = "user"
+          with open(output, "w", encoding="utf-8") as handle:
+              json.dump(settings, handle, indent=2, sort_keys=True)
+              handle.write("\\n")
+          PY
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference-hook-neutralized
           for stl in runtime/fixtures/*.stl; do
