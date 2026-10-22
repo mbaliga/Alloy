@@ -11,6 +11,9 @@ sys.path.insert(0, str(ROOT / "ci"))
 
 from validate_g3_reference_transform import (  # noqa: E402
     CONTRACT_PATH,
+    _apply_transform,
+    _compose,
+    _parse_transform,
     load_contract,
     validate_reference_3mf,
     validate_reference_geometry,
@@ -38,7 +41,19 @@ class G3ReferenceTransformTests(unittest.TestCase):
         contract = load_contract()
         self.assertEqual("travel_obstacle", contract["fixture"])
         self.assertEqual("test-only strict G3 comparison input transform", contract["scope"])
-        self.assertEqual(90.0, contract["rotation_degrees"])
+        self.assertEqual(-90.0, contract["rotation_degrees"])
+        self.assertEqual("3MF row-major 4x3 affine matrix with row-vector points",
+                         contract["matrix_convention"])
+
+    def test_3mf_transform_uses_row_vector_semantics(self):
+        transform = _parse_transform("0 -1 0 1 0 0 0 0 1 76 90 0", "fixture")
+        self.assertEqual((76.0, 89.0, 0.0), _apply_transform((1.0, 0.0, 0.0), transform))
+
+    def test_nested_component_translation_is_rotated_by_build_transform(self):
+        build = _parse_transform("0 -1 0 1 0 0 0 0 1 10 10 0", "build-item")
+        component = _parse_transform("1 0 0 0 1 0 0 0 1 1 0 0", "component")
+        effective = _compose(build, component)
+        self.assertEqual((10.0, 9.0, 0.0), _apply_transform((0.0, 0.0, 0.0), effective))
 
     def test_transform_is_only_wired_to_test_evidence(self):
         native_test = (ROOT / "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java").read_text(

@@ -40,8 +40,10 @@ def load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
         raise RuntimeError("G3 transform contract is not bound to travel_obstacle")
     if contract.get("scope") != "test-only strict G3 comparison input transform":
         raise RuntimeError("G3 transform contract must remain test-only")
-    if contract.get("rotation_degrees") != 90.0:
-        raise RuntimeError("native G3 travel_obstacle transform must remain 90 degrees")
+    if contract.get("rotation_degrees") != -90.0:
+        raise RuntimeError("native G3 travel_obstacle transform must match the 3MF row-vector -90-degree rotation")
+    if contract.get("matrix_convention") != "3MF row-major 4x3 affine matrix with row-vector points":
+        raise RuntimeError("G3 transform contract must state the 3MF row-vector matrix convention")
     matrix = contract.get("reference_effective_rotation_matrix")
     if not isinstance(matrix, list) or len(matrix) != 9 or any(
         not isinstance(value, (int, float)) or not math.isfinite(value)
@@ -49,7 +51,7 @@ def load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
     ):
         raise RuntimeError("G3 reference rotation matrix must contain nine finite numbers")
     if any(abs(float(actual) - expected) > 1e-6 for actual, expected in zip(matrix, expected_matrix)):
-        raise RuntimeError("G3 contract matrix must encode a positive 90-degree Z rotation")
+        raise RuntimeError("G3 contract matrix must match the pinned desktop 3MF Z rotation")
     return contract
 
 
@@ -75,12 +77,12 @@ def _compose(
     outer_matrix, outer_translation = outer
     inner_matrix, inner_translation = inner
     matrix = [
-        [sum(outer_matrix[row][k] * inner_matrix[k][column] for k in range(3)) for column in range(3)]
+        [sum(inner_matrix[row][k] * outer_matrix[k][column] for k in range(3)) for column in range(3)]
         for row in range(3)
     ]
     translation = [
-        outer_translation[row] + sum(outer_matrix[row][k] * inner_translation[k] for k in range(3))
-        for row in range(3)
+        outer_translation[column] + sum(inner_translation[row] * outer_matrix[row][column] for row in range(3))
+        for column in range(3)
     ]
     return matrix, translation
 
@@ -159,8 +161,8 @@ def _apply_transform(
 ) -> tuple[float, float, float]:
     matrix, translation = transform
     return tuple(
-        sum(matrix[row][column] * point[column] for column in range(3)) + translation[row]
-        for row in range(3)
+        sum(point[row] * matrix[row][column] for row in range(3)) + translation[column]
+        for column in range(3)
     )
 
 
