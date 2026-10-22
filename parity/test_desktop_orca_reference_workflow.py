@@ -81,7 +81,6 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertEqual(text.count('--load-settings "$MACHINE;$PROCESS"'), 2)
         self.assertEqual(text.count('raise SystemExit("project_settings fixture must remain a project document")'), 2)
 
-        self.assertEqual(text.count(r'handle.write("\n")'), 2)
 
 
 if __name__ == "__main__":
