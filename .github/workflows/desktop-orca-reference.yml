@@ -122,10 +122,9 @@ jobs:
           set -euxo pipefail
           ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
           MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"
-          # Use the checked-in G3 recipe rather than the resolved system
-          # process/filament snapshots. The latter are useful provenance
-          # artifacts, but they can silently reintroduce a different nozzle
-          # temperature or volumetric cap into a parity reference.
+          # Keep the exact Bambu project settings as the source of truth.
+          # Normalize its "from: project" provenance only for Orca CLI; all
+          # print-setting values remain unchanged.
           PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
           PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
           python3 - "$PROJECT_SETTINGS" "$PROCESS" <<'PY'
