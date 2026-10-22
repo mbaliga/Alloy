@@ -4,7 +4,7 @@ set -euo pipefail
 
 output_dir=path-b-template-probe
 output_dir=${ALLOY_TEMPLATE_PROBE_OUTPUT_DIR:-$output_dir}
-device_output=/sdcard/Android/data/com.mbaliga.alloy/files/alloy-bambu-template-probe
+device_output=/sdcard/Android/media/com.mbaliga.alloy/alloy-bambu-template-probe
 finalized=0
 
 collect_diagnostics() {

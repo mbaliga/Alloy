@@ -144,6 +144,17 @@ class MachineTemplateProbeScriptTests(unittest.TestCase):
             json.dumps(counterfactual_manifest), encoding="utf-8"
         )
 
+    def test_probe_evidence_uses_adb_readable_android_media_directory(self):
+        script = SCRIPT.read_text(encoding="utf-8")
+        test_source = (ROOT / "app/src/androidTest/java/com/mbaliga/alloy/BambuMachineTemplateProbeTest.java").read_text(
+            encoding="utf-8"
+        )
+        expected = "/sdcard/Android/media/com.mbaliga.alloy/alloy-bambu-template-probe"
+        self.assertIn(expected, script)
+        self.assertIn("getExternalMediaDirs()", test_source)
+        self.assertIn('"alloy-bambu-template-probe"', test_source)
+        self.assertNotIn("/sdcard/Android/data/com.mbaliga.alloy/files/alloy-bambu-template-probe", script)
+
     def run_probe(self, mode):
         env = os.environ.copy()
         env.update({
