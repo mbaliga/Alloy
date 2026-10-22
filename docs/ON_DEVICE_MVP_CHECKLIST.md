@@ -4,9 +4,10 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Latest installable software-QA package:** PR head
-[`c79397b`](https://github.com/mbaliga/Alloy/commit/c79397bf8aa6c2d466ea0b594c593070fc0fe2ef);
-app/runtime source checkpoint remains
+**Latest installable software-QA package:** tested code head
+[`d763b1c`](https://github.com/mbaliga/Alloy/commit/d763b1cf87326edd0e2042717d05df1efc30c24e);
+the current PR head [`2e96802`](https://github.com/mbaliga/Alloy/commit/2e96802c884ac015cffb2d9e5e5d1232b7280d43)
+contains documentation-only updates and its CI rerun is in progress. App/runtime source checkpoint remains
 [`411bc34`](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9).
 Exact-head Android acceptance [run 39736852494](https://github.com/mbaliga/Alloy/actions/runs/39736852494)
 passed. CI QA APK: [artifact 12408246894](https://github.com/mbaliga/Alloy/actions/runs/39736852494/artifacts/12408246894),
