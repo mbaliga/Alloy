@@ -4,25 +4,21 @@ This is a verification protocol, not a print-readiness claim. A CI pass proves
 only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
-**Latest installable software-QA package:** app-source checkpoint
-`411bc3499d4ef864347e68e6b5f0df14a9544cc9`. Exact-PR-head Android acceptance
-run [39585653255](https://github.com/mbaliga/Alloy/actions/runs/39585653255)
-passed 210 tests, with 0 failures and 15 native-dependent skips. The CI-signed
-QA APK is artifact [12340881375](https://github.com/mbaliga/Alloy/actions/runs/39585653255/artifacts/12340881375);
-archive SHA-256: `900eef12e80a9e30d275ab0826918af95a620f8627d0991fb523780fa26acb64`.
-This is software QA only, not a production release. Current PR head
-`167225e` is documentation-only after the GLES Activity-launch synchronization
-fix; app runtime remains unchanged from 411.
+**Latest installable software-QA package:** PR head
+[`d763b1c`](https://github.com/mbaliga/Alloy/commit/d763b1cf87326edd0e2042717d05df1efc30c24e);
+app/runtime source checkpoint remains
+[`411bc34`](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9).
+Exact-head Android acceptance [run 39736852494](https://github.com/mbaliga/Alloy/actions/runs/39736852494)
+passed. CI QA APK: [artifact 12408246894](https://github.com/mbaliga/Alloy/actions/runs/39736852494/artifacts/12408246894),
+archive SHA-256 `7f5f1e3e799aa789b82af6dc90354b3c4ca778cf5f08d63470c8529aef0a5232`.
+This is software QA only, not a production release.
 
-The exact-PR-head native workflow
-[39585653322](https://github.com/mbaliga/Alloy/actions/runs/39585653322)
-is still building native dependencies. An earlier workflow for the same app
-runtime [39578080512](https://github.com/mbaliga/Alloy/actions/runs/39578080512)
-built Alloy and is running API-35 native instrumentation. G3 parity and the
-isolated physical-pilot stages have not run on this checkpoint yet. The last
-completed exact-source G3 comparison failed the unchanged 2% gate; see
-[`GATE_STATUS.md`](GATE_STATUS.md). Do not infer native print qualification
-from Android acceptance.
+The corrected exact-head native workflow [39736852448](https://github.com/mbaliga/Alloy/actions/runs/39736852448)
+is building native dependencies. The exact-head strict G3 comparison has not
+completed; the last completed comparison used the superseded transform
+interpretation and is not valid evidence for this corrected candidate. See
+[`GATE_STATUS.md`](GATE_STATUS.md). Do not infer native slicing or print
+qualification from Android acceptance.
 
 **Native-engine QA package for import/slice diagnostics:** artifact
 [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410),
@@ -34,14 +30,13 @@ extracted `app-release.apk` SHA-256:
 and layer-review diagnostics. Native instrumentation passed, but strict G3
 failed; do not print, share, or send its generated job to Bambu Handy.
 
-**Current native-engine candidate:** APK artifact
+**Previous native-engine diagnostic candidate:** APK artifact
 [12337998464](https://github.com/mbaliga/Alloy/actions/runs/39578080512/artifacts/12337998464),
 archive SHA-256
 `6db76e1d2eb590ec23aad677dbf22d14b52dbaf551c30e0aaecb5064c6e58a47`
-(60,064,192-byte archive). Native APK build completed, but API-35
-instrumentation is still running and exact-head G3 has not run. This candidate
-may be used for model-import/arrangement/slicing diagnostics only. Do not print,
-share, or send any generated job to Bambu Handy.
+(60,064,192-byte archive). It predates the current corrected test contract;
+use only for import/arrangement/slicing diagnostics. Do not print, share, or
+send generated jobs to Bambu Handy.
 
 **Latest published app-runtime checkpoint:** [`411bc34`](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9)
 clarifies that estimates exclude printer startup purge/cleaning. The preceding
@@ -60,23 +55,17 @@ production signing remain unverified.
 
 ## 1. Install the matching artifacts
 
-For phone-only software QA, use the CI-signed ordinary APK from the
-app-source-equivalent checkpoint above:
+For phone-only software QA, use the latest CI-signed QA APK above:
 
-- [CI-signed Android QA APK, artifact 12340881375](https://github.com/mbaliga/Alloy/actions/runs/39585653255/artifacts/12340881375).
+- [CI-signed Android QA APK, artifact 12408246894](https://github.com/mbaliga/Alloy/actions/runs/39736852494/artifacts/12408246894).
   Verify the downloaded archive SHA-256 is
-  `900eef12e80a9e30d275ab0826918af95a620f8627d0991fb523780fa26acb64`
+  `7f5f1e3e799aa789b82af6dc90354b3c4ca778cf5f08d63470c8529aef0a5232`
   before extraction. Then record the extracted `app-release.apk` SHA-256 on
-  your device. The exact-head JUnit report records 210 passed, 0 failed and 15
-  native-dependent skipped tests. This is the ordinary software-acceptance
-  build, not a production release.
-- Newest app-source native candidate: artifact
-  [12337998464](https://github.com/mbaliga/Alloy/actions/runs/39578080512/artifacts/12337998464).
-  Archive SHA-256:
-  `6db76e1d2eb590ec23aad677dbf22d14b52dbaf551c30e0aaecb5064c6e58a47`.
-  Build is complete, but native instrumentation/G3 are pending. Use only for
-  local import, arrangement, slicing and layer-review diagnostics; never
-  dispatch its G-code.
+  your device. Android acceptance passed at this exact PR head. This is a
+  software-acceptance build, not a production release.
+- Current corrected native candidate: exact-head build [39736852448](https://github.com/mbaliga/Alloy/actions/runs/39736852448)
+  is still running; no matching APK or G3 artifact is available yet. Do not
+  substitute an older native APK for this run or dispatch its G-code.
 - Previously completed native diagnostic APK:
   artifact [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410).
   Extracted `app-release.apk` SHA-256:
