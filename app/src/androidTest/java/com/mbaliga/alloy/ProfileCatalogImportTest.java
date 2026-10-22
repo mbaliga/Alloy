@@ -337,6 +337,9 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("9", imported.nativeSettings.get("top_surface_jerk"));
         Assert.assertEquals("9", imported.nativeSettings.get("initial_layer_jerk"));
         Assert.assertEquals("9", imported.nativeSettings.get("travel_jerk"));
+        Assert.assertEquals("Cool Plate", imported.nativeSettings.get("curr_bed_type"));
+        Assert.assertEquals("35", imported.nativeSettings.get("cool_plate_temp"));
+        Assert.assertEquals("35", imported.nativeSettings.get("cool_plate_temp_initial_layer"));
         Assert.assertEquals("400%", imported.nativeSettings.get("infill_anchor"));
         Assert.assertEquals("20", imported.nativeSettings.get("infill_anchor_max"));
         Assert.assertEquals("auto_brim", imported.nativeSettings.get("brim_type"));
@@ -392,6 +395,8 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("initial_layer_jerk = 9"));
             Assert.assertTrue(serialized.contains("travel_jerk = 9"));
             Assert.assertTrue(serialized.contains("enable_arc_fitting = 0"));
+            Assert.assertTrue(serialized.contains("bed_temperature = 35"));
+            Assert.assertTrue(serialized.contains("first_layer_bed_temperature = 35"));
             Assert.assertTrue(serialized.contains("set_other_flow_ratios = 0"));
             Assert.assertTrue(serialized.contains("outer_wall_flow_ratio = 1"));
             Assert.assertTrue(serialized.contains("top_solid_infill_flow_ratio = 1"));
