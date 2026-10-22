@@ -5,7 +5,7 @@ only the software checks that ran; it does not establish slicer parity, physical
 printer safety, Bambu Handy acceptance, or production signing.
 
 **Latest installable software-QA package:** PR head
-[`d763b1c`](https://github.com/mbaliga/Alloy/commit/d763b1cf87326edd0e2042717d05df1efc30c24e);
+[`c79397b`](https://github.com/mbaliga/Alloy/commit/c79397bf8aa6c2d466ea0b594c593070fc0fe2ef);
 app/runtime source checkpoint remains
 [`411bc34`](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9).
 Exact-head Android acceptance [run 39736852494](https://github.com/mbaliga/Alloy/actions/runs/39736852494)
@@ -14,11 +14,11 @@ archive SHA-256 `7f5f1e3e799aa789b82af6dc90354b3c4ca778cf5f08d63470c8529aef0a523
 This is software QA only, not a production release.
 
 The corrected exact-head native workflow [39736852448](https://github.com/mbaliga/Alloy/actions/runs/39736852448)
-is building native dependencies. The exact-head strict G3 comparison has not
-completed; the last completed comparison used the superseded transform
-interpretation and is not valid evidence for this corrected candidate. See
-[`GATE_STATUS.md`](GATE_STATUS.md). Do not infer native slicing or print
-qualification from Android acceptance.
+completed native instrumentation and exact-head G3 export. Strict G3 failed
+the unchanged 2% limit (see [`GATE_STATUS.md`](GATE_STATUS.md)); no artifact
+from this candidate is qualified to print, share, or import into Bambu Handy.
+Use the Android QA package for non-print software checks only. Do not infer
+native slicing or print qualification from Android acceptance.
 
 **Native-engine QA package for import/slice diagnostics:** artifact
 [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410),
@@ -63,9 +63,11 @@ For phone-only software QA, use the latest CI-signed QA APK above:
   before extraction. Then record the extracted `app-release.apk` SHA-256 on
   your device. Android acceptance passed at this exact PR head. This is a
   software-acceptance build, not a production release.
-- Current corrected native candidate: exact-head build [39736852448](https://github.com/mbaliga/Alloy/actions/runs/39736852448)
-  is still running; no matching APK or G3 artifact is available yet. Do not
-  substitute an older native APK for this run or dispatch its G-code.
+- Current corrected native diagnostic APK: artifact
+  [12409607852](https://github.com/mbaliga/Alloy/actions/runs/39736852448/artifacts/12409607852).
+  Native instrumentation passed, but strict G3 failed. Use it only for
+  model-import, plate-arrangement, slicing, and layer-review diagnostics. Do
+  not print, send, export for Bambu Handy, or share any generated job.
 - Previously completed native diagnostic APK:
   artifact [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410).
   Extracted `app-release.apk` SHA-256:

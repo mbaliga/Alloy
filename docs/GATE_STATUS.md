@@ -3,6 +3,18 @@ Total output lines: 3624
 
 # Latest exact-head status — 2026-10-22
 
+## Corrected exact-head run — d763b1c — native instrumentation PASS, strict G3 FAIL / NO-GO
+
+The current PR head is [c79397bf](https://github.com/mbaliga/Alloy/commit/c79397bf8aa6c2d466ea0b594c593070fc0fe2ef); its parent [d763b1c](https://github.com/mbaliga/Alloy/commit/d763b1cf87326edd0e2042717d05df1efc30c24e) contains the latest tested transform contract. App/runtime remains at `411bc3499d4ef864347e68e6b5f0df14a9544cc9`; this is verification-only, with no production slicing, G-code, printer-send, or threshold change.
+
+Android acceptance [39736852494](https://github.com/mbaliga/Alloy/actions/runs/39736852494) passed; software-QA APK [12408246894](https://github.com/mbaliga/Alloy/actions/runs/39736852494/artifacts/12408246894), archive SHA-256 `7f5f1e3e799aa789b82af6dc90354b3c4ca778cf5f08d63470c8529aef0a5232`. Native build and API-35 instrumentation, G3 export, and evidence validation completed in [39736852448](https://github.com/mbaliga/Alloy/actions/runs/39736852448). The exact-head strict comparator **failed** at the unchanged 2% limit; report bundle [12411345286](https://github.com/mbaliga/Alloy/actions/runs/39736852448/artifacts/12411345286). All 63 profile identity fields pass on all fixtures. Time deltas remain cube 14.31% (1775/1521 s), supported overhang 17.77% (2048/1684 s), thin wall 13.23% (1330/1154 s), and travel obstacle 9.43% (3393/3073 s). Filament length deltas: 2.09%, 2.59%, 2.65%, and 1.17%; corresponding mass deltas: 2.03%, 2.47%, 2.58%, and 1.29%. Therefore **no slicing artifact from this candidate is qualified for print, direct send, or Bambu Handy**.
+
+The correction resolves the 3MF row-vector transform convention and makes the retained desktop mesh equal the checked-in STL after transform/plate-translation normalization. Focused tests pass 9/9; full parity tooling passes 203/203. Deposited path totals on the travel-obstacle fixture now match by feature, but travel routing and estimate still fail. Diagnostic report indicates 83,655 vs 113,666 mm total XYZ motion and 70.8 vs 188.2 s nominal travel time; these are G-code diagnostics, not firmware execution measurements. A hook-neutralized counterfactual removes large conditional desktop travel but is explicitly non-production and does not establish printer behavior. The default BBL-mode toggle and template-only probes are also diagnostic, not fixes. Do not copy Bambu macros or adjust planner/estimator/tolerance based on these probes alone.
+
+Latest software QA package is safe for UI/import/planning workflow verification only. Physical A1 Mini pilot, Bambu Handy acceptance, A1/P1S runtime qualification, full source/license provenance review, production signing, and release approval remain open. See the checklist below; it must not be used to print or share a job.
+
+---
+
 ## Native G3 follow-up — exact parent head e6d0dd1
 
 The tested parent was [e6d0dd16ca9f2009d8e2b4694ff18e4469c93ffc](https://github.com/mbaliga/Alloy/commit/e6d0dd16ca9f2009d8e2b4694ff18e4469c93ffc). Android acceptance passed in [run 39725057362](https://github.com/mbaliga/Alloy/actions/runs/39725057362); native API-35 instrumentation and all four native G3 exports completed in [run 39725057371](https://github.com/mbaliga/Alloy/actions/runs/39725057371). The exact-head strict comparator **failed**; the 2% tolerance is unchanged. Its report is [artifact 12404627846](https://github.com/mbaliga/Alloy/actions/runs/39725057371/artifacts/12404627846), ZIP SHA-256 `706093c3184343bbe9bd5d91f5c594871fb99340e7163b4e833655eb50b005f5`.
