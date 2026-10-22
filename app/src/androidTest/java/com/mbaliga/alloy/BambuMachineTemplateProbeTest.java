@@ -51,8 +51,7 @@ public final class BambuMachineTemplateProbeTest {
             profile = ProfileCatalog.importBambu(ProfileCatalog.loadDefault(app.getAssets()),
                     new byte[][]{ProfileCatalog.readProfileDocument(input)});
         }
-        File directory = new File(app.getExternalFilesDir(null), "alloy-bambu-template-probe");
-        if (!directory.exists()) Assert.assertTrue(directory.mkdirs());
+        File directory = probeRoot(app);
         File manifest = new File(directory, "manifest.json");
         if (manifest.exists()) Assert.assertTrue("stale success manifest must be removed", manifest.delete());
         String[][] fixtures = {
@@ -138,7 +137,7 @@ public final class BambuMachineTemplateProbeTest {
             profile = ProfileCatalog.importBambu(ProfileCatalog.loadDefault(app.getAssets()),
                     new byte[][]{profileBytes});
         }
-        File root = new File(app.getExternalFilesDir(null), "alloy-bambu-template-probe");
+        File root = probeRoot(app);
         File directory = new File(root, "counterfactual-bbl");
         if (!directory.exists()) Assert.assertTrue(directory.mkdirs());
         File manifest = new File(directory, "manifest.json");
@@ -222,7 +221,7 @@ public final class BambuMachineTemplateProbeTest {
             profile = ProfileCatalog.importBambu(ProfileCatalog.loadDefault(app.getAssets()),
                     new byte[][]{ProfileCatalog.readProfileDocument(input)});
         }
-        File root = new File(app.getExternalFilesDir(null), "alloy-bambu-template-probe");
+        File root = probeRoot(app);
         File directory = new File(root, "end-only");
         if (!directory.exists()) Assert.assertTrue(directory.mkdirs());
         File manifest = new File(root, "end-only-manifest.json");
@@ -283,6 +282,21 @@ public final class BambuMachineTemplateProbeTest {
                 .put("template_sha256", bundle.getJSONObject("sha256").getString("machine_end_gcode"))
                 .put("fixtures", results);
         Files.write(manifest.toPath(), evidence.toString(2).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Keep diagnostic G-code in Android's app-owned shared media directory.
+     * Android 11+ prevents adb pull from Android/data, which otherwise hides
+     * probe evidence even when instrumentation rendered it successfully.
+     */
+    private static File probeRoot(Context app) throws Exception {
+        File[] mediaDirs = app.getExternalMediaDirs();
+        if (mediaDirs == null || mediaDirs.length == 0 || mediaDirs[0] == null)
+            throw new java.io.IOException("Shared external media storage is unavailable for the diagnostic probe");
+        File directory = new File(mediaDirs[0], "alloy-bambu-template-probe");
+        if (!directory.exists() && !directory.mkdirs())
+            throw new java.io.IOException("Could not create the diagnostic probe directory");
+        return directory;
     }
 
     private static JSONObject loadBundle() throws Exception {
