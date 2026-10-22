@@ -391,6 +391,10 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("top_surface_jerk = 9"));
             Assert.assertTrue(serialized.contains("initial_layer_jerk = 9"));
             Assert.assertTrue(serialized.contains("travel_jerk = 9"));
+            Assert.assertTrue(serialized.contains("enable_arc_fitting = 0"));
+            Assert.assertTrue(serialized.contains("set_other_flow_ratios = 0"));
+            Assert.assertTrue(serialized.contains("outer_wall_flow_ratio = 1"));
+            Assert.assertTrue(serialized.contains("top_solid_infill_flow_ratio = 1"));
             Assert.assertTrue(serialized.contains("infill_anchor = 400%"));
             Assert.assertTrue(serialized.contains("infill_anchor_max = 20"));
             Assert.assertTrue(serialized.contains("retract_length = 0.8"));
@@ -473,6 +477,7 @@ public final class ProfileCatalogImportTest {
                         + "\"line_width\":\"0.4\",\"outer_wall_line_width\":\"0.42\","
                         + "\"inner_wall_line_width\":\"0.45\",\"internal_solid_infill_line_width\":\"0.42\","
                         + "\"top_surface_line_width\":\"0.42\",\"initial_layer_line_width\":\"0.5\","
+                        + "\"enable_arc_fitting\":\"0\","
                         + "\"filament_flow_ratio\":\"0.97\",\"print_flow_ratio\":\"1.02\","
                         + "\"initial_layer_flow_ratio\":\"1.03\",\"top_solid_infill_flow_ratio\":\"0.98\","
                         + "\"bottom_solid_infill_flow_ratio\":\"1.01\","
@@ -495,6 +500,7 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("0.42", imported.nativeSettings.get("solid_infill_extrusion_width"));
         Assert.assertEquals("0.42", imported.nativeSettings.get("top_infill_extrusion_width"));
         Assert.assertEquals("0.5", imported.nativeSettings.get("first_layer_extrusion_width"));
+        Assert.assertEquals("disabled", imported.nativeSettings.get("arc_fitting"));
         Assert.assertEquals(0.97f, imported.flowRatio, 0.001f);
         Assert.assertEquals("1.02", imported.nativeSettings.get("print_flow_ratio"));
         Assert.assertEquals("1.03", imported.nativeSettings.get("first_layer_flow_ratio"));
@@ -528,6 +534,7 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("top_solid_infill_flow_ratio = 0.98"));
             Assert.assertTrue(serialized.contains("bottom_solid_infill_flow_ratio = 1.01"));
             Assert.assertTrue(serialized.contains("set_other_flow_ratios = 1"));
+            Assert.assertTrue(serialized.contains("enable_arc_fitting = 0"));
             Assert.assertTrue(serialized.contains("bridge_flow = 1.05"));
             Assert.assertTrue(serialized.contains("bridge_no_support = 1"));
             Assert.assertTrue(serialized.contains("gap_fill_speed = 30"));
