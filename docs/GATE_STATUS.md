@@ -1,3 +1,15 @@
+# Latest exact-head status — 2026-10-22
+
+Current PR head: [26153a7ec757681098bd78ff9f8dff18a52f1189](https://github.com/mbaliga/Alloy/commit/26153a7ec757681098bd78ff9f8dff18a52f1189). The application/runtime source checkpoint remains [411bc3499d4ef864347e68e6b5f0df14a9544cc9](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9); recent changes are test, diagnostics, and workflow only.
+
+- Android acceptance on predecessor head [fe7100117d44a225352d396e76b6344ec8d1d04d](https://github.com/mbaliga/Alloy/commit/fe7100117d44a225352d396e76b6344ec8d1d04d) passed in [run 39716316437](https://github.com/mbaliga/Alloy/actions/runs/39716316437). QA APK artifact [12399842993](https://github.com/mbaliga/Alloy/actions/runs/39716316437/artifacts/12399842993), archive SHA-256 `2af46d5d7261624bbd1aa7a13d0744f67fdb34dfe48b038da70da23670b43278`; software-QA only.
+- The native engine built on [run 39716316487](https://github.com/mbaliga/Alloy/actions/runs/39716316487), but its API-35 emulator failed to install the app because Android reported `Can't find service: package`. The instrumentation XML records **0 tests executed**; this is infrastructure failure, not an assertion from the test-only transform change. Report artifact [12401729423](https://github.com/mbaliga/Alloy/actions/runs/39716316487/artifacts/12401729423), archive SHA-256 `a7d81523443d93f544820b0532f767d2e0f28f73cdafcdda49e6a85ad377bbea`.
+- Consequently, exact-head G3 export and strict comparison did not run on `fe71001`. The previous valid G3 evidence remains the strict **FAIL** recorded below; no print/Handy qualification is granted.
+- Commit `26153a7` makes G3 export and comparison execute with `always()` after earlier emulator failures, without changing the 2% gate. Exact-head CI for this commit is in progress; until new G3 evidence is produced, G3 remains **unverified at this head** and print/share remain **NO-GO**.
+- The travel-obstacle orientation correction is test-only (+90°) and fail-closed against the desktop 3MF transform. It does not alter production model transforms. The desktop reference, profile audits, parity tooling, and Android acceptance checks passed on predecessor head `fe71001`; the local transform-contract tests passed 5/5 and full parity tests 199/199.
+
+Direct send, Bambu Handy handoff, physical A1 Mini acceptance, A1/P1S runtime qualification, production signing, and release approval remain open.
+
 # Exact-head Android/native result — 2026-10-22
 
 Verified PR head before this documentation/tooling update: [ecab2f405f9cf9282787b371eac246a3f0cf9fb3](https://github.com/mbaliga/Alloy/commit/ecab2f405f9cf9282787b371eac246a3f0cf9fb3). Application runtime is unchanged from [411bc3499d4ef864347e68e6b5f0df14a9544cc9](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9).
