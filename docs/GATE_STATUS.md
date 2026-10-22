@@ -1016,3 +1016,51 @@ Application-source checkpoint `63f53724775d4f5e7a2641f7a95b3dadbf379cf1` changes
 The ordinary Android workflow [39420155791](https://github.com/mbaliga/Alloy/actions/runs/39420155791) passed with 220 reported tests, zero failures, and 14 native-dependent skips. The CI QA APK is artifact [12264346365](https://github.com/mbaliga/Alloy/actions/runs/39420155791/artifacts/12264346365), archive SHA-256 `eb5b0cc70919e11784324bc44fa4dcfbf858860632f18ccc7d6dc8b7c4c40c48`. It is for software QA only, not a production release or print artifact.
 
 At the last check, exact-source native run [39420155810](https://github.com/mbaliga/Alloy/actions/runs/39420155810) had passed native dependency compilation and was building the optional native engine. No fresh G3 comparison or physical-pilot result was available yet. The latest completed strict G3 comparison remains **NO-GO** at the existing tolerance; direct-send, Bambu Handy, physical-print, and production-release qualification remain closed. Subsequent PR commits update documentation only; the application/runtime source is unchanged from checkpoint `63f5372`.
+
+
+### 2026-10-22 exact-head G3 result and native test diagnosis
+
+At PR head `4a99f8f555efd601cd20b5190bfac97cd6011dc2`, desktop Orca reference
+run [39778592065](https://github.com/mbaliga/Alloy/actions/runs/39778592065),
+Android acceptance
+[39778592231](https://github.com/mbaliga/Alloy/actions/runs/39778592231),
+Bambu profile compatibility
+[39778592204](https://github.com/mbaliga/Alloy/actions/runs/39778592204),
+official source snapshot
+[39778592290](https://github.com/mbaliga/Alloy/actions/runs/39778592290),
+and parity tooling
+[39778592332](https://github.com/mbaliga/Alloy/actions/runs/39778592332)
+passed. The software-QA APK is artifact
+[12425954059](https://github.com/mbaliga/Alloy/actions/runs/39778592231/artifacts/12425954059),
+archive SHA-256
+`5c957ade52596529cfe62aa039079526319f240414a31d3bda86eabe70807c83`.
+It is not a native-slicer qualification or a print artifact.
+
+Native run
+[39778592179](https://github.com/mbaliga/Alloy/actions/runs/39778592179)
+built the native engine and exported exact-head G3 evidence, but its overall
+result is **FAIL**. Strict G3 report artifact
+[12441006405](https://github.com/mbaliga/Alloy/actions/runs/39778592179/artifacts/12441006405)
+kept the 2% tolerance unchanged. Print-time deltas: cube 14.31% (1,521 vs
+1,775 s), supported overhang 17.58% (1,688 vs 2,048 s), thin wall 13.23%
+(1,154 vs 1,330 s), and travel obstacle 9.43% (3,073 vs 3,393 s). Filament
+length and mass also fail for the first three fixtures (2.03–2.65%); travel
+obstacle is within those two limits. The detailed native G-code evidence is
+artifact [12441475071](https://github.com/mbaliga/Alloy/actions/runs/39778592179/artifacts/12441475071).
+Profile identity passed; toolpath/time parity did not. No native output from
+this run is qualified to print or share to Bambu Handy.
+
+Native instrumentation also failed: 8 tests timed out, several while slicing.
+The independent Bambu-template rendering checks timed out; their diagnostic
+pull also reported Android external-storage permission denied. A separate
+counterfactual identity assertion exposed a stale expected digest: the exact
+pinned project-settings fixture hashes to
+`6ea072f761a3a50dd33caafe5a6c44b0da4011698c97d34e20011849b231fd18`, not the
+old `d638086d...` value. Commit
+[be3feaf](https://github.com/mbaliga/Alloy/commit/be3feaf9a93889554fd5bc19cfca7bf7fdd7afab)
+updates that test constant. It has not yet been validated by an exact-head
+instrumentation rerun. The corrected bed-temperature identity mapping remains
+a comparator fix only; it does not resolve the actual G3 path/time differences.
+
+Direct send, Handy handoff, physical printing, and production release therefore
+remain locked. Do not use these artifacts to print or send jobs.
