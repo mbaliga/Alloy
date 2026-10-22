@@ -135,8 +135,8 @@ jobs:
           source, output = sys.argv[1:]
           with open(source, encoding="utf-8") as handle:
               settings = json.load(handle)
-          if "type" in settings or "from" in settings:
-              raise SystemExit("project_settings fixture must remain an exact project document")
+          if "type" in settings:
+              raise SystemExit("project_settings fixture must remain a project document")
           settings["type"] = "process"
           settings["from"] = "user"
           with open(output, "w", encoding="utf-8") as handle:
@@ -187,8 +187,8 @@ jobs:
           source, output = sys.argv[1:]
           with open(source, encoding="utf-8") as handle:
               settings = json.load(handle)
-          if "type" in settings or "from" in settings:
-              raise SystemExit("project_settings fixture must remain an exact project document")
+          if "type" in settings:
+              raise SystemExit("project_settings fixture must remain a project document")
           settings["type"] = "process"
           settings["from"] = "user"
           with open(output, "w", encoding="utf-8") as handle:

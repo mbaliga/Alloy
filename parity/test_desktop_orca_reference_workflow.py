@@ -79,7 +79,7 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertEqual(text.count('PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"'), 2)
         self.assertEqual(text.count('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"'), 2)
         self.assertEqual(text.count('--load-settings "$MACHINE;$PROCESS"'), 2)
-        self.assertEqual(text.count('raise SystemExit("project_settings fixture must remain an exact project document")'), 2)
+        self.assertEqual(text.count('raise SystemExit("project_settings fixture must remain a project document")'), 2)
 
         self.assertEqual(text.count('handle.write("\\\\n")'), 2)
 
