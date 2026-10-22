@@ -9,6 +9,8 @@ on:
       - 'ci/neutralize_bambu_motion_hooks.py'
       - 'ci/validate_release_readiness.py'
       - 'ci/validate_release_wiring.py'
+      - 'ci/validate_g3_reference_transform.py'
+      - 'app/src/androidTest/assets/profiles/g3-travel-obstacle-transform.json'
       - 'release/production-readiness.template.json'
       - 'docs/RELEASE.md'
       - '.github/workflows/parity-tools.yml'
@@ -19,6 +21,8 @@ on:
       - 'ci/neutralize_bambu_motion_hooks.py'
       - 'ci/validate_release_readiness.py'
       - 'ci/validate_release_wiring.py'
+      - 'ci/validate_g3_reference_transform.py'
+      - 'app/src/androidTest/assets/profiles/g3-travel-obstacle-transform.json'
       - 'release/production-readiness.template.json'
       - 'docs/RELEASE.md'
       - '.github/workflows/parity-tools.yml'
@@ -38,7 +42,10 @@ jobs:
       - name: Compile Python tools
         run: |
           python3 -m py_compile parity/*.py
-          python3 -m py_compile ci/compare_hook_neutralized_g3.py ci/neutralize_bambu_motion_hooks.py
+          python3 -m py_compile ci/compare_g3_artifacts.py ci/compare_hook_neutralized_g3.py ci/neutralize_bambu_motion_hooks.py ci/validate_g3_reference_transform.py
+
+      - name: Run G3 reference transform contract tests
+        run: python3 -m unittest -v parity/test_g3_reference_transform.py
 
       - name: Run hook-neutralized counterfactual diagnostic tests
         run: |

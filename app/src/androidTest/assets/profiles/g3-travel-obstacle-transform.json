@@ -1,0 +1,11 @@
+{
+  "fixture": "travel_obstacle",
+  "scope": "test-only strict G3 comparison input transform",
+  "rotation_degrees": 90.0,
+  "reference_effective_rotation_matrix": [
+    0.0, -1.0, 0.0,
+    1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0
+  ],
+  "translation_policy": "desktop placement translation is intentionally canceled by native bed-centering"
+}

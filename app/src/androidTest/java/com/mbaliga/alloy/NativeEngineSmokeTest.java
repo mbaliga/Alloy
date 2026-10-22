@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith;
 
 import ru.ytkab0bp.slicebeam.slic3r.Native;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +24,28 @@ import java.nio.file.Files;
 /** End-to-end on-device proof for the optional arm64 native slice path. */
 @RunWith(AndroidJUnit4.class)
 public final class NativeEngineSmokeTest {
+    private static final String G3_TRAVEL_OBSTACLE_TRANSFORM = "profiles/g3-travel-obstacle-transform.json";
+
+    @Test
+    public void g3ReferenceTransformRotatesOnlyTheTravelObstacleComparisonFixture() throws Exception {
+        Context target = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        MeshModel cube;
+        MeshModel obstacle;
+        try (InputStream input = target.getAssets().open("models/box-20mm.stl")) {
+            cube = MeshModel.read("box-20mm.stl", input);
+        }
+        try (InputStream input = target.getAssets().open("models/travel_obstacle.stl")) {
+            obstacle = MeshModel.read("travel_obstacle.stl", input);
+        }
+
+        Assert.assertSame("ordinary G3 fixtures keep their original orientation", cube,
+                applyG3ReferenceTransform("box-20mm.stl", cube));
+        MeshModel rotated = applyG3ReferenceTransform("travel_obstacle.stl", obstacle);
+        Assert.assertNotSame("only the G3 comparison copy is transformed", obstacle, rotated);
+        Assert.assertEquals(obstacle.maxY - obstacle.minY, rotated.maxX - rotated.minX, 0.001f);
+        Assert.assertEquals(obstacle.maxX - obstacle.minX, rotated.maxY - rotated.minY, 0.001f);
+    }
+
     @Test
     public void slicesBundledCubeAndStagesValidatedPackage() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
@@ -922,12 +946,36 @@ public final class NativeEngineSmokeTest {
         try (InputStream input = context.getAssets().open("models/" + assetName)) {
             mesh = MeshModel.read(assetName, input);
         }
+        mesh = applyG3ReferenceTransform(assetName, mesh);
         Slicer.Result result = new NativeSlicerEngine(context.getCacheDir(), false)
                 .slice(mesh, config.copy(), null);
         GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
         Assert.assertTrue(safety.summary(), safety.isValid());
         Files.write(new File(evidenceDir, outputName).toPath(),
                 result.gcode.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Applies the desktop G3 arrange rotation to this evidence copy only. */
+    private static MeshModel applyG3ReferenceTransform(String assetName, MeshModel mesh) throws Exception {
+        if (!"travel_obstacle.stl".equals(assetName)) return mesh;
+        Context instrumentationContext = InstrumentationRegistry.getInstrumentation().getContext();
+        JSONObject contract;
+        try (InputStream input = instrumentationContext.getAssets().open(G3_TRAVEL_OBSTACLE_TRANSFORM)) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int count;
+            while ((count = input.read(buffer)) >= 0) {
+                if (count > 0) bytes.write(buffer, 0, count);
+            }
+            contract = new JSONObject(new String(bytes.toByteArray(), StandardCharsets.UTF_8));
+        }
+        Assert.assertEquals("transform contract must stay fixture-specific", "travel_obstacle",
+                contract.getString("fixture"));
+        Assert.assertEquals("transform contract must stay test-only",
+                "test-only strict G3 comparison input transform", contract.getString("scope"));
+        Assert.assertEquals("transform angle must match the pinned desktop 3MF rotation", 90.0,
+                contract.getDouble("rotation_degrees"), 0.0);
+        return mesh.transformed(assetName, 1f, (float) contract.getDouble("rotation_degrees"));
     }
 
     private static void copyAsset(Context context, String assetName, File target) throws Exception {
