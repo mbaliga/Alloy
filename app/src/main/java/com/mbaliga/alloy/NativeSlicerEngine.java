@@ -721,10 +721,17 @@ public final class NativeSlicerEngine implements SlicerEngine {
             startAcceleration = parseFirstNumber(config.nativeSettings.get("default_acceleration"));
         String acceleration = Float.isFinite(startAcceleration) && startAcceleration > 0f
                 ? String.format(Locale.US, "M204 S%.0f\\n", startAcceleration) : "";
+        // The typed profile temperatures describe generic bed values, while
+        // Bambu recipes carry a separate temperature for each plate. Match
+        // the startup block to the same active-plate resolution used by the
+        // native config writer, or a Cool Plate job can silently heat to the
+        // profile's generic Hot Plate temperature.
+        float firstLayerBedTemperature = parseTemperature(
+                selectedBedTemperature(config, true), config.firstLayerBedTemperature);
         return String.format(Locale.US,
                 "; Alloy native start · %s\\n; Alloy template policy: %s\\n%sM140 S%.0f\\nM104 S%.0f\\nM190 S%.0f\\nM109 S%.0f\\nG28\\nG90\\nM83\\nG92 E0\\nM107",
-                config.printer, A1MiniTemplatePolicy.ID, acceleration, config.firstLayerBedTemperature, config.nozzleTemperature,
-                config.firstLayerBedTemperature, config.firstLayerNozzleTemperature);
+                config.printer, A1MiniTemplatePolicy.ID, acceleration, firstLayerBedTemperature, config.nozzleTemperature,
+                firstLayerBedTemperature, config.firstLayerNozzleTemperature);
     }
 
     private static String endGcode(Slicer.Config config) {
