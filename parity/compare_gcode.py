@@ -1176,9 +1176,13 @@ def main() -> None:
         # Keep the import local so the comparator remains usable as a small
         # standalone metrics library in environments that only need G-code.
         from verify_g3_profile import merged_desktop_settings, read_native_settings, verify
+        desktop_gcode, _ = read_gcode(args.desktop, args.plate_member)
+        native_gcode, _ = read_gcode(args.android, args.plate_member)
         profile_identity = verify(
             merged_desktop_settings(args.desktop_profile, args.desktop_profile_overlay),
             read_native_settings(args.native_config),
+            desktop_gcode=desktop_gcode,
+            native_gcode=native_gcode,
         )
     comparison = compare(desktop, android, args.tolerance, profile_identity)
     report = {
