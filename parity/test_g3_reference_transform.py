@@ -13,6 +13,7 @@ from validate_g3_reference_transform import (  # noqa: E402
     CONTRACT_PATH,
     load_contract,
     validate_reference_3mf,
+    validate_reference_geometry,
 )
 
 
@@ -47,6 +48,7 @@ class G3ReferenceTransformTests(unittest.TestCase):
         self.assertIn('if (!"travel_obstacle.stl".equals(assetName)) return mesh;', native_test)
         comparator = (ROOT / "ci/compare_g3_artifacts.py").read_text(encoding="utf-8")
         self.assertIn("validate_reference_3mf(", comparator)
+        self.assertIn("validate_reference_geometry(", comparator)
         self.assertIn("orca-reference\" / \"travel_obstacle\"", comparator)
         workflow = (ROOT / ".github/workflows/parity-tools.yml").read_text(encoding="utf-8")
         self.assertIn("parity/test_g3_reference_transform.py", workflow)
@@ -78,6 +80,61 @@ class G3ReferenceTransformTests(unittest.TestCase):
                 archive.writestr("3D/3dmodel.model", xml)
             with self.assertRaisesRegex(RuntimeError, "one build item"):
                 validate_reference_3mf(reference)
+
+    def make_geometry_archive(self, path: Path, vertices: list[tuple[float, float, float]]) -> None:
+        model = b'''<?xml version="1.0"?>
+<model xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
+ xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06">
+ <resources><object id="2"><components>
+  <component objectid="1" p:path="/3D/Objects/mesh.model" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>
+ </components></object></resources>
+ <build><item objectid="2" transform="0 -1 0 1 0 0 0 0 1 10 10 0"/></build>
+</model>'''
+        vertex_xml = "".join(f'<vertex x="{x}" y="{y}" z="{z}"/>' for x, y, z in vertices)
+        face_xml = "".join(
+            f'<triangle v1="{index}" v2="{index + 1}" v3="{index + 2}"/>'
+            for index in range(0, len(vertices), 3)
+        )
+        mesh = (
+            '<model xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources>'
+            f'<object id="1"><mesh><vertices>{vertex_xml}</vertices><triangles>{face_xml}</triangles></mesh></object>'
+            '</resources></model>'
+        )
+        with ZipFile(path, "w") as archive:
+            archive.writestr("3D/3dmodel.model", model)
+            archive.writestr("3D/Objects/mesh.model", mesh)
+
+    @staticmethod
+    def write_ascii_stl(path: Path, vertices: list[tuple[float, float, float]]) -> None:
+        lines = ["solid fixture"]
+        for index in range(0, len(vertices), 3):
+            lines.extend((" facet normal 0 0 1", "  outer loop"))
+            lines.extend(f"   vertex {x} {y} {z}" for x, y, z in vertices[index:index + 3])
+            lines.extend(("  endloop", " endfacet"))
+        lines.append("endsolid fixture")
+        path.write_text("\n".join(lines), encoding="utf-8")
+
+    def test_reference_mesh_matches_transformed_source_despite_plate_translation(self):
+        vertices = [(0, 0, 0), (2, 0, 0), (0, 1, 0)]
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            reference = directory / "travel_obstacle.gcode.3mf"
+            source = directory / "travel_obstacle.stl"
+            self.make_geometry_archive(reference, vertices)
+            self.write_ascii_stl(source, vertices)
+            validate_reference_geometry(reference, source)
+
+    def test_reference_mesh_mismatch_fails_closed(self):
+        vertices = [(0, 0, 0), (2, 0, 0), (0, 1, 0)]
+        different = [(0, 0, 0), (3, 0, 0), (0, 1, 0)]
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            reference = directory / "travel_obstacle.gcode.3mf"
+            source = directory / "travel_obstacle.stl"
+            self.make_geometry_archive(reference, different)
+            self.write_ascii_stl(source, vertices)
+            with self.assertRaisesRegex(RuntimeError, "does not match the test-rotated bundled STL"):
+                validate_reference_geometry(reference, source)
 
 
 if __name__ == "__main__":
