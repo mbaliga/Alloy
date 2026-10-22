@@ -460,6 +460,12 @@ public final class ProfileCatalog {
             return key;
         }
         switch (key) {
+            case "enable_arc_fitting":
+                // Bambu exports this user choice as a boolean while the
+                // native adapter consumes the bounded Orca enum. Preserve an
+                // explicit project override instead of silently inheriting
+                // the bundled profile's default.
+                return "arc_fitting";
             case "support_type": {
                 // When the provider supplies both keys, support_style is the
                 // more specific value. Avoid making JSON member order change
@@ -553,6 +559,11 @@ public final class ProfileCatalog {
     private static String importedNativeValue(String nativeKey, String sourceKey,
                                               Object raw, Map<String, Object> all) {
         String value = arrayText(raw);
+        if ("arc_fitting".equals(nativeKey) && "enable_arc_fitting".equals(sourceKey)) {
+            String normalized = value.trim().toLowerCase(Locale.US);
+            return "1".equals(normalized) || "true".equals(normalized)
+                    ? "emit_center" : "disabled";
+        }
         if ("fill_pattern".equals(nativeKey) || "top_fill_pattern".equals(nativeKey)
                 || "bottom_fill_pattern".equals(nativeKey)
                 || "internal_solid_infill_pattern".equals(nativeKey)) {

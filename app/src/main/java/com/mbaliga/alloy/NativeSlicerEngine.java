@@ -534,7 +534,12 @@ public final class NativeSlicerEngine implements SlicerEngine {
                 optionalSetting(settings, config.nativeSettings, flowKey, flowKey);
             }
         }
-        if (hasRoleFlowOverrides) setting(settings, "set_other_flow_ratios", "1");
+        // Preserve an explicit Bambu project choice (notably 0 in the
+        // retained A1 Mini G3 project). For custom imports that provide role
+        // ratios but omit the switch, enable them so those overrides are not
+        // silently ignored.
+        if (hasRoleFlowOverrides && !config.nativeSettings.containsKey("set_other_flow_ratios"))
+            setting(settings, "set_other_flow_ratios", "1");
         setting(settings, "extrusion_multiplier", number(config.extrusionMultiplier));
         // Bambu's resolved PLA profile carries the cap on the filament, not
         // on the global object. Preserve that distinction for SliceBeam while
