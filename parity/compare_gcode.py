@@ -699,6 +699,7 @@ def travel_diagnostic(desktop: Metrics, android: Metrics) -> str:
         ranked.append((max(distance_delta, time_delta), key, left, right,
                        distance_delta, time_delta))
     ranked.sort(key=lambda item: (-item[0], item[1]))
+    changed = [row for row in ranked if row[4] > 1e-9 or row[5] > 1e-9]
     group_text = "; ".join(
         f"{key}: Δdistance={distance_delta:.3f}mm "
         f"(desktop/Android {left.get('distance_mm', 0.0):.3f}/"
@@ -707,8 +708,7 @@ def travel_diagnostic(desktop: Metrics, android: Metrics) -> str:
         f"Δnominal_time={time_delta:.3f}s "
         f"(desktop/Android {left.get('nominal_seconds', 0.0):.3f}/"
         f"{right.get('nominal_seconds', 0.0):.3f})"
-        for _, key, left, right, distance_delta, time_delta in ranked[:8]
-        if distance_delta > 1e-9 or time_delta > 1e-9
+        for _, key, left, right, distance_delta, time_delta in changed[:8]
     ) or "no per-layer/feedrate travel delta"
 
     left_segments = desktop.travel_segments
@@ -879,14 +879,14 @@ def per_layer_toolpath_diagnostic(desktop: Metrics, android: Metrics) -> str:
         ranked.append((max(path_delta, e_delta), key, left, right,
                        path_delta, e_delta))
     ranked.sort(key=lambda row: (-row[0], row[1]))
+    changed = [row for row in ranked if row[4] > 1e-9 or row[5] > 1e-9]
     details = "; ".join(
         f"{key}: Δpath={path_delta:.3f}mm "
         f"(desktop/Android {left.get('path_mm', 0.0):.3f}/{right.get('path_mm', 0.0):.3f}), "
         f"ΔE={e_delta:.3f}mm "
         f"(desktop/Android {left.get('positive_e_mm', 0.0):.3f}/{right.get('positive_e_mm', 0.0):.3f}), "
         f"moves={int(left.get('moves', 0))}/{int(right.get('moves', 0))}"
-        for _, key, left, right, path_delta, e_delta in ranked[:12]
-        if path_delta > 1e-9 or e_delta > 1e-9
+        for _, key, left, right, path_delta, e_delta in changed[:12]
     ) or "no per-layer/per-feature deposited-total delta"
     return (
         "diagnostic only; per-layer/per-feature deposited totals are invariant "
