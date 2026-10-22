@@ -694,16 +694,22 @@ def travel_diagnostic(desktop: Metrics, android: Metrics) -> str:
         right = android.travel_by_layer_feedrate.get(key, {})
         left_distance = left.get("distance_mm", 0.0)
         right_distance = right.get("distance_mm", 0.0)
-        ranked.append((abs(left_distance - right_distance), key, left, right))
+        distance_delta = abs(left_distance - right_distance)
+        time_delta = abs(left.get("nominal_seconds", 0.0) - right.get("nominal_seconds", 0.0))
+        ranked.append((max(distance_delta, time_delta), key, left, right,
+                       distance_delta, time_delta))
     ranked.sort(key=lambda item: (-item[0], item[1]))
     group_text = "; ".join(
-        f"{key}: distance_mm={left.get('distance_mm', 0.0):.3f}/"
-        f"{right.get('distance_mm', 0.0):.3f}, "
+        f"{key}: Δdistance={distance_delta:.3f}mm "
+        f"(desktop/Android {left.get('distance_mm', 0.0):.3f}/"
+        f"{right.get('distance_mm', 0.0):.3f}), "
         f"moves={int(left.get('moves', 0))}/{int(right.get('moves', 0))}, "
-        f"nominal_seconds={left.get('nominal_seconds', 0.0):.3f}/"
-        f"{right.get('nominal_seconds', 0.0):.3f}"
-        for _, key, left, right in ranked[:8]
-    ) or "no supported travel segments"
+        f"Δnominal_time={time_delta:.3f}s "
+        f"(desktop/Android {left.get('nominal_seconds', 0.0):.3f}/"
+        f"{right.get('nominal_seconds', 0.0):.3f})"
+        for _, key, left, right, distance_delta, time_delta in ranked[:8]
+        if distance_delta > 1e-9 or time_delta > 1e-9
+    ) or "no per-layer/feedrate travel delta"
 
     left_segments = desktop.travel_segments
     right_segments = android.travel_segments
