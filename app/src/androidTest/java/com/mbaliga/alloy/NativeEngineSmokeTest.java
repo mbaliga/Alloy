@@ -614,7 +614,13 @@ public final class NativeEngineSmokeTest {
         String travelSlope = requestedTravelSlope(arguments);
         if (travelSlope != null) config.nativeSettings.put("travel_slope", travelSlope);
         boolean arcFitting = requestedArcFitting(arguments);
-        if (arcFitting) config.nativeSettings.put("arc_fitting", "emit_center");
+        // The retained desktop G3 project explicitly resolves
+        // enable_arc_fitting=0. Do not let the shipped phone profile's
+        // arc-fitting default leak into the parity fixture; the optional
+        // experiment opts back in without changing production recipes.
+        config.nativeSettings.put("arc_fitting", arcFitting ? "emit_center" : "disabled");
+        Assert.assertEquals("G3 evidence must use the requested desktop arc-fitting mode",
+                arcFitting ? "emit_center" : "disabled", config.nativeSettings.get("arc_fitting"));
         File evidenceDir = new File(context.getExternalFilesDir(null), "alloy-g3-evidence");
         if (!evidenceDir.exists()) Assert.assertTrue(evidenceDir.mkdirs());
         copyAsset(context, "profiles/a1-mini-0.4-pla-basic.json",
