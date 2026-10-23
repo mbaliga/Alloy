@@ -4,8 +4,10 @@ This is a verification protocol, not a print-readiness claim. Passing software
 checks does not establish slicer parity, physical printer safety, Bambu Handy
 acceptance, or production signing.
 
-**Latest installable Android software-QA package:** exact PR head
-[`bd6ab14`](https://github.com/mbaliga/Alloy/commit/bd6ab14afbe92a87d2c598adf5f8dc0987d7c41b).
+**Latest installable Android software-QA package:** tested app-source head
+[`bd6ab14`](https://github.com/mbaliga/Alloy/commit/bd6ab14afbe92a87d2c598adf5f8dc0987d7c41b). The current PR head
+[`9061129`](https://github.com/mbaliga/Alloy/commit/9061129bf21e1e6434748ca1aa294c6f840e0a93)
+adds only this checklist refresh; app source is unchanged.
 Android acceptance [run 39894310373](https://github.com/mbaliga/Alloy/actions/runs/39894310373)
 passed. Download the CI-signed QA APK archive [artifact
 12476638827](https://github.com/mbaliga/Alloy/actions/runs/39894310373/artifacts/12476638827);
@@ -13,10 +15,10 @@ GitHub reports archive SHA-256
 `b3f7d370eedb482a079789a4982b61096d84355c2fd1542b126f52d48827e8a1`.
 This is a software-QA build, not a production release.
 
-On the same PR head, the optional native engine and native instrumentation APK
+On the same tested app-source head, the optional native engine and native instrumentation APK
 compiled successfully. API-35 ARM-translated instrumentation passed; the
 independent pinned-template render and its diagnostic comparison also passed.
-The exact-head native G3 export is currently running in workflow
+Native G3 export for this app-source head is currently running in workflow
 [39894310320](https://github.com/mbaliga/Alloy/actions/runs/39894310320);
 exact-head G3 semantic comparison, isolated pilot build, and pilot evidence have
 not completed. Until those gates pass, do not print, directly send, or hand off
