@@ -1,87 +1,46 @@
 # Alloy on-device MVP verification
 
-This is a verification protocol, not a print-readiness claim. A CI pass proves
-only the software checks that ran; it does not establish slicer parity, physical
-printer safety, Bambu Handy acceptance, or production signing.
+This is a verification protocol, not a print-readiness claim. Passing software
+checks does not establish slicer parity, physical printer safety, Bambu Handy
+acceptance, or production signing.
 
-**Latest installable software-QA package:** tested code head
-[`d763b1c`](https://github.com/mbaliga/Alloy/commit/d763b1cf87326edd0e2042717d05df1efc30c24e);
-the current PR head [`2e96802`](https://github.com/mbaliga/Alloy/commit/2e96802c884ac015cffb2d9e5e5d1232b7280d43)
-contains documentation-only updates and its CI rerun is in progress. App/runtime source checkpoint remains
-[`411bc34`](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9).
-Exact-head Android acceptance [run 39736852494](https://github.com/mbaliga/Alloy/actions/runs/39736852494)
-passed. CI QA APK: [artifact 12408246894](https://github.com/mbaliga/Alloy/actions/runs/39736852494/artifacts/12408246894),
-archive SHA-256 `7f5f1e3e799aa789b82af6dc90354b3c4ca778cf5f08d63470c8529aef0a5232`.
-This is software QA only, not a production release.
+**Latest installable Android software-QA package:** exact PR head
+[`bd6ab14`](https://github.com/mbaliga/Alloy/commit/bd6ab14afbe92a87d2c598adf5f8dc0987d7c41b).
+Android acceptance [run 39894310373](https://github.com/mbaliga/Alloy/actions/runs/39894310373)
+passed. Download the CI-signed QA APK archive [artifact
+12476638827](https://github.com/mbaliga/Alloy/actions/runs/39894310373/artifacts/12476638827);
+GitHub reports archive SHA-256
+`b3f7d370eedb482a079789a4982b61096d84355c2fd1542b126f52d48827e8a1`.
+This is a software-QA build, not a production release.
 
-The corrected exact-head native workflow [39736852448](https://github.com/mbaliga/Alloy/actions/runs/39736852448)
-completed native instrumentation and exact-head G3 export. Strict G3 failed
-the unchanged 2% limit (see [`GATE_STATUS.md`](GATE_STATUS.md)); no artifact
-from this candidate is qualified to print, share, or import into Bambu Handy.
-Use the Android QA package for non-print software checks only. Do not infer
-native slicing or print qualification from Android acceptance.
+On the same PR head, the optional native engine and native instrumentation APK
+compiled successfully. API-35 ARM-translated instrumentation passed; the
+independent pinned-template render and its diagnostic comparison also passed.
+The exact-head native G3 export is currently running in workflow
+[39894310320](https://github.com/mbaliga/Alloy/actions/runs/39894310320);
+exact-head G3 semantic comparison, isolated pilot build, and pilot evidence have
+not completed. Until those gates pass, do not print, directly send, or hand off
+a native-generated job to Bambu Handy. Do not infer qualification from a green
+Android acceptance run.
 
-**Native-engine QA package for import/slice diagnostics:** artifact
-[12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410),
-archive SHA-256
-`d61dcf7e973099a142fa4299cb712719872cb42bfe4b73ed45c51ef27ead70a2`;
-extracted `app-release.apk` SHA-256:
-`d6c20906198e7ca8764646ef32d046376103d5c1d614bd0b8e20687a69373362`
-(about 144 MiB). Use only for real-model import, plate-planning, local-slicing
-and layer-review diagnostics. Native instrumentation passed, but strict G3
-failed; do not print, share, or send its generated job to Bambu Handy.
+**Do not send or print unqualified generated jobs.** Direct-send, external-share,
+physical-printer, and production-release gates remain fail-closed. A1 Mini
+physical acceptance, A1/P1S runtime qualification, real-printer testing,
+Bambu Handy acceptance, production signing, and release approval remain
+unverified.
 
-**Previous native-engine diagnostic candidate:** APK artifact
-[12337998464](https://github.com/mbaliga/Alloy/actions/runs/39578080512/artifacts/12337998464),
-archive SHA-256
-`6db76e1d2eb590ec23aad677dbf22d14b52dbaf551c30e0aaecb5064c6e58a47`
-(60,064,192-byte archive). It predates the current corrected test contract;
-use only for import/arrangement/slicing diagnostics. Do not print, share, or
-send generated jobs to Bambu Handy.
+## 1. Install the matching artifact
 
-**Latest published app-runtime checkpoint:** [`411bc34`](https://github.com/mbaliga/Alloy/commit/411bc3499d4ef864347e68e6b5f0df14a9544cc9)
-clarifies that estimates exclude printer startup purge/cleaning. The preceding
-[`3e2947d`](https://github.com/mbaliga/Alloy/commit/3e2947d1cc29e3f72ae1866565cb1b114ed34b30)
-adds source-pinned A1 PETG Basic / TPU 95A and P1S PETG HF / TPU 95A recipes,
-the three-printer recipe picker, and grade-specific TPU drying guidance.
-Local parity (191 tests) and profile, learning, and Android wiring validators
-pass. Android acceptance and native instrumentation are software evidence
-only; strict G3, G2 provenance, physical printer acceptance, Bambu Handy
-acceptance, production signing, and release approval remain open.
+For phone-only software QA, use the exact-head CI-signed APK above:
 
-**Do not send or print unqualified generated jobs.** Direct-send and
-external-share gates remain fail-closed. A1 Mini physical acceptance, A1/P1S
-runtime qualification, real-printer testing, Bambu Handy acceptance, and
-production signing remain unverified.
-
-## 1. Install the matching artifacts
-
-For phone-only software QA, use the latest CI-signed QA APK above:
-
-- [CI-signed Android QA APK, artifact 12408246894](https://github.com/mbaliga/Alloy/actions/runs/39736852494/artifacts/12408246894).
-  Verify the downloaded archive SHA-256 is
-  `7f5f1e3e799aa789b82af6dc90354b3c4ca778cf5f08d63470c8529aef0a5232`
-  before extraction. Then record the extracted `app-release.apk` SHA-256 on
-  your device. Android acceptance passed at this exact PR head. This is a
-  software-acceptance build, not a production release.
-- Current corrected native diagnostic APK: artifact
-  [12409607852](https://github.com/mbaliga/Alloy/actions/runs/39736852448/artifacts/12409607852).
-  Native instrumentation passed, but strict G3 failed. Use it only for
-  model-import, plate-arrangement, slicing, and layer-review diagnostics. Do
-  not print, send, export for Bambu Handy, or share any generated job.
-- Previously completed native diagnostic APK:
-  artifact [12332570410](https://github.com/mbaliga/Alloy/actions/runs/39562063843/artifacts/12332570410).
-  Extracted `app-release.apk` SHA-256:
-  `d6c20906198e7ca8764646ef32d046376103d5c1d614bd0b8e20687a69373362`.
-  It passed API-35 native instrumentation but failed strict G3; use only for
-  local diagnostics and never dispatch its G-code.
-
-Before installing, verify the artifact identity and archive digest, and retain
-the extracted APK digest. This software QA artifact is not a production
-release and does not include a qualified native-slicing path. Native CI APKs
-are available for engineering diagnostics, but the dedicated physical-pilot
-build was skipped after G3 failed. Do not send generated packages to the
-printer or Bambu Handy while qualification is incomplete.
+- Download [Android QA APK archive, artifact 12476638827](https://github.com/mbaliga/Alloy/actions/runs/39894310373/artifacts/12476638827).
+  Verify the archive SHA-256 is
+  `b3f7d370eedb482a079789a4982b61096d84355c2fd1542b126f52d48827e8a1`
+  before extraction. Install the extracted `app-release.apk` for software
+  checks only; record its SHA-256 and the phone/Android version with results.
+- This ordinary Android acceptance APK is not a production release and does
+  not authorize printing. Native-engine artifacts must remain diagnostic-only
+  until exact-head native G3, isolated pilot, and physical A1 Mini gates pass.
 
 ## 1a. Phone navigation and visual system
 
