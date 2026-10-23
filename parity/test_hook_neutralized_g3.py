@@ -103,9 +103,6 @@ class HookNeutralizedG3Tests(unittest.TestCase):
             ), encoding="utf-8")
             with self.assertRaises(ValueError):
                 _native_input(native)
-            native.write_text(empty_attestations + "M971 S11 C11 O0\n", encoding="utf-8")
-            with self.assertRaises(ValueError):
-                _native_input(native)
 
     def test_emits_non_gating_report_for_four_matched_fixtures(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -160,31 +157,36 @@ class HookNeutralizedG3Tests(unittest.TestCase):
             for value in neutral_native[0]["delta_after_minus_before"].values()
         ))
 
-    def test_rejects_remaining_skiptype_or_hook_motion(self):
-        with tempfile.TemporaryDirectory() as directory:
-            archive = Path(directory) / "bad.gcode.3mf"
-            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS})
-            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS},
-                          GCODE + "; SKIPTYPE: timelapse\n")
-            with self.assertRaises(ValueError):
-                _desktop_input(archive)
-
-    def test_rejects_executable_hook_commands_without_skiptype_comments(self):
-        for marker in ("M971 S11 C11 O0", "M1004 S5 P1", "G39 S1", "G39.3 S1"):
-            with self.subTest(marker=marker), tempfile.TemporaryDirectory() as directory:
-                archive = Path(directory) / "bad.gcode.3mf"
-                self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS},
-                              GCODE + marker + "\n")
-                with self.assertRaises(ValueError):
-                    _desktop_input(archive)
-
-    def test_allows_unrelated_conditional_and_firmware_commands(self):
+    def test_allows_machine_end_commands_when_hook_settings_are_neutral(self):
+        machine_end = (
+            "M1002 judge_flag timelapse_record_flag\n"
+            "M971 S11 C11 O0\n"
+            "M1004 S5 P1\n"
+            "G39 S1\nG39.3 S1\nM622 J1\nM623\nG392 S0\n"
+        )
         with tempfile.TemporaryDirectory() as directory:
             archive = Path(directory) / "valid.gcode.3mf"
-            unrelated = GCODE + "M622.1 S1\nM622 J1\nM623\nG392 S0\n"
-            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS}, unrelated)
-            self.assertEqual(_desktop_input(archive)[1], unrelated)
+            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS},
+                          GCODE + machine_end)
+            self.assertIn(machine_end.strip(), _desktop_input(archive)[1])
 
+            native = Path(directory) / "native.gcode"
+            native_gcode = GCODE.replace(
+                f" = {NEUTRAL_HOOK_VALUE}\n", " =\n"
+            ) + machine_end
+            native.write_text(native_gcode, encoding="utf-8")
+            self.assertEqual(_native_input(native), native_gcode)
+
+    def test_rejects_hook_markers_in_profile_settings_even_when_gcode_has_commands(self):
+        for settings in (
+            {"time_lapse_gcode": HOOK_TEXT, "wrapping_detection_gcode": NEUTRAL_HOOK_VALUE},
+            {"time_lapse_gcode": NEUTRAL_HOOK_VALUE, "wrapping_detection_gcode": "G39.3 S1"},
+        ):
+            with self.subTest(settings=settings), tempfile.TemporaryDirectory() as directory:
+                archive = Path(directory) / "bad.gcode.3mf"
+                self._archive(archive, settings, GCODE + "M971 S11 C11 O0\n")
+                with self.assertRaises(ValueError):
+                    _desktop_input(archive)
 
 if __name__ == "__main__":
     unittest.main()
