@@ -44,6 +44,24 @@ public final class NativeEngineSmokeTest {
         Assert.assertNotSame("only the G3 comparison copy is transformed", obstacle, rotated);
         Assert.assertEquals(obstacle.maxY - obstacle.minY, rotated.maxX - rotated.minX, 0.001f);
         Assert.assertEquals(obstacle.maxX - obstacle.minX, rotated.maxY - rotated.minY, 0.001f);
+        int asymmetricVertex = -1;
+        float centerX = (obstacle.minX + obstacle.maxX) / 2f;
+        float centerY = (obstacle.minY + obstacle.maxY) / 2f;
+        for (int i = 0; i < obstacle.vertices.length; i += 3) {
+            if (Math.abs(obstacle.vertices[i] - centerX)
+                    + Math.abs(obstacle.vertices[i + 1] - centerY) > 0.001f) {
+                asymmetricVertex = i;
+                break;
+            }
+        }
+        Assert.assertTrue("fixture must contain a vertex that distinguishes rotation direction",
+                asymmetricVertex >= 0);
+        Assert.assertEquals("3MF row-vector matrix maps x to positive y under Java's conventional rotation",
+                centerX + obstacle.vertices[asymmetricVertex + 1] - centerY,
+                rotated.vertices[asymmetricVertex], 0.001f);
+        Assert.assertEquals("3MF row-vector matrix maps y to negative x under Java's conventional rotation",
+                centerY - obstacle.vertices[asymmetricVertex] + centerX,
+                rotated.vertices[asymmetricVertex + 1], 0.001f);
     }
 
     @Test
