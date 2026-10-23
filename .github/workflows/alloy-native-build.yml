@@ -543,16 +543,16 @@ jobs:
           ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ALLOY_PR_MERGE_SHA: ${{ github.sha }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          ALLOY_RUN_ID: ${{ github.run_id }}
+          ALLOY_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           python3 ci/g3_evidence_manifest.py \
             --evidence-dir path-b-g3-evidence \
             --head-sha "$ALLOY_PR_HEAD_SHA" \
             --base-sha "$ALLOY_PR_BASE_SHA" \
             --merge-sha "$ALLOY_PR_MERGE_SHA" \
-            --run-id "$GITHUB_RUN_ID" \
-            --run-attempt "$GITHUB_RUN_ATTEMPT"
+            --run-id "$ALLOY_RUN_ID" \
+            --run-attempt "$ALLOY_RUN_ATTEMPT"
       - name: Upload unqualified Bambu template rendering probe
         if: always()
         uses: actions/upload-artifact@v4
