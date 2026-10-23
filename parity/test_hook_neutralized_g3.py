@@ -11,10 +11,11 @@ from compare_hook_neutralized_g3 import (
     _desktop_input,
     _native_input,
 )
+from neutralize_bambu_motion_hooks import HOOK_KEYS, NEUTRAL_HOOK_VALUE
 
 
-GCODE = """; time_lapse_gcode =
-; wrapping_detection_gcode =
+GCODE = f"""; time_lapse_gcode = {NEUTRAL_HOOK_VALUE}
+; wrapping_detection_gcode = {NEUTRAL_HOOK_VALUE}
 ;LAYER_CHANGE
 G90
 G1 X1 Y1 F600
@@ -51,7 +52,7 @@ class HookNeutralizedG3Tests(unittest.TestCase):
             "wrapping_detection_gcode": "",
             "other_setting": "unchanged",
         }
-        neutral = {**source, "time_lapse_gcode": ""}
+        neutral = {**source, **{key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS}}
         source_bytes = (json.dumps(source) + "\n").encode()
         neutral_bytes = (json.dumps(neutral, indent=2) + "\n").encode()
         source_path = profile_dir / "machine.json"
@@ -63,32 +64,46 @@ class HookNeutralizedG3Tests(unittest.TestCase):
             "qualified": False,
             "source_profile_sha256": hashlib.sha256(source_bytes).hexdigest(),
             "neutral_profile_sha256": hashlib.sha256(neutral_bytes).hexdigest(),
-            "cleared_keys": ["time_lapse_gcode", "wrapping_detection_gcode"],
+            "neutralized_keys": list(HOOK_KEYS),
+            "neutralization_value": NEUTRAL_HOOK_VALUE,
+            "neutralization_kind": "comment-only-sentinel-to-prevent-empty-setting-fallback",
         }
         (neutral_dir / "machine-hooks-neutralized-manifest.json").write_text(
             json.dumps(manifest), encoding="utf-8"
         )
         return source
 
-    def test_requires_both_desktop_settings_and_native_attestations_empty(self):
+    def test_requires_both_desktop_settings_and_native_inert_attestations(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             valid = root / "valid.gcode.3mf"
-            self._archive(valid, {"time_lapse_gcode": "", "wrapping_detection_gcode": ""})
+            self._archive(valid, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS})
             self.assertEqual(_desktop_input(valid)[0], "Metadata/plate_1.gcode")
             native = root / "native.gcode"
             native.write_text(GCODE, encoding="utf-8")
             self.assertEqual(_native_input(native), GCODE)
+            empty_attestations = GCODE.replace(
+                f" = {NEUTRAL_HOOK_VALUE}\n", " =\n"
+            )
+            native.write_text(empty_attestations, encoding="utf-8")
+            self.assertEqual(_native_input(native), empty_attestations)
 
             for settings in (
-                {"time_lapse_gcode": "M971", "wrapping_detection_gcode": ""},
-                {"time_lapse_gcode": "", "wrapping_detection_gcode": "G39"},
+                # Regression for Orca's empty-value fallback observed in the
+                # retained 398994 reference: emitted config restored this hook.
+                {"time_lapse_gcode": HOOK_TEXT, "wrapping_detection_gcode": NEUTRAL_HOOK_VALUE},
+                {"time_lapse_gcode": NEUTRAL_HOOK_VALUE, "wrapping_detection_gcode": "G39"},
             ):
                 bad = root / "bad.gcode.3mf"
                 self._archive(bad, settings)
                 with self.subTest(settings=settings), self.assertRaises(ValueError):
                     _desktop_input(bad)
-            native.write_text(GCODE.replace("; wrapping_detection_gcode =\n", ""), encoding="utf-8")
+            native.write_text(GCODE.replace(
+                f"; wrapping_detection_gcode = {NEUTRAL_HOOK_VALUE}\n", ""
+            ), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                _native_input(native)
+            native.write_text(empty_attestations + "M971 S11 C11 O0\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 _native_input(native)
 
@@ -112,7 +127,7 @@ class HookNeutralizedG3Tests(unittest.TestCase):
                 fixture_dir = reference_dir / "orca-reference-hook-neutralized" / fixture
                 fixture_dir.mkdir(parents=True)
                 self._archive(fixture_dir / f"{fixture}.gcode.3mf", {
-                    "time_lapse_gcode": "", "wrapping_detection_gcode": "",
+                    key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS
                 })
             result = compare_neutralized_fixtures(
                 native_dir, reference_dir, report_dir, "a" * 64, 1234
@@ -122,6 +137,7 @@ class HookNeutralizedG3Tests(unittest.TestCase):
         self.assertEqual(result["scope"], "hook-neutralized-counterfactual-diagnostic-only")
         self.assertEqual(result["qualification"], "not-a-production-parity-result")
         self.assertIs(result["thresholds_applied"], False)
+        self.assertEqual(result["neutralization_value"], NEUTRAL_HOOK_VALUE)
         self.assertIn("retract_when_changing_layer", result["other_profile_controls_unchanged"])
         self.assertIn("does not model firmware execution", result["interpretation_limit"])
         self.assertEqual([row["fixture"] for row in result["fixtures"]], list(FIXTURES))
@@ -147,11 +163,27 @@ class HookNeutralizedG3Tests(unittest.TestCase):
     def test_rejects_remaining_skiptype_or_hook_motion(self):
         with tempfile.TemporaryDirectory() as directory:
             archive = Path(directory) / "bad.gcode.3mf"
-            self._archive(archive, {"time_lapse_gcode": "", "wrapping_detection_gcode": ""})
-            self._archive(archive, {"time_lapse_gcode": "", "wrapping_detection_gcode": ""},
+            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS})
+            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS},
                           GCODE + "; SKIPTYPE: timelapse\n")
             with self.assertRaises(ValueError):
                 _desktop_input(archive)
+
+    def test_rejects_executable_hook_commands_without_skiptype_comments(self):
+        for marker in ("M971 S11 C11 O0", "M1004 S5 P1", "G39 S1", "G39.3 S1"):
+            with self.subTest(marker=marker), tempfile.TemporaryDirectory() as directory:
+                archive = Path(directory) / "bad.gcode.3mf"
+                self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS},
+                              GCODE + marker + "\n")
+                with self.assertRaises(ValueError):
+                    _desktop_input(archive)
+
+    def test_allows_unrelated_conditional_and_firmware_commands(self):
+        with tempfile.TemporaryDirectory() as directory:
+            archive = Path(directory) / "valid.gcode.3mf"
+            unrelated = GCODE + "M622.1 S1\nM622 J1\nM623\nG392 S0\n"
+            self._archive(archive, {key: NEUTRAL_HOOK_VALUE for key in HOOK_KEYS}, unrelated)
+            self.assertEqual(_desktop_input(archive)[1], unrelated)
 
 
 if __name__ == "__main__":

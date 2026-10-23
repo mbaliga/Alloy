@@ -28,19 +28,34 @@ from compare_g3_artifacts import (  # noqa: E402
     wait_for_reference_run,
 )
 from compare_gcode import parse_metrics, travel_diagnostic  # noqa: E402
+from neutralize_bambu_motion_hooks import HOOK_KEYS, NEUTRAL_HOOK_VALUE  # noqa: E402
 
 
 FIXTURES = ("cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle")
 NEUTRAL_REFERENCE_ROOT = "orca-reference-hook-neutralized"
 NO_HOOK_MARKERS = (
     "; SKIPPABLE_START",
+    "; SKIPPABLE_END",
     "; SKIPTYPE: timelapse",
     "; SKIPTYPE: head_wrap_detect",
+    "M1002 judge_flag timelapse_record_flag",
+    "M1002 judge_flag g39_3rd_layer_detect_flag",
+    "M1002 judge_flag g39_detection_flag",
+    "M971 S11 C11 O0",
     "M1004 S5 P1",
+    "G0 X187 Y178 F20000",
+    "G39 S1",
     "G39.3 S1",
+    "G1 X-13.0 F3000 ; move to safe pos",
 )
 SOURCE_HOOK_MARKERS = ("; SKIPTYPE: timelapse", "; SKIPTYPE: head_wrap_detect")
-EMPTY_HOOK_ASSIGNMENTS = ("; time_lapse_gcode =", "; wrapping_detection_gcode =")
+NATIVE_HOOK_ASSIGNMENTS = {
+    key: (
+        f"; {key} =",
+        f"; {key} = {NEUTRAL_HOOK_VALUE}",
+    )
+    for key in HOOK_KEYS
+}
 
 
 def _fail(message: str) -> None:
@@ -70,13 +85,17 @@ def validate_neutral_profile_bundle(reference_dir: Path) -> tuple[dict[str, Any]
         _fail("desktop profile manifest does not bind the pinned resolved machine profile")
     if manifest.get("neutral_profile_sha256") != _sha256(profile_path):
         _fail("desktop profile manifest does not bind the hook-neutralized machine profile")
-    if manifest.get("cleared_keys") != ["time_lapse_gcode", "wrapping_detection_gcode"]:
-        _fail("desktop profile manifest does not name exactly the two cleared hook keys")
+    if manifest.get("neutralized_keys") != list(HOOK_KEYS):
+        _fail("desktop profile manifest does not name exactly the two neutralized hook keys")
+    if manifest.get("neutralization_value") != NEUTRAL_HOOK_VALUE or manifest.get(
+        "neutralization_kind"
+    ) != "comment-only-sentinel-to-prevent-empty-setting-fallback":
+        _fail("desktop profile manifest does not bind the expected inert hook sentinel")
     if not isinstance(source, dict) or not isinstance(neutral, dict):
         _fail("desktop machine profiles must be JSON objects")
-    for key in ("time_lapse_gcode", "wrapping_detection_gcode"):
-        if neutral.get(key) != "":
-            _fail(f"hook-neutralized desktop machine profile has non-empty {key}")
+    for key in HOOK_KEYS:
+        if neutral.get(key) != NEUTRAL_HOOK_VALUE:
+            _fail(f"hook-neutralized desktop machine profile has an unexpected {key} value")
     source_without_hooks = {key: value for key, value in source.items()
                             if key not in {"time_lapse_gcode", "wrapping_detection_gcode"}}
     neutral_without_hooks = {key: value for key, value in neutral.items()
@@ -99,9 +118,9 @@ def _desktop_input(path: Path, neutral_profile: dict[str, Any] | None = None) ->
             gcode = archive.read(gcode_names[0]).decode("utf-8", errors="replace")
     except (BadZipFile, KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
         _fail(f"cannot inspect hook-neutralized desktop archive {path.name}: {error}")
-    for key in ("time_lapse_gcode", "wrapping_detection_gcode"):
-        if settings.get(key) != "":
-            _fail(f"desktop counterfactual does not have empty {key}")
+    for key in HOOK_KEYS:
+        if settings.get(key) != NEUTRAL_HOOK_VALUE:
+            _fail(f"desktop counterfactual does not preserve the inert sentinel for {key}")
         if neutral_profile is not None and settings.get(key) != neutral_profile.get(key):
             _fail(f"desktop slice does not match the neutralized profile value for {key}")
     for marker in NO_HOOK_MARKERS:
@@ -136,9 +155,13 @@ def _native_input(path: Path) -> str:
     if not path.is_file() or path.stat().st_size == 0:
         _fail(f"native counterfactual is missing: {path.name}")
     gcode = path.read_text(encoding="utf-8", errors="replace")
-    for key in EMPTY_HOOK_ASSIGNMENTS:
-        if not re.search(r"^" + re.escape(key) + r"\s*$", gcode, re.MULTILINE):
-            _fail(f"native counterfactual does not attest empty hook setting {key}")
+    for key, assignments in NATIVE_HOOK_ASSIGNMENTS.items():
+        prefix, sentinel = assignments
+        pattern = r"^" + re.escape(prefix) + r"(?:\s*|" + re.escape(
+            sentinel[len(prefix):]
+        ) + r")\s*$"
+        if not re.search(pattern, gcode, re.MULTILINE):
+            _fail(f"native counterfactual has an unexpected hook-setting attestation for {key}")
     for marker in NO_HOOK_MARKERS:
         if marker in gcode:
             _fail(f"native counterfactual still emits motion-hook marker {marker!r}")
@@ -264,10 +287,13 @@ def compare_neutralized_fixtures(
         "scope": "hook-neutralized-counterfactual-diagnostic-only",
         "qualification": "not-a-production-parity-result",
         "neutralization_scope": ["time_lapse_gcode", "wrapping_detection_gcode"],
+        "neutralization_value": NEUTRAL_HOOK_VALUE,
+        "neutralization_kind": "comment-only-sentinel-to-prevent-empty-setting-fallback",
         "other_profile_controls_unchanged": ["retract_when_changing_layer"],
         "interpretation_limit": (
-            "This measures slicer output after clearing profile hook text; it does not model "
-            "firmware execution of conditional blocks or disable other Bambu layer-change policy."
+            "This measures slicer output after replacing profile hook text with an inert "
+            "comment-only sentinel; it does not model firmware execution of conditional "
+            "blocks or disable other Bambu layer-change policy."
         ),
         "g3_gate_modified": False,
         "thresholds_applied": False,

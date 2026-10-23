@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create an audit-only Orca machine profile with Bambu motion hooks empty."""
+"""Create an audit-only Orca profile with comment-only Bambu hook sentinels."""
 
 from __future__ import annotations
 
@@ -12,6 +12,10 @@ from typing import Any
 
 HOOK_KEYS = ("time_lapse_gcode", "wrapping_detection_gcode")
 REQUIRED_TIME_LAPSE_MARKERS = ("SKIPTYPE: timelapse", "SKIPTYPE: head_wrap_detect")
+# Orca can restore a machine default when a loaded profile supplies an empty
+# string. Keep a non-empty, inert value so profile merging cannot silently
+# re-enable the pinned Bambu hooks.
+NEUTRAL_HOOK_VALUE = "; Alloy G3 counterfactual: hook intentionally disabled"
 OUTPUT_NAME = "machine-hooks-neutralized.json"
 MANIFEST_NAME = "machine-hooks-neutralized-manifest.json"
 
@@ -46,7 +50,7 @@ def create_neutral_profile(source: Path, output_dir: Path) -> dict[str, Any]:
         raise ValueError("source time_lapse_gcode lacks expected Bambu hook marker(s): "
                          + ", ".join(missing_markers))
     for key in HOOK_KEYS:
-        profile[key] = ""
+        profile[key] = NEUTRAL_HOOK_VALUE
 
     output_dir.mkdir(parents=True, exist_ok=True)
     profile_path = output_dir / OUTPUT_NAME
@@ -59,8 +63,10 @@ def create_neutral_profile(source: Path, output_dir: Path) -> dict[str, Any]:
         "source_profile_sha256": sha256(raw),
         "neutral_profile": OUTPUT_NAME,
         "neutral_profile_sha256": sha256(profile_bytes),
-        "cleared_keys": list(HOOK_KEYS),
-        "cleared_source_values_nonempty": {
+        "neutralized_keys": list(HOOK_KEYS),
+        "neutralization_value": NEUTRAL_HOOK_VALUE,
+        "neutralization_kind": "comment-only-sentinel-to-prevent-empty-setting-fallback",
+        "source_hook_values_nonempty": {
             key: bool(value.strip()) for key, value in original_values.items()
         },
         "unchanged_key_count": len(set(profile) - set(HOOK_KEYS)),
