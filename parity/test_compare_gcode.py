@@ -6,6 +6,7 @@ import unittest
 from zipfile import ZipFile
 
 from compare_gcode import (
+    acceleration_profiles,
     acceleration_signature,
     compare,
     metrics_report,
@@ -450,6 +451,39 @@ class CompareGcodeTests(unittest.TestCase):
             acceleration = next(c for c in result["checks"] if c["name"] == "acceleration_command_profile")
             self.assertEqual(acceleration["status"], "warn")
             self.assertIn("desktop=P500, Android=P700", acceleration["detail"])
+
+    def test_skiptype_acceleration_is_reported_separately_from_unconditional_profile(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop_text = (
+                "; total layer number: 1\n;LAYER_CHANGE\nM204 P300\n"
+                "; SKIPPABLE_START\n; SKIPTYPE: head_wrap_detect\nM204 S5000\n"
+                "; SKIPPABLE_END\nM204 P500\n"
+                ";FEATURE: External perimeter\nG1 X10 E1\n"
+            )
+            android_text = desktop_text.replace("M204 S5000", "M204 P1500")
+            desktop_path = self.write(root, "desktop.gcode", desktop_text)
+            android_path = self.write(root, "android.gcode", android_text)
+            desktop_profile = acceleration_profiles(desktop_path, None)
+            android_profile = acceleration_profiles(android_path, None)
+            self.assertEqual([("P", 300.0), ("P", 500.0)], desktop_profile[0])
+            self.assertEqual(desktop_profile[0], android_profile[0])
+            self.assertEqual({"head_wrap_detect": [("P", 5000.0)]}, desktop_profile[1])
+            self.assertEqual({"head_wrap_detect": [("P", 1500.0)]}, android_profile[1])
+            self.assertNotEqual(desktop_profile[1], android_profile[1])
+
+            desktop = parse_metrics(desktop_path, None)
+            android = parse_metrics(android_path, None)
+            result = compare(desktop, android, 0.02)
+            unconditional = next(
+                c for c in result["checks"]
+                if c["name"] == "acceleration_command_profile")
+            conditional = next(
+                c for c in result["checks"]
+                if c["name"] == "conditional_acceleration_profile")
+            self.assertEqual("pass", unconditional["status"])
+            self.assertEqual("warn", conditional["status"])
+            self.assertIn("head_wrap_detect", conditional["detail"])
 
     def test_feature_transition_warning_identifies_first_divergence(self):
         with tempfile.TemporaryDirectory() as directory:

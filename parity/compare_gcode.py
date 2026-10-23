@@ -608,8 +608,10 @@ def parse_metrics(path: Path, plate_member: str | None) -> Metrics:
     )
 
 
-def acceleration_signature(path: Path, plate_member: str | None) -> list[tuple[str, float]]:
-    """Return the ordered acceleration intent emitted by each slicer.
+def acceleration_profiles(
+    path: Path, plate_member: str | None,
+) -> tuple[list[tuple[str, float]], dict[str, list[tuple[str, float]]]]:
+    """Return unconditional and SKIPTYPE-scoped acceleration commands.
 
     Orca/Bambu commonly encode the print acceleration with ``M204 S`` while
     SliceBeam uses ``M204 P``. Treat those spellings as the same canonical
@@ -618,6 +620,7 @@ def acceleration_signature(path: Path, plate_member: str | None) -> list[tuple[s
     """
     text, _ = read_gcode(path, plate_member)
     signature: list[tuple[str, float]] = []
+    conditional: dict[str, list[tuple[str, float]]] = {}
     has_layer_markers = any(
         MODEL_LAYER_START_RE.match(line.strip())
         or CHANGE_LAYER_RE.match(line.strip())
@@ -625,8 +628,17 @@ def acceleration_signature(path: Path, plate_member: str | None) -> list[tuple[s
         for line in text.splitlines()
     )
     model_started = not has_layer_markers
+    skippable = False
+    skip_type: str | None = None
     for raw_line in text.splitlines():
         line = raw_line.strip()
+        if line.upper().startswith("; SKIPPABLE_START"):
+            skippable = True
+        elif line.upper().startswith("; SKIPPABLE_END"):
+            skippable = False
+            skip_type = None
+        elif line.upper().startswith("; SKIPTYPE:"):
+            skip_type = line.split(":", 1)[1].strip() or "<untyped>"
         if (MODEL_LAYER_START_RE.match(line)
                 or CHANGE_LAYER_RE.match(line)
                 or LAYER_MARKER_RE.match(line)):
@@ -640,8 +652,18 @@ def acceleration_signature(path: Path, plate_member: str | None) -> list[tuple[s
         values = {key.upper(): float(value) for key, value in TOKEN_RE.findall(match.group(1) or "")}
         for key, value in values.items():
             canonical = "P" if key in {"S", "P"} else key
-            signature.append((canonical, value))
-    return signature
+            command = (canonical, value)
+            scope = skip_type or ("<untyped>" if skippable else None)
+            if scope is None:
+                signature.append(command)
+            else:
+                conditional.setdefault(scope, []).append(command)
+    return signature, conditional
+
+
+def acceleration_signature(path: Path, plate_member: str | None) -> list[tuple[str, float]]:
+    """Return only the unconditional acceleration sequence (compatibility helper)."""
+    return acceleration_profiles(path, plate_member)[0]
 
 
 def first_acceleration_mismatch(desktop: list[tuple[str, float]],
@@ -1169,8 +1191,10 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
         f"delta={extrusion_diff:.2%}, tolerance=5.00%",
     )
 
-    desktop_acceleration = acceleration_signature(Path(desktop.source), desktop.archive_member)
-    android_acceleration = acceleration_signature(Path(android.source), android.archive_member)
+    desktop_acceleration, desktop_conditional_acceleration = acceleration_profiles(
+        Path(desktop.source), desktop.archive_member)
+    android_acceleration, android_conditional_acceleration = acceleration_profiles(
+        Path(android.source), android.archive_member)
     if not desktop_acceleration or not android_acceleration:
         add(
             "acceleration_command_profile",
@@ -1190,6 +1214,26 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
             "normalized M204 sequence differs: "
             + first_acceleration_mismatch(desktop_acceleration, android_acceleration),
         )
+
+    if not desktop_conditional_acceleration and not android_conditional_acceleration:
+        add("conditional_acceleration_profile", "unavailable",
+            "no SKIPTYPE-scoped M204 commands in either G-code")
+    elif desktop_conditional_acceleration == android_conditional_acceleration:
+        add("conditional_acceleration_profile", "pass",
+            "M204 sequences match for each SKIPTYPE scope")
+    else:
+        scopes = sorted(set(desktop_conditional_acceleration)
+                        | set(android_conditional_acceleration))
+        differing = []
+        for scope in scopes:
+            left = desktop_conditional_acceleration.get(scope, [])
+            right = android_conditional_acceleration.get(scope, [])
+            if left != right:
+                differing.append(
+                    f"{scope}: {first_acceleration_mismatch(left, right)}")
+        add("conditional_acceleration_profile", "warn",
+            "diagnostic only; SKIPTYPE-scoped M204 commands are firmware-conditional; "
+            + "; ".join(differing))
 
     hard_fail = any(c["status"] == "fail" for c in checks)
     # G3 cannot pass if neither filament representation nor print time is available from both.
