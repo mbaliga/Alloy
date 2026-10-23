@@ -75,6 +75,8 @@ def validate_manifest(
     head_sha: str,
     base_sha: str,
     merge_sha: str,
+    run_id: str,
+    run_attempt: str,
 ) -> dict[str, Any]:
     path = evidence_dir / MANIFEST_NAME
     if not path.is_file():
@@ -90,6 +92,8 @@ def validate_manifest(
         "pr_head_sha": head_sha,
         "pr_base_sha": base_sha,
         "pr_merge_sha": merge_sha,
+        "workflow_run_id": run_id,
+        "workflow_run_attempt": run_attempt,
     }
     if not isinstance(manifest, dict) or any(manifest.get(key) != value for key, value in expected.items()):
         raise ValueError("native G3 evidence manifest identity mismatch")

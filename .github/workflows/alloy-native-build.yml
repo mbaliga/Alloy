@@ -574,6 +574,8 @@ jobs:
           ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+          ALLOY_RUN_ID: ${{ github.run_id }}
+          ALLOY_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           python3 ci/compare_g3_artifacts.py \
             --native-dir path-b-g3-evidence \

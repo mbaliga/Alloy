@@ -31,6 +31,8 @@ class G3EvidenceManifestTests(unittest.TestCase):
             head_sha=self.identity["head_sha"],
             base_sha=self.identity["base_sha"],
             merge_sha=self.identity["merge_sha"],
+            run_id=self.identity["run_id"],
+            run_attempt=self.identity["run_attempt"],
         )
         self.assertEqual(written, validated)
         self.assertEqual(8, len(validated["files_sha256"]))
@@ -45,6 +47,8 @@ class G3EvidenceManifestTests(unittest.TestCase):
                 head_sha="d" * 40,
                 base_sha=self.identity["base_sha"],
                 merge_sha=self.identity["merge_sha"],
+                run_id=self.identity["run_id"],
+                run_attempt=self.identity["run_attempt"],
             )
 
     def test_manifest_rejects_changed_or_added_inputs(self):
@@ -56,6 +60,8 @@ class G3EvidenceManifestTests(unittest.TestCase):
                 head_sha=self.identity["head_sha"],
                 base_sha=self.identity["base_sha"],
                 merge_sha=self.identity["merge_sha"],
+                run_id=self.identity["run_id"],
+                run_attempt=self.identity["run_attempt"],
             )
         write_manifest(self.root, **self.identity)
         (self.root / "untracked.gcode").write_text("G1 X0\n", encoding="utf-8")
@@ -65,7 +71,23 @@ class G3EvidenceManifestTests(unittest.TestCase):
                 head_sha=self.identity["head_sha"],
                 base_sha=self.identity["base_sha"],
                 merge_sha=self.identity["merge_sha"],
+                run_id=self.identity["run_id"],
+                run_attempt=self.identity["run_attempt"],
             )
+
+    def test_manifest_rejects_another_workflow_run_or_attempt(self):
+        write_manifest(self.root, **self.identity)
+        for run_id, run_attempt in (("654321", "2"), ("123456", "3")):
+            with self.subTest(run_id=run_id, run_attempt=run_attempt):
+                with self.assertRaisesRegex(ValueError, "identity mismatch"):
+                    validate_manifest(
+                        self.root,
+                        head_sha=self.identity["head_sha"],
+                        base_sha=self.identity["base_sha"],
+                        merge_sha=self.identity["merge_sha"],
+                        run_id=run_id,
+                        run_attempt=run_attempt,
+                    )
 
     def test_manifest_rejects_invalid_digest_and_identity(self):
         with self.assertRaisesRegex(ValueError, "invalid PR head SHA"):
@@ -83,6 +105,8 @@ class G3EvidenceManifestTests(unittest.TestCase):
                 head_sha=self.identity["head_sha"],
                 base_sha=self.identity["base_sha"],
                 merge_sha=self.identity["merge_sha"],
+                run_id=self.identity["run_id"],
+                run_attempt=self.identity["run_attempt"],
             )
 
 
