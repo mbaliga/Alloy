@@ -24,6 +24,7 @@ public final class InitialMaterialInventoryTest {
         for (PrinterCapabilityCatalog.Material material : mini.materials) {
             String inventoryId = material.id;
             if ("pla".equals(material.id)) inventoryId = "pla-basic";
+            if ("petg".equals(material.id)) inventoryId = "petg-basic";
             if ("bambu-pla-cf".equals(material.id)) inventoryId = "pla-cf";
             Assert.assertTrue("A1 Mini material " + material.id + " must have an inventory row " + inventoryId,
                     inventoryIds.contains(inventoryId));
