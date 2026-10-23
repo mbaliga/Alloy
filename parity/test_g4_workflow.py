@@ -41,6 +41,17 @@ class G4WorkflowTests(unittest.TestCase):
         self.assertIn("static compatibility pre-gate", workflow)
         self.assertIn("static compatibility pre-gate; it is not runtime parity", workflow)
 
+    def test_profile_source_checkouts_are_pinned_retried_and_upload_failure_logs(self):
+        workflow = (ROOT / ".github/workflows/bambu-profile-compatibility.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("ci/checkout_pinned_snapshot.py", workflow)
+        self.assertEqual(workflow.count("--attempts 3 --retry-delay 8"), 2)
+        self.assertIn("bambustudio-checkout.log", workflow)
+        self.assertIn("slicebeam-checkout.log", workflow)
+        self.assertIn("if: always()", workflow)
+        self.assertIn("profile-compatibility-evidence", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
