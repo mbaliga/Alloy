@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/test_export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
       - 'parity/test_generate_fixtures.py'
       - 'parity/compare_gcode.py'
@@ -29,6 +30,7 @@ on:
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
       - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/test_export_resolved_orca_profiles.py'
       - 'parity/generate_fixtures.py'
       - 'parity/test_generate_fixtures.py'
       - 'parity/compare_gcode.py'
@@ -155,6 +157,55 @@ jobs:
             python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
           done
 
+      # A1/P1S source-profile references are intentionally diagnostic only.
+      # Their printer-native app recipes are not yet paired with equivalent
+      # desktop project settings, so no estimate-parity result is inferred.
+      - name: Slice A1 and P1S profile references (diagnostic only)
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
+          python3 parity/export_resolved_orca_profiles.py "$GITHUB_WORKSPACE/orca-profiles" runtime/multimodel-profiles --printer a1 --printer p1s
+          mkdir -p runtime/orca-reference-multimodel
+          : > runtime/evidence/multimodel-reference-errors.txt
+          for printer in a1 p1s; do
+            profile_dir="$GITHUB_WORKSPACE/runtime/multimodel-profiles/$printer"
+            out_root="$GITHUB_WORKSPACE/runtime/orca-reference-multimodel/$printer"
+            mkdir -p "$out_root"
+            for stl in runtime/fixtures/*.stl; do
+              name="$(basename "$stl" .stl)"
+              out="$out_root/$name"
+              mkdir -p "$out"
+              if ! "$ORCA" \
+                --debug 2 \
+                --arrange 1 \
+                --slice 0 \
+                --load-settings "$profile_dir/machine.json;$profile_dir/process.json" \
+                --load-filaments "$profile_dir/filament.json" \
+                --allow-newer-file \
+                --outputdir "$out" \
+                --export-3mf "$name.gcode.3mf" \
+                "$GITHUB_WORKSPACE/$stl" \
+                > "$out/orca.log" 2>&1; then
+                echo "Slice failed: $printer / $name" | tee -a runtime/evidence/multimodel-reference-errors.txt
+                continue
+              fi
+              if ! python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"; then
+                echo "3MF verification failed: $printer / $name" | tee -a runtime/evidence/multimodel-reference-errors.txt
+              fi
+            done
+          done
+          {
+            echo "Purpose: diagnostic reference slices only; not a parity gate or print qualification"
+            echo "Orca profile source: ${ORCA_PROFILE_SHA}"
+            echo "A1 mapping: Bambu Lab A1 0.4 nozzle / 0.20mm Standard @BBL A1 / Bambu PLA Basic @BBL A1"
+            echo "P1S mapping: Bambu Lab P1S 0.4 nozzle / 0.20mm Standard @BBL X1C / Bambu PLA Basic @BBL X1C"
+            echo "P1S process and filament leaves are the exact compatible leaves in this pinned snapshot"
+            echo "These default profile slices are not compared with native output until settings are explicitly aligned"
+            find runtime/orca-reference-multimodel -type f -name '*.gcode.3mf' -print0 | xargs -0 -r sha256sum
+          } > runtime/evidence/multimodel-reference-manifest.txt
+
       # This separately named lane is only a counterfactual for isolating the
       # effect of profile motion hooks. It does not replace or modify the
       # strict reference slices above.
@@ -222,6 +273,8 @@ jobs:
           path: |
             runtime/orca-reference
             runtime/orca-reference-hook-neutralized
+            runtime/orca-reference-multimodel
+            runtime/multimodel-profiles
             runtime/profiles
             runtime/profiles/hook-neutralized
             runtime/fixtures/SHA256SUMS
