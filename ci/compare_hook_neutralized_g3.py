@@ -33,21 +33,6 @@ from neutralize_bambu_motion_hooks import HOOK_KEYS, NEUTRAL_HOOK_VALUE  # noqa:
 
 FIXTURES = ("cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle")
 NEUTRAL_REFERENCE_ROOT = "orca-reference-hook-neutralized"
-NO_HOOK_MARKERS = (
-    "; SKIPPABLE_START",
-    "; SKIPPABLE_END",
-    "; SKIPTYPE: timelapse",
-    "; SKIPTYPE: head_wrap_detect",
-    "M1002 judge_flag timelapse_record_flag",
-    "M1002 judge_flag g39_3rd_layer_detect_flag",
-    "M1002 judge_flag g39_detection_flag",
-    "M971 S11 C11 O0",
-    "M1004 S5 P1",
-    "G0 X187 Y178 F20000",
-    "G39 S1",
-    "G39.3 S1",
-    "G1 X-13.0 F3000 ; move to safe pos",
-)
 SOURCE_HOOK_MARKERS = ("; SKIPTYPE: timelapse", "; SKIPTYPE: head_wrap_detect")
 NATIVE_HOOK_ASSIGNMENTS = {
     key: (
@@ -123,9 +108,6 @@ def _desktop_input(path: Path, neutral_profile: dict[str, Any] | None = None) ->
             _fail(f"desktop counterfactual does not preserve the inert sentinel for {key}")
         if neutral_profile is not None and settings.get(key) != neutral_profile.get(key):
             _fail(f"desktop slice does not match the neutralized profile value for {key}")
-    for marker in NO_HOOK_MARKERS:
-        if marker in gcode:
-            _fail(f"desktop counterfactual still emits motion-hook marker {marker!r}")
     return gcode_names[0], gcode
 
 
@@ -162,9 +144,6 @@ def _native_input(path: Path) -> str:
         ) + r")\s*$"
         if not re.search(pattern, gcode, re.MULTILINE):
             _fail(f"native counterfactual has an unexpected hook-setting attestation for {key}")
-    for marker in NO_HOOK_MARKERS:
-        if marker in gcode:
-            _fail(f"native counterfactual still emits motion-hook marker {marker!r}")
     return gcode
 
 
@@ -293,7 +272,10 @@ def compare_neutralized_fixtures(
         "interpretation_limit": (
             "This measures slicer output after replacing profile hook text with an inert "
             "comment-only sentinel; it does not model firmware execution of conditional "
-            "blocks or disable other Bambu layer-change policy."
+            "blocks or disable other Bambu layer-change policy. machine_end_gcode is "
+            "intentionally preserved and may contain commands also used by the hooks; "
+            "validation is limited to the two exact profile hook settings and native "
+            "hook-setting attestations, not global G-code command scans."
         ),
         "g3_gate_modified": False,
         "thresholds_applied": False,
