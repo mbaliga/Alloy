@@ -6,6 +6,8 @@ on:
       - '.github/workflows/bambu-profile-compatibility.yml'
       - 'parity/audit_path_b_a1mini_profile.py'
       - 'parity/test_g4_workflow.py'
+      - 'parity/test_checkout_pinned_snapshot.py'
+      - 'ci/checkout_pinned_snapshot.py'
       - 'ci/verify_profile_snapshot.py'
       - 'ci/validate_profile_assets.py'
       - 'app/src/main/assets/profiles/**'
@@ -39,17 +41,21 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          git clone --filter=blob:none --no-checkout "$BAMBU_PROFILE_REPO" bambustudio
-          git -C bambustudio checkout --detach "$BAMBU_PROFILE_SHA"
-          test "$(git -C bambustudio rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
+          mkdir -p profile-compatibility-evidence
+          python3 ci/checkout_pinned_snapshot.py \
+            "$BAMBU_PROFILE_REPO" "$BAMBU_PROFILE_SHA" bambustudio \
+            --attempts 3 --retry-delay 8 \
+            2>&1 | tee profile-compatibility-evidence/bambustudio-checkout.log
 
       - name: Clone pinned SliceBeam source
         shell: bash
         run: |
           set -euxo pipefail
-          git clone --filter=blob:none --no-checkout "$SLICEBEAM_REPO" slicebeam
-          git -C slicebeam checkout --detach "$SLICEBEAM_SHA"
-          test "$(git -C slicebeam rev-parse HEAD)" = "$SLICEBEAM_SHA"
+          mkdir -p profile-compatibility-evidence
+          python3 ci/checkout_pinned_snapshot.py \
+            "$SLICEBEAM_REPO" "$SLICEBEAM_SHA" slicebeam \
+            --attempts 3 --retry-delay 8 \
+            2>&1 | tee profile-compatibility-evidence/slicebeam-checkout.log
 
       - name: Audit selected Bambu profile compatibility
         id: audit
