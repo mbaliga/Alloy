@@ -1,6918 +1,5860 @@
-package com.mbaliga.alloy;
-
-import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.ActivityNotFoundException;
-import android.content.res.ColorStateList;
-import android.content.BroadcastReceiver;
-import android.content.ClipData;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.provider.OpenableColumns;
-import android.view.Gravity;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowInsets;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.ScrollView;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
-
-/** Alloy v1 task-flow shell: Import â†’ Prepare â†’ Slice â†’ Inspect â†’ Export. */
-public final class MainActivity extends Activity {
-    private static final int REQUEST_OPEN = 41;
-    private static final int REQUEST_EXPORT = 42;
-    private static final int REQUEST_PROJECT_EXPORT = 43;
-    private static final int REQUEST_PROJECT_OPEN = 44;
-    private static final int REQUEST_BATCH_EXPORT = 45;
-    private static final int REQUEST_NOTIFICATIONS = 46;
-    private static final int REQUEST_PROFILE = 47;
-    private static final int REQUEST_PROFILE_EXPORT = 48;
-    private static final int REQUEST_VIEW_EXPORT = 49;
-    private static final int REQUEST_VISUALIZATION_EXPORT = 50;
-    private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
-    private static final String BUNDLED_PROFILE_PRINTER_ID = "bundled_profile_printer_id";
-    private static final String BUNDLED_PROFILE_ID = "bundled_profile_id";
-    private static final int HISTORY_RESET = 0;
-    private static final int HISTORY_RESTORE = 1;
-    private static final int HISTORY_MUTATION = 2;
-    private static final String NOTIFICATION_PERMISSION_PROMPTED = "notification_permission_prompted";
-    private static final String IMMERSIVE_INTRO_SHOWN = "immersive_intro_shown";
-    // Keep a versioned marker so an install that already dismissed the early
-    // prototype intro still receives the first polished supplied-model Hero
-    // view once after this visual-review milestone.
-    private static final String IMMERSIVE_INTRO_VERSION = "immersive_intro_version";
-    private static final int CURRENT_IMMERSIVE_INTRO_VERSION = 2;
-    private static final String FIRST_RUN_ONBOARDING_VERSION = "first_run_onboarding_version";
-    private static final int CURRENT_FIRST_RUN_ONBOARDING_VERSION = 1;
-    private static final int BG = Color.rgb(246, 245, 241);
-    private static final int SURFACE = Color.WHITE;
-    private static final int PANEL = Color.rgb(237, 234, 227);
-    private static final int TEXT = Color.rgb(30, 29, 27);
-    private static final int MUTED = Color.rgb(112, 108, 101);
-    private static final int INK = Color.rgb(66, 61, 54);
-    private static final int GOLD = Color.rgb(146, 103, 48);
-    private static final int GREEN = Color.rgb(43, 125, 92);
-    private static final int AMBER = Color.rgb(184, 121, 31);
-    private static final int RED = Color.rgb(181, 69, 54);
-    private static final String[] STUDIO_FINISHES = {
-            "Natural PLA", "Matte black", "Arctic white", "Safety orange", "Metallic"
-    };
-
-    private LinearLayout root, actions, layerInspector;
-    private ArcNavigationBar arcNavigation;
-    private SeekBar layerSeek;
-    private TextView layerInspectorLabel;
-    private TextView status, details, modelMeta, inventorySummary, inventoryStatusDot;
-    private TextView printerMarkerValue, materialMarkerValue, qualityMarkerValue, supportsMarkerValue, plateMarkerValue;
-    private View printerMarker, materialMarker;
-    private ViewportView viewport;
-    private MeshModel model, sourceModel, unmodifiedSourceModel;
-    private final ArrayList<MeshModel.PartTransform> partTransforms = new ArrayList<>();
-    private final ArrayList<Uri> modelUris = new ArrayList<>();
-    private final ArrayList<String> modelNames = new ArrayList<>();
-    private float modelScale = 1f, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees;
-    private boolean geometryRepairEnabled;
-    private boolean repairingGeometry;
-    private Slicer.Result slice;
-    private boolean slicing;
-    private boolean batchSlicing;
-    private BatchSliceJobController.BatchResult lastBatch;
-    private final Slicer.Config config = new Slicer.Config();
-    private InventoryStore inventoryStore;
-    private ImportedModelStore importedModelStore;
-    private ProjectStore projectStore;
-    private ProjectHistoryStore projectHistoryStore;
-    private ModelHistoryStore modelHistoryStore;
-    private PlateStore plateStore;
-    private int activePlateIndex;
-    private PrinterJobStore printerJobStore;
-    private PrinterCredentialStore credentialStore;
-    private VisualizationCredentialStore visualizationCredentialStore;
-    private BambuLanTransport printerTransport;
-    private BambuPrinterDiscovery.Scan activeDiscovery;
-    private PrinterTransport.Artifact stagedArtifact;
-    // Set only after an untouched bundled fixture finishes importing. User
-    // imports, restored projects and all geometry mutations clear this proof.
-    private String trustedPilotFixtureAssetPath;
-    /**
-     * A recovered artifact belongs to the interrupted printer transaction,
-     * not to whichever model the user loads next. Keep it separate from the
-     * current slice so model import/plate switching cannot accidentally erase
-     * the evidence needed for explicit recovery review.
-     */
-    private PrinterTransport.Artifact recoveredArtifact;
-    private PrinterTransport.PrinterTarget activePrinterTarget;
-    private String activePrinterJobId;
-    private boolean printActive;
-    private boolean printerBusy;
-    private BroadcastReceiver printerEventReceiver;
-    private BroadcastReceiver sliceEventReceiver;
-    private BroadcastReceiver batchSliceEventReceiver;
-    private SliceJobStore sliceJobStore;
-    private String activeSliceJobId;
-    private Dialog sliceProgressDialog;
-    private FilamentSweepLoader sliceProgressLoader;
-    private BatchSliceJobStore batchSliceJobStore;
-    private String activeBatchSliceJobId;
-    private boolean batchRestoring;
-    private boolean importing;
-    private boolean projectTransferring;
-    private boolean batchTransferring;
-    private boolean profileImporting;
-    private boolean visualizing;
-    private boolean openingPrivateA1Study;
-    private boolean modeling;
-    private boolean plateImportInFlight;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ExecutorService importExecutor = Executors.newSingleThreadExecutor(r -> {
-        Thread thread = new Thread(r, "alloy-import");
-        thread.setPriority(Thread.NORM_PRIORITY);
-        return thread;
-    });
-    private final AtomicLong importIds = new AtomicLong();
-    private Future<?> activeImport;
-    private long activeImportId;
-    /** Prevent a stalled document provider from trapping a phone-only session. */
-    private Runnable importTimeoutRunnable;
-    private final AtomicLong geometryRepairIds = new AtomicLong();
-    private Future<?> activeGeometryRepair;
-    private long activeGeometryRepairId;
-    private final AtomicLong projectTransferIds = new AtomicLong();
-    private Future<?> activeProjectTransfer;
-    private long activeProjectTransferId;
-    private final AtomicLong batchTransferIds = new AtomicLong();
-    private Future<?> activeBatchTransfer;
-    private long activeBatchTransferId;
-    private Future<?> activeVisualization;
-    private final AtomicLong visualizationIds = new AtomicLong();
-    private long activeVisualizationId;
-    private byte[] pendingVisualizationPng;
-    private Future<?> activeCertificateInspection;
-    private final AtomicLong certificateInspectionIds = new AtomicLong();
-    private long activeCertificateInspectionId;
-    private Future<?> activeModeling;
-    private final AtomicLong modelingIds = new AtomicLong();
-    private long activeModelingId;
-    private Future<?> activeBatchSnapshot;
-    private Runnable pendingNotificationAction;
-    private SliceJobController sliceJobs;
-    private BatchSliceJobController batchSliceJobs;
-    private ProfileCatalog.Profile profile;
-    private Future<?> activeProfileImport;
-    private final AtomicLong profileImportIds = new AtomicLong();
-    private long activeProfileImportId;
-    private Runnable profileImportTimeoutRunnable;
-
-    @Override public void onCreate(Bundle state) {
-        super.onCreate(state);
-        Window window = getWindow();
-        window.setStatusBarColor(BG);
-        window.setNavigationBarColor(BG);
-        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        inventoryStore = new InventoryStore(getSharedPreferences("alloy_inventory", MODE_PRIVATE));
-        new InventoryReconciliationStore(getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE))
-                .drain(inventoryStore);
-        importedModelStore = new ImportedModelStore(getSharedPreferences("alloy_model_library", MODE_PRIVATE));
-        projectStore = new ProjectStore(getPreferences(MODE_PRIVATE));
-        projectHistoryStore = new ProjectHistoryStore(getSharedPreferences("alloy_project_history", MODE_PRIVATE));
-        plateStore = new PlateStore(getSharedPreferences("alloy_plates", MODE_PRIVATE));
-        modelHistoryStore = new ModelHistoryStore(getSharedPreferences("alloy_model_history", MODE_PRIVATE));
-        ProjectArchive.pruneStoredProjects(new java.io.File(getFilesDir(), "projects"), plateStore.plates());
-        pruneModelCache();
-        activePlateIndex = plateStore.activeIndex();
-        printerJobStore = new PrinterJobStore(getSharedPreferences("alloy_printer_job", MODE_PRIVATE));
-        PrinterJobStore.Job recoveredJob = printerJobStore.recoverAfterRestart(PrinterJobService.ownsAnyJob());
-        if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.COMPLETED
-                && recoveredJob.filamentMm > 0f) {
-            try {
-                InventoryReconciliationStore reconciliation = new InventoryReconciliationStore(
-                        getSharedPreferences("alloy_inventory_reconciliation", MODE_PRIVATE));
-                reconciliation.enqueue(recoveredJob.jobId, recoveredJob.filament,
-                        recoveredJob.filamentMm, recoveredJob.filamentDiameterMm);
-                reconciliation.drain(inventoryStore);
-            } catch (Exception ignored) {
-                // The durable queue remains the source of truth for the next launch.
-            }
-        }
-        if (recoveredJob != null && recoveredJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
-            try {
-                recoveredArtifact = recoverPrinterArtifact(recoveredJob);
-            } catch (Exception ignored) {
-                // A missing or evicted artifact never becomes a reason to
-                // retry a printer job; the checkpoint remains fail-closed.
-            }
-        }
-        credentialStore = new PrinterCredentialStore(getSharedPreferences("alloy_printer", MODE_PRIVATE));
-        visualizationCredentialStore = new VisualizationCredentialStore(
-                getSharedPreferences("alloy_visualization", MODE_PRIVATE));
-        sliceJobStore = new SliceJobStore(getSharedPreferences("alloy_slice_job", MODE_PRIVATE));
-        SliceJobStore.Job existingSlice = sliceJobStore.load();
-        boolean liveSlice = existingSlice != null && SliceJobService.ownsJob(existingSlice.jobId);
-        SliceJobStore.Job recoveredSlice = sliceJobStore.recoverAfterRestart(liveSlice);
-        if (recoveredSlice != null && (recoveredSlice.state == SliceJobStore.State.QUEUED
-                || recoveredSlice.state == SliceJobStore.State.RUNNING) && SliceJobService.ownsJob(recoveredSlice.jobId)) {
-            activeSliceJobId = recoveredSlice.jobId;
-            slicing = true;
-        }
-        batchSliceJobStore = new BatchSliceJobStore(getSharedPreferences("alloy_batch_slice_job", MODE_PRIVATE));
-        BatchSliceJobStore.Job existingBatch = batchSliceJobStore.load();
-        boolean liveBatch = existingBatch != null && BatchSliceJobService.ownsJob(existingBatch.jobId);
-        BatchSliceJobStore.Job recoveredBatch = batchSliceJobStore.recoverAfterRestart(liveBatch);
-        if (recoveredBatch != null && (recoveredBatch.state == BatchSliceJobStore.State.QUEUED
-                || recoveredBatch.state == BatchSliceJobStore.State.RUNNING) && BatchSliceJobService.ownsJob(recoveredBatch.jobId)) {
-            activeBatchSliceJobId = recoveredBatch.jobId;
-            batchSlicing = true;
-        }
-        try {
-            android.content.SharedPreferences profilePreferences = getPreferences(MODE_PRIVATE);
-            String bundledPrinterId = profilePreferences.getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
-            String bundledProfileId = profilePreferences.getString(BUNDLED_PROFILE_ID, "");
-            profile = bundledProfileId.isEmpty()
-                    ? ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId)
-                    : ProfileCatalog.loadPlanningById(getAssets(), bundledProfileId);
-            java.io.File importedProfileFile = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
-            if (importedProfileFile.isFile()) {
-                try {
-                    try (InputStream input = new java.io.FileInputStream(importedProfileFile)) {
-                        profile = ProfileCatalog.load(input);
-                    }
-                } catch (Exception ignored) {
-                    // A damaged private override must fall back to the
-                    // packaged profile rather than leaving an un-applied
-                    // recipe in memory.
-                }
-            }
-            profile.applyTo(config);
-        } catch (Exception ignored) {
-            // Keep the conservative in-code defaults if the packaged profile is unavailable.
-        }
-        projectStore.restoreRecipe(config);
-        SlicerEngine engine = BuildConfig.NATIVE_ENGINE_ENABLED
-                ? new NativeSlicerEngine(getCacheDir(), BuildConfig.NATIVE_ENGINE_VERIFIED)
-                : new LegacyOfflineEngine();
-        sliceJobs = new SliceJobController(engine);
-        batchSliceJobs = new BatchSliceJobController(engine);
-        buildUi();
-        registerPrinterEvents();
-        registerSliceEvents();
-        registerBatchSliceEvents();
-        refreshPrinterUi();
-        refreshSliceUi();
-        refreshBatchSliceUi();
-        Uri incoming = modelUriFromIntent(getIntent());
-        if (incoming != null) {
-            rememberUriPermission(incoming, getIntent().getFlags());
-            loadUri(incoming, false);
-        } else {
-            PlateStore.Plate activePlate = plateStore.activePlate();
-            if (!activePlate.uris.isEmpty()) {
-                restorePlateCheckpoint(activePlate);
-                loadUris(activePlate.uris, activePlate.names, true);
-            } else {
-                ProjectStore.SavedProject saved = projectStore.savedProject();
-                if (saved != null) {
-                    loadUris(saved.uris, saved.names, true);
-                } else {
-                    // Give a fresh install an immediately inspectable 3D model.
-                    // Owner visual-review builds add the supplied Redmagic
-                    // design through an optional catalog overlay; ordinary
-                    // builds retain the Alloy-authored showcase. Both paths
-                    // materialize through the same offline cache boundary.
-                    ModelCatalog.Entry ownerStartup = privateOwnerStartupModel();
-                    if (ownerStartup == null) loadShowcaseModel();
-                    else loadAssetModel(ownerStartup.assetPath, ownerStartup.name);
-                    openingPrivateA1Study = hasBundledA1Reference();
-                    // The supplied handoff is an immersive presentation first,
-                    // not merely a slicer canvas. Make that experience visible
-                    // once on a genuinely fresh install, or once after a
-                    // visual-review upgrade; subsequent launches return
-                    // directly to the project so this never becomes a
-                    // blocking welcome screen. The old boolean is retained
-                    // for backwards compatibility but the versioned marker
-                    // makes the upgrade path explicit.
-                    int introVersion = 0;
-                    try {
-                        introVersion = getPreferences(MODE_PRIVATE)
-                                .getInt(IMMERSIVE_INTRO_VERSION, 0);
-                    } catch (ClassCastException ignored) {
-                        // A very early build used only IMMERSIVE_INTRO_SHOWN;
-                        // treat that legacy preference shape as version zero.
-                    }
-                    if (introVersion < CURRENT_IMMERSIVE_INTRO_VERSION && !firstRunOnboardingPending()) {
-                        getPreferences(MODE_PRIVATE).edit()
-                                .putInt(IMMERSIVE_INTRO_VERSION, CURRENT_IMMERSIVE_INTRO_VERSION)
-                                .putBoolean(IMMERSIVE_INTRO_SHOWN, true)
-                                .apply();
-                        mainHandler.postDelayed(() -> {
-                            if (isFinishing() || model == null) return;
-                            // The private visual-review build is meant to
-                            // make the supplied A1 Mini study discoverable
-                            // immediately: land on the machine, receding
-                            // plates and scale props first. The supplied
-                            // Redmagic/box/parts catalog remains available
-                            // through the model workspace and atlas.
-                            if (hasBundledA1Reference()) {
-                                openingPrivateA1Study = false;
-                                showPrinterStudy();
-                            }
-                            else showImmersiveView();
-                        }, 350L);
-                    }
-                }
-            }
-        }
-        if (incoming == null) scheduleFirstRunOnboarding();
-    }
-
-    /**
-     * Ask only when the user starts a background-capable job. Requesting this
-     * on launch obscures the first-run 3D study and gives no context for why
-     * Alloy needs notifications. The job still starts if the user declines.
-     */
-    private void requestNotificationPermissionIfNeeded(Runnable afterPermission) {
-        if (afterPermission == null) return;
-        if (Build.VERSION.SDK_INT < 33
-                || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-                || getPreferences(MODE_PRIVATE).getBoolean(NOTIFICATION_PERMISSION_PROMPTED, false)) {
-            afterPermission.run();
-            return;
-        }
-        pendingNotificationAction = afterPermission;
-        getPreferences(MODE_PRIVATE).edit().putBoolean(NOTIFICATION_PERMISSION_PROMPTED, true).apply();
-        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATIONS);
-    }
-
-    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_NOTIFICATIONS) {
-            Runnable afterPermission = pendingNotificationAction;
-            pendingNotificationAction = null;
-            if (grantResults == null || grantResults.length == 0
-                    || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Notifications are off; job progress remains available inside Alloy", Toast.LENGTH_LONG).show();
-            }
-            if (afterPermission != null) mainHandler.post(afterPermission);
-        }
-    }
-
-    @Override protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        Uri incoming = modelUriFromIntent(intent);
-        if (incoming == null) return;
-        rememberUriPermission(incoming, intent.getFlags());
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation before opening another model", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        loadUri(incoming, false);
-    }
-
-    /** Accept both normal file opens and Android share-sheet handoffs. */
-    @SuppressWarnings("deprecation")
-    static Uri modelUriFromIntent(Intent intent) {
-        if (intent == null) return null;
-        if (intent.getData() != null) return intent.getData();
-        Object stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-        return stream instanceof Uri ? (Uri) stream : null;
-    }
-
-    private void registerPrinterEvents() {
-        printerEventReceiver = new BroadcastReceiver() {
-            @Override public void onReceive(android.content.Context context, Intent intent) {
-                handlePrinterEvent(intent);
-            }
-        };
-        IntentFilter filter = new IntentFilter(PrinterJobService.ACTION_STATUS);
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(printerEventReceiver, filter, RECEIVER_NOT_EXPORTED);
-        else registerReceiver(printerEventReceiver, filter);
-    }
-
-    private void registerSliceEvents() {
-        sliceEventReceiver = new BroadcastReceiver() {
-            @Override public void onReceive(android.content.Context context, Intent intent) {
-                handleSliceEvent(intent);
-            }
-        };
-        IntentFilter filter = new IntentFilter(SliceJobService.ACTION_STATUS);
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(sliceEventReceiver, filter, RECEIVER_NOT_EXPORTED);
-        else registerReceiver(sliceEventReceiver, filter);
-    }
-
-    private void registerBatchSliceEvents() {
-        batchSliceEventReceiver = new BroadcastReceiver() {
-            @Override public void onReceive(android.content.Context context, Intent intent) {
-                handleBatchSliceEvent(intent);
-            }
-        };
-        IntentFilter filter = new IntentFilter(BatchSliceJobService.ACTION_STATUS);
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(batchSliceEventReceiver, filter, RECEIVER_NOT_EXPORTED);
-        else registerReceiver(batchSliceEventReceiver, filter);
-    }
-
-    private void handleBatchSliceEvent(Intent intent) {
-        if (intent == null || batchSliceJobStore == null || status == null) return;
-        String jobId = intent.getStringExtra(BatchSliceJobService.EXTRA_JOB_ID);
-        BatchSliceJobStore.Job current = batchSliceJobStore.load();
-        if (current == null || jobId == null || !jobId.equals(current.jobId)) return;
-        BatchSliceJobStore.State state;
-        try { state = BatchSliceJobStore.State.valueOf(intent.getStringExtra(BatchSliceJobService.EXTRA_STATE)); }
-        catch (Exception ignored) { return; }
-        int progress = intent.getIntExtra(BatchSliceJobService.EXTRA_PROGRESS, current.progress);
-        String phase = intent.getStringExtra(BatchSliceJobService.EXTRA_PHASE);
-        String detail = intent.getStringExtra(BatchSliceJobService.EXTRA_DETAIL);
-        if (state == BatchSliceJobStore.State.QUEUED || state == BatchSliceJobStore.State.RUNNING) {
-            activeBatchSliceJobId = jobId;
-            batchSlicing = true;
-            status.setText("Batch  Â·  " + (progress < 0 ? "working" : progress + "%")
-                    + "  Â·  " + (phase == null || phase.length() == 0 ? "processing" : phase));
-        } else if (state == BatchSliceJobStore.State.COMPLETED) {
-            activeBatchSliceJobId = null;
-            batchSlicing = false;
-            status.setText("Batch  Â·  validating plate resultsâ€¦");
-            refreshActions();
-            restoreForegroundBatchAsync(true);
-            return;
-        } else if (state == BatchSliceJobStore.State.CANCELLED) {
-            activeBatchSliceJobId = null;
-            batchSlicing = false;
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch slice cancelled");
-        } else if (state == BatchSliceJobStore.State.RECOVERY_REQUIRED) {
-            activeBatchSliceJobId = null;
-            batchSlicing = false;
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  previous batch needs review");
-        } else if (state == BatchSliceJobStore.State.FAILED) {
-            activeBatchSliceJobId = null;
-            batchSlicing = false;
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch slice failed");
-            if (detail != null && detail.length() > 0)
-                Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
-        }
-        refreshActions();
-    }
-
-    private void refreshBatchSliceUi() {
-        if (batchSliceJobStore == null || status == null) return;
-        BatchSliceJobStore.Job job = batchSliceJobStore.load();
-        if (job == null) return;
-        if ((job.state == BatchSliceJobStore.State.QUEUED || job.state == BatchSliceJobStore.State.RUNNING)
-                && BatchSliceJobService.ownsJob(job.jobId)) {
-            activeBatchSliceJobId = job.jobId;
-            batchSlicing = true;
-            status.setText("Batch  Â·  " + (job.progress > 0 ? job.progress + "%  Â·  " : "") + job.phase);
-        } else if (job.state == BatchSliceJobStore.State.COMPLETED && model != null && lastBatch == null) {
-            restoreForegroundBatchAsync(false);
-        } else if (job.state == BatchSliceJobStore.State.RECOVERY_REQUIRED && !batchSlicing) {
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  previous batch needs review");
-        }
-        refreshActions();
-    }
-
-    /** Rehydrate a completed durable batch only when its project fingerprint still matches. */
-    private void restoreForegroundBatchAsync(boolean showSummary) {
-        if (batchRestoring || batchSliceJobStore == null || model == null) return;
-        BatchSliceJobStore.Job job = batchSliceJobStore.load();
-        if (job == null || job.state != BatchSliceJobStore.State.COMPLETED) return;
-        final String jobId = job.jobId;
-        final ArrayList<PlateStore.Plate> currentPlates = plateStore.plates();
-        final Slicer.Config currentConfig = config.copy();
-        final String currentProjectHash;
-        try { currentProjectHash = BatchSliceRequestStore.fingerprint(currentPlates, currentConfig); }
-        catch (Exception error) { return; }
-        batchRestoring = true;
-        activeBatchSnapshot = importExecutor.submit(() -> {
-            try {
-                BatchSliceRequestStore.Request request = BatchSliceRequestStore.read(getFilesDir(), jobId);
-                if (!request.projectSha256.equalsIgnoreCase(currentProjectHash) || !sameConfig(request.config, currentConfig))
-                    throw new IOException("The completed batch belongs to a different project or recipe");
-                BatchSliceJobController.BatchResult restored = BatchSliceResultStore.read(getFilesDir(), getContentResolver(), request,
-                        BatchSliceRequestStore.jobDirectory(getFilesDir(), jobId));
-                mainHandler.post(() -> {
-                    batchRestoring = false;
-                    activeBatchSnapshot = null;
-                    if (!jobId.equals(activeBatchJobIdOrEmpty()) || isFinishing()) return;
-                    lastBatch = restored;
-                    bindBatchResult(restored);
-                    status.setText("Inspect  Â·  " + restored.plates.size() + " plates ready");
-                    details.setText(String.format(Locale.US, "%d plates  Â·  %d layers  Â·  %.0f mm filament  Â·  %s",
-                            restored.plates.size(), restored.totalLayers(), restored.totalFilamentMm(),
-                            restored.totalPrintTimeSeconds() > 0f ? formatDuration(restored.totalPrintTimeSeconds()) : "time pending"));
-                    refreshActions();
-                    if (showSummary) showBatchSummary(restored);
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    batchRestoring = false;
-                    activeBatchSnapshot = null;
-                    if (isFinishing()) return;
-                    status.setText("Prepare  Â·  completed batch needs review");
-                    refreshActions();
-                    Toast.makeText(this, "Batch result could not be revalidated: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private String activeBatchJobIdOrEmpty() {
-        BatchSliceJobStore.Job job = batchSliceJobStore == null ? null : batchSliceJobStore.load();
-        return job == null ? "" : job.jobId;
-    }
-
-    private void bindBatchResult(BatchSliceJobController.BatchResult result) {
-        if (result == null) return;
-        for (BatchSliceJobController.PlateResult plate : result.plates) {
-            if (plate.plate.index != activePlateIndex) continue;
-            model = plate.model;
-            slice = plate.slice;
-            stagedArtifact = plate.artifact;
-            viewport.setModel(model);
-            viewport.setResult(slice);
-            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-            return;
-        }
-    }
-
-    private void handleSliceEvent(Intent intent) {
-        if (intent == null || sliceJobStore == null) return;
-        String jobId = intent.getStringExtra(SliceJobService.EXTRA_JOB_ID);
-        SliceJobStore.Job current = sliceJobStore.load();
-        if (current == null || jobId == null || !jobId.equals(current.jobId)) return;
-        SliceJobStore.State state;
-        try { state = SliceJobStore.State.valueOf(intent.getStringExtra(SliceJobService.EXTRA_STATE)); }
-        catch (Exception ignored) { return; }
-        int progress = intent.getIntExtra(SliceJobService.EXTRA_PROGRESS, current.progress);
-        String phase = intent.getStringExtra(SliceJobService.EXTRA_PHASE);
-        String detail = intent.getStringExtra(SliceJobService.EXTRA_DETAIL);
-        if (state == SliceJobStore.State.QUEUED || state == SliceJobStore.State.RUNNING) {
-            activeSliceJobId = jobId;
-            slicing = true;
-            status.setText("Slice  Â·  " + (progress < 0 ? "working" : progress + "%")
-                    + "  Â·  " + (phase == null || phase.length() == 0 ? "processing" : phase));
-            showSliceProgressLoader(progress, phase);
-        } else if (state == SliceJobStore.State.COMPLETED) {
-            activeSliceJobId = null;
-            slicing = false;
-            dismissSliceProgressLoader();
-            if (!restoreForegroundSliceIfMatching()) {
-                status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  slice result needs review");
-                Toast.makeText(this, "Slice completed but its local result could not be revalidated", Toast.LENGTH_LONG).show();
-            }
-        } else if (state == SliceJobStore.State.CANCELLED) {
-            activeSliceJobId = null;
-            slicing = false;
-            dismissSliceProgressLoader();
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  slice cancelled");
-        } else if (state == SliceJobStore.State.RECOVERY_REQUIRED) {
-            activeSliceJobId = null;
-            slicing = false;
-            dismissSliceProgressLoader();
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  previous slice needs review");
-        } else if (state == SliceJobStore.State.FAILED) {
-            activeSliceJobId = null;
-            slicing = false;
-            dismissSliceProgressLoader();
-            status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  slice failed");
-            if (detail != null && detail.length() > 0)
-                Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
-        }
-        refreshActions();
-    }
-
-    private void refreshSliceUi() {
-        if (sliceJobStore == null || status == null) return;
-        SliceJobStore.Job job = sliceJobStore.load();
-        if (job == null) return;
-        if ((job.state == SliceJobStore.State.QUEUED || job.state == SliceJobStore.State.RUNNING)
-                && SliceJobService.ownsJob(job.jobId)) {
-            activeSliceJobId = job.jobId;
-            slicing = true;
-            status.setText("Slice  Â·  " + (job.progress > 0 ? job.progress + "%  Â·  " : "") + job.phase);
-            showSliceProgressLoader(job.progress, job.phase);
-        } else if (job.state == SliceJobStore.State.COMPLETED && model != null) {
-            dismissSliceProgressLoader();
-            if (restoreForegroundSliceIfMatching()) {
-                status.setText("Inspect  Â·  " + slice.layers.size() + " layers");
-                details.setText(String.format(Locale.US, "%.0f mm filament  Â·  %s  Â·  %d warning(s)", slice.filamentMm,
-                        slice.printTimeSeconds < 0f ? "time pending" : formatDuration(slice.printTimeSeconds), slice.warnings));
-            }
-        }
-        refreshActions();
-    }
-
-    /**
-     * Slicing happens in a durable foreground service. This surface mirrors
-     * its actual progress and offers a visible cancellation route; it never
-     * manufactures completion just to make the animation look polished.
-     */
-    private void showSliceProgressLoader(int progress, String phase) {
-        if (isFinishing()) return;
-        if (sliceProgressDialog == null) {
-            sliceProgressDialog = new Dialog(this);
-            sliceProgressDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            sliceProgressDialog.setCancelable(false);
-            FrameLayout page = new FrameLayout(this);
-            page.setBackgroundColor(Color.rgb(5, 8, 8));
-            sliceProgressLoader = new FilamentSweepLoader(this);
-            page.addView(sliceProgressLoader, new FrameLayout.LayoutParams(-1, -1));
-            TextView cancel = label("Cancel slice", 14, Color.rgb(184, 188, 184));
-            cancel.setGravity(Gravity.CENTER);
-            cancel.setPadding(dp(18), dp(12), dp(18), dp(12));
-            cancel.setContentDescription("Cancel slicing");
-            cancel.setOnClickListener(v -> cancelSlice());
-            FrameLayout.LayoutParams cancelLp = new FrameLayout.LayoutParams(-2, -2,
-                    Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-            cancelLp.topMargin = dp(24);
-            page.addView(cancel, cancelLp);
-            sliceProgressDialog.setContentView(page);
-            Window dialogWindow = sliceProgressDialog.getWindow();
-            if (dialogWindow != null) {
-                dialogWindow.setBackgroundDrawable(new ColorDrawable(Color.rgb(5, 8, 8)));
-                dialogWindow.setDimAmount(0f);
-            }
-        }
-        sliceProgressLoader.setProgress(progress, phase);
-        if (!sliceProgressDialog.isShowing()) {
-            sliceProgressDialog.show();
-            Window dialogWindow = sliceProgressDialog.getWindow();
-            if (dialogWindow != null) dialogWindow.setLayout(-1, -1);
-        }
-    }
-
-    private void dismissSliceProgressLoader() {
-        if (sliceProgressDialog != null && sliceProgressDialog.isShowing()) sliceProgressDialog.dismiss();
-        sliceProgressDialog = null;
-        sliceProgressLoader = null;
-    }
-
-    /** Reattach a completed service result only to the exact model and recipe that created it. */
-    private boolean restoreForegroundSliceIfMatching() {
-        if (sliceJobStore == null || model == null) return false;
-        SliceJobStore.Job job = sliceJobStore.load();
-        if (job == null || job.state != SliceJobStore.State.COMPLETED) return false;
-        try {
-            if (!job.modelSha256.equalsIgnoreCase(SliceRequestStore.fingerprint(model))) return false;
-            SliceRequestStore.Request request = SliceRequestStore.read(getFilesDir(), job.jobId);
-            if (!sameConfig(request.config, config)) return false;
-            Slicer.Result restored = SliceResultStore.read(SliceRequestStore.jobDirectory(getFilesDir(), job.jobId), request.config);
-            PrinterTransport.Artifact artifact = ArtifactStore.recover(getFilesDir(), job.artifactName, job.artifactSize, job.artifactSha256);
-            slice = restored;
-            stagedArtifact = artifact;
-            lastBatch = null;
-            viewport.setModel(model);
-            viewport.setResult(restored);
-            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-            details.setText(String.format(Locale.US, "%.0f mm filament  Â·  %s  Â·  %d warning(s)", restored.filamentMm,
-                    restored.printTimeSeconds < 0f ? "time pending" : formatDuration(restored.printTimeSeconds), restored.warnings));
-            return true;
-        } catch (Exception error) {
-            return false;
-        }
-    }
-
-    private static boolean sameConfig(Slicer.Config left, Slicer.Config right) {
-        if (left == null || right == null) return false;
-        return close(left.layerHeight, right.layerHeight) && close(left.firstLayerHeight, right.firstLayerHeight)
-                && close(left.nozzle, right.nozzle) && close(left.filamentDiameter, right.filamentDiameter)
-                && close(left.infill, right.infill) && close(left.bedX, right.bedX) && close(left.bedY, right.bedY)
-                && close(left.bedZ, right.bedZ) && safeEquals(left.printer, right.printer) && safeEquals(left.filament, right.filament)
-                && close(left.nozzleTemperature, right.nozzleTemperature) && close(left.firstLayerNozzleTemperature, right.firstLayerNozzleTemperature)
-                && close(left.bedTemperature, right.bedTemperature) && close(left.firstLayerBedTemperature, right.firstLayerBedTemperature)
-                && close(left.extrusionMultiplier, right.extrusionMultiplier) && close(left.maxVolumetricSpeed, right.maxVolumetricSpeed)
-                && close(left.travelSpeed, right.travelSpeed) && close(left.outerWallSpeed, right.outerWallSpeed)
-                && close(left.innerWallSpeed, right.innerWallSpeed) && close(left.infillSpeed, right.infillSpeed)
-                && close(left.initialLayerSpeed, right.initialLayerSpeed) && close(left.fanMinPercent, right.fanMinPercent)
-                && close(left.fanMaxPercent, right.fanMaxPercent) && left.supports == right.supports
-                && close(left.supportThresholdDegrees, right.supportThresholdDegrees) && left.perimeters == right.perimeters
-                && left.topLayers == right.topLayers && left.bottomLayers == right.bottomLayers
-                && left.nativeSettings.equals(right.nativeSettings);
-    }
-
-    private static boolean close(float left, float right) { return Math.abs(left - right) <= 0.0001f; }
-    private static boolean safeEquals(String left, String right) { return left == null ? right == null : left.equals(right); }
-
-    private void handlePrinterEvent(Intent intent) {
-        if (intent == null || printerJobStore == null) return;
-        String jobId = intent.getStringExtra(PrinterJobService.EXTRA_JOB_ID);
-        PrinterJobStore.Job current = printerJobStore.load();
-        if (current == null || jobId == null || !jobId.equals(current.jobId)) return;
-        String encoded = intent.getStringExtra(PrinterJobService.EXTRA_STATE);
-        PrinterTransport.State state;
-        try { state = PrinterTransport.State.valueOf(encoded); }
-        catch (Exception ignored) { return; }
-        int progress = intent.getIntExtra(PrinterJobService.EXTRA_PROGRESS, -1);
-        String phase = intent.getStringExtra(PrinterJobService.EXTRA_PHASE);
-        String detail = intent.getStringExtra(PrinterJobService.EXTRA_DETAIL);
-        if (state == PrinterTransport.State.UPLOADING && progress >= 0) {
-            status.setText("Printer  Â·  " + progress + "%  Â·  " + (phase == null ? "Uploading artifact" : phase));
-        } else if (state == PrinterTransport.State.UPLOADED) {
-            activePrinterJobId = current.jobId;
-            activePrinterTarget = printerTarget(current);
-            printActive = false;
-            printerBusy = false;
-            recoverUploadedArtifact(current);
-            status.setText("Printer  Â·  artifact uploaded  Â·  ready to start");
-        } else if (state == PrinterTransport.State.CONNECTING || state == PrinterTransport.State.START_REQUESTED
-                || state == PrinterTransport.State.RUNNING || state == PrinterTransport.State.PAUSE_REQUESTED
-                || state == PrinterTransport.State.PAUSED || state == PrinterTransport.State.RESUME_REQUESTED
-                || state == PrinterTransport.State.CANCEL_REQUESTED) {
-            activePrinterJobId = current.jobId;
-            activePrinterTarget = printerTarget(current);
-            printActive = state == PrinterTransport.State.START_REQUESTED
-                    || state == PrinterTransport.State.RUNNING || state == PrinterTransport.State.PAUSE_REQUESTED
-                    || state == PrinterTransport.State.PAUSED || state == PrinterTransport.State.RESUME_REQUESTED
-                    || state == PrinterTransport.State.CANCEL_REQUESTED;
-            printerBusy = true;
-            status.setText("Printer  Â·  " + state.name());
-        } else if (state == PrinterTransport.State.RECOVERY_REQUIRED) {
-            printActive = false;
-            printerBusy = false;
-            activePrinterTarget = null;
-            activePrinterJobId = null;
-            recoverUploadedArtifact(current);
-            status.setText("Printer  Â·  recovery review required");
-        } else if (state == PrinterTransport.State.FAILED || state == PrinterTransport.State.COMPLETED
-                || state == PrinterTransport.State.CANCELLED) {
-            printActive = false;
-            printerBusy = false;
-            activePrinterTarget = null;
-            activePrinterJobId = null;
-            if (state == PrinterTransport.State.COMPLETED) updateInventorySummary();
-            status.setText("Printer  Â·  " + state.name());
-            if (state == PrinterTransport.State.FAILED && detail != null && detail.length() > 0)
-                Toast.makeText(this, "Printer job failed: " + detail, Toast.LENGTH_LONG).show();
-        }
-        refreshActions();
-    }
-
-    private void refreshPrinterUi() {
-        if (printerJobStore == null) return;
-        PrinterJobStore.Job job = printerJobStore.load();
-        if (job == null) return;
-        if (job.state == PrinterTransport.State.UPLOADED || job.state == PrinterTransport.State.RECOVERY_REQUIRED)
-            recoverUploadedArtifact(job);
-        if (job.state == PrinterTransport.State.CONNECTING || job.state == PrinterTransport.State.UPLOADING
-                || job.state == PrinterTransport.State.START_REQUESTED || job.state == PrinterTransport.State.RUNNING
-                || job.state == PrinterTransport.State.PAUSE_REQUESTED || job.state == PrinterTransport.State.PAUSED
-                || job.state == PrinterTransport.State.RESUME_REQUESTED || job.state == PrinterTransport.State.CANCEL_REQUESTED) {
-            activePrinterJobId = job.jobId;
-            activePrinterTarget = printerTarget(job);
-            printActive = job.state == PrinterTransport.State.START_REQUESTED
-                    || job.state == PrinterTransport.State.RUNNING || job.state == PrinterTransport.State.PAUSE_REQUESTED
-                    || job.state == PrinterTransport.State.PAUSED || job.state == PrinterTransport.State.RESUME_REQUESTED
-                    || job.state == PrinterTransport.State.CANCEL_REQUESTED;
-            printerBusy = true;
-            status.setText("Printer  Â·  " + job.state.name());
-        } else if (job.state == PrinterTransport.State.UPLOADED) {
-            activePrinterJobId = job.jobId;
-            activePrinterTarget = printerTarget(job);
-            printActive = false;
-            printerBusy = false;
-            status.setText("Printer  Â·  artifact uploaded  Â·  ready to start");
-        } else if (job.state == PrinterTransport.State.RECOVERY_REQUIRED) {
-            activePrinterTarget = null;
-            activePrinterJobId = null;
-            printActive = false;
-            printerBusy = false;
-        }
-        refreshActions();
-    }
-
-    private void recoverUploadedArtifact(PrinterJobStore.Job job) {
-        try {
-            recoveredArtifact = recoverPrinterArtifact(job);
-        } catch (Exception ignored) {
-            recoveredArtifact = null;
-        }
-    }
-
-    private PrinterTransport.Artifact recoverPrinterArtifact(PrinterJobStore.Job job) throws Exception {
-        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
-            return ArtifactStore.recoverForA1MiniNoSupportPilot(getFilesDir(), job.artifactName,
-                    job.artifactSize, job.artifactSha256);
-        }
-        return ArtifactStore.recoverForPhysicalPrint(getFilesDir(), job.artifactName,
-                job.artifactSize, job.artifactSha256);
-    }
-
-    private PrinterTransport.PrinterTarget printerTarget(PrinterJobStore.Job job) {
-        try { return new PrinterTransport.PrinterTarget(job.printerName, job.host, job.serial); }
-        catch (Exception ignored) { return null; }
-    }
-
-    private void buildUi() {
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(BG);
-        root.setPadding(dp(18), dp(12), dp(18), 0);
-        // Android 15 enforces edge-to-edge for target 35. Keep the workshop
-        // header and bottom action rail clear of system bars on every API.
-        root.setOnApplyWindowInsetsListener((view, insets) -> {
-            int top;
-            int bottom;
-            if (Build.VERSION.SDK_INT >= 30) {
-                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
-                top = bars.top;
-                bottom = bars.bottom;
-            } else {
-                top = insets.getSystemWindowInsetTop();
-                bottom = insets.getSystemWindowInsetBottom();
-            }
-            view.setPadding(dp(18), dp(12) + top, dp(18), bottom);
-            return insets;
-        });
-
-        root.addView(buildHeader(), new LinearLayout.LayoutParams(-1, dp(76)));
-
-        status = label("Import a model to begin", 13, MUTED);
-        status.setGravity(Gravity.CENTER_VERTICAL);
-        status.setPadding(dp(14), 0, dp(14), 0);
-        status.setBackground(round(Color.rgb(239, 236, 230), Color.rgb(222, 216, 206), 1, 14));
-        root.addView(status, new LinearLayout.LayoutParams(-1, dp(42)));
-
-        FrameLayout workspace = new FrameLayout(this);
-        workspace.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 2, 28));
-        workspace.setClipToOutline(true);
-        LinearLayout.LayoutParams workspaceLp = new LinearLayout.LayoutParams(-1, 0, 1);
-        workspaceLp.topMargin = dp(10);
-        workspaceLp.bottomMargin = dp(10);
-        viewport = new ViewportView(this);
-        viewport.setPartSelectionListener(part -> {
-            if (model == null || model.parts == null || part < 0 || part >= model.parts.length) return;
-            if (!modelUris.isEmpty()) projectStore.saveSelectedPart(part);
-            saveCurrentPlate();
-            status.setText("Prepare  Â·  focused on " + model.parts[part].name);
-        });
-        workspace.addView(viewport, new FrameLayout.LayoutParams(-1, -1));
-
-        modelMeta = label("NEW PROJECT\n" + profileShortLabel(), 10, MUTED);
-        modelMeta.setLetterSpacing(0.12f);
-        modelMeta.setLineSpacing(2, 1.0f);
-        modelMeta.setMaxWidth(dp(150));
-        modelMeta.setMaxLines(3);
-        FrameLayout.LayoutParams metaLp = new FrameLayout.LayoutParams(dp(132), -2, Gravity.TOP | Gravity.START);
-        metaLp.setMargins(dp(16), dp(16), 0, 0);
-        modelMeta.setPadding(dp(12), dp(9), dp(12), dp(9));
-        modelMeta.setBackground(round(Color.argb(236, 255, 255, 255), Color.rgb(226, 222, 213), 1, 14));
-        modelMeta.setElevation(dp(2));
-        workspace.addView(modelMeta, metaLp);
-
-        TextView fit = control("âŠ™", "Fit model", v -> { viewport.fitModel(); Toast.makeText(this, "Model fitted to the build plate", Toast.LENGTH_SHORT).show(); });
-        FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
-        fitLp.setMargins(0, dp(16), dp(16), 0);
-        workspace.addView(fit, fitLp);
-
-        TextView orbit = control("â†»", "Reset view", v -> { viewport.resetView(); Toast.makeText(this, "View reset", Toast.LENGTH_SHORT).show(); });
-        FrameLayout.LayoutParams orbitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
-        orbitLp.setMargins(0, dp(70), dp(16), 0);
-        workspace.addView(orbit, orbitLp);
-
-        // Keep the subject unobstructed: these tags sit in the same orbit as
-        // the reference configurator instead of becoming a second toolbar on
-        // top of the model.
-        // The header already owns the study shortcut. Reserve the left and
-        // right lanes beside the subject for context pills so they do not
-        // collide with the metadata card or the fit/reset controls.
-        workspace.addView(marker("â–£", "Printer", profilePrinterLabel(), v -> showPrinterStatus(), Gravity.TOP | Gravity.START, dp(16), dp(150)));
-        workspace.addView(marker("M", "Material", profileMaterialLabel(), v -> showRecipe(), Gravity.TOP | Gravity.END, dp(16), dp(150)));
-        workspace.addView(marker(Integer.toString(activePlateIndex + 1), "Plate", currentPlateLabel(), v -> showPlates(), Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(16)));
-        workspace.addView(marker(String.format(Locale.US, "%.2f", config.layerHeight), "Quality", "Layer height", v -> showRecipe(), Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(70)));
-        workspace.addView(marker("âŒ", "Supports", config.supports ? "Auto supports" : "Off", v -> showRecipe(), Gravity.BOTTOM | Gravity.END, dp(22), dp(22)));
-        workspace.addView(marker("â†—", "Arrange", "Scale / tilt / pack", v -> showPrepare(), Gravity.BOTTOM | Gravity.START, dp(22), dp(22)));
-
-        root.addView(workspace, workspaceLp);
-        root.addView(buildInventoryStrip(), new LinearLayout.LayoutParams(-1, dp(76)));
-
-        details = label("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume", 12, MUTED);
-        details.setGravity(Gravity.CENTER_VERTICAL);
-        details.setPadding(dp(14), 0, dp(14), 0);
-        details.setBackground(round(Color.rgb(239, 236, 230), Color.rgb(222, 216, 206), 1, 14));
-        details.setOnClickListener(v -> showParts());
-        details.setContentDescription("Model dimensions and part list");
-        LinearLayout.LayoutParams detailsLp = new LinearLayout.LayoutParams(-1, dp(42));
-        detailsLp.bottomMargin = dp(8);
-        root.addView(details, detailsLp);
-
-        // Dynamic task actions stay in this off-screen source of truth. The
-        // upper curve triggers one contextual next step; the lower "more"
-        // destination exposes the remaining routes. This avoids turning the
-        // contextual bar into an unstructured list of every action.
-        actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        arcNavigation = new ArcNavigationBar(this);
-        arcNavigation.setListener(new ArcNavigationBar.Listener() {
-            @Override public void onContext() { openArcContext(); }
-            @Override public void onSearch() { showModelLibrary(); }
-            @Override public void onAlerts() { showPrinterReadiness(); }
-            @Override public void onHome() {
-                if (viewport != null) viewport.resetView();
-                status.setText(model == null ? "Start  Â·  choose a model" : "Prepare  Â·  " + model.displayName);
-            }
-            @Override public void onLibrary() { showModelLibrary(); }
-            @Override public void onPrepare() { showPrepare(); }
-            @Override public void onHistory() { showModelHistory(); }
-            @Override public void onMore() { showMoreActions(); }
-        });
-        root.addView(arcNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
-
-        layerInspector = new LinearLayout(this);
-        layerInspector.setOrientation(LinearLayout.VERTICAL);
-        layerInspector.setPadding(dp(12), dp(2), dp(12), 0);
-        layerInspector.setBackground(round(Color.rgb(239, 236, 230), Color.rgb(222, 216, 206), 1, 14));
-        layerInspectorLabel = label("LAYER INSPECTION", 10, MUTED);
-        layerInspectorLabel.setContentDescription("Selected toolpath layer details");
-        layerInspector.addView(layerInspectorLabel, new LinearLayout.LayoutParams(-1, dp(22)));
-        layerSeek = new SeekBar(this);
-        layerSeek.setContentDescription("Toolpath layer scrubber");
-        layerSeek.setMax(0);
-        layerSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (!fromUser || slice == null || slice.layers == null || slice.layers.isEmpty()) return;
-                viewport.setSelectedLayer(progress);
-                Slicer.Layer layer = slice.layers.get(progress);
-                layerInspectorLabel.setText(String.format(Locale.US, "LAYER %d / %d  Â·  Z %.2f mm  Â·  %d segments",
-                        progress + 1, slice.layers.size(), layer.z, layer.segments.size()));
-                status.setText(String.format(Locale.US, "Inspect  Â·  layer %d / %d  Â·  Z %.2f mm  Â·  %d segments",
-                        progress + 1, slice.layers.size(), layer.z, layer.segments.size()));
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) { }
-            @Override public void onStopTrackingTouch(SeekBar seekBar) { }
-        });
-        layerInspector.addView(layerSeek, new LinearLayout.LayoutParams(-1, dp(34)));
-        LinearLayout.LayoutParams inspectorLp = new LinearLayout.LayoutParams(-1, dp(60));
-        inspectorLp.bottomMargin = dp(8);
-        root.addView(layerInspector, inspectorLp);
-        setContentView(root);
-        root.requestApplyInsets();
-        updateRecipeMarkers();
-        refreshActions();
-    }
-
-    /** A distraction-free presentation surface for the model and toolpath. */
-    private void showImmersiveView() {
-        if (model == null) {
-            Toast.makeText(this, "Import or create a model before opening the 3D view", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setBackgroundColor(Color.WHITE);
-        page.setPadding(0, 0, 0, 0);
-
-        FrameLayout stage = new FrameLayout(this);
-        stage.setBackgroundColor(Color.WHITE);
-        stage.setClipToOutline(false);
-        ViewportView scene = new ViewportView(this);
-        // Immersive study keeps the selected model as the hero, matching the
-        // supplied configurator reference. The main workspace retains the
-        // contextual printer envelope; this view is for inspecting the part.
-        scene.setPresentationMode(false);
-        scene.setCleanPresentation(true);
-        scene.setModel(model);
-        scene.setResult(slice);
-        scene.setSelectedPart(viewport == null ? -1 : viewport.getSelectedPart());
-        stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
-
-        TextView title = label(presentationTitle(model.displayName) + "\n"
-                + profileMaterialLabel() + "  Â·  " + currentPlateLabel(), 13, TEXT);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setLineSpacing(3, 1.0f);
-        // Keep the plate badge in its own visual lane on narrow phones; the
-        // supplied configurator reference has generous desktop whitespace,
-        // while Android presentation surfaces can be only 360dp wide.
-        title.setMaxWidth(dp(185));
-        title.setMaxLines(2);
-        title.setPadding(dp(16), dp(12), dp(16), dp(12));
-        title.setBackground(round(Color.argb(248, 255, 255, 255), Color.rgb(231, 228, 221), 1, 18));
-        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
-        titleLp.setMargins(dp(14), dp(14), 0, 0);
-        stage.addView(title, titleLp);
-
-        ImageView logo = alloyLogo();
-        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        logoLp.topMargin = dp(14);
-        stage.addView(logo, logoLp);
-
-        TextView close = control("Ã—", "Close immersive 3D view", v -> dialog.dismiss());
-        FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
-        closeLp.setMargins(0, dp(14), dp(14), 0);
-        stage.addView(close, closeLp);
-        TextView fit = control("âŠ™", "Fit model in immersive view", v -> scene.fitModel());
-        FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
-        fitLp.setMargins(0, dp(68), dp(14), 0);
-        stage.addView(fit, fitLp);
-        addPresentationAppearanceControls(stage, scene, dp(122));
-
-        TextView hint = label("DRAG TO ORBIT  Â·  PINCH TO ZOOM  Â·  TAP A PART TO FOCUS", 9, MUTED);
-        hint.setGravity(Gravity.CENTER);
-        hint.setLetterSpacing(0.08f);
-        FrameLayout.LayoutParams hintLp = new FrameLayout.LayoutParams(-2, dp(30), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        hintLp.bottomMargin = dp(12);
-        stage.addView(hint, hintLp);
-
-        // These are deliberately lightweight callouts: the model remains the
-        // hero while the same product vocabulary as the supplied reference
-        // identifies the print context around it.
-        // The reference has a desktop-sized centered badge. On a phone, drop
-        // it into the open upper stage so it never competes with the title.
-        stage.addView(sceneTag("01", "PLATE", currentPlateLabel(), Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, dp(88)));
-        // Give each callout a dedicated visual lane. Center-vertical
-        // placement looks balanced on a desktop canvas, but on a tall phone
-        // it puts pills over the hero mesh or the appearance controls and
-        // makes the study feel like an early debug overlay.
-        stage.addView(sceneTag("M", "MATERIAL", profileMaterialLabel(), Gravity.TOP | Gravity.START, dp(16), dp(136)));
-        stage.addView(sceneTag("âŒ", "SUPPORTS", config.supports ? "AUTO" : "OFF", Gravity.BOTTOM | Gravity.END, dp(16), dp(154)));
-        stage.addView(sceneTag("â–£", "PRINTER", profilePrinterLabel().toUpperCase(Locale.US), Gravity.BOTTOM | Gravity.START, dp(22), dp(62)));
-        page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
-
-        LinearLayout footer = new LinearLayout(this);
-        footer.setGravity(Gravity.CENTER_VERTICAL);
-        footer.setPadding(dp(14), dp(10), dp(14), dp(14));
-        footer.setBackgroundColor(Color.WHITE);
-        TextView meta = label(currentPlateLabel() + "  Â·  " + profileShortLabel(), 11, MUTED);
-        meta.setGravity(Gravity.CENTER_VERTICAL);
-        meta.setSingleLine(true);
-        meta.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        meta.setMinWidth(dp(110));
-        footer.addView(meta, new LinearLayout.LayoutParams(0, dp(50), 1));
-        Button study = dialogButton("A1 study", v -> {
-            dialog.dismiss();
-            showPrinterStudy();
-        });
-        study.setContentDescription("Open A1 Mini visual study");
-        footer.addView(study, new LinearLayout.LayoutParams(-2, dp(50)));
-        if (slice != null) {
-            Button path = dialogButton("Path view", null);
-            path.setOnClickListener(v -> {
-                scene.setToolpathOnly(!scene.isToolpathOnly());
-                path.setText(scene.isToolpathOnly() ? "Model view" : "Path view");
-            });
-            footer.addView(path, new LinearLayout.LayoutParams(-2, dp(50)));
-        }
-        if (model.parts != null && model.parts.length > 1) {
-            Button assembly = dialogButton("Explode", null);
-            assembly.setContentDescription("Toggle exploded assembly view");
-            assembly.setOnClickListener(v -> {
-                boolean exploded = !scene.isExplodedPresentation();
-                scene.setExplodedPresentation(exploded);
-                assembly.setText(exploded ? "Assemble" : "Explode");
-                Toast.makeText(this, exploded ? "Exploded inspection view" : "Assembled inspection view", Toast.LENGTH_SHORT).show();
-            });
-            footer.addView(assembly, new LinearLayout.LayoutParams(-2, dp(50)));
-        }
-        Button framing = dialogButton("Machine view", null);
-        framing.setOnClickListener(v -> {
-            boolean machine = framing.getText().toString().equals("Machine view");
-            scene.setPresentationMode(machine);
-            scene.setCleanPresentation(!machine);
-            framing.setText(machine ? "Hero view" : "Machine view");
-        });
-        footer.addView(framing, new LinearLayout.LayoutParams(-2, dp(50)));
-        Button done = dialogButton("Done", v -> dialog.dismiss());
-        done.setTextSize(13);
-        done.setTypeface(null, android.graphics.Typeface.BOLD);
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(0, dp(54), 1);
-        doneLp.leftMargin = dp(8);
-        footer.addView(done, doneLp);
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(78)));
-
-        dialog.setContentView(page);
-        dialog.setOnDismissListener(ignored -> scene.onHostPause());
-        dialog.show();
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(android.R.color.transparent);
-            window.setLayout(-1, -1);
-            enterPresentationMode(window);
-        }
-    }
-
-    private Button dialogButton(String text, View.OnClickListener listener) {
-        Button button = new Button(this);
-        button.setText(text);
-        button.setTextSize(12);
-        button.setTextColor(TEXT);
-        button.setAllCaps(false);
-        button.setStateListAnimator(null);
-        button.setMinHeight(dp(48));
-        button.setPadding(dp(14), 0, dp(14), 0);
-        button.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
-        button.setOnClickListener(listener);
-        return button;
-    }
-
-    /** Remove platform chrome while a presentation study is on screen. */
-    private void enterPresentationMode(Window window) {
-        if (window == null) return;
-        // Dialog windows can briefly inherit the host activity's system-bar
-        // policy during a cold launch. The study is a full-bleed product
-        // surface, so make fullscreen an explicit window property as well as
-        // an insets request; otherwise status/navigation chrome can appear
-        // over marketing captures and change the composition.
-        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        if (Build.VERSION.SDK_INT >= 30) {
-            window.setDecorFitsSystemWindows(false);
-            android.view.WindowInsetsController controller = window.getInsetsController();
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.systemBars());
-                controller.setSystemBarsBehavior(
-                        android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-        } else {
-            window.getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        }
-    }
-
-    /**
-     * Presentation controls are intentionally inside the 3D stage so the
-     * visual treatment is discoverable. They only change renderer uniforms;
-     * geometry, recipes, slices and printer commands remain untouched.
-     */
-    private void addPresentationAppearanceControls(FrameLayout stage, ViewportView scene, int topMargin) {
-        Button finish = dialogButton(STUDIO_FINISHES[scene.getFinishMode()], null);
-        finish.setTextSize(10);
-        finish.setMinWidth(dp(112));
-        finish.setContentDescription("Cycle studio finish");
-        finish.setOnClickListener(v -> {
-            int next = (scene.getFinishMode() + 1) % STUDIO_FINISHES.length;
-            scene.setFinishMode(next);
-            finish.setText(STUDIO_FINISHES[next]);
-            Toast.makeText(this, "Studio finish Â· " + STUDIO_FINISHES[next], Toast.LENGTH_SHORT).show();
-        });
-        FrameLayout.LayoutParams finishLp = new FrameLayout.LayoutParams(-2, dp(40), Gravity.TOP | Gravity.END);
-        finishLp.setMargins(0, topMargin, dp(14), 0);
-        stage.addView(finish, finishLp);
-
-        Button theme = dialogButton("Light stage", null);
-        theme.setTextSize(10);
-        theme.setMinWidth(dp(112));
-        theme.setContentDescription("Toggle studio stage theme");
-        theme.setOnClickListener(v -> {
-            boolean dark = !scene.isNightStage();
-            scene.setNightStage(dark);
-            theme.setText(dark ? "Dark stage" : "Light stage");
-            Toast.makeText(this, dark ? "Dark studio stage" : "Light studio stage", Toast.LENGTH_SHORT).show();
-        });
-        FrameLayout.LayoutParams themeLp = new FrameLayout.LayoutParams(-2, dp(40), Gravity.TOP | Gravity.END);
-        themeLp.setMargins(0, topMargin + dp(44), dp(14), 0);
-        stage.addView(theme, themeLp);
-    }
-
-    private View sceneTag(String glyph, String eyebrow, String value, int gravity,
-                          int horizontalMargin, int verticalMargin) {
-        LinearLayout tag = new LinearLayout(this);
-        tag.setOrientation(LinearLayout.HORIZONTAL);
-        tag.setGravity(Gravity.CENTER_VERTICAL);
-        tag.setPadding(dp(6), dp(5), dp(12), dp(5));
-        tag.setBackground(round(Color.argb(246, 255, 255, 255), Color.rgb(226, 222, 213), 1, 22));
-        tag.setElevation(dp(4));
-        TextView icon = label(glyph, glyph.length() > 2 ? 9 : 13, INK);
-        icon.setGravity(Gravity.CENTER);
-        icon.setTypeface(null, android.graphics.Typeface.BOLD);
-        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 17));
-        tag.addView(icon, new LinearLayout.LayoutParams(dp(32), dp(32)));
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        copy.setPadding(dp(7), 0, 0, 0);
-        TextView small = label(eyebrow, 8, MUTED);
-        small.setLetterSpacing(0.08f);
-        TextView main = label(value, 11, TEXT);
-        main.setTypeface(null, android.graphics.Typeface.BOLD);
-        copy.addView(small);
-        copy.addView(main);
-        tag.addView(copy);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
-        if ((gravity & Gravity.START) != 0) lp.leftMargin = horizontalMargin;
-        if ((gravity & Gravity.END) != 0) lp.rightMargin = horizontalMargin;
-        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
-        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
-        tag.setLayoutParams(lp);
-        return tag;
-    }
-
-    /** A quieter configurator pill for the standalone machine marketing study. */
-    private View compactSceneTag(String glyph, String eyebrow, String value, int gravity,
-                                 int horizontalMargin, int verticalMargin) {
-        LinearLayout tag = new LinearLayout(this);
-        tag.setOrientation(LinearLayout.HORIZONTAL);
-        tag.setGravity(Gravity.CENTER_VERTICAL);
-        tag.setPadding(dp(3), dp(2), dp(7), dp(2));
-        tag.setBackground(round(Color.argb(238, 255, 255, 255), Color.rgb(226, 222, 213), 1, 18));
-        tag.setElevation(dp(3));
-        TextView icon = label(glyph, glyph.length() > 2 ? 7 : 10, INK);
-        icon.setGravity(Gravity.CENTER);
-        icon.setTypeface(null, android.graphics.Typeface.BOLD);
-        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 12));
-        tag.addView(icon, new LinearLayout.LayoutParams(dp(22), dp(22)));
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        copy.setPadding(dp(6), 0, 0, 0);
-        TextView small = label(eyebrow, 6, MUTED);
-        small.setLetterSpacing(0.07f);
-        TextView main = label(value, 9, TEXT);
-        main.setTypeface(null, android.graphics.Typeface.BOLD);
-        copy.addView(small);
-        copy.addView(main);
-        tag.addView(copy);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
-        if ((gravity & Gravity.START) != 0) lp.leftMargin = horizontalMargin;
-        if ((gravity & Gravity.END) != 0) lp.rightMargin = horizontalMargin;
-        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
-        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
-        tag.setLayoutParams(lp);
-        return tag;
-    }
-
-    private View buildHeader() {
-        FrameLayout header = new FrameLayout(this);
-        // The bundled profile is source-backed, but physical-print promotion
-        // remains a separate gate until the native/runtime and real-printer
-        // acceptance evidence is complete. Avoid presenting that intentional
-        // fail-closed state as if the profile were malformed or untrusted.
-        String profileState = profile != null && profile.verified ? "PROFILE VERIFIED" : "PROFILE REVIEW REQUIRED";
-        TextView context = label("WORKSHOP\nPHONE-FIRST  Â·  " + profileState, 9, MUTED);
-        context.setLetterSpacing(0.11f);
-        context.setLineSpacing(2, 1.0f);
-        // Keep the contextual copy below the centered wordmark on narrow
-        // phones; a long profile state must never render underneath the logo.
-        FrameLayout.LayoutParams contextLp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.START);
-        contextLp.leftMargin = dp(8);
-        contextLp.bottomMargin = 0;
-        header.addView(context, contextLp);
-        context.setContentDescription("Open Learn: beginner guide, materials and troubleshooting");
-        context.setOnClickListener(v -> showLearnHub());
-
-        // The real mark owns the visual centre of the header. It is clipped
-        // to a circle, rather than being scaled down inside one, so the black
-        // field and luminous lettering retain the intended icon treatment.
-        ImageView logo = alloyLogo();
-        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        logoLp.topMargin = 0;
-        header.addView(logo, logoLp);
-
-        LinearLayout leftControls = new LinearLayout(this);
-        leftControls.setGravity(Gravity.CENTER_VERTICAL);
-        TextView printerStudy = control("3D", "Open model 3D study", v -> {
-            if (model == null) showModelLibrary();
-            else showImmersiveView();
-        });
-        TextView machineStudy = control("A1", "Open A1 Mini 3D study", v -> showPrinterStudy());
-        leftControls.addView(printerStudy, new LinearLayout.LayoutParams(dp(42), dp(42)));
-        LinearLayout.LayoutParams machineStudyLp = new LinearLayout.LayoutParams(dp(42), dp(42));
-        machineStudyLp.leftMargin = dp(6);
-        leftControls.addView(machineStudy, machineStudyLp);
-        FrameLayout.LayoutParams leftControlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
-        leftControlsLp.leftMargin = dp(2);
-        header.addView(leftControls, leftControlsLp);
-
-        LinearLayout rightControls = new LinearLayout(this);
-        rightControls.setGravity(Gravity.CENTER_VERTICAL);
-        TextView inventory = control("â–¦", "Workshop inventory", v -> showInventory());
-        TextView menu = control("Â·", "Project menu", v -> showProjectMenu());
-        LinearLayout.LayoutParams printerInventoryLp = new LinearLayout.LayoutParams(dp(42), dp(42));
-        rightControls.addView(inventory, printerInventoryLp);
-        LinearLayout.LayoutParams menuLp = new LinearLayout.LayoutParams(dp(42), dp(42));
-        menuLp.leftMargin = dp(6);
-        rightControls.addView(menu, menuLp);
-        FrameLayout.LayoutParams rightControlsLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END);
-        rightControlsLp.rightMargin = dp(2);
-        header.addView(rightControls, rightControlsLp);
-        return header;
-    }
-
-    /** A standalone A1 Mini study makes the supplied/reviewed printer model discoverable. */
-    private void showPrinterStudy() {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setBackgroundColor(Color.WHITE);
-        page.setPadding(0, 0, 0, 0);
-
-        FrameLayout stage = new FrameLayout(this);
-        stage.setBackgroundColor(Color.WHITE);
-        stage.setClipToOutline(false);
-        ViewportView scene = new ViewportView(this);
-        scene.setMachineStudy(true);
-        scene.setPresentationMode(true);
-        scene.setCleanPresentation(false);
-        // Start in the light, airy treatment used by the supplied product
-        // reference. The appearance control still exposes the dark study,
-        // but the first frame should make the machine and its scale props
-        // immediately discoverable instead of hiding them in a black field.
-        scene.setNightStage(false);
-        scene.setModel(null);
-        stage.addView(scene, new FrameLayout.LayoutParams(-1, -1));
-
-        TextView title = label("A1 MINI\nBambu Lab\n180 Ã— 180 Ã— 180 MM", 9, TEXT);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setLetterSpacing(0.06f);
-        title.setLineSpacing(3, 1.0f);
-        title.setPadding(dp(2), dp(2), dp(2), dp(2));
-        title.setBackgroundColor(Color.TRANSPARENT);
-        FrameLayout.LayoutParams titleLp = new FrameLayout.LayoutParams(dp(215), -2, Gravity.TOP | Gravity.START);
-        titleLp.setMargins(dp(20), dp(18), 0, 0);
-        stage.addView(title, titleLp);
-        ImageView logo = alloyLogo();
-        FrameLayout.LayoutParams logoLp = new FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        logoLp.topMargin = dp(12);
-        stage.addView(logo, logoLp);
-        TextView close = control("Ã—", "Close A1 Mini 3D study", v -> dialog.dismiss());
-        FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
-        closeLp.setMargins(0, dp(14), dp(14), 0);
-        stage.addView(close, closeLp);
-        TextView fit = control("âŠ™", "Fit A1 Mini in study view", v -> scene.fitModel());
-        FrameLayout.LayoutParams fitLp = new FrameLayout.LayoutParams(dp(46), dp(46), Gravity.TOP | Gravity.END);
-        fitLp.setMargins(0, dp(68), dp(14), 0);
-        stage.addView(fit, fitLp);
-        // The supplied reference is a calm product configurator: callouts
-        // orbit the hero subject while controls stay quiet at the edges.
-        // Keep the renderer controls available through the scene itself, but
-        // do not let them dominate the first marketing frame.
-        // Match the supplied configurator's visual grammar: one quiet size
-        // selector above the hero, material and nozzle selectors orbiting it,
-        // and only two small context selectors near the lower edge. The
-        // labels are presentation-only; printer configuration remains in the
-        // actual preparation and pairing flows.
-        // Keep the configurable labels in quiet top/bottom bands. The older
-        // orbit layout put material and nozzle pills directly over the
-        // machine's gantry and uprights on portrait phones, obscuring the
-        // very mesh this study is meant to present.
-        // The fit button occupies the upper-right control rail. Keep all
-        // three configurator callouts below that rail on portrait screens;
-        // the previous 78dp row collided with the nozzle pill and fit button
-        // on narrow devices, making the first frame feel like a debug HUD.
-        // Leave a full control-height plus touch-spacing below the fit button.
-        // On tall, dense phones 124dp still landed on that rail after status
-        // bar/window insets were applied to the stage.
-        int calloutTop = dp(160);
-        View sizeTag = compactSceneTag("â–¡", "SIZE", "180 Ã— 180 Ã— 180 MM",
-                Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, calloutTop);
-        sizeTag.setOnClickListener(v -> {
-            scene.fitModel();
-            Toast.makeText(this, "A1 Mini volume Â· 180 Ã— 180 Ã— 180 mm", Toast.LENGTH_SHORT).show();
-        });
-        stage.addView(sizeTag);
-        View materialTag = compactSceneTag("â—Œ", "MATERIAL", "NATURAL PLA",
-                Gravity.TOP | Gravity.START, dp(8), calloutTop);
-        materialTag.setOnClickListener(v -> {
-            int next = (scene.getFinishMode() + 1) % 5;
-            scene.setFinishMode(next);
-            String[] finishes = {"Natural PLA", "Matte black", "Silk white", "Signal orange", "Steel blue"};
-            Toast.makeText(this, "Preview finish Â· " + finishes[next], Toast.LENGTH_SHORT).show();
-        });
-        stage.addView(materialTag);
-        View nozzleTag = compactSceneTag("âŒ", "NOZZLE", "0.4 MM",
-                Gravity.TOP | Gravity.END, dp(8), calloutTop);
-        nozzleTag.setOnClickListener(v -> showProfileReview());
-        stage.addView(nozzleTag);
-        View printerTag = compactSceneTag("A1", "PRINTER", "A1 MINI",
-                Gravity.BOTTOM | Gravity.START, dp(12), dp(18));
-        printerTag.setOnClickListener(v -> showPrinterStatus());
-        stage.addView(printerTag);
-        View scaleTag = compactSceneTag("â‰ˆ", "SCALE", "CAN  Â·  BALL  Â·  KEY",
-                Gravity.BOTTOM | Gravity.END, dp(12), dp(18));
-        scaleTag.setOnClickListener(v -> {
-            if (model == null) {
-                Toast.makeText(this, "Import a model to use known-dimension scaling", Toast.LENGTH_SHORT).show();
-            } else {
-                showScaleToKnownDimension();
-            }
-        });
-        stage.addView(scaleTag);
-        page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
-
-        LinearLayout footer = new LinearLayout(this);
-        footer.setOrientation(LinearLayout.VERTICAL);
-        footer.setGravity(Gravity.CENTER_VERTICAL);
-        footer.setPadding(dp(18), dp(10), dp(18), dp(12));
-        footer.setBackgroundColor(Color.WHITE);
-        TextView note = label("ALLOY  Â·  A1 MINI", 9, MUTED);
-        note.setGravity(Gravity.CENTER);
-        note.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        note.setLineSpacing(1, 1.0f);
-        footer.addView(note, new LinearLayout.LayoutParams(-1, dp(22)));
-        LinearLayout footerActions = new LinearLayout(this);
-        footerActions.setOrientation(LinearLayout.HORIZONTAL);
-        footerActions.setGravity(Gravity.CENTER);
-        Button done = dialogButton("Done", v -> dialog.dismiss());
-        done.setTextSize(13);
-        done.setTypeface(null, android.graphics.Typeface.BOLD);
-        LinearLayout.LayoutParams doneLp = new LinearLayout.LayoutParams(-1, dp(44));
-        footerActions.addView(done, doneLp);
-        footer.addView(footerActions, new LinearLayout.LayoutParams(-1, dp(44)));
-        page.addView(footer, new LinearLayout.LayoutParams(-1, dp(88)));
-
-        dialog.setContentView(page);
-        dialog.setOnDismissListener(ignored -> scene.onHostPause());
-        dialog.show();
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(android.R.color.transparent);
-            window.setLayout(-1, -1);
-            enterPresentationMode(window);
-        }
-    }
-
-    private LinearLayout buildInventoryStrip() {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(dp(14), dp(8), dp(10), dp(8));
-        card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 20));
-
-        inventoryStatusDot = label("â—", 16, GREEN);
-        inventoryStatusDot.setContentDescription("Workshop inventory status");
-        card.addView(inventoryStatusDot, new LinearLayout.LayoutParams(dp(26), -2));
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        TextView title = label("Workshop inventory", 13, TEXT);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        inventorySummary = label("", 11, MUTED);
-        copy.addView(title);
-        copy.addView(inventorySummary);
-        card.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView open = label("VIEW", 10, GOLD);
-        open.setTypeface(null, android.graphics.Typeface.BOLD);
-        open.setGravity(Gravity.CENTER);
-        open.setOnClickListener(v -> showInventory());
-        card.addView(open, new LinearLayout.LayoutParams(dp(58), -1));
-        updateInventorySummary();
-        return card;
-    }
-
-    private void updateInventorySummary() {
-        int reorder = 0;
-        int service = 0;
-        int attention = 0;
-        int stockUnknown = 0;
-        int serviceUnknown = 0;
-        for (InventoryStore.Item item : inventoryStore.items()) {
-            boolean low = item.needsReorder();
-            boolean upkeep = item.needsServiceAttention();
-            if (low) reorder++;
-            if (upkeep) service++;
-            if (low || upkeep) attention++;
-            if (!item.quantityConfirmed) stockUnknown++;
-            if (!item.serviceHistoryConfirmed) serviceUnknown++;
-        }
-        String summary = attention > 0
-                ? attention + " item" + (attention == 1 ? "" : "s") + " need attention  Â·  "
-                        + reorder + " reorder  Â·  " + service + " service due"
-                        + (stockUnknown + serviceUnknown == 0 ? "" : "  Â·  "
-                        + stockUnknown + " stock unknown  Â·  " + serviceUnknown + " service histories unknown")
-                : stockUnknown > 0 || serviceUnknown > 0
-                        ? stockUnknown + " stock amounts not recorded  Â·  " + serviceUnknown + " service histories unknown"
-                        : "Stock recorded  Â·  no service due";
-        inventorySummary.setText(summary);
-        if (inventoryStatusDot != null) {
-            int color = reorder > 0 ? RED : service > 0 ? AMBER
-                    : stockUnknown > 0 || serviceUnknown > 0 ? MUTED : GREEN;
-            inventoryStatusDot.setTextColor(color);
-            inventoryStatusDot.setContentDescription(summary);
-        }
-    }
-
-    private TextView label(String text, float size, int color) {
-        TextView view = new TextView(this);
-        view.setText(text);
-        view.setTextSize(size);
-        view.setTextColor(color);
-        view.setFontFeatureSettings("kern");
-        return view;
-    }
-
-    /** Keep the hand-built product shell consistent across phone densities. */
-    private int dp(float value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
-
-    private String profileShortLabel() {
-        return profile == null ? "A1 MINI  Â·  0.4 MM NOZZLE" : profile.name.toUpperCase(Locale.US);
-    }
-
-    private String viewportDisplayName(String value) {
-        String name = value == null ? "MODEL" : value.trim();
-        if (name.length() == 0) name = "MODEL";
-        if ("ALLOY SHOWCASE BOX".equalsIgnoreCase(name)) name = "SHOWCASE BOX";
-        name = name.toUpperCase(Locale.US);
-        return name.length() > 24 ? name.substring(0, 24).trim() + "â€¦" : name;
-    }
-
-    /** Keep filesystem-heavy CAD names legible in the small presentation title. */
-    private String presentationTitle(String value) {
-        String name = value == null ? "MODEL" : value.trim().toLowerCase(Locale.US);
-        if (name.contains("redmagic") && name.contains("assembly")) return "REDMAGIC ASSEMBLY";
-        if (name.contains("redmagic") && name.contains("chassis")) return "REDMAGIC CHASSIS";
-        if (name.contains("redmagic") && name.contains("bezel")) return "REDMAGIC BEZEL";
-        if (name.contains("showcase")) return "SHOWCASE BOX";
-        String compact = viewportDisplayName(value);
-        return compact.length() > 18 ? compact.substring(0, 18).trim() + "â€¦" : compact;
-    }
-
-    private String profilePrinterLabel() {
-        if (profile == null) return "A1 Mini";
-        String label = profile.name == null ? "A1 Mini" : profile.name;
-        int separator = label.indexOf(" Â· ");
-        if (separator > 0) label = label.substring(0, separator);
-        if (label.toLowerCase(Locale.US).contains("a1 mini")) return "A1 Mini";
-        return label.length() > 24 ? label.substring(0, 24).trim() + "â€¦" : label;
-    }
-
-    private String profileMaterialLabel() {
-        return profile == null ? "PLA Basic" : profile.filamentName.replace("Bambu ", "");
-    }
-
-    private String profileBuildVolumeLabel() {
-        return profile == null ? "180 Ã— 180 Ã— 180 mm" : profile.buildVolumeLabel();
-    }
-
-    /** Active dimensions are profile-derived, bounded to the disclosed A1/P1S maximum. */
-    private float activeBedX() { return finite(config.bedX) ? clamp(config.bedX, 0.5f, 256f) : 180f; }
-    private float activeBedY() { return finite(config.bedY) ? clamp(config.bedY, 0.5f, 256f) : 180f; }
-    private float activeBedZ() { return finite(config.bedZ) ? clamp(config.bedZ, 0.5f, 256f) : 180f; }
-
-    private void requireActiveBuildVolume(MeshModel candidate) throws IOException {
-        if (candidate == null) throw new IOException("Generated model is empty");
-        float width = candidate.maxX - candidate.minX;
-        float depth = candidate.maxY - candidate.minY;
-        float height = candidate.maxZ - candidate.minZ;
-        if (width > activeBedX() + 0.001f || depth > activeBedY() + 0.001f || height > activeBedZ() + 0.001f)
-            throw new IOException("Generated model exceeds the " + profileBuildVolumeLabel() + " "
-                    + profilePrinterLabel() + " build volume");
-    }
-
-    private String currentPlateLabel() {
-        return "Plate " + (activePlateIndex + 1);
-    }
-
-    private String currentPlateName() {
-        if (model == null || model.displayName == null || model.displayName.trim().length() == 0)
-            return currentPlateLabel();
-        return currentPlateLabel() + "  Â·  " + model.displayName;
-    }
-
-    private void updatePlateMarker() {
-        if (plateMarkerValue != null) plateMarkerValue.setText(currentPlateLabel());
-    }
-
-    private Button action(String text, View.OnClickListener listener) {
-        Button button = new Button(this);
-        button.setText(text);
-        button.setTextSize(12);
-        button.setTextColor(TEXT);
-        button.setAllCaps(false);
-        button.setOnClickListener(listener);
-        button.setMinHeight(dp(48));
-        button.setPadding(dp(14), 0, dp(14), 0);
-        button.setStateListAnimator(null);
-        button.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(50));
-        lp.setMargins(dp(3), 0, dp(3), 0);
-        actions.addView(button, lp);
-        return button;
-    }
-
-    private TextView control(String glyph, String description, View.OnClickListener listener) {
-        TextView view = label(glyph, 20, INK);
-        view.setGravity(Gravity.CENTER);
-        view.setContentDescription(description);
-        view.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 24));
-        view.setElevation(dp(3));
-        view.setOnClickListener(listener);
-        return view;
-    }
-
-    private View marker(String glyph, String eyebrow, String value, View.OnClickListener listener, int gravity, int margin, int verticalMargin) {
-        LinearLayout pill = new LinearLayout(this);
-        pill.setOrientation(LinearLayout.HORIZONTAL);
-        pill.setGravity(Gravity.CENTER_VERTICAL);
-        pill.setPadding(dp(6), dp(5), dp(11), dp(5));
-        pill.setBackground(round(SURFACE, Color.rgb(216, 211, 201), 1, 24));
-        pill.setElevation(dp(5));
-        TextView badge = label(glyph, glyph.length() > 2 ? 8 : 13, INK);
-        badge.setGravity(Gravity.CENTER);
-        badge.setTypeface(null, android.graphics.Typeface.BOLD);
-        badge.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(191, 184, 171), 1, 17));
-        pill.addView(badge, new LinearLayout.LayoutParams(dp(33), dp(33)));
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        copy.setPadding(dp(6), 0, 0, 0);
-        TextView small = label(eyebrow.toUpperCase(Locale.US), 8, MUTED);
-        small.setLetterSpacing(0.08f);
-        TextView main = label(value, 11, TEXT);
-        main.setTypeface(null, android.graphics.Typeface.BOLD);
-        if ("Quality".equals(eyebrow)) qualityMarkerValue = main;
-        if ("Supports".equals(eyebrow)) supportsMarkerValue = main;
-        if ("Plate".equals(eyebrow)) plateMarkerValue = main;
-        if ("Printer".equals(eyebrow)) { printerMarkerValue = main; printerMarker = pill; }
-        if ("Material".equals(eyebrow)) { materialMarkerValue = main; materialMarker = pill; }
-        copy.addView(small);
-        copy.addView(main);
-        pill.addView(copy);
-        pill.setContentDescription(eyebrow + ": " + value);
-        pill.setOnClickListener(listener);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, gravity);
-        if ((gravity & Gravity.START) != 0) lp.leftMargin = margin;
-        if ((gravity & Gravity.END) != 0) lp.rightMargin = margin;
-        if ((gravity & Gravity.TOP) != 0) lp.topMargin = verticalMargin;
-        if ((gravity & Gravity.BOTTOM) != 0) lp.bottomMargin = verticalMargin;
-        pill.setLayoutParams(lp);
-        return pill;
-    }
-
-    private void updateRecipeMarkers() {
-        if (printerMarkerValue != null) printerMarkerValue.setText(profilePrinterLabel());
-        if (printerMarker != null) printerMarker.setContentDescription("Printer: " + profilePrinterLabel());
-        if (materialMarkerValue != null) materialMarkerValue.setText(profileMaterialLabel());
-        if (materialMarker != null) materialMarker.setContentDescription("Material: " + profileMaterialLabel());
-        if (qualityMarkerValue != null) qualityMarkerValue.setText(String.format(Locale.US, "%.2f mm", config.layerHeight));
-        if (supportsMarkerValue != null) supportsMarkerValue.setText(config.supports ? "Auto supports" : "Off");
-        if (viewport != null) viewport.setBuildVolume(config.bedX, config.bedY, config.bedZ);
-    }
-
-    private android.graphics.drawable.Drawable round(int fill, int stroke, int strokeWidth, int radius) {
-        android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
-        drawable.setColor(fill);
-        drawable.setStroke(dp(strokeWidth), stroke);
-        drawable.setCornerRadius(dp(radius));
-        return drawable;
-    }
-
-    /** One true mark everywhere: centred, circle-clipped and never shrunk into a badge. */
-    private ImageView alloyLogo() {
-        ImageView logo = new ImageView(this);
-        logo.setImageResource(R.drawable.alloy_logo);
-        logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        logo.setBackground(round(Color.BLACK, Color.rgb(99, 224, 211), 1, 21));
-        logo.setClipToOutline(true);
-        logo.setContentDescription("Alloy");
-        return logo;
-    }
-
-    private void showPrinterStatus() {
-        PrinterCredentialStore.Credentials credentials = savedCredentials();
-        String statusTitle = profile == null ? "Printer status" : profilePrinterLabel();
-        String pairing = credentials == null ? "No printer is paired." : "Paired target: " + credentials.name + " Â· " + credentials.host
-                + "\nModel: " + (credentials.model.length() == 0 ? "not confirmed" : credentials.model)
-                + (credentials.certificateFingerprint.length() > 0 ? "\nCertificate pin: configured" : "\nCertificate pin: not configured");
-        PrinterJobStore.Job previousJob = printerJobStore.load();
-        PrinterReadiness.Report readiness = printerReadinessReport();
-        StringBuilder readinessText = new StringBuilder(readiness.summary());
-        for (PrinterReadiness.Check check : readiness.checks()) {
-            readinessText.append("\n").append(check.passed() ? "âœ“ " : "! ")
-                    .append(check.label).append(" Â· ").append(check.detail);
-        }
-        if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
-            pairing += "\n\nUNCONFIRMED JOB\n" + previousJob.summary() + "\n" + previousJob.detail
-                    + "\n\n" + (recoveredArtifact == null
-                    ? "The staged artifact could not be revalidated; sending is blocked."
-                    : "The staged artifact was recovered and its package, size and SHA-256 identity were revalidated.")
-                    + "\nVerify the printer's physical/app state before dismissing this record.";
-        }
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
-                .setTitle(statusTitle)
-                .setMessage("" + (profile == null ? "Conservative fallback profile" : profile.name)
-                        + "\n\nProfile status: " + (profile != null && profile.verified ? "verified" : "unverified")
-                        + "\nSource: " + (profile == null ? "built-in fallback" : profile.provenanceSource)
-                        + "\n\n" + pairing
-                        + "\n\nPRINT READINESS\n" + readinessText
-                        + "\n\nLAN upload/control stays behind the transport and physical-printer gates. This screen can probe the paired services; it does not start a print.")
-                .setNegativeButton("Close", null)
-                .setPositiveButton(credentials == null ? "Pair / test LAN" : "Refresh telemetry", (ignored, which) -> {
-                    if (credentials == null) showPrinterPairing();
-                    else refreshPrinterStatus();
-                });
-        if (credentials != null && (previousJob == null || previousJob.state != PrinterTransport.State.RECOVERY_REQUIRED))
-            dialog.setNeutralButton("Pair / test LAN", (ignored, which) -> showPrinterPairing());
-        if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
-            dialog.setNeutralButton("Dismiss record", (ignored, which) -> {
-                printerJobStore.clear();
-                recoveredArtifact = null;
-                status.setText("Printer  Â·  recovery record dismissed");
-                refreshActions();
-            });
-        }
-        dialog.show();
-    }
-
-    private void refreshPrinterStatus() {
-        PrinterCredentialStore.Credentials credentials = savedCredentials();
-        if (credentials == null) {
-            showPrinterPairing();
-            return;
-        }
-        try {
-            if (printerTransport != null) printerTransport.close();
-            if (!credentials.hasCertificatePin()) {
-                Toast.makeText(this, "Read and save the printer certificate fingerprint before checking LAN status", Toast.LENGTH_LONG).show();
-                showPrinterPairing();
-                return;
-            }
-            BambuLanTransport transport = BambuLanTransport.pinned(credentials, credentials.certificateFingerprint);
-            printerTransport = transport;
-            PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(
-                    credentials.name, credentials.host, credentials.serial);
-            status.setText("Printer  Â·  reading telemetryâ€¦");
-            transport.readStatus(target, (state, detail) -> runOnUiThread(() -> {
-                if (isFinishing() || printerTransport != transport) return;
-                if (state == PrinterTransport.State.READY) status.setText("Printer  Â·  " + detail);
-                else if (state == PrinterTransport.State.STATUS_UNCONFIRMED) {
-                    status.setText("Printer  Â·  status unconfirmed");
-                    Toast.makeText(this, detail, Toast.LENGTH_LONG).show();
-                }
-                else if (state == PrinterTransport.State.FAILED) {
-                    status.setText("Printer  Â·  status unavailable");
-                    Toast.makeText(this, "Printer status failed: " + detail, Toast.LENGTH_LONG).show();
-                }
-            }));
-        } catch (Exception error) {
-            Toast.makeText(this, "Printer status could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void showPrinterPairing() {
-        if (printerBusy || slicing || batchSlicing || batchTransferring) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        PrinterCredentialStore.Credentials current = savedCredentials();
-        EditText name = textField(current == null ? profilePrinterLabel() : current.name, "Printer name");
-        EditText host = textField(current == null ? "" : current.host, "LAN IP or hostname");
-        EditText serial = textField(current == null ? "" : current.serial, "Printer serial");
-        EditText modelCode = textField(current == null ? "" : current.model,
-                "Bambu model code (N1 = A1 Mini; required for current pilot)");
-        EditText accessCode = textField(current == null ? "" : current.accessCode, "Developer/LAN access code");
-        accessCode.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        EditText fingerprint = textField(current == null ? "" : current.certificateFingerprint, "Optional SHA-256 certificate fingerprint");
-        fields.addView(name); fields.addView(host); fields.addView(serial); fields.addView(modelCode);
-        fields.addView(accessCode); fields.addView(fingerprint);
-        final AlertDialog[] pairingDialogRef = new AlertDialog[1];
-        Button findPrinter = new Button(this);
-        findPrinter.setText("Find printer on Wi-Fi");
-        findPrinter.setAllCaps(false);
-        findPrinter.setTextColor(GOLD);
-        findPrinter.setOnClickListener(view -> {
-            if (activeDiscovery != null) activeDiscovery.close();
-            findPrinter.setEnabled(false);
-            findPrinter.setText("Searching local networkâ€¦");
-            activeDiscovery = BambuPrinterDiscovery.discover(this, 5_000L, new BambuPrinterDiscovery.Callback() {
-                @Override public void onComplete(List<BambuPrinterDiscovery.Printer> printers) {
-                    runOnUiThread(() -> {
-                        if (isFinishing() || pairingDialogRef[0] == null || !pairingDialogRef[0].isShowing()) return;
-                        findPrinter.setEnabled(true);
-                        findPrinter.setText("Find printer on Wi-Fi");
-                        if (printers.isEmpty()) {
-                            Toast.makeText(MainActivity.this,
-                                    "No Bambu printer announced itself. Try manual IP entry on blocked/VLAN networks.",
-                                    Toast.LENGTH_LONG).show();
-                        } else {
-                            showDiscoveredPrinters(printers, name, host, serial, modelCode);
-                        }
-                    });
-                }
-
-                @Override public void onError(Exception error) {
-                    runOnUiThread(() -> {
-                        if (isFinishing() || pairingDialogRef[0] == null || !pairingDialogRef[0].isShowing()) return;
-                        findPrinter.setEnabled(true);
-                        findPrinter.setText("Find printer on Wi-Fi");
-                        Toast.makeText(MainActivity.this,
-                                "Wi-Fi discovery unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    });
-                }
-            });
-        });
-        fields.addView(findPrinter);
-        TextView note = label("Discovery is read-only and fills the printer name, host, serial and model code; the access code is never broadcast. A1 Mini, A1 and P1S planning profiles can be reviewed here, but the current physical pilot is deliberately restricted to model N1 (A1 Mini) plus an explicitly saved certificate fingerprint. Certificate inspection is the only unauthenticated network step; Alloy never sends MQTT/FTP commands over an unpinned session. Pairing stores the secret only in Android Keystore-backed encrypted preferences.", 12, MUTED);
-        note.setPadding(0, 16, 0, 0); fields.addView(note);
-        Button inspectCertificate = new Button(this);
-        inspectCertificate.setText("Read printer certificate");
-        inspectCertificate.setAllCaps(false);
-        inspectCertificate.setTextColor(GOLD);
-        inspectCertificate.setOnClickListener(view -> {
-            String hostValue = host.getText().toString().trim();
-            activeCertificateInspectionId = certificateInspectionIds.incrementAndGet();
-            long inspectionId = activeCertificateInspectionId;
-            if (activeCertificateInspection != null) activeCertificateInspection.cancel(true);
-            inspectCertificate.setEnabled(false);
-            inspectCertificate.setText("Reading certificateâ€¦");
-            activeCertificateInspection = importExecutor.submit(() -> {
-                try {
-                    String digest = BambuLanTransport.inspectCertificateFingerprint(hostValue);
-                    mainHandler.post(() -> {
-                        if (isFinishing() || inspectionId != activeCertificateInspectionId) return;
-                        fingerprint.setText(displayFingerprint(digest));
-                        inspectCertificate.setText("Fingerprint loaded");
-                        inspectCertificate.setEnabled(true);
-                        Toast.makeText(this, "Fingerprint loaded; tap Save and probe to pair", Toast.LENGTH_LONG).show();
-                    });
-                } catch (Exception error) {
-                    mainHandler.post(() -> {
-                        if (isFinishing() || inspectionId != activeCertificateInspectionId) return;
-                        inspectCertificate.setText("Read printer certificate");
-                        inspectCertificate.setEnabled(true);
-                        Toast.makeText(this, "Certificate inspection failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    });
-                }
-            });
-        });
-        fields.addView(inspectCertificate);
-        AlertDialog pairingDialog = new AlertDialog.Builder(this)
-                .setTitle("Pair printer")
-                .setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Save and probe", (dialog, which) -> {
-                    try {
-                        PrinterCredentialStore.Credentials credentials = new PrinterCredentialStore.Credentials(
-                                name.getText().toString(), host.getText().toString(), serial.getText().toString(),
-                                accessCode.getText().toString(), fingerprint.getText().toString(),
-                                modelCode.getText().toString());
-                        if (!credentials.hasCertificatePin()) {
-                            throw new IllegalArgumentException("Read and save the printer certificate fingerprint before probing LAN services");
-                        }
-                        credentialStore.save(credentials);
-                        if (printerTransport != null) printerTransport.close();
-                        printerTransport = BambuLanTransport.pinned(credentials, credentials.certificateFingerprint);
-                        PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(credentials.name, credentials.host, credentials.serial);
-                        status.setText("Printer  Â·  probing LAN servicesâ€¦");
-                        printerTransport.probe(target, (state, detail) -> runOnUiThread(() -> {
-                            status.setText(state == PrinterTransport.State.READY ? "Printer  Â·  LAN services ready" : "Printer  Â·  " + state);
-                            if (state == PrinterTransport.State.FAILED) Toast.makeText(this, "Printer probe failed: " + detail, Toast.LENGTH_LONG).show();
-                        }));
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Printer pairing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                })
-                .create();
-        pairingDialogRef[0] = pairingDialog;
-        pairingDialog.setOnDismissListener(dialog -> {
-            if (activeDiscovery != null) {
-                activeDiscovery.close();
-                activeDiscovery = null;
-            }
-        });
-        pairingDialog.show();
-    }
-
-    private void showDiscoveredPrinters(List<BambuPrinterDiscovery.Printer> printers,
-                                        EditText name, EditText host, EditText serial, EditText modelCode) {
-        if (printers == null || printers.isEmpty()) return;
-        String[] labels = new String[printers.size()];
-        for (int index = 0; index < printers.size(); index++) {
-            BambuPrinterDiscovery.Printer printer = printers.get(index);
-            labels[index] = printer.summary() + (printer.isA1Mini() ? "" : " Â· profile review needed");
-        }
-        new AlertDialog.Builder(this)
-                .setTitle("Printers found on Wi-Fi")
-                .setItems(labels, (dialog, which) -> {
-                    if (which < 0 || which >= printers.size()) return;
-                    BambuPrinterDiscovery.Printer printer = printers.get(which);
-                    name.setText(printer.name);
-                    host.setText(printer.host);
-                    serial.setText(printer.serial);
-                    modelCode.setText(printer.model);
-                    Toast.makeText(this,
-                            printer.isLanMode() ? "Printer details filled; enter the access code to continue"
-                                    : "Printer is not advertising LAN mode; review before pairing",
-                            Toast.LENGTH_LONG).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private PrinterCredentialStore.Credentials savedCredentials() {
-        try { return credentialStore == null ? null : credentialStore.load(); }
-        catch (Exception ignored) { return null; }
-    }
-
-    private static String displayFingerprint(String digest) {
-        if (digest == null || !digest.matches("[0-9a-fA-F]{64}")) return digest == null ? "" : digest;
-        String normalized = digest.toLowerCase(Locale.US);
-        StringBuilder display = new StringBuilder(95);
-        for (int index = 0; index < normalized.length(); index++) {
-            if (index > 0 && index % 2 == 0) display.append(':');
-            display.append(normalized.charAt(index));
-        }
-        return display.toString();
-    }
-
-    private void explainUnsupported(String feature) {
-        Toast.makeText(this, feature + " is reserved for the validated native engine", Toast.LENGTH_SHORT).show();
-    }
-
-    private void showInventory() {
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(4, 6, 4, 4);
-        TextView intro = label("A local workshop ledger for tools, spares and spools. Stock starts as not recordedâ€”not zero and not detected by the printer. Enter a checked amount; record service only after it happens.", 12, MUTED);
-        intro.setLineSpacing(3, 1.0f);
-        intro.setPadding(4, 0, 4, 14);
-        content.addView(intro, new LinearLayout.LayoutParams(-1, -2));
-        Button add = new Button(this);
-        add.setText("Add workshop item");
-        add.setAllCaps(false);
-        add.setTextColor(GOLD);
-        add.setOnClickListener(v -> showAddInventoryItem());
-        add.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 16));
-        LinearLayout.LayoutParams addLp = new LinearLayout.LayoutParams(-1, 48);
-        addLp.setMargins(0, 0, 0, 10);
-        content.addView(add, addLp);
-        for (InventoryStore.Item item : InventoryStore.orderedForAttention(inventoryStore.items()))
-            content.addView(inventoryRow(item));
-
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.addView(content);
-        new AlertDialog.Builder(this)
-                .setTitle("Workshop inventory")
-                .setView(scroll)
-                .setNegativeButton("Close", null)
-                .show();
-    }
-
-    private void showAddInventoryItem() {
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        EditText name = textField("", "Item name");
-        EditText category = textField("Tool", "Category (tool, consumable, spareâ€¦)");
-        EditText unit = textField("each", "Unit (each, spools, bottlesâ€¦)");
-        EditText quantity = field("", "Current quantity Â· enter checked amount");
-        EditText minimum = field("0", "Reorder below this quantity");
-        EditText interval = field("0", "Service interval in days (0 = none)");
-        EditText care = textField("Inspect, clean, or replace as needed", "Care notes");
-        fields.addView(name); fields.addView(category); fields.addView(unit);
-        fields.addView(quantity); fields.addView(minimum); fields.addView(interval); fields.addView(care);
-        TextView note = label("Items are stored only on this phone. Add the amount you physically checked. A service interval starts only after you record a completed service.", 12, MUTED);
-        note.setPadding(0, 16, 0, 0);
-        fields.addView(note);
-        new AlertDialog.Builder(this)
-                .setTitle("Add workshop item")
-                .setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Add", (dialog, which) -> {
-                    try {
-                        InventoryStore.Item added = inventoryStore.addCustom(
-                                name.getText().toString(), category.getText().toString(), unit.getText().toString(),
-                                Integer.parseInt(quantity.getText().toString()),
-                                Integer.parseInt(minimum.getText().toString()),
-                                Integer.parseInt(interval.getText().toString()), care.getText().toString());
-                        updateInventorySummary();
-                        Toast.makeText(this, added.name + " added to inventory", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                        showInventory();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Inventory values were not valid", Toast.LENGTH_LONG).show();
-                    }
-                })
-                .show();
-    }
-
-    private View inventoryRow(InventoryStore.Item item) {
-        LinearLayout row = new LinearLayout(this);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(10, 10, 10, 10);
-        int statusColor = inventoryStatusColor(item);
-        row.setBackground(round(statusColor == RED ? Color.rgb(255, 245, 242) : statusColor == AMBER ? Color.rgb(255, 250, 239) : SURFACE, Color.rgb(226, 222, 213), 1, 16));
-        row.setElevation(2);
-        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
-        rowLp.setMargins(0, 0, 0, 8);
-
-        TextView icon = label(item.glyph(), 15, statusColor);
-        icon.setGravity(Gravity.CENTER);
-        icon.setTypeface(null, android.graphics.Typeface.BOLD);
-        icon.setBackground(round(Color.rgb(247, 244, 237), Color.rgb(216, 211, 201), 1, 22));
-        row.addView(icon, new LinearLayout.LayoutParams(42, 42));
-
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        copy.setPadding(10, 0, 8, 0);
-        TextView name = label(item.name, 13, TEXT);
-        name.setTypeface(null, android.graphics.Typeface.BOLD);
-        String usage = item.usageLabel();
-        TextView meta = label(item.category + "  Â·  " + item.quantityLabel()
-                + (usage.length() == 0 ? "" : "  Â·  " + usage), 11, MUTED);
-        TextView schedule = label(item.serviceLabel(), 10, item.needsServiceAttention() ? statusColor : MUTED);
-        TextView care = label(item.care, 10, MUTED);
-        care.setMaxLines(2);
-        // A compact stock gauge makes the reorder state legible without
-        // opening the item. The scale is intentionally relative to four
-        // minimum-stock units, so a full spool or spare does not disappear
-        // into a nearly-empty bar while a zero-stock item remains obvious.
-        android.widget.ProgressBar stock = new android.widget.ProgressBar(
-                this, null, android.R.attr.progressBarStyleHorizontal);
-        int gaugeMax = Math.max(1, Math.max(item.quantity, Math.max(1, item.minimum * 4)));
-        stock.setMax(gaugeMax);
-        stock.setProgress(item.quantityConfirmed ? Math.max(0, Math.min(gaugeMax, item.quantity)) : 0);
-        stock.setProgressTintList(ColorStateList.valueOf(statusColor));
-        stock.setVisibility(item.quantityConfirmed ? View.VISIBLE : View.GONE);
-        stock.setContentDescription(item.name + " stock: " + item.quantityLabel());
-        copy.addView(name);
-        copy.addView(meta);
-        copy.addView(stock, new LinearLayout.LayoutParams(-1, dp(5)));
-        copy.addView(schedule);
-        copy.addView(care);
-        row.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
-
-        TextView status = label(item.statusLabel(), 9, statusColor);
-        status.setGravity(Gravity.CENTER);
-        status.setTypeface(null, android.graphics.Typeface.BOLD);
-        status.setLetterSpacing(0.08f);
-        status.setBackground(round(Color.WHITE, statusColor, 1, 14));
-        row.addView(status, new LinearLayout.LayoutParams(76, 30));
-        row.setOnClickListener(v -> showInventoryItem(item));
-        row.setContentDescription(item.name + " inventory status: " + item.statusLabel());
-        row.setLayoutParams(rowLp);
-        return row;
-    }
-
-    private int inventoryStatusColor(InventoryStore.Item item) {
-        if (item.needsReorder()) return RED;
-        if (item.needsServiceAttention()) return AMBER;
-        if (!item.quantityConfirmed || !item.serviceHistoryConfirmed) return MUTED;
-        return GREEN;
-    }
-
-    private void showInventoryItem(InventoryStore.Item item) {
-        boolean grams = item.usesGrams();
-        ArrayList<String> actionList = new ArrayList<>();
-        actionList.add(item.quantityConfirmed ? "Set exact quantity" : "Record current quantity");
-        if (item.quantityConfirmed) {
-            actionList.add(grams ? "Add 100 g" : "Add one");
-            actionList.add(grams ? "Use 100 g" : "Use one");
-        }
-        actionList.add(item.serviceHistoryConfirmed ? "Mark serviced" : "Record service done");
-        if (item.isCustom()) actionList.add("Remove item");
-        String[] actions = actionList.toArray(new String[0]);
-        new AlertDialog.Builder(this)
-                .setTitle(item.name)
-                .setMessage(item.category + "\n" + item.quantityLabel()
-                        + (item.usageLabel().length() == 0 ? "" : "\n" + item.usageLabel())
-                        + "\n\n" + item.care + "\n" + item.serviceLabel()
-                        + "\n\nCurrent state: " + item.statusLabel())
-                .setItems(actions, (dialog, which) -> {
-                    String selected = actions[which];
-                    if ("Set exact quantity".equals(selected) || "Record current quantity".equals(selected)) {
-                        showSetInventoryQuantity(item, dialog);
-                        return;
-                    }
-                    if (selected.equals(grams ? "Add 100 g" : "Add one")) {
-                        if (grams) inventoryStore.addQuantity(item, 100); else inventoryStore.addOne(item);
-                    } else if (selected.equals(grams ? "Use 100 g" : "Use one")) {
-                        if (grams) inventoryStore.useQuantity(item, 100); else inventoryStore.useOne(item);
-                    } else if ("Mark serviced".equals(selected) || "Record service done".equals(selected)) {
-                        inventoryStore.markServiced(item);
-                    } else if ("Remove item".equals(selected) && item.isCustom()) {
-                        new AlertDialog.Builder(this)
-                                .setTitle("Remove " + item.name + "?")
-                                .setMessage("This removes the custom inventory record from this phone.")
-                                .setNegativeButton("Keep", null)
-                                .setPositiveButton("Remove", (ignored, confirmed) -> {
-                                    inventoryStore.delete(item);
-                                    updateInventorySummary();
-                                    Toast.makeText(this, item.name + " removed", Toast.LENGTH_SHORT).show();
-                                })
-                                .show();
-                        return;
-                    }
-                    updateInventorySummary();
-                    Toast.makeText(this, item.name + " updated", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Close", null)
-                .show();
-    }
-
-    private void showSetInventoryQuantity(InventoryStore.Item item, android.content.DialogInterface itemDialog) {
-        EditText quantity = field(item.quantityConfirmed ? String.valueOf(item.quantity) : "",
-                item.unit.equalsIgnoreCase("g") ? "Exact current quantity in grams" : "Exact current quantity Â· " + item.unit);
-        quantity.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        new AlertDialog.Builder(this)
-                .setTitle(item.quantityConfirmed ? "Set exact quantity" : "Record current quantity")
-                .setMessage("Enter the amount you physically checked. Alloy cannot read spool or spare stock from the printer.")
-                .setView(quantity)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Save checked amount", (dialog, which) -> {
-                    try {
-                        int amount = Integer.parseInt(quantity.getText().toString().trim());
-                        inventoryStore.setExactQuantity(item, amount);
-                        updateInventorySummary();
-                        itemDialog.dismiss();
-                        showInventory();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Enter a valid whole-number quantity", Toast.LENGTH_LONG).show();
-                    }
-                })
-                .show();
-    }
-
-    private void showParts() {
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (model == null || model.parts == null || model.parts.length == 0) {
-            Toast.makeText(this, "Import a model before viewing parts", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        String[] labels = new String[model.parts.length + 1];
-        labels[0] = "All parts  Â·  " + (model.triangles.length / 3) + " triangles";
-        for (int index = 0; index < model.parts.length; index++) {
-            MeshModel.Part part = model.parts[index];
-            MeshModel.PartBounds bounds = model.partBounds(index);
-            labels[index + 1] = String.format(Locale.US, "%s  Â·  %.1f Ã— %.1f Ã— %.1f mm  Â·  %d triangles",
-                    part.name, bounds.width(), bounds.depth(), bounds.height(), part.triangleCount);
-        }
-        new AlertDialog.Builder(this)
-                .setTitle("Model parts")
-                .setMessage("Select a part to bring it forward in the 3D view.\n\nGeometry: " + model.geometryReport().summary()
-                        + (geometryRepairEnabled ? "\n\nConservative repair is active for this plate." : ""))
-                .setSingleChoiceItems(labels, viewport.getSelectedPart() + 1, (dialog, which) -> {
-                    viewport.setSelectedPart(which - 1);
-                    if (!modelUris.isEmpty()) projectStore.saveSelectedPart(which - 1);
-                    saveCurrentPlate();
-                    status.setText(which == 0 ? "Prepare  Â·  showing all parts" : "Prepare  Â·  focused on " + model.parts[which - 1].name);
-                })
-                .setNeutralButton("Transform", (dialog, which) -> {
-                    int selected = viewport.getSelectedPart();
-                    if (selected < 0) {
-                        Toast.makeText(this, "Select a part before transforming it", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    dialog.dismiss();
-                    showPartTransform(selected);
-                })
-                .setNegativeButton(geometryRepairEnabled ? "Original geometry" : "Repair geometry",
-                        (dialog, which) -> {
-                            if (geometryRepairEnabled) restoreOriginalGeometry();
-                            else repairGeometry();
-                        })
-                .setPositiveButton("Done", null)
-                .show();
-    }
-
-    private void showPartTransform(int partIndex) {
-        if (sourceModel == null || model == null || partIndex < 0 || partIndex >= model.parts.length) return;
-        MeshModel.PartTransform current = partTransformAt(partIndex);
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        EditText scale = field(String.format(Locale.US, "%.0f", current.scale * 100f), "Part scale (%)");
-        EditText rotation = field(String.format(Locale.US, "%.0f", current.rotationDegrees), "Part rotation (degrees)", true);
-        EditText tiltX = field(String.format(Locale.US, "%.0f", current.tiltXDegrees), "Tilt X (degrees)", true);
-        EditText tiltY = field(String.format(Locale.US, "%.0f", current.tiltYDegrees), "Tilt Y (degrees)", true);
-        EditText offsetX = field(String.format(Locale.US, "%.1f", current.offsetX), "Move X (mm)", true);
-        EditText offsetY = field(String.format(Locale.US, "%.1f", current.offsetY), "Move Y (mm)", true);
-        fields.addView(scale); fields.addView(rotation); fields.addView(tiltX); fields.addView(tiltY); fields.addView(offsetX); fields.addView(offsetY);
-        TextView note = label("Transforming one part preserves the other parts. Alloy re-levels the assembly on the bed and discards any previous slice.", 13, MUTED);
-        note.setPadding(0, 18, 0, 0);
-        fields.addView(note);
-        new AlertDialog.Builder(this)
-                .setTitle("Transform Â· " + model.parts[partIndex].name)
-                .setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Apply", (dialog, which) -> {
-                    try {
-                        float nextScale = clamp(Float.parseFloat(scale.getText().toString()) / 100f, 0.1f, 10f);
-                        float nextRotation = clamp(Float.parseFloat(rotation.getText().toString()), -360f, 360f);
-                        float nextTiltX = clamp(Float.parseFloat(tiltX.getText().toString()), -360f, 360f);
-                        float nextTiltY = clamp(Float.parseFloat(tiltY.getText().toString()), -360f, 360f);
-                        float nextOffsetX = clamp(Float.parseFloat(offsetX.getText().toString()), -1_000f, 1_000f);
-                        float nextOffsetY = clamp(Float.parseFloat(offsetY.getText().toString()), -1_000f, 1_000f);
-                        prepareModelMutation("Transform  Â·  " + model.parts[partIndex].name);
-                        while (partTransforms.size() <= partIndex) partTransforms.add(MeshModel.PartTransform.identity());
-                        partTransforms.set(partIndex, new MeshModel.PartTransform(nextScale, nextRotation, nextTiltX, nextTiltY, nextOffsetX, nextOffsetY));
-                        projectStore.savePartTransforms(partTransforms);
-                        saveCurrentPlate();
-                        model = rebuildModel(model.displayName);
-                        slice = null;
-                        stagedArtifact = null;
-                        viewport.setModel(model);
-                        viewport.setSelectedPart(partIndex);
-                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-                        status.setText("Prepare  Â·  transformed " + model.parts[partIndex].name);
-                        details.setText(modelDetails(model));
-                        finishModelMutation("Transform  Â·  " + model.parts[partIndex].name);
-                        refreshActions();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Part transform values were not valid", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .show();
-    }
-
-    private void repairGeometry() {
-        if (printerBusy || slicing || batchSlicing || importing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation before repairing geometry", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (repairingGeometry || sourceModel == null || model == null) return;
-        prepareModelMutation("Repair geometry");
-        final MeshModel input = sourceModel;
-        final String name = model.displayName;
-        final long repairId = geometryRepairIds.incrementAndGet();
-        activeGeometryRepairId = repairId;
-        repairingGeometry = true;
-        status.setText("Prepare  Â·  repairing geometryâ€¦");
-        refreshActions();
-        activeGeometryRepair = importExecutor.submit(() -> {
-            try {
-                MeshModel.RepairResult result = input.repair(name);
-                mainHandler.post(() -> {
-                    if (repairId != activeGeometryRepairId || !repairingGeometry || isFinishing()) return;
-                    repairingGeometry = false;
-                    activeGeometryRepair = null;
-                    try {
-                        sourceModel = result.mesh;
-                        geometryRepairEnabled = true;
-                        model = rebuildModel(name);
-                        slice = null;
-                        stagedArtifact = null;
-                        lastBatch = null;
-                        projectStore.saveGeometryRepair(true);
-                        saveCurrentPlate();
-                        viewport.setModel(model);
-                        viewport.setResult(null);
-                        status.setText("Prepare  Â·  geometry repaired");
-                        details.setText(modelDetails(model));
-                        finishModelMutation("Repair geometry");
-                        refreshActions();
-                        Toast.makeText(this, result.report.summary(), Toast.LENGTH_LONG).show();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Repaired geometry could not be applied: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                        refreshActions();
-                    }
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (repairId != activeGeometryRepairId || !repairingGeometry || isFinishing()) return;
-                    repairingGeometry = false;
-                    activeGeometryRepair = null;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions();
-                    Toast.makeText(this, "Geometry repair failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private void restoreOriginalGeometry() {
-        if (printerBusy || slicing || batchSlicing || importing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation before restoring geometry", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (unmodifiedSourceModel == null || model == null) return;
-        try {
-            prepareModelMutation("Restore original geometry");
-            sourceModel = unmodifiedSourceModel;
-            geometryRepairEnabled = false;
-            projectStore.saveGeometryRepair(false);
-            model = rebuildModel(model.displayName);
-            slice = null;
-            stagedArtifact = null;
-            lastBatch = null;
-            saveCurrentPlate();
-            viewport.setModel(model);
-            viewport.setResult(null);
-            status.setText("Prepare  Â·  original geometry restored");
-            details.setText(modelDetails(model));
-            finishModelMutation("Restore original geometry");
-            refreshActions();
-        } catch (Exception error) {
-            Toast.makeText(this, "Original geometry could not be restored: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private synchronized void cancelGeometryRepair() {
-        activeGeometryRepairId = geometryRepairIds.incrementAndGet();
-        if (activeGeometryRepair != null) {
-            activeGeometryRepair.cancel(true);
-            activeGeometryRepair = null;
-        }
-        if (!repairingGeometry) return;
-        repairingGeometry = false;
-        if (status != null) status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-        if (actions != null) refreshActions();
-    }
-
-    private MeshModel.PartTransform partTransformAt(int index) {
-        return index >= 0 && index < partTransforms.size()
-                ? partTransforms.get(index) : MeshModel.PartTransform.identity();
-    }
-
-    private String modelDetails(MeshModel value) {
-        int partCount = value.parts == null ? 1 : value.parts.length;
-        return String.format(Locale.US, "%.1f Ã— %.1f Ã— %.1f mm  Â·  %d triangles  Â·  %d %s  Â·  %s  Â·  centered on %s plate",
-                value.maxX - value.minX, value.maxY - value.minY, value.maxZ - value.minZ,
-                value.triangles.length / 3, partCount, partCount == 1 ? "part" : "parts",
-                value.geometryReport().summary(), profilePrinterLabel());
-    }
-
-    private void refreshActions() {
-        actions.removeAllViews();
-        // Help stays available during every task state. It is intentionally a
-        // read-only route: lessons may explain a blocked gate, never open it.
-        action("Learn", v -> showLearnHub());
-        if (projectTransferring || batchTransferring) {
-            Button busy = action(projectTransferring ? "Project fileâ€¦" : "Batch archiveâ€¦", null);
-            busy.setEnabled(false);
-        } else if (visualizing) {
-            Button busy = action("Visualizingâ€¦", null);
-            busy.setEnabled(false);
-            action("Cancel", v -> cancelVisualization()).setTextColor(RED);
-        } else if (modeling) {
-            Button busy = action("Modelingâ€¦", null);
-            busy.setEnabled(false);
-            action("Cancel", v -> cancelNativeBoolean()).setTextColor(RED);
-        } else if (repairingGeometry) {
-            Button busy = action("Repairing geometryâ€¦", null);
-            busy.setEnabled(false);
-            Button cancel = action("Cancel", v -> cancelGeometryRepair());
-            cancel.setTextColor(RED);
-        } else if (importing) {
-            Button busy = action("Loading modelâ€¦", null);
-            busy.setEnabled(false);
-            Button cancel = action("Cancel", v -> cancelImport());
-            cancel.setTextColor(RED);
-        } else if (model == null && (batchSlicing || slicing)) {
-            Button busy = action(batchSlicing ? "Slicing platesâ€¦" : "Slicingâ€¦", null);
-            busy.setEnabled(false);
-            Button cancel = action("Cancel", v -> {
-                if (batchSlicing) cancelBatchSlice(); else cancelSlice();
-            });
-            cancel.setTextColor(RED);
-        } else if (model == null) {
-            action("Import model", v -> openModel());
-            action("A1 3D", v -> showPrinterStudy());
-            action("Model", v -> showModelWorkbench());
-            action("Library", v -> showModelLibrary());
-            action("Profile", v -> showProfileReview());
-            action("Recipe", v -> showRecipe());
-            action("Print readiness", v -> showPrinterReadiness());
-            if (hasPrinterRecovery()) {
-                Button review = action("Review printer job", v -> showPrinterStatus());
-                review.setTextColor(RED);
-            }
-            addUploadedPrintAction();
-        } else if (batchSlicing) {
-            Button busy = action("Slicing platesâ€¦", null); busy.setEnabled(false);
-            Button cancel = action("Cancel", v -> cancelBatchSlice()); cancel.setTextColor(RED);
-        } else if (slicing) {
-            Button busy = action("Slicingâ€¦", null); busy.setEnabled(false);
-            Button cancel = action("Cancel", v -> cancelSlice()); cancel.setTextColor(RED);
-        } else if (slice == null) {
-            action("Import another", v -> openModel());
-            action("A1 3D", v -> showPrinterStudy());
-            action("Model", v -> showModelWorkbench());
-            action("Library", v -> showModelLibrary());
-            action("Model 3D", v -> showImmersiveView());
-            action("Print readiness", v -> showPrinterReadiness());
-            addHistoryActions();
-            action("Visualize", v -> showVisualization());
-            if (model.parts != null && model.parts.length > 1) action("Parts", v -> showParts());
-            if (model.parts != null && model.parts.length > 1) action("Arrange", v -> autoArrangeParts());
-            action("Profile", v -> showProfileReview());
-            action("Prepare", v -> showPrepare());
-            Button sliceButton = action("Slice", v -> startSlice());
-            sliceButton.setTextColor(GOLD);
-            if (hasPrinterRecovery()) {
-                Button review = action("Review printer job", v -> showPrinterStatus());
-                review.setTextColor(RED);
-            }
-            addUploadedPrintAction();
-        } else {
-            action("Model", v -> showModelWorkbench());
-            action("A1 3D", v -> showPrinterStudy());
-            action("Library", v -> showModelLibrary());
-            action("Model 3D", v -> showImmersiveView());
-            action("Print readiness", v -> showPrinterReadiness());
-            addHistoryActions();
-            action("Visualize", v -> showVisualization());
-            action("Prepare", v -> showPrepare());
-            action("Profile", v -> showProfileReview());
-            if (model.parts != null && model.parts.length > 1) action("Parts", v -> showParts());
-            action("Print plan", v -> showPrintPlan());
-            action("Inspect", v -> showInspection());
-            action(viewport.isToolpathOnly() ? "Model view" : "Path view", v -> {
-                viewport.setToolpathOnly(!viewport.isToolpathOnly());
-                status.setText(viewport.isToolpathOnly() ? "Inspect  Â·  top-down toolpath" : "Inspect  Â·  model view");
-                refreshActions();
-            });
-            action("Layer âˆ’", v -> changeLayer(-1));
-            action("Layer +", v -> changeLayer(1));
-            if (lastBatch != null && !lastBatch.plates.isEmpty()) {
-                Button batch = action("Export all plates", v -> exportBatchArchive());
-                batch.setTextColor(GOLD);
-            }
-            if (printActive && activePrinterTarget != null) {
-                PrinterJobStore.Job activeJob = printerJobStore.load();
-                if (activeJob != null && activeJob.state == PrinterTransport.State.PAUSED) {
-                    Button resume = action("Resume print", v -> resumePrint());
-                    resume.setTextColor(GOLD);
-                } else if (activeJob != null && activeJob.state == PrinterTransport.State.RUNNING) {
-                    Button pause = action("Pause print", v -> pausePrint());
-                    pause.setTextColor(GOLD);
-                }
-                Button cancel = action("Cancel print", v -> cancelPrint());
-                cancel.setTextColor(RED);
-            } else if (printerBusy) {
-                Button busy = action("Uploadingâ€¦", null);
-                busy.setEnabled(false);
-            } else {
-                PrinterJobStore.Job previousJob = printerJobStore.load();
-                if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
-                    Button review = action("Review printer job", v -> showPrinterStatus());
-                    review.setTextColor(RED);
-                } else if (hasUploadedPrinterArtifact()) {
-                    addUploadedPrintAction();
-                } else if (printerReadinessReport().canSend()) {
-                    Button send = action("Send to printer", v -> sendToPrinter());
-                    send.setTextColor(GOLD);
-                }
-            }
-            Button export = action("Export .3mf", v -> exportPackage()); export.setTextColor(GOLD);
-            action("Share package", v -> sharePackage());
-            action("Try Bambu Handy", v -> shareToBambuHandy());
-        }
-        if (arcNavigation != null) arcNavigation.setContextLabel(arcContextLabel());
-        updateLayerInspector();
-    }
-
-    private String arcContextLabel() {
-        if (projectTransferring) return "Saving project";
-        if (batchTransferring) return "Saving plates";
-        if (visualizing) return "Visualizing";
-        if (importing) return "Importing";
-        if (modeling) return "Modeling";
-        if (repairingGeometry) return "Repairing";
-        if (batchSlicing) return "Slicing plates";
-        if (slicing) return "Slicing";
-        if (printerBusy) return "Sending job";
-        if (printActive) return "Printer status";
-        if (model == null) return "Start a project";
-        return slice == null ? "Prepare" : "Inspect";
-    }
-
-    /**
-     * The upper arc is deliberately a single, state-specific action. It is
-     * not a menu: this preserves the visual hierarchy of the two-level Hyle
-     * navigation and means a tap always advances the print workflow.
-     */
-    private void openArcContext() {
-        if (projectTransferring || batchTransferring || visualizing || importing || modeling
-                || repairingGeometry || batchSlicing || slicing || printerBusy || printActive) {
-            showActiveArcOperation();
-            return;
-        }
-        if (model == null) {
-            openModel();
-            return;
-        }
-        if (slice == null) {
-            showPrepare();
-            return;
-        }
-        showInspection();
-    }
-
-    /** Surface a long-running operation without reopening the global action menu. */
-    private void showActiveArcOperation() {
-        String label = arcContextLabel();
-        Button cancel = findAction("Cancel");
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setTitle(label)
-                .setMessage(label + " is in progress. Alloy will keep this work on-device and preserve the current project.")
-                .setNegativeButton("Keep working", null);
-        if (cancel != null && cancel.isEnabled()) {
-            builder.setPositiveButton("Cancel", (dialog, which) -> cancel.performClick());
-        } else if (printActive) {
-            builder.setPositiveButton("View printer", (dialog, which) -> showPrinterStatus());
-        } else {
-            builder.setPositiveButton("OK", null);
-        }
-        builder.show();
-    }
-
-    private Button findAction(String label) {
-        if (actions == null) return null;
-        for (int index = 0; index < actions.getChildCount(); index++) {
-            View child = actions.getChildAt(index);
-            if (child instanceof Button && label.equals(((Button) child).getText().toString())) {
-                return (Button) child;
-            }
-        }
-        return null;
-    }
-
-    /** The lower ellipsis is the explicit overflow route, never the upper action. */
-    private void showMoreActions() {
-        if (actions == null || actions.getChildCount() == 0) return;
-        ArrayList<String> labels = new ArrayList<>();
-        ArrayList<View> destinations = new ArrayList<>();
-        for (int index = 0; index < actions.getChildCount(); index++) {
-            View child = actions.getChildAt(index);
-            if (!(child instanceof Button)) continue;
-            Button button = (Button) child;
-            String label = button.getText().toString();
-            // Primary destinations already have dedicated controls in the
-            // lower curve or are the upper curve's direct next action.
-            if ("Import model".equals(label) || "Import another".equals(label)
-                    || "Prepare".equals(label) || "Inspect".equals(label)
-                    || "Library".equals(label) || "Model".equals(label)
-                    || "History".equals(label)) continue;
-            if (!button.isEnabled()) label += "  Â·  working";
-            labels.add(label);
-            destinations.add(button);
-        }
-        if (labels.isEmpty()) return;
-        new AlertDialog.Builder(this)
-                .setTitle("More")
-                .setItems(labels.toArray(new String[0]), (dialog, which) -> {
-                    View target = destinations.get(which);
-                    if (target.isEnabled()) target.performClick();
-                })
-                .setNegativeButton("Close", null)
-                .show();
-    }
-
-    /** Scrub the selected toolpath layer directly on a phone. */
-    private void updateLayerInspector() {
-        if (layerInspector == null || layerSeek == null || layerInspectorLabel == null) return;
-        boolean available = slice != null && slice.layers != null && !slice.layers.isEmpty();
-        layerInspector.setVisibility(available ? View.VISIBLE : View.GONE);
-        if (!available) return;
-        int max = Math.max(0, slice.layers.size() - 1);
-        int selected = viewport == null ? max : viewport.getSelectedLayer();
-        if (selected < 0) selected = max;
-        selected = Math.max(0, Math.min(max, selected));
-        layerSeek.setMax(max);
-        if (layerSeek.getProgress() != selected) layerSeek.setProgress(selected);
-        Slicer.Layer layer = slice.layers.get(selected);
-        layerInspectorLabel.setText(String.format(Locale.US, "LAYER %d / %d  Â·  Z %.2f mm  Â·  %d segments",
-                selected + 1, slice.layers.size(), layer.z, layer.segments.size()));
-    }
-
-    private void addHistoryActions() {
-        if (modelHistoryStore == null || model == null) return;
-        boolean undo = modelHistoryStore.canUndo(activePlateIndex);
-        boolean redo = modelHistoryStore.canRedo(activePlateIndex);
-        if (undo) {
-            Button button = action("Undo", v -> undoModel());
-            button.setTextColor(GOLD);
-        }
-        if (redo) {
-            Button button = action("Redo", v -> redoModel());
-            button.setTextColor(GOLD);
-        }
-        if (undo || redo) action("History", v -> showModelHistory());
-    }
-
-    private void sendToPrinter() {
-        PrinterReadiness.Report readiness = printerReadinessReport();
-        if (!readiness.canSend()) {
-            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
-            showPrinterReadiness();
-            return;
-        }
-        PrinterCredentialStore.Credentials credentials = savedCredentials();
-        if (credentials == null) {
-            Toast.makeText(this, "Pair a printer and slice a validated artifact first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (!credentials.hasCertificatePin()) {
-            Toast.makeText(this, "Add the printer's SHA-256 certificate pin before physical printing", Toast.LENGTH_LONG).show();
-            showPrinterPairing();
-            return;
-        }
-        PrinterJobStore.Job previousJob = printerJobStore.load();
-        if (previousJob != null && previousJob.state == PrinterTransport.State.RECOVERY_REQUIRED) {
-            Toast.makeText(this, "Review the unconfirmed printer job in Printer status first", Toast.LENGTH_LONG).show();
-            showPrinterStatus();
-            return;
-        }
-        if (previousJob != null && previousJob.state == PrinterTransport.State.UPLOADED && recoveredArtifact != null) {
-            PrinterTransport.PrinterTarget uploadedTarget = printerTarget(previousJob);
-            if (uploadedTarget != null) {
-                activePrinterTarget = uploadedTarget;
-                activePrinterJobId = previousJob.jobId;
-                showStartConfirmation(uploadedTarget,
-                        previousJob.remotePath.length() == 0 ? "/" + recoveredArtifact.displayName : previousJob.remotePath,
-                        recoveredArtifact, previousJob.jobId);
-                return;
-            }
-        }
-        if (stagedArtifact == null) {
-            Toast.makeText(this, "Pair a printer and slice a validated artifact first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            // A foreground slice can finish without a GLES surface. Re-stage
-            // only at the user-visible handoff so LAN uploads always carry a
-            // Bambu-recognized preview without coupling the service to UI.
-            if (!ArtifactStore.hasThumbnail(stagedArtifact.sourceFile)) {
-                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
-                        artifactDisplayName(), viewport.thumbnailPng(512));
-            }
-        } catch (Exception error) {
-            Toast.makeText(this, "Printer preview staging failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Upload controlled pilot package?")
-                    .setMessage("PILOT BUILD Â· This can upload only the pinned bundled A1 Mini PLA fixture with supports off. It collects acceptance evidence; it does not qualify ordinary direct printing.")
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("Upload pilot", (dialog, which) -> beginPrinterUpload(credentials))
-                    .show();
-            return;
-        }
-        beginPrinterUpload(credentials);
-    }
-
-    private void beginPrinterUpload(PrinterCredentialStore.Credentials credentials) {
-        PrinterReadiness.Report readiness = printerReadinessReport();
-        if (!readiness.canSend() || credentials == null || stagedArtifact == null) {
-            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
-            showPrinterReadiness();
-            return;
-        }
-        final PrinterTransport.Artifact artifact = stagedArtifact;
-        final String filament = config.filament;
-        final float filamentMm = slice.filamentMm;
-        final float filamentDiameterMm = config.filamentDiameter;
-        try {
-            PrinterTransport.PrinterTarget target = new PrinterTransport.PrinterTarget(credentials.name, credentials.host, credentials.serial);
-            final String jobId = printerJobStore.begin(target, artifact, filament, filamentMm, filamentDiameterMm);
-            activePrinterJobId = jobId;
-            activePrinterTarget = target;
-            printActive = false;
-            printerBusy = true;
-            refreshActions();
-            status.setText("Printer  Â·  uploading artifactâ€¦");
-            PrinterJobService.startUpload(this, jobId);
-        } catch (Exception error) {
-            try { printerJobStore.update(PrinterTransport.State.FAILED, "Printer upload could not start: " + error.getMessage(), ""); }
-            catch (Exception ignored) { }
-            activePrinterTarget = null;
-            activePrinterJobId = null;
-            printActive = false;
-            printerBusy = false;
-            refreshActions();
-            Toast.makeText(this, "Printer upload could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private boolean hasPrinterRecovery() {
-        PrinterJobStore.Job job = printerJobStore == null ? null : printerJobStore.load();
-        return job != null && job.state == PrinterTransport.State.RECOVERY_REQUIRED;
-    }
-
-    private boolean physicalPrintCredentialsReady() {
-        PrinterCredentialStore.Credentials credentials = savedCredentials();
-        return isA1MiniPhysicalScope() && credentials != null && credentials.isA1Mini()
-                && credentials.hasCertificatePin();
-    }
-
-    /**
-     * A1, A1 Mini and P1S all have shipped planning profiles. The only
-     * physical lane has intentionally been scoped to the A1 Mini pilot, so a
-     * future verified A1/P1S profile cannot accidentally inherit that pilot's
-     * transport permission merely because the paired printer is N1.
-     */
-    private boolean isA1MiniPhysicalScope() {
-        return profile != null && "bambu.a1-mini".equals(profile.printerId);
-    }
-
-    /**
-     * Snapshot the current physical-print prerequisites without probing or
-     * mutating the printer. The report is informational until every gate is
-     * true; sendToPrinter() evaluates it again immediately before beginning a
-     * durable transaction.
-     */
-    private PrinterReadiness.Report printerReadinessReport() {
-        return printerReadinessReport(stagedArtifact);
-    }
-
-    private PrinterReadiness.Report printerReadinessReport(PrinterTransport.Artifact artifact) {
-        PrinterCredentialStore.Credentials credentials = savedCredentials();
-        boolean artifactReady = artifact != null && artifact.hasSourceFile()
-                && artifact.sourceFile.isFile()
-                && artifact.sourceFile.length() == artifact.sizeBytes;
-        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
-            A1MiniNoSupportPilot.Verdict pilot = A1MiniNoSupportPilot.evaluate(
-                    profile, config, slice, trustedPilotFixtureAssetPath);
-            return PrinterReadiness.evaluateA1MiniNoSupportPilot(
-                    true, BuildConfig.NATIVE_ENGINE_ENABLED, pilot, artifactReady,
-                    credentials != null, credentials != null && credentials.isA1Mini(),
-                    credentials != null && credentials.hasCertificatePin(), !hasPrinterRecovery());
-        }
-        return PrinterReadiness.evaluate(
-                BuildConfig.NATIVE_ENGINE_ENABLED,
-                BuildConfig.NATIVE_ENGINE_VERIFIED,
-                profile != null,
-                profile != null && profile.verified && isA1MiniPhysicalScope(),
-                slice != null,
-                slice != null && slice.engineVerified,
-                artifactReady,
-                credentials != null,
-                credentials != null && credentials.isA1Mini() && isA1MiniPhysicalScope(),
-                credentials != null && credentials.hasCertificatePin(),
-                !hasPrinterRecovery(),
-                SupportEngineStatus.physicalPrintReady(config, slice),
-                SupportEngineStatus.detail(config, slice));
-    }
-
-    private void showPrinterReadiness() {
-        PrinterReadiness.Report report = printerReadinessReport();
-        StringBuilder message = new StringBuilder(report.summary()).append("\n\n");
-        for (PrinterReadiness.Check check : report.checks()) {
-            message.append(check.passed() ? "âœ“ " : "! ")
-                    .append(check.label).append("  Â·  ")
-                    .append(check.detail).append('\n');
-        }
-        if (BuildConfig.PHYSICAL_PILOT_ENABLED) {
-            message.append("\nPILOT BUILD Â· This lane is only for collecting A1 Mini acceptance evidence with an immutable bundled fixture. It is excluded from production and does not qualify general direct printing.");
-        } else {
-            message.append("\nThis checklist is local and fail-closed. A1, A1 Mini and P1S are planning profiles; only the A1 Mini/N1 physical-pilot lane has an acceptance path. A green checklist still requires the target A1 Mini's physical acceptance evidence before this build can be promoted.");
-        }
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
-                .setTitle("Print readiness")
-                .setMessage(message.toString())
-                .setNegativeButton("Close", null);
-        if (savedCredentials() == null) {
-            dialog.setPositiveButton("Pair printer", (ignored, which) -> showPrinterPairing());
-        } else {
-            dialog.setPositiveButton("Printer status", (ignored, which) -> showPrinterStatus());
-        }
-        dialog.show();
-    }
-
-    private boolean hasUploadedPrinterArtifact() {
-        PrinterJobStore.Job job = printerJobStore == null ? null : printerJobStore.load();
-        return job != null && job.state == PrinterTransport.State.UPLOADED
-                && recoveredArtifact != null && printerTarget(job) != null
-                && physicalPrintCredentialsReady();
-    }
-
-    private void addUploadedPrintAction() {
-        if (!hasUploadedPrinterArtifact()) return;
-        PrinterJobStore.Job job = printerJobStore.load();
-        PrinterTransport.PrinterTarget target = printerTarget(job);
-        if (!printerReadinessReport(recoveredArtifact).canSend()) {
-            Button review = action("Print readiness", v -> showPrinterReadiness());
-            review.setTextColor(RED);
-            return;
-        }
-        Button start = action("Start uploaded print", v -> showStartConfirmation(target,
-                job.remotePath.length() == 0 ? "/" + recoveredArtifact.displayName : job.remotePath,
-                recoveredArtifact, job.jobId));
-        start.setTextColor(GOLD);
-    }
-
-    private void showStartConfirmation(PrinterTransport.PrinterTarget target, String remotePath,
-                                       PrinterTransport.Artifact artifact, String jobId) {
-        if (target == null || artifact == null || jobId == null) return;
-        PrinterReadiness.Report readiness = printerReadinessReport(artifact);
-        if (!readiness.canSend()) {
-            Toast.makeText(this, readiness.summary(), Toast.LENGTH_LONG).show();
-            showPrinterReadiness();
-            return;
-        }
-        new AlertDialog.Builder(this)
-                .setTitle("Start print?")
-                .setMessage((BuildConfig.PHYSICAL_PILOT_ENABLED
-                        ? "PILOT BUILD Â· This is an acceptance fixture, not a qualified direct-send job.\n\n" : "")
-                        + "The artifact was uploaded to " + target.name + ". The printer must confirm PREPARE/RUNNING telemetry before Alloy reports a start.")
-                .setNegativeButton("Keep uploaded", (dialog, which) -> {
-                    if (!printerJobStore.updateIfMatches(jobId, target, artifact, PrinterTransport.State.UPLOADED,
-                            "Artifact uploaded; start was not requested", remotePath)) return;
-                    activePrinterTarget = null;
-                    activePrinterJobId = null;
-                    printerBusy = false;
-                    refreshActions();
-                })
-                .setPositiveButton("Start", (dialog, which) -> {
-                    PrinterJobStore.Job current = printerJobStore.load();
-                    if (current == null || !jobId.equals(current.jobId) || current.state != PrinterTransport.State.UPLOADED) {
-                        Toast.makeText(this, "This printer job is no longer active", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    PrinterReadiness.Report latest = printerReadinessReport(artifact);
-                    if (!latest.canSend()) {
-                        Toast.makeText(this, latest.summary(), Toast.LENGTH_LONG).show();
-                        showPrinterReadiness();
-                        return;
-                    }
-                    printActive = true;
-                    printerBusy = true;
-                    refreshActions();
-                    status.setText("Printer  Â·  requesting startâ€¦");
-                    try {
-                        PrinterJobService.startPrint(this, jobId);
-                    } catch (Exception error) {
-                        printActive = false;
-                        printerBusy = false;
-                        activePrinterTarget = null;
-                        activePrinterJobId = null;
-                        refreshActions();
-                        Toast.makeText(this, "Print start could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                })
-                .show();
-    }
-
-    private void cancelPrint() {
-        if (!printActive || activePrinterTarget == null || activePrinterJobId == null) return;
-        final String jobId = activePrinterJobId;
-        status.setText("Printer  Â·  requesting cancellationâ€¦");
-        try {
-            PrinterJobService.cancelPrint(this, jobId);
-        } catch (Exception error) {
-            Toast.makeText(this, "Cancellation could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void pausePrint() {
-        if (!printActive || activePrinterTarget == null || activePrinterJobId == null) return;
-        final String jobId = activePrinterJobId;
-        status.setText("Printer  Â·  requesting pauseâ€¦");
-        try {
-            PrinterJobService.pausePrint(this, jobId);
-        } catch (Exception error) {
-            Toast.makeText(this, "Pause could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void resumePrint() {
-        if (!printActive || activePrinterTarget == null || activePrinterJobId == null) return;
-        final String jobId = activePrinterJobId;
-        status.setText("Printer  Â·  requesting resumeâ€¦");
-        try {
-            PrinterJobService.resumePrint(this, jobId);
-        } catch (Exception error) {
-            Toast.makeText(this, "Resume could not begin: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void openModel() {
-        if (printerBusy || slicing || batchSlicing || batchTransferring || profileImporting) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("*/*");
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"model/stl", "model/obj", "model/3mf", "model/step", "model/stp", "application/step", "application/vnd.ms-package.3dmanufacturing-3dmodel+xml", "application/octet-stream", "application/zip", "application/x-zip-compressed"});
-        startActivityForResult(intent, REQUEST_OPEN);
-    }
-
-    @Override protected void onActivityResult(int request, int resultCode, Intent data) {
-        super.onActivityResult(request, resultCode, data);
-        if (resultCode != RESULT_OK || data == null) return;
-        if (request == REQUEST_PROFILE) {
-            ArrayList<Uri> sources = new ArrayList<>();
-            if (data.getClipData() != null) {
-                for (int index = 0; index < data.getClipData().getItemCount(); index++)
-                    sources.add(data.getClipData().getItemAt(index).getUri());
-            } else if (data.getData() != null) {
-                sources.add(data.getData());
-            }
-            if (sources.isEmpty()) return;
-            for (Uri uri : sources) rememberUriPermission(uri, data.getFlags());
-            importBambuProfiles(sources);
-            return;
-        }
-        if (request == REQUEST_PROFILE_EXPORT && data.getData() != null) {
-            writeProfileExport(data.getData());
-            return;
-        }
-        if (request == REQUEST_OPEN) {
-            ArrayList<Uri> uris = new ArrayList<>();
-            if (data.getClipData() != null) {
-                for (int index = 0; index < data.getClipData().getItemCount(); index++)
-                    uris.add(data.getClipData().getItemAt(index).getUri());
-            } else if (data.getData() != null) {
-                uris.add(data.getData());
-            }
-            if (uris.isEmpty()) return;
-            for (Uri uri : uris) rememberUriPermission(uri, data.getFlags());
-            loadUris(uris, false);
-        }
-        if (request == REQUEST_EXPORT && data.getData() != null) writeExport(data.getData());
-        if (request == REQUEST_VIEW_EXPORT && data.getData() != null) writeViewExport(data.getData());
-        if (request == REQUEST_VISUALIZATION_EXPORT && data.getData() != null) writeVisualizationExport(data.getData());
-        if (request == REQUEST_PROJECT_EXPORT && data.getData() != null) writeProjectArchive(data.getData());
-        if (request == REQUEST_BATCH_EXPORT && data.getData() != null) writeBatchArchive(data.getData());
-        if (request == REQUEST_PROJECT_OPEN && data.getData() != null) {
-            rememberUriPermission(data.getData(), data.getFlags());
-            readProjectArchive(data.getData());
-        }
-    }
-
-    private void openBambuProfile() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring || profileImporting) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/json");
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "application/octet-stream", "text/plain"});
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        startActivityForResult(intent, REQUEST_PROFILE);
-    }
-
-    private void importBambuProfiles(ArrayList<Uri> sources) {
-        if (sources == null || sources.isEmpty()) return;
-        final ProfileCatalog.Profile baseline = profile;
-        final long importId = profileImportIds.incrementAndGet();
-        activeProfileImportId = importId;
-        profileImporting = true;
-        status.setText("Profile  Â·  importing Bambu preset chainâ€¦");
-        refreshActions();
-        profileImportTimeoutRunnable = () -> {
-            synchronized (MainActivity.this) {
-                if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
-            }
-            cancelProfileImport();
-            Toast.makeText(MainActivity.this,
-                    "Profile import timed out. Check the selected files and try again.",
-                    Toast.LENGTH_LONG).show();
-        };
-        mainHandler.postDelayed(profileImportTimeoutRunnable, 60_000L);
-        activeProfileImport = importExecutor.submit(() -> {
-            try {
-                byte[][] documents = new byte[sources.size()][];
-                for (int index = 0; index < sources.size(); index++) {
-                    try (InputStream input = getContentResolver().openInputStream(sources.get(index))) {
-                        if (input == null) throw new IOException("A selected profile could not be opened");
-                        documents[index] = ProfileCatalog.readProfileDocument(input);
-                    }
-                }
-                ProfileCatalog.Profile imported = ProfileCatalog.importBambu(baseline, documents);
-                byte[] normalized = ProfileCatalog.serialize(imported);
-                writeImportedProfile(imported, normalized);
-                mainHandler.post(() -> {
-                    synchronized (MainActivity.this) {
-                        if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
-                        if (profileImportTimeoutRunnable != null) {
-                            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
-                            profileImportTimeoutRunnable = null;
-                        }
-                    }
-                    profileImporting = false;
-                    activeProfileImport = null;
-                    if (isFinishing()) return;
-                    profile = imported;
-                    profile.applyTo(config);
-                    projectStore.saveRecipe(config);
-                    slice = null;
-                    stagedArtifact = null;
-                    lastBatch = null;
-                    if (viewport != null) viewport.setResult(null);
-                    if (model != null) {
-                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-                        details.setText(modelDetails(model));
-                    } else {
-                        modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
-                        details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
-                    }
-                    updateRecipeMarkers();
-                    status.setText("Profile  Â·  imported Â· review required");
-                    refreshActions();
-                    Toast.makeText(this, "Imported Bambu profile Â· review required before printing", Toast.LENGTH_LONG).show();
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    synchronized (MainActivity.this) {
-                        if (importId != activeProfileImportId || !profileImporting || isFinishing()) return;
-                        if (profileImportTimeoutRunnable != null) {
-                            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
-                            profileImportTimeoutRunnable = null;
-                        }
-                    }
-                    profileImporting = false;
-                    activeProfileImport = null;
-                    if (isFinishing()) return;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions();
-                    Toast.makeText(this, "Profile import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private synchronized void cancelProfileImport() {
-        activeProfileImportId = profileImportIds.incrementAndGet();
-        if (profileImportTimeoutRunnable != null) {
-            mainHandler.removeCallbacks(profileImportTimeoutRunnable);
-            profileImportTimeoutRunnable = null;
-        }
-        if (activeProfileImport != null) {
-            activeProfileImport.cancel(true);
-            activeProfileImport = null;
-        }
-        if (!profileImporting) return;
-        profileImporting = false;
-        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-        refreshActions();
-    }
-
-    /** Persist a normalized profile with a same-directory temporary replacement. */
-    private void writeImportedProfile(ProfileCatalog.Profile imported, byte[] normalized) throws IOException {
-        if (imported == null || normalized == null || normalized.length == 0)
-            throw new IOException("The imported profile is empty");
-        java.io.File destination = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
-        java.io.File parent = destination.getParentFile();
-        if (parent != null && !parent.isDirectory() && !parent.mkdirs() && !parent.isDirectory())
-            throw new IOException("The private profile store could not be created");
-        if (parent == null) throw new IOException("The private profile store has no parent");
-        java.io.File temporary = new java.io.File(parent, destination.getName() + ".tmp");
-        try (java.io.FileOutputStream output = new java.io.FileOutputStream(temporary)) {
-            output.write(normalized);
-            output.flush();
-            output.getFD().sync();
-        }
-        if (!temporary.renameTo(destination)) {
-            try (java.io.FileOutputStream output = new java.io.FileOutputStream(destination)) {
-                output.write(normalized);
-                output.flush();
-                output.getFD().sync();
-            }
-            temporary.delete();
-        }
-    }
-
-    private boolean importedProfileActive() {
-        return profile != null && "Bambu JSON preset import".equals(profile.provenanceSource);
-    }
-
-    private void showBundledProfilePicker() {
-        if (importedProfileActive()) {
-            Toast.makeText(this, "Reset the imported profile before selecting a bundled planning profile", Toast.LENGTH_LONG).show();
-            return;
-        }
-        try {
-            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadInitial(getAssets());
-            String[] labels = new String[choices.size()];
-            for (int index = 0; index < choices.size(); index++) {
-                ProfileCatalog.Profile choice = choices.get(index);
-                labels[index] = choice.name + "\nPlanning / inspection only Â· direct printing remains locked";
-            }
-            new AlertDialog.Builder(this)
-                    .setTitle("Select planning printer")
-                    .setMessage("This changes the build envelope and starter PLA recipe. It clears the current slice for review; it does not pair, send to, or qualify a physical printer.")
-                    .setItems(labels, (ignored, which) -> applyBundledProfile(choices.get(which)))
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Bundled profiles are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void showMaterialRecipePicker() {
-        if (profile == null) {
-            Toast.makeText(this, "Select a planning printer first", Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (importedProfileActive()) {
-            Toast.makeText(this, "Reset the imported preset before choosing a bundled recipe", Toast.LENGTH_LONG).show();
-            return;
-        }
-        try {
-            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadMaterialProfiles(getAssets(), profile.printerId);
-            String[] labels = new String[choices.size()];
-            for (int index = 0; index < choices.size(); index++) {
-                labels[index] = materialRecipePickerLabel(choices.get(index));
-            }
-            String printerName = profile.printerId.equals("bambu.a1-mini") ? "A1 Mini"
-                    : profile.printerId.equals("bambu.a1") ? "A1" : "P1S";
-            new AlertDialog.Builder(this)
-                    .setTitle(printerName + " material recipe")
-                    .setMessage(materialRecipePickerGuidance(profile.printerId))
-                    .setItems(labels, (ignored, which) -> {
-                        if (which >= 0 && which < choices.size()) applyBundledProfile(choices.get(which));
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Material recipes are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    static String materialRecipePickerLabel(ProfileCatalog.Profile choice) {
-        if (choice != null && "bambu.a1-mini".equals(choice.printerId))
-            return a1MiniMaterialPickerLabel(choice);
-        if (choice == null) return "Unknown recipe Â· planning only";
-        String routeNote = "TPU".equalsIgnoreCase(choice.material)
-                ? "external/direct feed only Â· do not infer AMS compatibility"
-                : "check material route and spool compatibility";
-        if (isTpu95aHf(choice)) routeNote += " Â· dry before use";
-        return choice.filamentName + "\n" + choice.material
-                + " Â· " + routeNote + " Â· 0.4 mm nozzle Â· planning only";
-    }
-
-    static String materialRecipePickerGuidance(String printerId) {
-        if ("bambu.a1-mini".equals(printerId)) return a1MiniMaterialPickerGuidance();
-        String guidance = "Choose a source-backed 0.4 mm starter recipe for the selected printer. "
-                + "Material suitability does not confirm the exact spool, feeder route, temperature, or printer condition. "
-                + "Flexible TPU recipes require external/direct feed; do not infer powered-AMS compatibility. "
-                + "Review material and feed route before slicing. These recipes are for planning and inspection only; "
-                + "Alloy print/send actions remain unqualified.";
-        if ("bambu.p1s".equals(printerId)) {
-            guidance += " Bambu TPU 95A HF should be dried before use (70 Â°C for 8 hours); "
-                    + "that advice is specific to the HF recipe, not a generic TPU preset.";
-        }
-        return guidance;
-    }
-
-    static String a1MiniMaterialPickerLabel(ProfileCatalog.Profile choice) {
-        if (choice == null) return "Unknown recipe Â· planning only";
-        String feedNote;
-        if ("TPU".equalsIgnoreCase(choice.material)) {
-            feedNote = "external/direct feed only";
-            if (isTpu95aHf(choice)) feedNote += " Â· dry before use";
-        } else if ("PVA".equalsIgnoreCase(choice.material)) {
-            feedNote = "dry PVA only in AMS Lite; otherwise external";
-        } else {
-            feedNote = "AMS Lite-compatible spool (check fit) or external";
-        }
-        return choice.filamentName + "\n" + choice.material + " Â· " + feedNote
-                + " Â· 0.4 mm nozzle Â· planning only";
-    }
-
-    static String a1MiniMaterialPickerGuidance() {
-        return "Choose a source-backed 0.4 mm recipe. Bambu lists PLA, PETG, TPU and PVA as ideal for A1 Mini; ABS, ASA, PC, PA, PET and fiber-reinforced materials are not recommended. AMS Lite does not support TPU or wet/absorbent PVA; dry PVA is listed as compatible, but keep it dry. Check that every spool physically fits the AMS Lite. The bundled TPU recipe is specifically Bambu TPU 95A HF for A1 Mini and requires external/direct feed; it is not a generic TPU profile. Bambu says TPU 95A HF should be dried before use (70 Â°C for 8 hours). Choosing a recipe replaces the active recipe and clears the current slice. Alloy print/send actions remain unqualified.";
-    }
-
-    private static boolean isTpu95aHf(ProfileCatalog.Profile choice) {
-        return choice != null && "TPU".equalsIgnoreCase(choice.material)
-                && choice.filamentName != null
-                && choice.filamentName.toUpperCase(java.util.Locale.ROOT).contains("95A HF");
-    }
-
-    private void applyBundledProfile(ProfileCatalog.Profile selected) {
-        if (selected == null) return;
-        profile = selected;
-        profile.applyTo(config);
-        getPreferences(MODE_PRIVATE).edit()
-                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId)
-                .putString(BUNDLED_PROFILE_ID, selected.id).apply();
-        projectStore.saveRecipe(config);
-        slice = null;
-        stagedArtifact = null;
-        lastBatch = null;
-        if (viewport != null) viewport.setResult(null);
-        if (model != null) {
-            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-            details.setText(modelDetails(model));
-        } else {
-            modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
-            details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
-        }
-        updateRecipeMarkers();
-        status.setText("Prepare  Â·  " + profilePrinterLabel() + " planning profile selected; re-slice to review");
-        refreshActions();
-        Toast.makeText(this, "Planning profile selected Â· direct printing remains locked", Toast.LENGTH_LONG).show();
-    }
-
-    private void showProfileReview() {
-        if (profile == null) {
-            new AlertDialog.Builder(this).setTitle("Active profile")
-                    .setMessage("The bundled fallback profile is unavailable. Slicing and printing are blocked until a valid profile is loaded.")
-                    .setPositiveButton("Done", null).show();
-            return;
-        }
-        String statusLabel = profile.verified ? "verified" : "review required Â· source-backed";
-        String message = profile.name
-                + "\n\nPrinter envelope\n" + profile.buildVolumeLabel()
-                + "\nNozzle " + String.format(Locale.US, "%.2f mm", profile.nozzle)
-                + "\n\nMaterial\n" + profile.filamentName + " Â· " + profile.material
-                + "\n\nProfile status\n" + statusLabel
-                + "\nSource\n" + profile.provenanceSource
-                + "\nRevision\n" + profile.provenanceRevision
-                + "\n\nOnly allowlisted scalar settings are projected into the native engine. G-code templates and unknown settings stay out of the job package.";
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this)
-                .setTitle("Active profile")
-                .setMessage(message)
-                .setNegativeButton("Close", null)
-                .setPositiveButton("Export JSON", (ignored, which) -> openProfileExport());
-        if (importedProfileActive()) {
-            dialog.setNeutralButton("Reset to bundled", (ignored, which) -> resetImportedProfile());
-        } else {
-            dialog.setNeutralButton("Select planning printer", (ignored, which) -> showBundledProfilePicker());
-        }
-        dialog.show();
-    }
-
-    private void openProfileExport() {
-        if (profile == null) {
-            Toast.makeText(this, "There is no active profile to export", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/json");
-        intent.putExtra(Intent.EXTRA_TITLE, safeName(profile.name) + ".alloy-profile.json");
-        startActivityForResult(intent, REQUEST_PROFILE_EXPORT);
-    }
-
-    private void writeProfileExport(Uri uri) {
-        try {
-            byte[] data = ProfileCatalog.serialize(profile);
-            try (java.io.OutputStream output = getContentResolver().openOutputStream(uri)) {
-                if (output == null) throw new IOException("Output destination could not be opened");
-                output.write(data);
-                output.flush();
-            }
-            Toast.makeText(this, "Exported normalized Alloy profile", Toast.LENGTH_LONG).show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Profile export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void resetImportedProfile() {
-        if (!importedProfileActive()) {
-            Toast.makeText(this, "A bundled planning profile is already active", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        new AlertDialog.Builder(this)
-                .setTitle("Reset imported profile?")
-                    .setMessage("This removes only Alloy's private imported-profile override and restores the selected bundled planning profile. Saved models, plates, project archives, and inventory remain unchanged. Any slice must be reviewed again.")
-                .setNegativeButton("Keep it", null)
-                .setPositiveButton("Reset profile", (ignored, which) -> {
-                    java.io.File destination = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
-                    if (destination.exists() && !destination.delete()) {
-                        Toast.makeText(this, "The private profile override could not be removed", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    try {
-                        android.content.SharedPreferences profilePreferences = getPreferences(MODE_PRIVATE);
-                        String bundledPrinterId = profilePreferences.getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
-                        String bundledProfileId = profilePreferences.getString(BUNDLED_PROFILE_ID, "");
-                        ProfileCatalog.Profile restored = bundledProfileId.isEmpty()
-                                ? ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId)
-                                : ProfileCatalog.loadPlanningById(getAssets(), bundledProfileId);
-                        profile = restored;
-                        profile.applyTo(config);
-                        projectStore.saveRecipe(config);
-                        slice = null;
-                        stagedArtifact = null;
-                        lastBatch = null;
-                        if (viewport != null) viewport.setResult(null);
-                        if (model != null) {
-                            modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-                            details.setText(modelDetails(model));
-                        } else {
-                            modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
-                            details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
-                        }
-                        updateRecipeMarkers();
-                        status.setText(model == null ? "Profile  Â·  bundled planning profile restored" : "Prepare  Â·  recipe reset, review model");
-                        refreshActions();
-                        Toast.makeText(this, "Bundled planning profile restored", Toast.LENGTH_LONG).show();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Profile reset failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    private void rememberUriPermission(Uri uri, int flags) {
-        int takeFlags = flags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        if (takeFlags == 0) takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
-        try {
-            getContentResolver().takePersistableUriPermission(uri, takeFlags);
-        } catch (SecurityException ignored) {
-            // Some providers expose a readable URI without persistable grants.
-        }
-    }
-
-    private void loadUri(Uri uri) { loadUri(uri, false); }
-
-    private void loadUri(Uri uri, boolean restoreTransform) {
-        ArrayList<Uri> uris = new ArrayList<>();
-        uris.add(uri);
-        loadUris(uris, restoreTransform);
-    }
-
-    private void loadUris(ArrayList<Uri> uris, boolean restoreTransform) {
-        loadUris(uris, null, restoreTransform);
-    }
-
-    private void loadUris(ArrayList<Uri> uris, ArrayList<String> preferredNames, boolean restoreTransform) {
-        loadUris(uris, preferredNames, restoreTransform, null);
-    }
-
-    private void loadUris(ArrayList<Uri> uris, ArrayList<String> preferredNames, boolean restoreTransform,
-                          String pilotFixtureAssetPath) {
-        if (uris == null || uris.isEmpty()) return;
-        final ArrayList<Uri> requestedUris = new ArrayList<>(uris);
-        final ArrayList<String> requestedNames = preferredNames == null ? null : new ArrayList<>(preferredNames);
-        final String requestedPilotFixture = A1MiniNoSupportPilot.isFixtureAsset(pilotFixtureAssetPath)
-                ? pilotFixtureAssetPath : null;
-        // A document import runs off the UI thread. Snapshot the recipe used
-        // for STEP conversion so a concurrent editor change cannot produce a
-        // converted mesh whose cache identity and visible recipe disagree.
-        final Slicer.Config importConfig = config.copy();
-        final ProfileCatalog.Profile importProfileBaseline = profile;
-        final boolean restoreGeometryRepair = restoreTransform && projectStore.savedGeometryRepair();
-        cancelImport();
-        sliceJobs.cancel();
-        final long importId = importIds.incrementAndGet();
-        activeImportId = importId;
-        importing = true;
-        status.setText("Import  Â·  reading modelâ€¦");
-        refreshActions();
-        importTimeoutRunnable = () -> {
-            synchronized (MainActivity.this) {
-                if (importId != activeImportId || !importing || isFinishing()) return;
-            }
-            cancelImport();
-            Toast.makeText(MainActivity.this,
-                    "Model import timed out. Check the file provider or try a smaller model.",
-                    Toast.LENGTH_LONG).show();
-        };
-        mainHandler.postDelayed(importTimeoutRunnable, 90_000L);
-        activeImport = importExecutor.submit(() -> {
-            try {
-            ArrayList<MeshModel> loaded = new ArrayList<>();
-            ArrayList<MeshModel> pristineLoaded = new ArrayList<>();
-            ArrayList<Uri> loadedUris = new ArrayList<>();
-            ArrayList<String> names = new ArrayList<>();
-            byte[] embeddedProjectSettings = null;
-            for (int index = 0; index < requestedUris.size(); index++) {
-                if (Thread.currentThread().isInterrupted()) throw new CancellationException("Import cancelled");
-                Uri uri = requestedUris.get(index);
-                if (uri == null) throw new IllegalArgumentException("A selected model URI is missing");
-                String preferred = requestedNames != null && index < requestedNames.size() ? requestedNames.get(index) : null;
-                String name = preferred == null || preferred.trim().length() == 0 ? displayName(uri) : preferred;
-                try (InputStream raw = getContentResolver().openInputStream(uri)) {
-                    if (raw == null) throw new IllegalArgumentException("The selected file could not be opened");
-                    java.io.BufferedInputStream probe = new java.io.BufferedInputStream(raw);
-                    boolean direct3mf = ModelBundleExtractor.isDirect3mf(name, getContentResolver().getType(uri));
-                    if (ModelBundleExtractor.isZip(probe) && !direct3mf) {
-                        if (name.toLowerCase(Locale.US).endsWith(".alloy.zip"))
-                            throw new IOException("This is an Alloy project archive; use Open project archive");
-                        ArrayList<ModelBundleExtractor.Extracted> extracted = ModelBundleExtractor.extract(getFilesDir(), probe);
-                        for (ModelBundleExtractor.Extracted item : extracted) {
-                            String itemName = item.displayName;
-                            if (".3mf".equals(item.materialized.extension)) {
-                                embeddedProjectSettings = mergeProjectSettings(embeddedProjectSettings,
-                                        BambuProjectSettingsExtractor.extract(item.materialized.file));
-                            }
-                            ModelStore.Materialized renderable = renderableMaterialized(item.materialized, itemName, importConfig);
-                            loadedUris.add(renderable.uri);
-                            try (InputStream input = getContentResolver().openInputStream(renderable.uri)) {
-                                if (input == null) throw new IllegalArgumentException("The extracted model could not be opened");
-                                MeshModel parsed = MeshModel.read(ModelStore.parserName(itemName, renderable.extension), input);
-                                pristineLoaded.add(parsed);
-                                loaded.add(restoreGeometryRepair ? parsed.repair(itemName).mesh : parsed);
-                                names.add(itemName);
-                            }
-                        }
-                    } else {
-                        ModelStore.Materialized materialized = ModelStore.materialize(getFilesDir(), getContentResolver(), uri, name);
-                        if (".3mf".equals(materialized.extension)) {
-                            embeddedProjectSettings = mergeProjectSettings(embeddedProjectSettings,
-                                    BambuProjectSettingsExtractor.extract(materialized.file));
-                        }
-                        ModelStore.Materialized renderable = renderableMaterialized(materialized, name, importConfig);
-                        loadedUris.add(renderable.uri);
-                        try (InputStream input = getContentResolver().openInputStream(renderable.uri)) {
-                            if (input == null) throw new IllegalArgumentException("The selected file could not be opened");
-                            // Parse from the content-detected suffix, while keeping
-                            // the provider's friendly name for project labels.
-                            MeshModel parsed = MeshModel.read(ModelStore.parserName(name, renderable.extension), input);
-                            pristineLoaded.add(parsed);
-                            loaded.add(restoreGeometryRepair ? parsed.repair(name).mesh : parsed);
-                            names.add(name);
-                        }
-                    }
-                }
-            }
-            String projectName = loaded.size() == 1 ? names.get(0) : "Project Â· " + loaded.size() + " models";
-            MeshModel combined = loaded.size() == 1 ? loaded.get(0)
-                    : MeshModel.combine(projectName, loaded, null, activeBedX());
-            MeshModel pristineCombined = pristineLoaded.size() == 1
-                    ? pristineLoaded.get(0) : MeshModel.combine(projectName, pristineLoaded, null, activeBedX());
-            float scale = restoreTransform ? projectStore.savedScale() : 1f;
-            float rotation = restoreTransform ? projectStore.savedRotation() : 0f;
-            float tiltX = restoreTransform ? projectStore.savedTiltX() : 0f;
-            float tiltY = restoreTransform ? projectStore.savedTiltY() : 0f;
-            final ArrayList<Uri> importedUris = new ArrayList<>(loadedUris);
-            final ArrayList<String> importedNames = new ArrayList<>(names);
-            final ProfileCatalog.Profile importedProjectProfile;
-            if (embeddedProjectSettings == null) {
-                importedProjectProfile = null;
-            } else {
-                importedProjectProfile = ProfileCatalog.importBambu(importProfileBaseline,
-                        new byte[][]{embeddedProjectSettings});
-                writeImportedProfile(importedProjectProfile,
-                        ProfileCatalog.serialize(importedProjectProfile));
-            }
-            mainHandler.post(() -> {
-                synchronized (MainActivity.this) {
-                    if (importId != activeImportId || !importing || isFinishing()) return;
-                    importing = false;
-                    activeImport = null;
-                    if (importTimeoutRunnable != null) {
-                        mainHandler.removeCallbacks(importTimeoutRunnable);
-                        importTimeoutRunnable = null;
-                    }
-                }
-                try {
-                    if (importedProjectProfile != null) {
-                        profile = importedProjectProfile;
-                        profile.applyTo(config);
-                        projectStore.saveRecipe(config);
-                    }
-                    applyLoadedModel(combined, pristineCombined, projectName, importedUris, importedNames,
-                            scale, rotation, tiltX, tiltY, restoreTransform, restoreGeometryRepair);
-                    trustedPilotFixtureAssetPath = !restoreTransform ? requestedPilotFixture : null;
-                    if (!restoreTransform && importedModelStore != null)
-                        importedModelStore.remember(getFilesDir(), importedUris, importedNames);
-                    // A new import is a visual handoff as much as it is a
-                    // preparation event. Land on the object-first surface so
-                    // a supplied box, part, assembly or CAD conversion is
-                    // immediately inspectable; restored projects still open
-                    // in the normal workspace to preserve their task context.
-                    if (!restoreTransform && !openingPrivateA1Study) mainHandler.postDelayed(() -> {
-                        if (!isFinishing() && model != null && !importing && !slicing && !batchSlicing)
-                            showImmersiveView();
-                    }, 120L);
-                } catch (Exception error) {
-                    Toast.makeText(MainActivity.this, "Import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    refreshActions();
-                }
-            });
-            } catch (CancellationException ignored) {
-                // Cancellation is an expected user action; no error toast is needed.
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    synchronized (MainActivity.this) {
-                        if (importId != activeImportId || !importing || isFinishing()) return;
-                        importing = false;
-                        activeImport = null;
-                        if (importTimeoutRunnable != null) {
-                            mainHandler.removeCallbacks(importTimeoutRunnable);
-                            importTimeoutRunnable = null;
-                        }
-                    }
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    pruneModelCache();
-                    refreshActions();
-                    if (restoreTransform && model == null) {
-                        // Keep the saved URI/project intact for a later retry,
-                        // but never strand a phone-only session on an empty
-                        // workspace because a provider document disappeared.
-                        loadShowcaseWithoutReplacingSavedProject();
-                        status.setText("Prepare  Â·  saved model needs review");
-                        // The workspace itself is already the recovery affordance.
-                        // Keep the explanation in the durable status line so a
-                        // stale provider URI cannot cover the first useful 3D
-                        // frame with a transient warning surface.
-                    } else {
-                        Toast.makeText(MainActivity.this, "Import failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-        });
-    }
-
-    /** Turn CAD sources into the mesh format consumed by the renderer/project store. */
-    private ModelStore.Materialized renderableMaterialized(ModelStore.Materialized materialized,
-                                                            String displayName,
-                                                            Slicer.Config importConfig) throws IOException {
-        if (materialized == null) throw new IOException("Imported model is missing");
-        if (!".step".equals(materialized.extension)) return materialized;
-        return NativeStepImporter.convertTo3mf(getFilesDir(), materialized, importConfig, displayName);
-    }
-
-    private static byte[] mergeProjectSettings(byte[] existing, byte[] candidate) throws IOException {
-        if (candidate == null) return existing;
-        if (existing != null && !Arrays.equals(existing, candidate))
-            throw new IOException("Select one Bambu 3MF project when embedded recipes differ");
-        return candidate;
-    }
-
-    private synchronized void cancelImport() {
-        activeImportId = importIds.incrementAndGet();
-        if (importTimeoutRunnable != null) {
-            mainHandler.removeCallbacks(importTimeoutRunnable);
-            importTimeoutRunnable = null;
-        }
-        if (activeImport != null) {
-            activeImport.cancel(true);
-            activeImport = null;
-        }
-        if (!importing) return;
-        importing = false;
-        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-        refreshActions();
-    }
-
-    private boolean firstRunOnboardingPending() {
-        try {
-            return getPreferences(MODE_PRIVATE).getInt(FIRST_RUN_ONBOARDING_VERSION, 0)
-                    < CURRENT_FIRST_RUN_ONBOARDING_VERSION;
-        } catch (ClassCastException ignored) {
-            return true;
-        }
-    }
-
-    /**
-     * A first run needs orientation, not an unexplained model canvas or a
-     * premature permission prompt. This deliberately stays independent of the
-     * immersive visual intro so an external Android share can still open its
-     * model immediately.
-     */
-    private void scheduleFirstRunOnboarding() {
-        if (!firstRunOnboardingPending()) return;
-        mainHandler.postDelayed(() -> {
-            if (!isFinishing() && firstRunOnboardingPending()) showFirstRunOnboarding(0);
-        }, 280L);
-    }
-
-    private void finishFirstRunOnboarding() {
-        getPreferences(MODE_PRIVATE).edit()
-                .putInt(FIRST_RUN_ONBOARDING_VERSION, CURRENT_FIRST_RUN_ONBOARDING_VERSION)
-                .apply();
-    }
-
-    private void showFirstRunOnboarding(int step) {
-        final int safeStep = Math.max(0, Math.min(4, step));
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        LinearLayout page = learnPage();
-        TextView eyebrow = label("WELCOME TO ALLOY  Â·  " + (safeStep + 1) + " / 5", 10, MUTED);
-        eyebrow.setLetterSpacing(0.10f);
-        page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(26)));
-
-        String title;
-        String body;
-        if (safeStep == 0) {
-            title = "Your print workshop, on your phone";
-            body = "Import a model, arrange real geometry, prepare a plate and inspect the result without needing a desktop. Start with a small, familiar object and keep the printer in view for any physical work.";
-        } else if (safeStep == 1) {
-            title = "Pair later, or explore now";
-            body = "You can use Library, 3D planning and Learn without pairing a printer. Pairing is only for a future qualified LAN route; Alloy will ask for printer details and notifications when there is a clear reason, never during this tour.";
-        } else if (safeStep == 2) {
-            title = "Match the physical setup";
-            body = "A printer name is not enough. Before slicing, identify the printer, nozzle, build plate, material and feed route in front of you. The active profile changes the printable envelope, but it cannot verify the machine automatically.";
-        } else if (safeStep == 3) {
-            title = "Start with one understandable object";
-            body = "Import a small STL, OBJ, 3MF or supported STEP source, or choose a Library model. Place it inside the real plate boundary, then inspect the first layer, thin features, bridges and warnings after slicing.";
-        } else {
-            title = "Review before any physical step";
-            body = "A recipe, estimate, preview and export are planning tools. A direct printer job stays locked until the exact printer, profile, native engine, package and physical evidence are qualified. A lock is a safety boundary, not an error to bypass.";
-        }
-        TextView heading = label(title, 25, TEXT);
-        heading.setTypeface(null, android.graphics.Typeface.BOLD);
-        heading.setLineSpacing(dp(3), 1f);
-        page.addView(heading, new LinearLayout.LayoutParams(-1, -2));
-        TextView intro = label(body, 14, MUTED);
-        intro.setLineSpacing(dp(4), 1f);
-        LinearLayout.LayoutParams introLp = new LinearLayout.LayoutParams(-1, -2);
-        introLp.topMargin = dp(12);
-        page.addView(intro, introLp);
-        boolean feedArtwork = safeStep == 1 || safeStep == 2 || safeStep == 4;
-        addLearnArtwork(page, feedArtwork ? "learn/material-feed-route-v1.png" : "learn/first-layer-hotend-v1.png",
-                feedArtwork ? "Illustration of a spool and feed route" : "Illustration of a hotend placing a line");
-
-        TextView boundary = label(safeStep == 4
-                        ? "DIRECT PRINTING REMAINS FAIL-CLOSED UNTIL ITS SEPARATE EVIDENCE GATES PASS"
-                        : "NO NOTIFICATIONS OR PRINTER PERMISSIONS ARE REQUESTED DURING ONBOARDING",
-                10, safeStep == 4 ? RED : INK);
-        boundary.setLetterSpacing(0.06f);
-        boundary.setLineSpacing(dp(2), 1f);
-        LinearLayout.LayoutParams boundaryLp = new LinearLayout.LayoutParams(-1, -2);
-        boundaryLp.topMargin = dp(8);
-        page.addView(boundary, boundaryLp);
-
-        LinearLayout actions = new LinearLayout(this);
-        actions.setGravity(Gravity.CENTER_VERTICAL);
-        actions.setPadding(0, dp(18), 0, 0);
-        Button skip = dialogButton(safeStep == 4 ? "Not now" : "Skip tour", v -> {
-            finishFirstRunOnboarding();
-            dialog.dismiss();
-        });
-        actions.addView(skip, new LinearLayout.LayoutParams(0, dp(50), 1));
-        Button next = dialogButton(safeStep == 4 ? "Open Library" : "Continue", v -> {
-            if (safeStep < 4) {
-                dialog.dismiss();
-                showFirstRunOnboarding(safeStep + 1);
-            } else {
-                finishFirstRunOnboarding();
-                dialog.dismiss();
-                showModelLibrary();
-            }
-        });
-        next.setTypeface(null, android.graphics.Typeface.BOLD);
-        LinearLayout.LayoutParams nextLp = new LinearLayout.LayoutParams(0, dp(50), 1);
-        nextLp.leftMargin = dp(8);
-        actions.addView(next, nextLp);
-        page.addView(actions, new LinearLayout.LayoutParams(-1, dp(70)));
-        setDialogPage(dialog, page);
-    }
-
-    /** Offline, data-driven field guide. It deliberately has no print-control affordance. */
-    private void showLearnHub() {
-        try {
-            LearningCatalog catalog = LearningCatalog.load(getAssets());
-            final Dialog dialog = new Dialog(this);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            LinearLayout page = learnPage();
-            TextView eyebrow = label("LEARN Â· OFFLINE FIELD GUIDE", 10, MUTED);
-            eyebrow.setLetterSpacing(0.10f);
-            page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
-            TextView title = label("A calm start, when you need it", 22, TEXT);
-            title.setTypeface(null, android.graphics.Typeface.BOLD);
-            page.addView(title, new LinearLayout.LayoutParams(-1, dp(38)));
-            TextView intro = label("Short, source-labelled guidance for preparing a model, choosing material and recognising when to stop. Learning never unlocks physical printing.", 13, MUTED);
-            intro.setLineSpacing(dp(3), 1f);
-            page.addView(intro, new LinearLayout.LayoutParams(-1, -2));
-            addLearnArtwork(page, "learn/first-layer-hotend-v1.png", "Illustration of a hotend placing a first-layer line");
-
-            addLearnButton(page, "Replay welcome", "A short, skippable tour of the safe phone-first route", v -> { dialog.dismiss(); showFirstRunOnboarding(0); });
-            addLearnButton(page, "Start here", "A first-print checklist with no hidden promises", v -> showLearnArticles(dialog, catalog.ofKind("start"), "Start here"));
-            addLearnButton(page, "Quick cheat sheet", "Plain-language layers, materials, supports and first-layer basics", v -> showLearnArticles(dialog, catalog.ofKind("cheatsheet"), "Quick cheat sheet"));
-            addLearnButton(page, "FAQ Â· Common questions", "Clear answers about files, slicing, materials and sending", v -> showLearnArticles(dialog, catalog.ofKind("faq"), "FAQ"));
-            addLearnButton(page, "Materials & compatibility", "A1 mini, A1 and P1S records; Bambu capability is separate from Alloy send approval", v -> showMaterials(dialog));
-            addLearnButton(page, "Fix a symptom", "Search by what you see. Hard-stop guidance comes first.", v -> showTroubleshooting(dialog, catalog));
-            TextView boundary = label("Safety boundary Â· Never remove a certificate, readiness gate or physical safeguard to continue. Use the printer and current manufacturer guidance as the source of truth during a fault.", 11, RED);
-            boundary.setPadding(dp(4), dp(12), dp(4), dp(8));
-            page.addView(boundary, new LinearLayout.LayoutParams(-1, -2));
-            Button close = dialogButton("Done", v -> dialog.dismiss());
-            page.addView(close, new LinearLayout.LayoutParams(-1, dp(48)));
-            setDialogPage(dialog, page);
-        } catch (IOException error) {
-            Toast.makeText(this, "Learn is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private LinearLayout learnPage() {
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(20), dp(18), dp(20), dp(24));
-        content.setBackgroundColor(BG);
-        return content;
-    }
-
-    // Dialog accepts the content root directly; wrapping makes long articles
-    // readable with large text and keeps the action rail off the content.
-    private void setDialogPage(Dialog dialog, LinearLayout content) {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
-        dialog.setContentView(scroll);
-        dialog.show();
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(android.R.color.transparent);
-            window.setLayout(-1, -1);
-        }
-    }
-
-    private void addLearnButton(LinearLayout page, String title, String detail, View.OnClickListener listener) {
-        Button button = dialogButton(title + "\n" + detail, listener);
-        button.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        button.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-        button.setTextSize(14);
-        button.setPadding(dp(16), dp(8), dp(16), dp(8));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(68));
-        lp.topMargin = dp(10);
-        page.addView(button, lp);
-    }
-
-    private void addLearnArtwork(LinearLayout page, String asset, String description) {
-        if (asset == null || asset.length() == 0) return;
-        try (InputStream input = getAssets().open(asset)) {
-            Bitmap bitmap = BitmapFactory.decodeStream(input);
-            if (bitmap == null) return;
-            ImageView image = new ImageView(this);
-            image.setImageBitmap(bitmap);
-            image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            image.setAdjustViewBounds(true);
-            image.setContentDescription(description);
-            image.setBackground(round(PANEL, Color.rgb(226, 222, 213), 1, 22));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(164));
-            lp.topMargin = dp(14); lp.bottomMargin = dp(4);
-            page.addView(image, lp);
-        } catch (IOException ignored) {
-            // Text remains a complete accessible equivalent when art is absent.
-        }
-    }
-
-    private void showLearnArticles(Dialog parent, List<LearningCatalog.Article> articles, String heading) {
-        parent.dismiss();
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        LinearLayout page = learnPage();
-        TextView eyebrow = label("LEARN Â· " + heading.toUpperCase(Locale.US), 10, MUTED);
-        eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
-        TextView title = label(heading, 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD);
-        page.addView(title, new LinearLayout.LayoutParams(-1, dp(40)));
-        for (LearningCatalog.Article article : articles) addLearnArticle(page, article);
-        Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); });
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.topMargin = dp(12); page.addView(back, lp);
-        setDialogPage(dialog, page);
-    }
-
-    private void addLearnArticle(LinearLayout page, LearningCatalog.Article article) {
-        LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(14), dp(13), dp(14), dp(13)); card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
-        TextView safety = label(article.safety.toUpperCase(Locale.US), 10, "Hard stop".equals(article.safety) ? RED : AMBER);
-        safety.setLetterSpacing(0.10f); card.addView(safety);
-        TextView title = label(article.title, 17, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setPadding(0, dp(4), 0, dp(5)); card.addView(title);
-        TextView summary = label(article.summary, 13, MUTED); summary.setLineSpacing(dp(3), 1f); card.addView(summary);
-        if (article.artwork.length() > 0) {
-            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary
-                    + (article.visualNote.isEmpty() ? "" : ". " + article.visualNote));
-            if (!article.visualNote.isEmpty()) {
-                TextView visualNote = label(article.visualNote, 11, MUTED);
-                visualNote.setLineSpacing(dp(2), 1f);
-                visualNote.setPadding(dp(2), dp(2), dp(2), dp(2));
-                card.addView(visualNote);
-            }
-        } else {
-            addLearnDiagram(card, article);
-        }
-        TextView next = label("SAFE NEXT STEPS", 10, INK); next.setLetterSpacing(0.08f); next.setPadding(0, dp(10), 0, dp(2)); card.addView(next);
-        for (int i = 0; i < article.steps.size(); i++) {
-            TextView step = label((i + 1) + ". " + article.steps.get(i), 13, TEXT); step.setPadding(0, dp(3), 0, 0); step.setLineSpacing(dp(2), 1f); card.addView(step);
-        }
-        TextView scope = label("Scope Â· " + article.scope + "\nSource Â· " + article.source, 10, MUTED);
-        scope.setPadding(0, dp(10), 0, 0); scope.setLineSpacing(dp(2), 1f); card.addView(scope);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(12); page.addView(card, lp);
-    }
-
-    /** Every text-only field-guide article gets an offline visual and accessible equivalent. */
-    private void addLearnDiagram(LinearLayout page, LearningCatalog.Article article) {
-        LearningIllustrationView illustration = new LearningIllustrationView(this, article.id,
-                "Diagram for " + article.title + ". " + article.summary);
-        illustration.setBackground(round(PANEL, Color.rgb(226, 222, 213), 1, 18));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(144));
-        lp.topMargin = dp(14); lp.bottomMargin = dp(4);
-        page.addView(illustration, lp);
-    }
-
-    private void showTroubleshooting(Dialog parent, LearningCatalog catalog) {
-        parent.dismiss();
-        final Dialog dialog = new Dialog(this); dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        LinearLayout page = learnPage();
-        TextView eyebrow = label("LEARN Â· SYMPTOM FIRST", 10, MUTED); eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
-        TextView title = label("What are you seeing?", 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD); page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
-        EditText search = new EditText(this); search.setHint("Search: lifting, stringing, collision, pairing"); search.setSingleLine(true); search.setContentDescription("Search troubleshooting symptoms");
-        search.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 14)); search.setPadding(dp(14), 0, dp(14), 0); page.addView(search, new LinearLayout.LayoutParams(-1, dp(52)));
-        TextView resultStatus = label("", 11, MUTED);
-        resultStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        resultStatus.setPadding(dp(2), dp(10), dp(2), dp(2));
-        page.addView(resultStatus, new LinearLayout.LayoutParams(-1, -2));
-        LinearLayout results = new LinearLayout(this); results.setOrientation(LinearLayout.VERTICAL); page.addView(results, new LinearLayout.LayoutParams(-1, -2));
-        renderTroubleshootingResults(results, resultStatus, catalog, "");
-        search.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                renderTroubleshootingResults(results, resultStatus, catalog, s.toString());
-            }
-            @Override public void afterTextChanged(android.text.Editable editable) { }
-        });
-        Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); }); LinearLayout.LayoutParams backLp = new LinearLayout.LayoutParams(-1, dp(48)); backLp.topMargin = dp(12); page.addView(back, backLp);
-        setDialogPage(dialog, page);
-    }
-
-    private void renderTroubleshootingResults(LinearLayout results, TextView status,
-                                             LearningCatalog catalog, String query) {
-        results.removeAllViews();
-        List<LearningCatalog.Article> matches = catalog.searchTroubleshooting(query);
-        String trimmed = query == null ? "" : query.trim();
-        if (trimmed.isEmpty()) {
-            status.setText("Safety stop checks Â· search to narrow by symptom");
-        } else {
-            status.setText(matches.size() + (matches.size() == 1 ? " matching guide" : " matching guides"));
-        }
-        for (LearningCatalog.Article article : matches) addLearnArticle(results, article);
-        if (!trimmed.isEmpty() && matches.isEmpty()) {
-            TextView empty = label("No exact offline match. If the printer is hot, moving, smoking, colliding, or has damaged wiring, stop and use current manufacturer support.", 13, RED);
-            empty.setPadding(0, dp(14), 0, 0); results.addView(empty);
-        }
-    }
-
-    private void showMaterials(Dialog parent) {
-        parent.dismiss();
-        try {
-            PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
-            final Dialog dialog = new Dialog(this); dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            LinearLayout page = learnPage();
-            TextView eyebrow = label("LEARN Â· MATERIALS & COMPATIBILITY", 10, MUTED); eyebrow.setLetterSpacing(0.10f); page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(24)));
-            TextView title = label("Choose a known setup", 22, TEXT); title.setTypeface(null, android.graphics.Typeface.BOLD); page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
-            TextView note = label("Bambu-published capability is not an Alloy direct-send approval. Every record below remains blocked until its printer, profile, native engine and physical evidence gates pass.", 13, RED); note.setLineSpacing(dp(3), 1f); page.addView(note, new LinearLayout.LayoutParams(-1, -2));
-            addLearnArtwork(page, "learn/material-feed-route-v1.png", "Illustration of material spool and feed route");
-            for (PrinterCapabilityCatalog.Printer printer : catalog.printers) addPrinterCapability(page, printer);
-            Button back = dialogButton("Back to Learn", v -> { dialog.dismiss(); showLearnHub(); }); LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.topMargin = dp(12); page.addView(back, lp);
-            setDialogPage(dialog, page);
-        } catch (IOException error) { Toast.makeText(this, "Material catalog is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show(); }
-    }
-
-    private void addPrinterCapability(LinearLayout page, PrinterCapabilityCatalog.Printer printer) {
-        LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL); card.setPadding(dp(14), dp(13), dp(14), dp(13)); card.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 1, 18));
-        TextView name = label(printer.name, 18, TEXT); name.setTypeface(null, android.graphics.Typeface.BOLD); card.addView(name);
-        TextView facts = label(printer.buildVolume + " Â· " + printer.nozzle + " Â· Bed " + printer.bed, 12, MUTED); facts.setPadding(0, dp(3), 0, 0); card.addView(facts);
-        TextView direct = label("ALLOY DIRECT SEND Â· " + printer.directSendState, 10, RED); direct.setLetterSpacing(0.07f); direct.setPadding(0, dp(10), 0, dp(4)); card.addView(direct);
-        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus + (material.amsLiteStatus.isEmpty() ? "" : " Â· AMS Lite: " + material.amsLiteStatus) + " Â· Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
-        String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
-        if (!amsLiteSourceUrl.isEmpty()) {
-            final String sourceUrl = amsLiteSourceUrl;
-            TextView feedSource = label("AMS Lite handling is feeder guidance only; it does not override this printer's material rating.", 11, MUTED);
-            feedSource.setPadding(0, dp(8), 0, 0); card.addView(feedSource);
-            Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
-            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); card.addView(sourceButton, sourceLp);
-        }
-        TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
-        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
-            TextView row = label(route.title + " Â· " + route.state + "\n" + route.note, 12, TEXT);
-            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
-            if (!route.sourceUrl.isEmpty()) {
-                final String routeSourceUrl = route.sourceUrl;
-                Button routeSourceButton = dialogButton("Open official " + route.title + " compatibility guidance",
-                        v -> openCapabilitySource(routeSourceUrl));
-                LinearLayout.LayoutParams routeSourceLp = new LinearLayout.LayoutParams(-1, dp(40));
-                routeSourceLp.topMargin = dp(4); card.addView(routeSourceButton, routeSourceLp);
-            }
-        }
-        TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
-        for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
-            TextView row = label(form.title + " Â· " + form.state + "\n"
-                    + "Form: " + form.form + " Â· Routes: " + form.compatibleRoutes + "\n"
-                    + "Fit: " + form.geometry + "\n" + form.note, 12, TEXT);
-            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
-        }
-        TextView spool = label("SPOOL CHECK", 10, INK); spool.setLetterSpacing(0.08f); spool.setPadding(0, dp(12), 0, dp(2)); card.addView(spool);
-        for (String guidance : printer.spoolGuidance) { TextView row = label("â€¢ " + guidance, 12, TEXT); row.setPadding(0, dp(4), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
-        TextView source = label("Source/scope Â· " + printer.source + " Â· reviewed " + printer.reviewed, 10, MUTED); source.setPadding(0, dp(10), 0, 0); source.setLineSpacing(dp(2), 1f); card.addView(source);
-        Button openSource = dialogButton("Open official Bambu source", v -> openCapabilitySource(printer.sourceUrl));
-        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(8); card.addView(openSource, sourceLp);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(12); page.addView(card, lp);
-    }
-
-    private void showModelLibrary() {
-        if (printerBusy || slicing || batchSlicing || batchTransferring) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            ArrayList<ModelCatalog.Entry> entries = ModelCatalog.load(getAssets());
-            final Dialog dialog = new Dialog(this);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            LinearLayout page = new LinearLayout(this);
-            page.setOrientation(LinearLayout.VERTICAL);
-            page.setBackgroundColor(BG);
-            page.setPadding(dp(14), dp(12), dp(14), dp(12));
-
-            TextView eyebrow = label("LIBRARY", 11, MUTED);
-            eyebrow.setLetterSpacing(0.16f);
-            page.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(28)));
-            TextView title = label("Library", 24, TEXT);
-            title.setTypeface(null, android.graphics.Typeface.BOLD);
-            page.addView(title, new LinearLayout.LayoutParams(-1, dp(42)));
-            TextView subtitle = label("Saved models  /  Recently opened", 13, MUTED);
-            page.addView(subtitle, new LinearLayout.LayoutParams(-1, dp(34)));
-
-            // Make the supplied/user-owned geometry path obvious at the point
-            // where a person is looking for models. The catalog remains
-            // license-audited, while imported STL/OBJ/3MF files go through
-            // the normal content-addressed cache and the same live renderer.
-            HorizontalScrollView quickActionsScroll = new HorizontalScrollView(this);
-            quickActionsScroll.setHorizontalScrollBarEnabled(false);
-            LinearLayout quickActions = new LinearLayout(this);
-            quickActions.setOrientation(LinearLayout.HORIZONTAL);
-            Button import3d = dialogButton("Import 3D file", v -> {
-                dialog.dismiss();
-                openModel();
-            });
-            quickActions.addView(import3d, new LinearLayout.LayoutParams(-2, dp(46)));
-            Button create3d = dialogButton("Create / edit", v -> {
-                dialog.dismiss();
-                showModelWorkbench();
-            });
-            LinearLayout.LayoutParams createLp = new LinearLayout.LayoutParams(-2, dp(46));
-            createLp.leftMargin = dp(8);
-            quickActions.addView(create3d, createLp);
-            Button printer3d = dialogButton("A1 Mini study", v -> {
-                dialog.dismiss();
-                showPrinterStudy();
-            });
-            LinearLayout.LayoutParams printerLp = new LinearLayout.LayoutParams(-2, dp(46));
-            printerLp.leftMargin = dp(8);
-            quickActions.addView(printer3d, printerLp);
-            quickActionsScroll.addView(quickActions, new HorizontalScrollView.LayoutParams(-2, dp(46)));
-            page.addView(quickActionsScroll, new LinearLayout.LayoutParams(-1, dp(54)));
-
-            TextView recentTitle = label("RECENT ON THIS PHONE", 10, MUTED);
-            recentTitle.setLetterSpacing(0.12f);
-            recentTitle.setPadding(dp(2), dp(8), 0, 0);
-            page.addView(recentTitle, new LinearLayout.LayoutParams(-1, dp(30)));
-            HorizontalScrollView recentScroll = new HorizontalScrollView(this);
-            recentScroll.setHorizontalScrollBarEnabled(false);
-            LinearLayout recent = new LinearLayout(this);
-            recent.setOrientation(LinearLayout.HORIZONTAL);
-            recent.setPadding(0, 0, dp(4), dp(6));
-            ArrayList<ImportedModelStore.Entry> recentEntries = importedModelStore == null
-                    ? new ArrayList<>() : importedModelStore.entries(getFilesDir());
-            android.content.SharedPreferences favourites = getSharedPreferences("alloy_model_favourites", MODE_PRIVATE);
-            ArrayList<View> libraryItems = new ArrayList<>();
-            ArrayList<ModelCatalog.Entry> libraryCatalog = new ArrayList<>();
-            final String[] activeFilter = {"All"};
-            final String[] searchQuery = {""};
-            final ArrayList<Button> filterButtons = new ArrayList<>();
-            final Runnable[] refreshFilterCounts = {() -> {}};
-            if (recentEntries.isEmpty()) {
-                TextView emptyRecent = label("Import a box, bow part, STEP or 3MF and it will stay here for offline reopen.", 11, MUTED);
-                emptyRecent.setGravity(Gravity.CENTER_VERTICAL);
-                recent.addView(emptyRecent, new LinearLayout.LayoutParams(-1, dp(42)));
-            } else {
-                for (ImportedModelStore.Entry entry : recentEntries) {
-                    Button recentChip = dialogButton(galleryShortName(entry.name), null);
-                    recentChip.setTextSize(11);
-                    recentChip.setMinWidth(dp(126));
-                    recentChip.setContentDescription("Open imported model " + entry.name);
-                    recentChip.setTag("uri:" + entry.sha256);
-                    recentChip.setOnClickListener(v -> {
-                        dialog.dismiss();
-                        loadUri(entry.uri, false);
-                    });
-                    LinearLayout.LayoutParams recentLp = new LinearLayout.LayoutParams(-2, dp(42));
-                    if (recent.getChildCount() > 0) recentLp.leftMargin = dp(6);
-                    recent.addView(recentChip, recentLp);
-                    libraryItems.add(recentChip);
-                }
-            }
-            recentScroll.addView(recent, new HorizontalScrollView.LayoutParams(-2, dp(48)));
-            page.addView(recentScroll, new LinearLayout.LayoutParams(-1, dp(52)));
-
-            HorizontalScrollView chooserScroll = new HorizontalScrollView(this);
-            chooserScroll.setHorizontalScrollBarEnabled(false);
-            LinearLayout chooser = new LinearLayout(this);
-            chooser.setOrientation(LinearLayout.HORIZONTAL);
-            chooser.setPadding(0, dp(2), dp(4), dp(8));
-            chooserScroll.addView(chooser, new HorizontalScrollView.LayoutParams(-2, dp(56)));
-            page.addView(chooserScroll, new LinearLayout.LayoutParams(-1, dp(58)));
-
-            FrameLayout stage = new FrameLayout(this);
-            stage.setBackground(round(SURFACE, Color.rgb(226, 222, 213), 2, 28));
-            stage.setClipToOutline(true);
-            ViewportView preview = new ViewportView(this);
-            preview.setPresentationMode(false);
-            preview.setCleanPresentation(true);
-            stage.addView(preview, new FrameLayout.LayoutParams(-1, -1));
-            addPresentationAppearanceControls(stage, preview, dp(14));
-            stage.addView(sceneTag("â—‡", "STUDY", "LIVE MODEL", Gravity.TOP | Gravity.START, dp(16), dp(18)));
-            stage.addView(sceneTag("01", "PLATE", "EXAMPLE", Gravity.BOTTOM | Gravity.START, dp(22), dp(18)));
-            page.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1f));
-
-            TextView selectedName = label("", 16, TEXT);
-            selectedName.setTypeface(null, android.graphics.Typeface.BOLD);
-            selectedName.setPadding(dp(2), dp(10), dp(2), 0);
-            LinearLayout selectedHeader = new LinearLayout(this);
-            selectedHeader.setGravity(Gravity.CENTER_VERTICAL);
-            selectedHeader.addView(selectedName, new LinearLayout.LayoutParams(0, dp(36), 1f));
-            TextView favouriteToggle = label("â™¡", 26, INK);
-            favouriteToggle.setGravity(Gravity.CENTER);
-            favouriteToggle.setContentDescription("Add to favourites");
-            selectedHeader.addView(favouriteToggle, new LinearLayout.LayoutParams(dp(42), dp(36)));
-            page.addView(selectedHeader, new LinearLayout.LayoutParams(-1, dp(38)));
-            TextView selectedProvenance = label("", 11, MUTED);
-            selectedProvenance.setLineSpacing(1, 1.0f);
-            page.addView(selectedProvenance, new LinearLayout.LayoutParams(-1, dp(46)));
-
-            int initialIndex = 0;
-            for (int index = 0; index < entries.size(); index++) {
-                if (entries.get(index).name.toLowerCase(Locale.US).contains("assembly")) {
-                    initialIndex = index;
-                    break;
-                }
-            }
-            final ModelCatalog.Entry[] selected = new ModelCatalog.Entry[]{entries.get(initialIndex)};
-            Runnable refreshFavourite = () -> {
-                boolean isFavourite = favourites.getBoolean("asset:" + selected[0].assetPath, false);
-                favouriteToggle.setText(isFavourite ? "â™¥" : "â™¡");
-                favouriteToggle.setTextColor(isFavourite ? GOLD : INK);
-                favouriteToggle.setContentDescription(isFavourite ? "Remove from favourites" : "Add to favourites");
-            };
-            favouriteToggle.setOnClickListener(v -> {
-                String key = "asset:" + selected[0].assetPath;
-                favourites.edit().putBoolean(key, !favourites.getBoolean(key, false)).apply();
-                refreshFavourite.run();
-                filterLibraryItems(libraryItems, searchQuery[0], activeFilter[0], favourites);
-                refreshFilterCounts[0].run();
-            });
-            for (int index = 0; index < entries.size(); index++) {
-                ModelCatalog.Entry entry = entries.get(index);
-                Button chip = dialogButton(galleryShortName(entry.name), null);
-                chip.setTextSize(11);
-                chip.setMinWidth(dp(108));
-                chip.setTag("asset:" + entry.assetPath);
-                chip.setContentDescription(entry.name);
-                LinearLayout.LayoutParams chipLp = new LinearLayout.LayoutParams(-2, dp(46));
-                if (index > 0) chipLp.leftMargin = dp(6);
-                chooser.addView(chip, chipLp);
-                libraryItems.add(chip);
-                libraryCatalog.add(entry);
-                final ModelCatalog.Entry chosen = entry;
-                chip.setOnClickListener(v -> {
-                    try {
-                        ModelCatalog.verify(getAssets(), chosen);
-                        try (InputStream input = getAssets().open(chosen.assetPath)) {
-                            MeshModel parsed = MeshModel.read(chosen.name, input);
-                            selected[0] = chosen;
-                            preview.setModel(parsed);
-                            selectedName.setText(chosen.name);
-                            selectedProvenance.setText(chosen.provenanceLabel() + "  Â·  checksum verified");
-                            refreshFavourite.run();
-                        }
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Example rejected: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-
-            EditText modelSearch = new EditText(this);
-            modelSearch.setSingleLine(true);
-            modelSearch.setTextSize(12);
-            modelSearch.setHint("âŒ• Search");
-            modelSearch.setPadding(dp(10), 0, dp(8), 0);
-            modelSearch.setBackground(round(SURFACE, Color.rgb(222, 216, 206), 1, 18));
-            Button sort = dialogButton("â˜·  Sort", null);
-            sort.setTextSize(11);
-            LinearLayout.LayoutParams sortLp = new LinearLayout.LayoutParams(-2, dp(34));
-            sortLp.leftMargin = dp(6);
-
-            int favCount = 0;
-            for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) favCount++;
-            HorizontalScrollView filterScroll = new HorizontalScrollView(this);
-            filterScroll.setHorizontalScrollBarEnabled(false);
-            LinearLayout filterRow = new LinearLayout(this);
-            filterRow.setGravity(Gravity.CENTER_VERTICAL);
-            filterRow.addView(modelSearch, new LinearLayout.LayoutParams(dp(98), dp(38)));
-            filterScroll.addView(filterRow, new HorizontalScrollView.LayoutParams(-2, dp(40)));
-            page.addView(filterScroll, new LinearLayout.LayoutParams(-1, dp(42)));
-            String[] filterLabels = {"All " + libraryItems.size(), "Favourites " + favCount, "Recent " + recentEntries.size()};
-            for (String filterLabel : filterLabels) {
-                Button filter = dialogButton(filterLabel, null);
-                filter.setTextSize(11);
-                LinearLayout.LayoutParams filterLp = new LinearLayout.LayoutParams(-2, dp(34));
-                if (filterRow.getChildCount() > 0) filterLp.leftMargin = dp(6);
-                filterRow.addView(filter, filterLp);
-                filterButtons.add(filter);
-                filter.setOnClickListener(v -> {
-                    activeFilter[0] = filterLabel.startsWith("Favourites") ? "Favourites" : filterLabel.startsWith("Recent") ? "Recent" : "All";
-                    filterLibraryItems(libraryItems, modelSearch.getText().toString(), activeFilter[0], favourites);
-                    for (int i = 0; i < filterRow.getChildCount(); i++) filterRow.getChildAt(i).setAlpha(filterRow.getChildAt(i) == filter ? 1f : .7f);
-                });
-            }
-            filterRow.addView(sort, sortLp);
-            refreshFilterCounts[0] = () -> {
-                int count = 0;
-                for (View item : libraryItems) if (favourites.getBoolean(String.valueOf(item.getTag()), false)) count++;
-                if (filterButtons.size() == 3) {
-                    filterButtons.get(0).setText("All " + libraryItems.size());
-                    filterButtons.get(1).setText("Favourites " + count);
-                    filterButtons.get(2).setText("Recent " + recentEntries.size());
-                }
-            };
-            refreshFilterCounts[0].run();
-            modelSearch.addTextChangedListener(new android.text.TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    searchQuery[0] = s.toString();
-                    filterLibraryItems(libraryItems, s.toString(), activeFilter[0], favourites);
-                }
-                @Override public void afterTextChanged(android.text.Editable s) {}
-            });
-            sort.setOnClickListener(v -> {
-                boolean ascending = !Boolean.TRUE.equals(sort.getTag());
-                sort.setTag(ascending);
-                sort.setText(ascending ? "â˜·  Aâ€“Z" : "â˜·  Zâ€“A");
-                java.util.Collections.sort(libraryCatalog, (left, right) -> {
-                    int order = left.name.compareToIgnoreCase(right.name);
-                    return ascending ? order : -order;
-                });
-                // Reorder existing views instead of relabeling them. Each click
-                // listener captures its verified catalog entry; relabeling alone
-                // would make a sorted chip open a different model than it names.
-                ArrayList<View> sortedItems = new ArrayList<>();
-                for (ModelCatalog.Entry entry : libraryCatalog) {
-                    String expectedTag = "asset:" + entry.assetPath;
-                    for (View item : libraryItems) {
-                        if (expectedTag.equals(String.valueOf(item.getTag()))) {
-                            sortedItems.add(item);
-                            break;
-                        }
-                    }
-                }
-                chooser.removeAllViews();
-                for (View item : sortedItems) {
-                    LinearLayout.LayoutParams itemLp = new LinearLayout.LayoutParams(-2, dp(46));
-                    if (chooser.getChildCount() > 0) itemLp.leftMargin = dp(6);
-                    chooser.addView(item, itemLp);
-                }
-            });
-            page.removeView(filterScroll);
-            page.addView(filterScroll, 3);
-
-            LinearLayout footer = new LinearLayout(this);
-            footer.setGravity(Gravity.CENTER_VERTICAL);
-            footer.setPadding(0, dp(8), 0, 0);
-            Button community = dialogButton("Community sources", v -> {
-                dialog.dismiss();
-                showCommunityModelSources();
-            });
-            footer.addView(community, new LinearLayout.LayoutParams(0, dp(50), 1f));
-            Button open = dialogButton("Use & open 3D", v -> {
-                dialog.dismiss();
-                loadAssetModel(selected[0].assetPath, selected[0].name);
-            });
-            LinearLayout.LayoutParams openLp = new LinearLayout.LayoutParams(-2, dp(50));
-            openLp.leftMargin = dp(8);
-            footer.addView(open, openLp);
-            Button close = dialogButton("Done", v -> dialog.dismiss());
-            LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(-2, dp(50));
-            closeLp.leftMargin = dp(8);
-            footer.addView(close, closeLp);
-            page.addView(footer, new LinearLayout.LayoutParams(-1, dp(58)));
-
-            ArcNavigationBar libraryNavigation = new ArcNavigationBar(this);
-            libraryNavigation.setContextLabel("Open in workshop");
-            libraryNavigation.setSelectedDestination(1);
-            libraryNavigation.setListener(new ArcNavigationBar.Listener() {
-                @Override public void onContext() { dialog.dismiss(); loadAssetModel(selected[0].assetPath, selected[0].name); }
-                @Override public void onSearch() { modelSearch.requestFocus(); }
-                @Override public void onAlerts() { dialog.dismiss(); showPrinterReadiness(); }
-                @Override public void onHome() { dialog.dismiss(); if (viewport != null) viewport.resetView(); }
-                @Override public void onLibrary() { modelSearch.requestFocus(); }
-                @Override public void onPrepare() { dialog.dismiss(); showPrepare(); }
-                @Override public void onHistory() { dialog.dismiss(); showModelHistory(); }
-                @Override public void onMore() { dialog.dismiss(); showMoreActions(); }
-            });
-            page.addView(libraryNavigation, new LinearLayout.LayoutParams(-1, dp(116)));
-
-            // Load only the first preview up front; the remaining surfaces are
-            // parsed when selected, keeping the phone's initial memory cost
-            // bounded while making every catalog entry visible in the atlas.
-            try {
-                ModelCatalog.Entry first = entries.get(initialIndex);
-                ModelCatalog.verify(getAssets(), first);
-                try (InputStream input = getAssets().open(first.assetPath)) {
-                    preview.setModel(MeshModel.read(first.name, input));
-                }
-                selectedName.setText(first.name);
-                selectedProvenance.setText(first.provenanceLabel() + "  Â·  checksum verified");
-                refreshFavourite.run();
-            } catch (Exception error) {
-                selectedName.setText("No preview available");
-                selectedProvenance.setText(error.getMessage());
-            }
-            dialog.setContentView(page);
-            dialog.setOnDismissListener(ignored -> preview.onHostPause());
-            dialog.show();
-            filterLibraryItems(libraryItems, "", "All", favourites);
-            Window window = dialog.getWindow();
-            if (window != null) {
-                window.setBackgroundDrawableResource(android.R.color.transparent);
-                window.setLayout(-1, -1);
-            }
-        } catch (Exception error) {
-            Toast.makeText(this, "Model library unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private String galleryShortName(String value) {
-        if (value == null || value.trim().length() == 0) return "Model";
-        int separator = value.indexOf(" Â· ");
-        String shortName = separator > 0 ? value.substring(0, separator) : value;
-        return shortName.length() > 18 ? shortName.substring(0, 18) + "â€¦" : shortName;
-    }
-
-    private void filterLibraryItems(ArrayList<View> items, String query, String filter,
-                                    android.content.SharedPreferences favourites) {
-        String needle = query == null ? "" : query.trim().toLowerCase(Locale.US);
-        for (View item : items) {
-            String key = String.valueOf(item.getTag());
-            String name = String.valueOf(item.getContentDescription()).toLowerCase(Locale.US);
-            boolean isRecent = key.startsWith("uri:");
-            boolean visible = "All".equals(filter)
-                    || ("Favourites".equals(filter) && favourites.getBoolean(key, false))
-                    || ("Recent".equals(filter) && isRecent);
-            if (visible && !needle.isEmpty()) visible = name.contains(needle);
-            item.setVisibility(visible ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    private void showCommunityModelSources() {
-        List<CommunityModelCatalog.Entry> entries = CommunityModelCatalog.entries();
-        String[] labels = new String[entries.size()];
-        for (int index = 0; index < entries.size(); index++) labels[index] = entries.get(index).summary();
-        new AlertDialog.Builder(this)
-                .setTitle("Community model sources")
-                .setMessage("Open the original page to download a model. Alloy does not mirror these files; the source page remains the authority for license, attribution and revision terms.")
-                .setItems(labels, (dialog, which) -> {
-                    CommunityModelCatalog.Entry entry = entries.get(which);
-                    new AlertDialog.Builder(this)
-                            .setTitle(entry.name)
-                            .setMessage(entry.details())
-                            .setNegativeButton("Back", null)
-                            .setPositiveButton("Open source", (info, open) -> {
-                                try {
-                                    startActivity(entry.browserIntent());
-                                } catch (Exception error) {
-                                    Toast.makeText(this, "No browser is available for this source", Toast.LENGTH_LONG).show();
-                                }
-                            })
-                            .show();
-                })
-                .setNegativeButton("Close", null)
-                .show();
-    }
-
-    /** Open the bounded primitive/assembly workbench. */
-    private void showModelWorkbench() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring || visualizing || modeling) {
-            Toast.makeText(this, "Finish the current operation before modeling", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        ModelWorkbench.Primitive[] primitives = ModelWorkbench.Primitive.values();
-        int customIndex = primitives.length;
-        int booleanIndex = primitives.length + 1;
-        int arrayIndex = model == null ? -1 : primitives.length + 2;
-        int mirrorIndex = model == null ? -1 : primitives.length + 3;
-        int layFlatIndex = model == null ? -1 : primitives.length + 4;
-        int autoOrientIndex = model == null ? -1 : primitives.length + 5;
-        String[] labels = new String[primitives.length + 2 + (model == null ? 0 : 4)];
-        for (int index = 0; index < primitives.length; index++) labels[index] = primitives[index].label;
-        labels[customIndex] = "Custom sketch  Â·  extrude";
-        labels[booleanIndex] = "Boolean with primitive  Â·  native OCCT";
-        if (arrayIndex >= 0) {
-            labels[arrayIndex] = "Duplicate current model  Â·  array";
-            labels[mirrorIndex] = "Mirror current model  Â·  X / Y";
-            labels[layFlatIndex] = "Lay flat  Â·  largest face";
-            labels[autoOrientIndex] = "Auto orient  Â·  axis-aligned";
-        }
-        final int[] selectedPrimitive = new int[]{0};
-        new AlertDialog.Builder(this)
-                .setTitle("Model workbench")
-                .setMessage("Create a printable primitive, extrude a convex sketch, or use exact native union/subtract/intersect editing. Dimensions are bounded to the " + profilePrinterLabel() + " build volume.")
-                .setSingleChoiceItems(labels, 0, (dialog, which) -> selectedPrimitive[0] = which)
-                .setNegativeButton("Close", null)
-                .setPositiveButton("Continue", (dialog, which) -> {
-                    if (selectedPrimitive[0] == customIndex) showSketchExtrusion();
-                    else if (selectedPrimitive[0] == booleanIndex) showBooleanOperation();
-                    else if (selectedPrimitive[0] == arrayIndex) showModelArray();
-                    else if (selectedPrimitive[0] == mirrorIndex) showMirrorModel();
-                    else if (selectedPrimitive[0] == layFlatIndex) layCurrentModelFlat();
-                    else if (selectedPrimitive[0] == autoOrientIndex) autoOrientCurrentModel();
-                    else showPrimitiveDimensions(primitives[Math.max(0, selectedPrimitive[0])]);
-                })
-                .show();
-    }
-
-    private void layCurrentModelFlat() {
-        if (model == null) {
-            Toast.makeText(this, "Import or create a model before laying it flat", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            MeshModel flattened = model.layFlat(model.displayName + " Â· largest face on bed");
-            installGeneratedModel(flattened, flattened.displayName);
-            Toast.makeText(this, "Largest face placed on the build plate; review orientation before slicing", Toast.LENGTH_LONG).show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Model could not be laid flat: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void autoOrientCurrentModel() {
-        if (model == null) {
-            Toast.makeText(this, "Import or create a model before auto-orienting it", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            MeshModel oriented = model.autoOrient(model.displayName + " Â· auto-oriented");
-            installGeneratedModel(oriented, oriented.displayName);
-            Toast.makeText(this, "Best bounded axis-aligned orientation applied; review the bed and supports before slicing", Toast.LENGTH_LONG).show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Model could not be auto-oriented: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void showMirrorModel() {
-        if (model == null) {
-            Toast.makeText(this, "Import or create a model before mirroring it", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        RadioGroup axes = new RadioGroup(this);
-        axes.setPadding(28, 4, 28, 0);
-        RadioButton x = new RadioButton(this);
-        x.setId(View.generateViewId());
-        x.setText("Mirror across X centreline"); x.setTextColor(TEXT); x.setTag(Boolean.TRUE);
-        RadioButton y = new RadioButton(this);
-        y.setId(View.generateViewId());
-        y.setText("Mirror across Y centreline"); y.setTextColor(TEXT); y.setTag(Boolean.FALSE);
-        axes.addView(x); axes.addView(y); axes.check(x.getId());
-        TextView note = label("Mirrors the current printable mesh around the centre of its footprint, preserves named parts, and keeps the same bounds and bed placement. This is a geometry edit and can be undone from History.", 12, MUTED);
-        note.setPadding(28, 14, 28, 0);
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL); content.addView(axes); content.addView(note);
-        new AlertDialog.Builder(this).setTitle("Mirror current model").setView(content)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Mirror", (dialog, which) -> {
-                    try {
-                        boolean xAxis = Boolean.TRUE.equals(axes.findViewById(axes.getCheckedRadioButtonId()).getTag());
-                        String axis = xAxis ? "X" : "Y";
-                        MeshModel mirrored = ModelWorkbench.mirror(model.displayName + " Â· mirror " + axis, model, xAxis);
-                        installGeneratedModel(mirrored, model.displayName + " Â· mirror " + axis);
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Mirror could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    private void showModelArray() {
-        if (model == null) {
-            Toast.makeText(this, "Import or create a model before duplicating it", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
-        EditText copies = field("2", "Copies (2â€“32)");
-        fields.addView(copies);
-        TextView note = label("Creates repeated copies with a deterministic 5 mm clearance shelf pack. The result remains an editable named-part assembly and must fit the " + profileBuildVolumeLabel() + " " + profilePrinterLabel() + " envelope.", 12, MUTED);
-        note.setPadding(0, 14, 0, 0); fields.addView(note);
-        new AlertDialog.Builder(this).setTitle("Duplicate current model").setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Create array", (dialog, which) -> {
-                    try {
-                        int count = Math.round(clamp(Float.parseFloat(copies.getText().toString()), 2f, 32f));
-                        MeshModel generated = ModelWorkbench.createArray(model.displayName + " Â· array", model, count,
-                                activeBedX(), activeBedY(), activeBedZ());
-                        installGeneratedModel(generated, model.displayName + " Â· " + count + " copies");
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Array could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    /** Configure a native exact-solid operation using the current model as the first operand. */
-    private void showBooleanOperation() {
-        if (!BuildConfig.NATIVE_ENGINE_ENABLED) {
-            explainUnsupported("Exact solid modeling");
-            return;
-        }
-        if (model == null) {
-            Toast.makeText(this, "Import or create a model before boolean editing", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
-
-        TextView operationLabel = label("OPERATION", 10, GOLD);
-        operationLabel.setTypeface(null, android.graphics.Typeface.BOLD);
-        fields.addView(operationLabel);
-        RadioGroup operations = new RadioGroup(this);
-        String[] operationNames = {"Union  Â·  add primitive", "Subtract  Â·  cut primitive", "Intersect  Â·  keep overlap"};
-        for (int index = 0; index < operationNames.length; index++) {
-            RadioButton option = new RadioButton(this);
-            option.setId(View.generateViewId());
-            option.setText(operationNames[index]); option.setTextColor(TEXT); option.setTag(index);
-            operations.addView(option);
-        }
-        operations.check(operations.getChildAt(NativeGeometry.CUT).getId());
-        fields.addView(operations);
-
-        TextView primitiveLabel = label("TOOL PRIMITIVE", 10, GOLD);
-        primitiveLabel.setTypeface(null, android.graphics.Typeface.BOLD);
-        primitiveLabel.setPadding(0, 12, 0, 0); fields.addView(primitiveLabel);
-        RadioGroup primitives = new RadioGroup(this);
-        ModelWorkbench.Primitive[] available = ModelWorkbench.Primitive.values();
-        for (int index = 0; index < available.length; index++) {
-            RadioButton option = new RadioButton(this);
-            option.setId(View.generateViewId());
-            option.setText(available[index].label); option.setTextColor(TEXT); option.setTag(index);
-            primitives.addView(option);
-        }
-        primitives.check(primitives.getChildAt(0).getId());
-        fields.addView(primitives);
-
-        EditText width = field("30", "Width / outer diameter (mm)");
-        EditText depth = field("30", "Depth / outer diameter (mm)");
-        EditText height = field("20", "Height (mm)");
-        fields.addView(width); fields.addView(depth); fields.addView(height);
-        TextView note = label("Uses the bundled OCCT solid kernel. Both inputs must be one watertight solid; the result is revalidated, cached and returned to the normal 3D/slicing path. Native runtime required.", 12, MUTED);
-        note.setPadding(0, 14, 0, 0); fields.addView(note);
-        new AlertDialog.Builder(this).setTitle("Exact solid edit").setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Apply", (dialog, which) -> {
-                    try {
-                        int operation = (Integer) operations.findViewById(operations.getCheckedRadioButtonId()).getTag();
-                        int primitiveIndex = (Integer) primitives.findViewById(primitives.getCheckedRadioButtonId()).getTag();
-                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, activeBedX());
-                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, activeBedY());
-                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
-                        startNativeBoolean(operation, available[primitiveIndex], w, d, h);
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Boolean edit could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    private void startNativeBoolean(int operation, ModelWorkbench.Primitive primitive,
-                                    float width, float depth, float height) {
-        if (model == null || primitive == null) return;
-        final MeshModel source = model;
-        final String sourceName = model.displayName;
-        prepareModelMutation("Boolean  Â·  " + NativeGeometry.label(operation));
-        final long id = modelingIds.incrementAndGet();
-        activeModelingId = id; modeling = true;
-        status.setText("Model  Â·  " + NativeGeometry.label(operation).toLowerCase(Locale.US) + "â€¦");
-        refreshActions();
-        activeModeling = importExecutor.submit(() -> {
-            try {
-                if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException("Modeling cancelled");
-                ModelStore.Materialized first = ModelStore.materializeGenerated(getFilesDir(),
-                        ModelWorkbench.toBinaryStl(source, 200_000));
-                MeshModel toolMesh = ModelWorkbench.create(primitive, "Boolean tool", width, depth, height);
-                ModelStore.Materialized second = ModelStore.materializeGenerated(getFilesDir(),
-                        ModelWorkbench.toBinaryStl(toolMesh));
-                ModelStore.Materialized resultFile = NativeGeometry.apply(getFilesDir(), first.file, second.file, operation);
-                MeshModel result;
-                try (InputStream input = new java.io.FileInputStream(resultFile.file)) {
-                    result = MeshModel.read(ModelStore.parserName("Boolean result", resultFile.extension), input);
-                }
-                final MeshModel resultModel = result;
-                final String resultName = sourceName + "  Â·  " + NativeGeometry.label(operation).toLowerCase(Locale.US);
-                mainHandler.post(() -> {
-                    if (id != activeModelingId || isFinishing()) return;
-                    modeling = false; activeModeling = null;
-                    try {
-                        ArrayList<Uri> uris = new ArrayList<>(); uris.add(resultFile.uri);
-                        ArrayList<String> names = new ArrayList<>(); names.add(resultName);
-                        requireActiveBuildVolume(resultModel);
-                        applyLoadedModel(resultModel, resultModel, resultName, uris, names,
-                                1f, 0f, 0f, 0f, false, false, HISTORY_MUTATION);
-                        finishModelMutation("Boolean  Â·  " + NativeGeometry.label(operation));
-                        status.setText("Prepare  Â·  " + resultName);
-                    } catch (Exception error) {
-                        status.setText("Prepare  Â·  " + sourceName);
-                        Toast.makeText(this, "Boolean result could not be opened: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                        refreshActions();
-                    }
-                });
-            } catch (java.util.concurrent.CancellationException ignored) {
-                // Cancellation is expected; stale completion is suppressed by the operation id.
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (id != activeModelingId || isFinishing()) return;
-                    modeling = false; activeModeling = null;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions();
-                    Toast.makeText(this, "Boolean edit failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private synchronized void cancelNativeBoolean() {
-        activeModelingId = modelingIds.incrementAndGet();
-        if (activeModeling != null) { activeModeling.cancel(true); activeModeling = null; }
-        if (!modeling) return;
-        modeling = false;
-        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-        refreshActions();
-    }
-
-    private void showSketchExtrusion() {
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
-        EditText sketch = textField("-20,-15\n20,-15\n20,15\n-20,15", "One x,y point per line");
-        sketch.setMinLines(4); sketch.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
-        EditText height = field("25", "Extrusion height (mm)");
-        CheckBox addToAssembly = new CheckBox(this);
-        addToAssembly.setText("Add to current assembly"); addToAssembly.setTextColor(TEXT);
-        addToAssembly.setChecked(model != null); addToAssembly.setEnabled(model != null);
-        fields.addView(sketch); fields.addView(height); fields.addView(addToAssembly);
-        TextView note = label("Convex, consistently wound sketches only Â· 3â€“16 points Â· millimetres. The result is watertight and uses the same repair, cache, project and slicing gates as imported geometry.", 12, MUTED);
-        note.setPadding(0, 14, 0, 0); fields.addView(note);
-        new AlertDialog.Builder(this).setTitle("Extrude sketch").setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Create", (dialog, which) -> {
-                    try {
-                        float[][] points = parseSketchPoints(sketch.getText().toString());
-                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
-                        MeshModel generated = ModelWorkbench.createExtrudedPolygon("Sketch extrusion", points, h);
-                        MeshModel result = generated; String name = "Sketch extrusion  Â·  " + points.length + " points";
-                        if (addToAssembly.isChecked() && model != null) {
-                            ArrayList<MeshModel> sources = new ArrayList<>(); sources.add(model); sources.add(generated);
-                            result = MeshModel.combine("Assembly", sources, null, activeBedX()); name = "Assembly  Â·  " + model.displayName;
-                        }
-                        requireActiveBuildVolume(result);
-                        installGeneratedModel(result, name);
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Sketch could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    private static float[][] parseSketchPoints(String text) throws IOException {
-        if (text == null) throw new IOException("Sketch is empty");
-        String[] rows = text.trim().split("(?:\\r?\\n|;)+");
-        ArrayList<float[]> points = new ArrayList<>();
-        for (String row : rows) {
-            String[] pair = row.trim().split("[,\\s]+", 3);
-            if (pair.length != 2) throw new IOException("Each sketch row must be x,y");
-            try { points.add(new float[]{Float.parseFloat(pair[0]), Float.parseFloat(pair[1])}); }
-            catch (NumberFormatException error) { throw new IOException("Sketch coordinates must be numbers", error); }
-        }
-        return points.toArray(new float[0][]);
-    }
-
-    private void showPrimitiveDimensions(ModelWorkbench.Primitive primitive) {
-        if (primitive == null) return;
-        float defaultWidth = primitive == ModelWorkbench.Primitive.CYLINDER || primitive == ModelWorkbench.Primitive.SPHERE ? 30f : 40f;
-        float defaultDepth = primitive == ModelWorkbench.Primitive.SPHERE ? 30f : 40f;
-        float defaultHeight = primitive == ModelWorkbench.Primitive.SPHERE ? 30f : 25f;
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        EditText width = field(String.format(Locale.US, "%.1f", defaultWidth), "Width / outer diameter (mm)");
-        EditText depth = field(String.format(Locale.US, "%.1f", defaultDepth), "Depth / outer diameter (mm)");
-        EditText height = field(String.format(Locale.US, "%.1f", defaultHeight), "Height (mm)");
-        fields.addView(width); fields.addView(depth); fields.addView(height);
-        EditText bevel = null;
-        EditText wall = null;
-        EditText bottom = null;
-        if (primitive == ModelWorkbench.Primitive.CHAMFERED_BOX) {
-            bevel = field("4.8", "Corner chamfer (mm; max 24% of smaller side)");
-            fields.addView(bevel);
-        } else if (primitive == ModelWorkbench.Primitive.HOLLOW_BOX) {
-            wall = field("2.0", "Wall thickness (mm; min 0.5)");
-            bottom = field("2.0", "Floor thickness (mm; min 0.5)");
-            fields.addView(wall); fields.addView(bottom);
-        }
-        final EditText bevelField = bevel;
-        final EditText wallField = wall;
-        final EditText bottomField = bottom;
-        CheckBox addToAssembly = new CheckBox(this);
-        addToAssembly.setText("Add to current assembly");
-        addToAssembly.setTextColor(TEXT);
-        addToAssembly.setChecked(model != null);
-        addToAssembly.setEnabled(model != null);
-        fields.addView(addToAssembly);
-        TextView note = label(primitive == ModelWorkbench.Primitive.TUBE
-                        ? "Tube uses a 55% inner-radius opening. Boolean cuts, fillets and freeform sculpting remain future workbench gates."
-                        : primitive == ModelWorkbench.Primitive.CHAMFERED_BOX
-                        ? "A deterministic eight-sided enclosure profile with a bounded, printable corner chamfer. Use native Boolean editing for openings and cut-outs."
-                        : primitive == ModelWorkbench.Primitive.HOLLOW_BOX
-                        ? "A watertight open-top enclosure with a printable floor, interior cavity and explicit wall thickness."
-                        : "All dimensions are millimetres. The result is validated, cached as STL, and can be sliced like an imported model.",
-                12, MUTED);
-        note.setPadding(0, 14, 0, 0); fields.addView(note);
-        new AlertDialog.Builder(this)
-                .setTitle("Create " + primitive.label.toLowerCase(Locale.US))
-                .setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Create", (dialog, which) -> {
-                    try {
-                        float w = clamp(Float.parseFloat(width.getText().toString()), 0.5f, activeBedX());
-                        float d = clamp(Float.parseFloat(depth.getText().toString()), 0.5f, activeBedY());
-                        float h = clamp(Float.parseFloat(height.getText().toString()), 0.5f, activeBedZ());
-                        MeshModel generated;
-                        if (primitive == ModelWorkbench.Primitive.CHAMFERED_BOX) {
-                            float maxBevel = Math.min(w, d) * 0.24f;
-                            float b = clamp(Float.parseFloat(bevelField.getText().toString()), 0.5f, maxBevel);
-                            generated = ModelWorkbench.createChamferedBox(primitive.label, w, d, h, b);
-                        } else if (primitive == ModelWorkbench.Primitive.HOLLOW_BOX) {
-                            float wallThickness = Float.parseFloat(wallField.getText().toString());
-                            float floorThickness = Float.parseFloat(bottomField.getText().toString());
-                            generated = ModelWorkbench.createHollowBox(primitive.label, w, d, h,
-                                    wallThickness, floorThickness);
-                        } else {
-                            generated = ModelWorkbench.create(primitive, primitive.label, w, d, h);
-                        }
-                        MeshModel result = generated;
-                        String name = primitive.label + "  Â·  " + String.format(Locale.US, "%.0f Ã— %.0f Ã— %.0f mm", w, d, h);
-                        if (addToAssembly.isChecked() && model != null) {
-                            ArrayList<MeshModel> sources = new ArrayList<>();
-                            sources.add(model); sources.add(generated);
-                            result = MeshModel.combine("Assembly", sources, null, activeBedX());
-                            name = "Assembly  Â·  " + model.displayName;
-                        }
-                        requireActiveBuildVolume(result);
-                        installGeneratedModel(result, name);
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Primitive could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                })
-                .show();
-    }
-
-    private void installGeneratedModel(MeshModel generated, String name) throws Exception {
-        boolean mutation = model != null;
-        if (mutation) prepareModelMutation("Create  Â·  " + name);
-        byte[] stl = ModelWorkbench.toBinaryStl(generated);
-        ModelStore.Materialized materialized = ModelStore.materializeGenerated(getFilesDir(), stl);
-        try (InputStream input = getContentResolver().openInputStream(materialized.uri)) {
-            if (input == null) throw new IOException("Generated model cache could not be opened");
-            MeshModel parsed = MeshModel.read(ModelStore.parserName(name, materialized.extension), input);
-            ArrayList<Uri> uris = new ArrayList<>(); uris.add(materialized.uri);
-            ArrayList<String> names = new ArrayList<>(); names.add(name);
-            applyLoadedModel(parsed, parsed, name, uris, names, 1f, 0f, 0f, 0f, false, false,
-                    mutation ? HISTORY_MUTATION : HISTORY_RESET);
-            if (mutation) finishModelMutation("Create  Â·  " + name);
-        }
-    }
-
-    /** Let the user preview a bounded finish and environment locally without misrepresenting it as generative AI. */
-    private void showOnDevicePreview(byte[] thumbnail) {
-        StudioPreviewRenderer.Finish[] finishes = StudioPreviewRenderer.Finish.values();
-        String[] labels = new String[finishes.length];
-        for (int index = 0; index < finishes.length; index++) labels[index] = finishes[index].label;
-        new AlertDialog.Builder(this)
-                .setTitle("Local finish preview")
-                .setMessage("Choose a presentation finish. This stays on the phone and does not change printable geometry or material settings.")
-                .setItems(labels, (dialog, which) -> showLocalEnvironmentPreview(thumbnail, finishes[which]))
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void showLocalEnvironmentPreview(byte[] thumbnail, StudioPreviewRenderer.Finish finish) {
-        StudioPreviewRenderer.Environment[] environments = StudioPreviewRenderer.Environment.values();
-        String[] labels = new String[environments.length];
-        for (int index = 0; index < environments.length; index++) labels[index] = environments[index].label;
-        new AlertDialog.Builder(this)
-                .setTitle("Local environment")
-                .setMessage("Choose the scene framing for the concept preview.")
-                .setItems(labels, (dialog, which) -> showStyledLocalPreview(thumbnail, finish, environments[which]))
-                .setNegativeButton("Back", null)
-                .show();
-    }
-
-    private void showStyledLocalPreview(byte[] thumbnail, StudioPreviewRenderer.Finish finish,
-                                        StudioPreviewRenderer.Environment environment) {
-        try {
-            VisualizationProvider.Result result = new OnDeviceVisualizationProvider(getFilesDir()).generate(
-                    new VisualizationProvider.Request(thumbnail, finish.label + " in a " + environment.label + " scene"));
-            Bitmap bitmap = BitmapFactory.decodeByteArray(result.imagePng, 0, result.imagePng.length);
-            if (bitmap == null) throw new IOException("On-device preview returned an unsupported image");
-            ImageView image = new ImageView(this);
-            image.setAdjustViewBounds(true); image.setPadding(12, 12, 12, 12); image.setImageBitmap(bitmap);
-            pendingVisualizationPng = result.imagePng.clone();
-            new AlertDialog.Builder(this).setTitle("On-device studio preview")
-                    .setMessage(result.providerLabel + " Â· " + finish.label + " Â· " + environment.label
-                            + "\nGeometry, recipe and printer commands remain unchanged. This is not a generative AI result.")
-                    .setView(image).setNegativeButton("Done", null)
-                    .setPositiveButton("Save PNG", (dialog, which) -> openVisualizationExport()).show();
-        } catch (Exception error) {
-            Toast.makeText(this, "The local preview could not be rendered: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void showVisualization() {
-        if (model == null || viewport == null) {
-            Toast.makeText(this, "Create or import a model before visualizing it", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring || visualizing || modeling) {
-            Toast.makeText(this, "Finish the current operation before visualizing", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        final byte[] thumbnail = viewport.thumbnailPng(768);
-        if (thumbnail == null) {
-            Toast.makeText(this, "The 3D workspace is not ready for a reference image", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        VisualizationCredentialStore.Credentials current = null;
-        try { current = visualizationCredentialStore.load(); } catch (Exception ignored) { }
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(28, 4, 28, 0);
-        EditText endpoint = textField(current == null ? "" : current.endpoint, "HTTPS image-edit endpoint");
-        EditText modelName = textField(current == null ? "" : current.model, "Cloud model name");
-        EditText apiKey = textField("", "BYOK API key (blank keeps saved key)");
-        apiKey.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        String dimensions = String.format(Locale.US, "%.1f Ã— %.1f Ã— %.1f mm", model.maxX - model.minX, model.maxY - model.minY, model.maxZ - model.minZ);
-        EditText prompt = textField("Show this 3D-printed model painted in a premium workshop environment; preserve its shape and proportions.", "Visualization prompt");
-        fields.addView(endpoint); fields.addView(modelName); fields.addView(apiKey); fields.addView(prompt);
-        TextView note = label("On-device visualization: " + new OnDeviceVisualizationProvider(getFilesDir()).availabilityLabel()
-                + "\nBYOK sends only this bounded rendered thumbnail and your prompt to your HTTPS endpoint; it does not upload the STL, project, printer credentials or inventory.", 12, MUTED);
-        note.setPadding(0, 14, 0, 0); fields.addView(note);
-        new AlertDialog.Builder(this).setTitle("Visualize model")
-                .setMessage("Model size: " + dimensions + "\nUse presets such as painted, assembled, workshop, installed, or product-photo.")
-                .setView(fields)
-                .setNeutralButton("On-device preview", (dialog, which) -> showOnDevicePreview(thumbnail))
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Visualize with BYOK", (dialog, which) -> {
-                    try {
-                        VisualizationCredentialStore.Credentials saved = visualizationCredentialStore.load();
-                        String key = apiKey.getText().toString().trim();
-                        if (key.length() == 0 && saved != null) key = saved.apiKey;
-                        VisualizationCredentialStore.Credentials credentials = new VisualizationCredentialStore.Credentials(
-                                endpoint.getText().toString(), modelName.getText().toString(), key);
-                        visualizationCredentialStore.save(credentials);
-                        startByokVisualization(credentials, new VisualizationProvider.Request(thumbnail, prompt.getText().toString()));
-                    } catch (Exception error) {
-                        Toast.makeText(this, "BYOK visualization could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    private void startByokVisualization(VisualizationCredentialStore.Credentials credentials,
-                                        VisualizationProvider.Request request) {
-        final long id = visualizationIds.incrementAndGet();
-        activeVisualizationId = id; visualizing = true;
-        status.setText("Visualize  Â·  sending bounded referenceâ€¦"); refreshActions();
-        activeVisualization = importExecutor.submit(() -> {
-            try {
-                VisualizationProvider.Result result = new ByokVisualizationProvider(credentials).generate(request);
-                mainHandler.post(() -> {
-                    if (id != activeVisualizationId || isFinishing()) return;
-                    visualizing = false; activeVisualization = null;
-                    status.setText("Visualize  Â·  result ready"); refreshActions(); showVisualizationResult(result);
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (id != activeVisualizationId || isFinishing()) return;
-                    visualizing = false; activeVisualization = null;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions(); Toast.makeText(this, "Visualization failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private void showVisualizationResult(VisualizationProvider.Result result) {
-        if (result == null) return;
-        Bitmap bitmap = BitmapFactory.decodeByteArray(result.imagePng, 0, result.imagePng.length);
-        if (bitmap == null) {
-            Toast.makeText(this, "Visualization returned an unsupported image", Toast.LENGTH_LONG).show();
-            return;
-        }
-        ImageView image = new ImageView(this);
-        image.setAdjustViewBounds(true); image.setPadding(12, 12, 12, 12); image.setImageBitmap(bitmap);
-        ScrollView scroll = new ScrollView(this); scroll.addView(image);
-        pendingVisualizationPng = result.imagePng.clone();
-        new AlertDialog.Builder(this).setTitle("Visualization ready")
-                .setMessage(result.providerLabel + " Â· reference geometry remains unchanged")
-                .setView(scroll).setNegativeButton("Done", null)
-                .setPositiveButton("Save PNG", (dialog, which) -> openVisualizationExport()).show();
-    }
-
-    private void openVisualizationExport() {
-        if (pendingVisualizationPng == null || !VisualizationProvider.isBoundedPng(pendingVisualizationPng)) {
-            Toast.makeText(this, "Visualization image is no longer available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("image/png");
-        intent.putExtra(Intent.EXTRA_TITLE, "alloy-visualization.png");
-        startActivityForResult(intent, REQUEST_VISUALIZATION_EXPORT);
-    }
-
-    private void writeVisualizationExport(Uri uri) {
-        byte[] png = pendingVisualizationPng;
-        pendingVisualizationPng = null;
-        if (png == null || !VisualizationProvider.isBoundedPng(png)) {
-            Toast.makeText(this, "Visualization image is no longer available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
-            if (out == null) throw new IOException("Output destination could not be opened");
-            out.write(png);
-            out.flush();
-            Toast.makeText(this, "Saved visualization PNG", Toast.LENGTH_LONG).show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Visualization export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        } finally {
-            java.util.Arrays.fill(png, (byte) 0);
-        }
-    }
-
-    private synchronized void cancelVisualization() {
-        activeVisualizationId = visualizationIds.incrementAndGet();
-        if (activeVisualization != null) { activeVisualization.cancel(true); activeVisualization = null; }
-        if (!visualizing) return;
-        visualizing = false;
-        if (status != null) status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-        if (actions != null) refreshActions();
-    }
-
-    private void loadAssetModel(String assetPath, String name) {
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            ModelStore.Materialized materialized = ModelStore.materializeAsset(getFilesDir(), getAssets(), assetPath);
-            ArrayList<Uri> uris = new ArrayList<>();
-            uris.add(materialized.uri);
-            ArrayList<String> names = new ArrayList<>();
-            names.add(name);
-            // Route bundled sources through the same worker-backed import
-            // path as phone-selected files. This is important for the private
-            // STEP assembly: OCCT tessellation must never block the UI thread.
-            loadUris(uris, names, false, assetPath);
-        } catch (Exception e) {
-            Toast.makeText(this, "Example failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /** Optional owner-only startup design, absent from ordinary/public APKs. */
-    private ModelCatalog.Entry privateOwnerStartupModel() {
-        try {
-            ModelCatalog.Entry chassis = null;
-            for (ModelCatalog.Entry entry : ModelCatalog.load(getAssets())) {
-                // The positioned STEP assembly is the most useful first-run
-                // study because it preserves the owner's editable multi-part
-                // layout. Keep the single STL as a fallback for builds that
-                // deliberately omit the native OCCT importer.
-                if (BuildConfig.NATIVE_ENGINE_ENABLED
-                        && entry.assetPath.endsWith("redmagic-keyboard-case-assembly-v04-angled.step"))
-                    return entry;
-                if (entry.assetPath.endsWith("redmagic-keyboard-main-chassis-v04.stl")) chassis = entry;
-            }
-            return chassis;
-        } catch (Exception ignored) {
-            // A missing private overlay must not prevent the normal showcase.
-        }
-        return null;
-    }
-
-    /** Asset presence is the stable owner-review switch during first launch. */
-    private boolean hasBundledA1Reference() {
-        try (InputStream input = getAssets().open("visuals/a1-mini-reference.mesh")) {
-            return input.read() >= 0;
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    private void loadShowcaseModel() {
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            MeshModel showcase = ModelWorkbench.createShowcaseBoxAssembly();
-            byte[] stl = ModelWorkbench.toBinaryStl(showcase);
-            ModelStore.Materialized materialized = ModelStore.materializeGenerated(getFilesDir(), stl);
-            ArrayList<Uri> uris = new ArrayList<>(); uris.add(materialized.uri);
-            ArrayList<String> names = new ArrayList<>(); names.add("Alloy showcase box");
-            // Keep the authored part names for the first-run study view. The
-            // generated STL is still materialized for offline persistence and
-            // export; reopening a saved project remains parser-backed.
-            applyLoadedModel(showcase, showcase, "Alloy showcase box", uris, names,
-                    1f, 0f, 0f, 0f, false, false);
-        } catch (Exception error) {
-            Toast.makeText(this, "Showcase failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /** Show a local recovery model without overwriting the user's saved plate. */
-    private void loadShowcaseWithoutReplacingSavedProject() {
-        ProjectStore.SavedProject savedProject = projectStore.savedProject();
-        PlateStore.Plate savedPlate = plateStore.activePlate();
-        int savedActivePlate = plateStore.activeIndex();
-        ArrayList<ModelHistoryStore.Timeline> savedHistory = modelHistoryStore == null
-                ? new ArrayList<>() : modelHistoryStore.exportTimelines();
-        loadShowcaseModel();
-        try {
-            if (savedProject == null) projectStore.clearModel();
-            else projectStore.saveModels(savedProject.uris, savedProject.names);
-            projectStore.saveTransform(savedPlate.scale, savedPlate.rotationDegrees,
-                    savedPlate.tiltXDegrees, savedPlate.tiltYDegrees);
-            projectStore.saveSelectedPart(savedPlate.selectedPart);
-            projectStore.savePartTransforms(savedPlate.partTransforms);
-            projectStore.saveGeometryRepair(savedPlate.geometryRepairEnabled);
-            plateStore.save(savedPlate);
-            plateStore.setActiveIndex(savedActivePlate);
-            if (modelHistoryStore != null) modelHistoryStore.importTimelines(savedHistory);
-        } catch (Exception ignored) {
-            // The local showcase remains a valid recovery surface even if an
-            // older checkpoint is too damaged to restore every sidecar.
-        }
-    }
-
-    private void applyLoadedModel(MeshModel loaded, MeshModel pristine, String name, ArrayList<Uri> uris,
-                                  ArrayList<String> names, float scale, float rotationDegrees,
-                                  float tiltXDegrees, float tiltYDegrees, boolean restoreTransform,
-                                  boolean repairEnabled) throws Exception {
-        applyLoadedModel(loaded, pristine, name, uris, names, scale, rotationDegrees,
-                tiltXDegrees, tiltYDegrees, restoreTransform, repairEnabled,
-                restoreTransform ? HISTORY_RESTORE : HISTORY_RESET);
-    }
-
-    private void applyLoadedModel(MeshModel loaded, MeshModel pristine, String name, ArrayList<Uri> uris,
-                                  ArrayList<String> names, float scale, float rotationDegrees,
-                                  float tiltXDegrees, float tiltYDegrees, boolean restoreTransform,
-                                  boolean repairEnabled, int historyMode) throws Exception {
-        trustedPilotFixtureAssetPath = null;
-        // A foreground slice owns an immutable request snapshot. Loading the
-        // same project again during Activity recreation must not cancel it;
-        // a genuinely new model is blocked by the slicing UI until the job is
-        // explicitly cancelled or completed.
-        if (activeSliceJobId == null) {
-            sliceJobs.cancel();
-            slicing = false;
-        }
-        sourceModel = loaded;
-        unmodifiedSourceModel = pristine == null ? loaded : pristine;
-        geometryRepairEnabled = repairEnabled;
-        modelScale = finite(scale) ? clamp(scale, MeshModel.MIN_MODEL_SCALE, MeshModel.MAX_MODEL_SCALE) : 1f;
-        modelRotationDegrees = finite(rotationDegrees) ? clamp(rotationDegrees, -360f, 360f) : 0f;
-        modelTiltXDegrees = finite(tiltXDegrees) ? clamp(tiltXDegrees, -360f, 360f) : 0f;
-        modelTiltYDegrees = finite(tiltYDegrees) ? clamp(tiltYDegrees, -360f, 360f) : 0f;
-        partTransforms.clear();
-        modelNames.clear();
-        if (names != null) modelNames.addAll(names);
-        if (restoreTransform) partTransforms.addAll(projectStore.savedPartTransforms(loaded.parts.length));
-        else projectStore.savePartTransforms(partTransforms);
-        model = rebuildModel(name);
-        modelUris.clear();
-        if (uris != null) modelUris.addAll(uris);
-        slice = null;
-        stagedArtifact = null;
-        if (!restoreTransform) lastBatch = null;
-        viewport.setModel(model);
-        viewport.setSelectedPart(restoreTransform ? projectStore.savedSelectedPart() : -1);
-        if (!modelUris.isEmpty()) {
-            projectStore.saveModels(modelUris, names);
-            projectStore.saveTransform(modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
-            if (!restoreTransform) projectStore.saveSelectedPart(-1);
-        }
-        plateImportInFlight = false;
-        saveCurrentPlate();
-        pruneModelCache();
-        if (modelHistoryStore != null) {
-            if (historyMode == HISTORY_RESET) {
-                modelHistoryStore.resetDocument(activePlateIndex, currentPlateSnapshot(), "Opened  Â·  " + name);
-            } else if (historyMode == HISTORY_RESTORE) {
-                modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "Recovered plate");
-            }
-            pruneModelCache();
-        }
-        boolean restoredBatch = restoreBatchResultForActivePlate(restoreTransform);
-        boolean restoredForeground = !restoredBatch && restoreForegroundSliceIfMatching();
-        modelMeta.setText(viewportDisplayName(name) + "\n" + profileShortLabel());
-        status.setText(restoredBatch || restoredForeground ? "Inspect  Â·  " + slice.layers.size() + " layers" : "Prepare  Â·  " + name);
-        details.setText(restoredBatch || restoredForeground
-                ? String.format(Locale.US, "%.0f mm filament  Â·  %s  Â·  %d warning(s)", slice.filamentMm,
-                slice.printTimeSeconds < 0f ? "time pending" : formatDuration(slice.printTimeSeconds), slice.warnings)
-                : modelDetails(model));
-        refreshActions();
-        refreshBatchSliceUi();
-    }
-
-    private boolean restoreBatchResultForActivePlate(boolean restoreTransform) {
-        if (!restoreTransform || lastBatch == null) return false;
-        for (BatchSliceJobController.PlateResult plate : lastBatch.plates) {
-            if (plate.plate.index != activePlateIndex) continue;
-            model = plate.model;
-            slice = plate.slice;
-            stagedArtifact = plate.artifact;
-            viewport.setModel(model);
-            viewport.setResult(slice);
-            return true;
-        }
-        return false;
-    }
-
-    private MeshModel rebuildModel(String name) throws Exception {
-        if (sourceModel == null) throw new IllegalStateException("No source model is selected");
-        MeshModel rebuilt = sourceModel.transformed(name, modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
-        int count = Math.min(partTransforms.size(), rebuilt.parts.length);
-        for (int index = 0; index < count; index++) {
-            MeshModel.PartTransform transform = partTransforms.get(index);
-            if (transform == null) continue;
-            if (transform.scale == 1f && transform.rotationDegrees == 0f
-                    && transform.tiltXDegrees == 0f && transform.tiltYDegrees == 0f
-                    && transform.offsetX == 0f && transform.offsetY == 0f) continue;
-            rebuilt = rebuilt.transformedPart(name, index, transform.scale, transform.rotationDegrees,
-                    transform.tiltXDegrees, transform.tiltYDegrees, transform.offsetX, transform.offsetY);
-        }
-        return rebuilt.leveledOnBed(name);
-    }
-
-    /**
-     * Pack logical parts into a bounded phone-side layout. The planner may
-     * rotate each part by 90 degrees in XY, but never silently changes its
-     * Z-up/tilt orientation because that can alter supports and first-layer
-     * behavior. Existing scale, tilt and global transforms remain intact.
-     */
-    private void autoArrangeParts() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (sourceModel == null || model == null || model.parts == null || model.parts.length < 2) {
-            Toast.makeText(this, "Arrange is available for assemblies with multiple parts", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        prepareModelMutation("Arrange parts");
-        try {
-            final float margin = Math.max(2f, config.nozzle * 2f);
-            MeshModel base = sourceModel.transformed(model.displayName, modelScale, modelRotationDegrees,
-                    modelTiltXDegrees, modelTiltYDegrees);
-            ArrayList<PlateArrangementPlanner.Part> specs = new ArrayList<>();
-            for (int index = 0; index < base.parts.length; index++) {
-                MeshModel.PartTransform current = partTransformAt(index);
-                MeshModel preview = base.transformedPart(model.displayName, index, current.scale,
-                        current.rotationDegrees, current.tiltXDegrees, current.tiltYDegrees, 0f, 0f);
-                MeshModel.PartBounds bounds = preview.partBounds(index);
-                specs.add(new PlateArrangementPlanner.Part(index, bounds.width(), bounds.depth()));
-            }
-            ArrayList<PlateArrangementPlanner.Placement> placements = PlateArrangementPlanner.plan(
-                    specs, config.bedX - margin * 2f, config.bedY - margin * 2f, margin);
-            MeshModel arranged = base;
-            ArrayList<MeshModel.PartTransform> next = new ArrayList<>();
-            for (int index = 0; index < arranged.parts.length; index++)
-                next.add(MeshModel.PartTransform.identity());
-            for (PlateArrangementPlanner.Placement placement : placements) {
-                int index = placement.sourceIndex;
-                MeshModel.PartTransform current = partTransformAt(index);
-                float rotation = current.rotationDegrees + placement.rotationDegrees;
-                MeshModel oriented = arranged.transformedPart(model.displayName, index, current.scale,
-                        rotation, current.tiltXDegrees, current.tiltYDegrees, 0f, 0f);
-                MeshModel.PartBounds bounds = oriented.partBounds(index);
-                float targetCenterX = margin + placement.x + placement.width / 2f;
-                float targetCenterY = margin + placement.y + placement.depth / 2f;
-                float currentCenterX = (bounds.minX + bounds.maxX) / 2f;
-                float currentCenterY = (bounds.minY + bounds.maxY) / 2f;
-                float offsetX = targetCenterX - currentCenterX;
-                float offsetY = targetCenterY - currentCenterY;
-                arranged = arranged.transformedPart(model.displayName, index, current.scale,
-                        rotation, current.tiltXDegrees, current.tiltYDegrees, offsetX, offsetY);
-                next.set(index, new MeshModel.PartTransform(current.scale, rotation,
-                        current.tiltXDegrees, current.tiltYDegrees, offsetX, offsetY));
-            }
-            int selectedPart = viewport.getSelectedPart();
-            partTransforms.clear();
-            partTransforms.addAll(next);
-            model = arranged.leveledOnBed(model.displayName);
-            projectStore.savePartTransforms(partTransforms);
-            saveCurrentPlate();
-            viewport.setModel(model);
-            viewport.setSelectedPart(selectedPart);
-            slice = null;
-            stagedArtifact = null;
-            lastBatch = null;
-            // Packing only chooses a reversible 0Â°/90Â° XY rotation. It must
-            // not be presented as an orientation recommendation: tilt and
-            // first-contact decisions can change supports, strength and
-            // surface quality and remain visible user choices.
-            status.setText("Prepare  Â·  parts packed on plate");
-            details.setText(modelDetails(model));
-            finishModelMutation("Auto-pack parts");
-            refreshActions();
-        } catch (Exception error) {
-            Toast.makeText(this, "Parts could not be arranged: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void showPrepare() {
-        if (printerBusy || batchSlicing || batchTransferring) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (model == null || sourceModel == null) {
-            Toast.makeText(this, "Import a model before preparing it", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        EditText scale = field(String.format(Locale.US, "%.0f", modelScale * 100f), "Scale (%)");
-        EditText rotation = field(String.format(Locale.US, "%.0f", modelRotationDegrees), "Rotate around Z (degrees)", true);
-        EditText tiltX = field(String.format(Locale.US, "%.0f", modelTiltXDegrees), "Tilt around X (degrees)", true);
-        EditText tiltY = field(String.format(Locale.US, "%.0f", modelTiltYDegrees), "Tilt around Y (degrees)", true);
-        fields.addView(scale);
-        fields.addView(rotation);
-        fields.addView(tiltX);
-        fields.addView(tiltY);
-        Button scaleHelper = dialogButton("Scale to known dimension", null);
-        scaleHelper.setContentDescription("Scale model to a known dimension");
-        scaleHelper.setOnClickListener(v -> showScaleToKnownDimension());
-        fields.addView(scaleHelper);
-        TextView note = label("The lowest point is placed on the bed. X/Y tilt and Z rotation apply before slicing; Alloy keeps the current model inside the selected build-volume gate.", 13, MUTED);
-        note.setPadding(0, 18, 0, 0);
-        fields.addView(note);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setTitle("Prepare model")
-                .setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Apply", (dialog, which) -> {
-                    try {
-                        float nextScale = clamp(Float.parseFloat(scale.getText().toString()) / 100f,
-                                MeshModel.MIN_MODEL_SCALE, MeshModel.MAX_MODEL_SCALE);
-                        float nextRotation = clamp(Float.parseFloat(rotation.getText().toString()), -360f, 360f);
-                        float nextTiltX = clamp(Float.parseFloat(tiltX.getText().toString()), -360f, 360f);
-                        float nextTiltY = clamp(Float.parseFloat(tiltY.getText().toString()), -360f, 360f);
-                        prepareModelMutation("Prepare model");
-                        modelScale = nextScale;
-                        modelRotationDegrees = nextRotation;
-                        modelTiltXDegrees = nextTiltX;
-                        modelTiltYDegrees = nextTiltY;
-                        model = rebuildModel(model.displayName);
-                        slice = null;
-                        stagedArtifact = null;
-                        lastBatch = null;
-                        viewport.setModel(model);
-                        if (!modelUris.isEmpty()) projectStore.saveTransform(modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
-                        saveCurrentPlate();
-                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-                        status.setText("Prepare  Â·  model updated");
-                        details.setText(modelDetails(model));
-                        finishModelMutation("Prepare model");
-                        refreshActions();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Preparation values were not valid", Toast.LENGTH_SHORT).show();
-                    }
-                });
-        if (model.parts != null && model.parts.length > 1)
-            builder.setNeutralButton("Auto-arrange", (dialog, which) -> autoArrangeParts());
-        builder.show();
-    }
-
-    /**
-     * Unitless STL/OBJ files are common in community libraries. Let the user
-     * anchor one physical dimension without making an unsafe automatic guess;
-     * the normal build-volume preflight still decides whether the result fits.
-     */
-    private void showScaleToKnownDimension() {
-        if (model == null || sourceModel == null) return;
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation before scaling the model", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        final String[] axes = {"Width (X)", "Depth (Y)", "Height (Z)"};
-        final RadioGroup axis = new RadioGroup(this);
-        axis.setOrientation(RadioGroup.VERTICAL);
-        for (String label : axes) {
-            RadioButton button = new RadioButton(this);
-            button.setText(label);
-            button.setTextColor(TEXT);
-            axis.addView(button, new RadioGroup.LayoutParams(-1, dp(44)));
-        }
-        ((RadioButton) axis.getChildAt(0)).setChecked(true);
-        EditText target = field(String.format(Locale.US, "%.1f", model.maxX - model.minX),
-                "Target dimension (mm)");
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        fields.addView(axis);
-        fields.addView(target);
-        String current = String.format(Locale.US, "Current size: %.1f Ã— %.1f Ã— %.1f mm",
-                model.maxX - model.minX, model.maxY - model.minY, model.maxZ - model.minZ);
-        TextView note = label(current + "\nUniform scale only; existing part placement offsets remain unchanged.\nAllowed scale: 10%â€“10,000%.", 12, MUTED);
-        note.setPadding(0, 12, 0, 0);
-        fields.addView(note);
-        new AlertDialog.Builder(this)
-                .setTitle("Scale to known dimension")
-                .setMessage("Use this for unitless STL/OBJ files when you know one real-world measurement.")
-                .setView(fields)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Apply", (dialog, which) -> {
-                    try {
-                        float targetMm = Float.parseFloat(target.getText().toString());
-                        if (!finite(targetMm) || targetMm <= 0f || targetMm > 10_000f)
-                            throw new IllegalArgumentException("Target dimension is invalid");
-                        int selected = axis.indexOfChild(axis.findViewById(axis.getCheckedRadioButtonId()));
-                        float currentMm = selected == 1 ? model.maxY - model.minY
-                                : selected == 2 ? model.maxZ - model.minZ : model.maxX - model.minX;
-                        if (!finite(currentMm) || currentMm <= 0f)
-                            throw new IllegalArgumentException("Current dimension is invalid");
-                        float nextScale = modelScale * targetMm / currentMm;
-                        if (!finite(nextScale) || nextScale < MeshModel.MIN_MODEL_SCALE
-                                || nextScale > MeshModel.MAX_MODEL_SCALE)
-                            throw new IllegalArgumentException("The resulting scale must be between 10% and 10,000%");
-                        prepareModelMutation("Scale to known dimension");
-                        modelScale = nextScale;
-                        model = rebuildModel(model.displayName);
-                        slice = null;
-                        stagedArtifact = null;
-                        lastBatch = null;
-                        viewport.setModel(model);
-                        if (!modelUris.isEmpty())
-                            projectStore.saveTransform(modelScale, modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees);
-                        saveCurrentPlate();
-                        modelMeta.setText(viewportDisplayName(model.displayName) + "\n" + profileShortLabel());
-                        status.setText("Prepare  Â·  model scaled to known dimension");
-                        details.setText(modelDetails(model));
-                        finishModelMutation("Scale to known dimension");
-                        refreshActions();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Scale could not be applied: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                })
-                .show();
-    }
-
-    private String displayName(Uri uri) {
-        android.database.Cursor cursor = null;
-        try {
-            cursor = getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                String value = cursor.getString(0);
-                if (value != null && value.trim().length() > 0) return value;
-            }
-        } catch (Exception ignored) {
-            // Cloud/document providers are allowed to omit metadata; use the URI below.
-        } finally {
-            if (cursor != null) cursor.close();
-        }
-        String path = uri.getLastPathSegment(); return path == null ? "model.stl" : path;
-    }
-
-    private void startSlice() {
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (model == null) return;
-        PreparationValidator.Report preflight = PreparationValidator.validate(model, config, profile);
-        if (!preflight.isReady()) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Cannot slice yet")
-                    .setMessage(preflight.message())
-                    .setPositiveButton("Done", null)
-                    .show();
-            return;
-        }
-        if (!preflight.warnings.isEmpty()) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Review before slicing")
-                    .setMessage(preflight.message())
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("Slice anyway", (dialog, which) -> requestNotificationPermissionIfNeeded(this::beginSlice))
-                    .show();
-            return;
-        }
-        requestNotificationPermissionIfNeeded(this::beginSlice);
-    }
-
-    private void beginSlice() {
-        if (model == null) return;
-        lastBatch = null;
-        if (batchSliceJobStore != null) batchSliceJobStore.clear();
-        activeBatchSliceJobId = null;
-        slice = null;
-        stagedArtifact = null;
-        if (sliceJobStore == null) return;
-        String jobId = SliceRequestStore.newJobId();
-        try {
-            String modelHash = SliceRequestStore.write(getFilesDir(), jobId, model, config, artifactDisplayName());
-            sliceJobStore.clear();
-            sliceJobStore.begin(jobId, artifactDisplayName(), modelHash);
-            activeSliceJobId = jobId;
-            slicing = true;
-            refreshActions();
-            status.setText("Slice  Â·  preparing foreground jobâ€¦");
-            showSliceProgressLoader(0, "Preparing the slice");
-            SliceJobService.start(this, jobId);
-        } catch (Exception error) {
-            activeSliceJobId = null;
-            slicing = false;
-            dismissSliceProgressLoader();
-            sliceJobStore.fail(jobId, "Could not start slice: " + error.getMessage());
-            status.setText("Prepare  Â·  slice could not start");
-            refreshActions();
-            Toast.makeText(this, "Slice could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void cancelSlice() {
-        if (!slicing && activeSliceJobId == null) return;
-        String jobId = activeSliceJobId;
-        if (jobId == null) return;
-        try {
-            SliceJobService.cancel(this, jobId);
-            status.setText("Slice  Â·  cancellingâ€¦");
-            // Preserve the head position while cancellation is acknowledged.
-            // Snapping it back to zero would falsely suggest the durable job
-            // restarted, even though SliceJobStore retains its last progress.
-            SliceJobStore.Job current = sliceJobStore == null ? null : sliceJobStore.load();
-            int visibleProgress = current == null ? 0 : current.progress;
-            showSliceProgressLoader(visibleProgress, "Cancelling slice");
-            refreshActions();
-        } catch (Exception error) {
-            Toast.makeText(this, "Slice cancellation failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void changeLayer(int delta) {
-        if (slice == null || slice.layers.isEmpty()) return;
-        int current = viewport.getSelectedLayer() < 0 ? slice.layers.size() - 1 : viewport.getSelectedLayer();
-        int next = Math.max(0, Math.min(slice.layers.size() - 1, current + delta));
-        viewport.setSelectedLayer(next);
-        Slicer.Layer layer = slice.layers.get(next);
-        status.setText(String.format(Locale.US, "Inspect  Â·  layer %d / %d  Â·  Z %.2f mm  Â·  %d segments",
-                next + 1, slice.layers.size(), layer.z, layer.segments.size()));
-    }
-
-    private void showInspection() {
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (slice == null || slice.layers == null || slice.layers.isEmpty()) {
-            Toast.makeText(this, "Slice the model before inspecting the toolpath", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        int selected = viewport.getSelectedLayer() < 0 ? slice.layers.size() - 1 : viewport.getSelectedLayer();
-        Slicer.Layer layer = slice.layers.get(Math.max(0, Math.min(slice.layers.size() - 1, selected)));
-        String time = slice.printTimeSeconds < 0f ? "Not reported by engine" : formatDuration(slice.printTimeSeconds);
-        String engine = slice.engineId == null ? "Unknown" : slice.engineId;
-        if (!slice.engineVerified) engine += " Â· unverified";
-        String message = String.format(Locale.US,
-                "Selected layer\n%d / %d  Â·  Z %.2f mm  Â·  %d segments\n\nFilament estimate\n%.1f mm\n\nApprox. engine time (unverified)\n%s\n\nTravel\n%s\n\nWarnings\n%d\n\nEngine\n%s",
-                layer.index + 1, slice.layers.size(), layer.z, layer.segments.size(), slice.filamentMm, time,
-                slice.travelMm < 0f ? "Not reported" : String.format(Locale.US, "%.1f mm", slice.travelMm), slice.warnings, engine);
-        new AlertDialog.Builder(this)
-                .setTitle("Toolpath inspection")
-                .setMessage(message)
-                .setPositiveButton("Done", null)
-                .show();
-    }
-
-    /**
-     * A preflight summary deliberately distinguishes the model toolpath from
-     * consumables a phone-side engine cannot measure. In particular, a
-     * single-material slice must never claim a purge, prime, or separately
-     * weighed support total that has not been emitted by the engine.
-     */
-    private void showPrintPlan() {
-        if (slice == null || slice.layers == null || slice.layers.isEmpty()) {
-            Toast.makeText(this, "Slice the model before opening its print plan", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
-        String orientation = String.format(Locale.US, "Z rotation %.0fÂ°  Â·  X tilt %.0fÂ°  Â·  Y tilt %.0fÂ°  Â·  scale %.0f%%",
-                modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
-        String message = String.format(Locale.US,
-                "%s\n%.0f mm  Â·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nAPPROX. ENGINE TIME (UNVERIFIED)\n%s\n\nCURRENT RECIPE\nNozzle %.0fÂ°C (first layer %.0fÂ°C)  Â·  plate %.0fÂ°C (first layer %.0fÂ°C)\n%.2f mm layers  Â·  %.0f%% infill  Â·  %d walls\n\nORIENTATION\n%s\nUse Model â†’ Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  Â·  no live printer temperature or idle/running telemetry has been verified.",
-                estimate.filamentScope, estimate.reportedFilamentMm, estimate.approximateReportedFilamentGrams, config.filament,
-                estimate.supportMaterial, estimate.primePurgeCleaning, estimate.time,
-                config.nozzleTemperature, config.firstLayerNozzleTemperature,
-                config.bedTemperature, config.firstLayerBedTemperature,
-                config.layerHeight, config.infill * 100f, config.perimeters, orientation);
-        new AlertDialog.Builder(this)
-                .setTitle("Print plan")
-                .setMessage(message)
-                .setNegativeButton("Inspect toolpath", (dialog, which) -> showInspection())
-                .setNeutralButton("Orientation", (dialog, which) -> showModelWorkbench())
-                .setPositiveButton("Done", null)
-                .show();
-    }
-
-    private static String formatDuration(float seconds) {
-        int total = Math.max(0, Math.round(seconds));
-        int hours = total / 3600;
-        int minutes = (total % 3600) / 60;
-        int remainder = total % 60;
-        return hours > 0 ? String.format(Locale.US, "%dh %02dm", hours, minutes)
-                : String.format(Locale.US, "%dm %02ds", minutes, remainder);
-    }
-
-    private String artifactDisplayName() {
-        return (model == null ? "alloy-job" : model.displayName) + "-plate-" + (activePlateIndex + 1);
-    }
-
-    private void exportPackage() {
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("application/octet-stream");
-        intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
-    }
-
-    /** Share only a qualified print package; exporting an unverified file remains a separate path. */
-    private void sharePackage() {
-        sharePackage(false);
-    }
-
-    /**
-     * Attempt Bambu Handy only when it advertises a suitable Android share
-     * target. An available activity is not treated as package/import proof.
-     */
-    private void shareToBambuHandy() {
-        sharePackage(true);
-    }
-
-    private void sharePackage(boolean preferBambuHandy) {
-        if (importing || model == null || slice == null) {
-            Toast.makeText(this, "Slice a model before sharing a package", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        ArtifactValidator.Report report = ArtifactValidator.validate(model, slice, config);
-        if (!report.isValid()) {
-            Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        String handoffBlock = BambuHandyHandoff.validationBlockReason(
-                report.isValid(), slice.engineVerified, profile != null && profile.verified,
-                SupportEngineStatus.physicalPrintReady(config, slice));
-        if (handoffBlock != null) {
-            new AlertDialog.Builder(this)
-                    .setTitle(preferBambuHandy ? "Not ready for Bambu Handy" : "Package not ready to share")
-                    .setMessage(handoffBlock + "\n\nAlloy will not share an unqualified print job to another app. You can still export it for inspection; exported jobs remain marked unverified and must not be printed.")
-                    .setPositiveButton("Understood", null)
-                    .show();
-            return;
-        }
-        try {
-            if (stagedArtifact == null || stagedArtifact.sourceFile == null
-                    || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
-                    || !ArtifactStore.sha256(stagedArtifact.sourceFile).equalsIgnoreCase(stagedArtifact.sha256)) {
-                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
-                        artifactDisplayName(), viewport.thumbnailPng(512));
-            }
-            GcodePackageValidator.validateForPhysicalPrint(stagedArtifact.sourceFile, config);
-            Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
-            if (preferBambuHandy) {
-                Intent targeted = BambuHandyHandoff.targetedShare(uri);
-                if (BambuHandyHandoff.canHandle(getPackageManager(), targeted)) {
-                    try {
-                        startActivity(targeted);
-                        Toast.makeText(this,
-                                "Bambu Handy opened. Confirm its import result; recipient compatibility is not yet verified.",
-                                Toast.LENGTH_LONG).show();
-                    } catch (ActivityNotFoundException disappeared) {
-                        // Package resolution and launch are not atomic: Handy
-                        // may be removed or updated between those operations.
-                        Toast.makeText(this,
-                                "Bambu Handy is no longer available. Choose another recipient.",
-                                Toast.LENGTH_LONG).show();
-                        startActivity(BambuHandyHandoff.chooserShare(uri));
-                    }
-                } else {
-                    Toast.makeText(this,
-                            "Bambu Handy is unavailable for this package type. Choose a recipient manually.",
-                            Toast.LENGTH_LONG).show();
-                    startActivity(BambuHandyHandoff.chooserShare(uri));
-                }
-            } else {
-                startActivity(BambuHandyHandoff.chooserShare(uri));
-            }
-        } catch (IOException notPrinterReady) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Package failed print-readiness checks")
-                    .setMessage(notPrinterReady.getMessage() + "\n\nThe file was not shared. You can export it for inspection, but do not print an unverified job.")
-                    .setPositiveButton("Understood", null)
-                    .show();
-        } catch (Exception error) {
-            Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void openViewExport() {
-        if (viewport == null) {
-            Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("image/png");
-        intent.putExtra(Intent.EXTRA_TITLE, viewport.isMachineStudy()
-                ? "alloy-a1-mini-study.png" : "alloy-3d-view.png");
-        startActivityForResult(intent, REQUEST_VIEW_EXPORT);
-    }
-
-    private void writeViewExport(Uri uri) {
-        if (viewport == null) {
-            Toast.makeText(this, "The 3D view is not ready", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        // Capture the live GLES surface so A1 study exports contain the
-        // supplied machine mesh, real material pass and receding plates.
-        // thumbnailPng remains intentionally reserved for bounded archive and
-        // BYOK references, where deterministic CPU rendering is preferable.
-        viewport.capturePng(1_024, png -> {
-            if (png == null || png.length == 0) {
-                Toast.makeText(this, "3D view capture failed", Toast.LENGTH_LONG).show();
-                return;
-            }
-            try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
-                if (out == null) throw new IOException("Output destination could not be opened");
-                out.write(png);
-                out.flush();
-                Toast.makeText(this, "Saved 3D view PNG", Toast.LENGTH_LONG).show();
-            } catch (Exception error) {
-                Toast.makeText(this, "3D view export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
-    private void writeExport(Uri uri) {
-        ArtifactValidator.Report report = ArtifactValidator.validate(model, slice, config);
-        if (!report.isValid()) {
-            Toast.makeText(this, "Export blocked: " + report.summary(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        try {
-            if (stagedArtifact == null || stagedArtifact.sourceFile == null
-                    || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
-                    || !ArtifactStore.sha256(stagedArtifact.sourceFile).equalsIgnoreCase(stagedArtifact.sha256)
-                    || !ArtifactStore.hasThumbnail(stagedArtifact.sourceFile)) {
-                stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config, artifactDisplayName(), viewport.thumbnailPng(512));
-            }
-        } catch (Exception error) {
-            Toast.makeText(this, "Export staging failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri);
-             java.io.InputStream input = new java.io.FileInputStream(stagedArtifact.sourceFile)) {
-            if (out == null) throw new IllegalArgumentException("Output destination could not be opened");
-            byte[] buffer = new byte[32 * 1024];
-            int read;
-            long written = 0L;
-            while ((read = input.read(buffer)) != -1) {
-                if (read == 0) continue;
-                written += read;
-                if (written > stagedArtifact.sizeBytes) throw new IOException("Export source changed while copying");
-                out.write(buffer, 0, read);
-            }
-            if (written != stagedArtifact.sizeBytes) throw new IOException("Export destination received an incomplete artifact");
-            out.flush();
-            Toast.makeText(this, "Exported .gcode.3mf", Toast.LENGTH_LONG).show();
-        } catch (Exception e) { Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
-    }
-
-    private void showRecipe() {
-        if (printerBusy || batchSlicing || batchTransferring) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (importing) {
-            Toast.makeText(this, "Finish or cancel the current model import first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (slicing || batchSlicing) {
-            Toast.makeText(this, "Cancel the current slice before changing the recipe", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(28, 4, 28, 0);
-        EditText layer = field(String.format(Locale.US, "%.2f", config.layerHeight), "Layer height (mm)");
-        EditText firstLayer = field(String.format(Locale.US, "%.2f", config.firstLayerHeight), "First layer height (mm)");
-        EditText infill = field(String.format(Locale.US, "%.0f", config.infill * 100), "Infill (%)");
-        EditText perimeters = field(Integer.toString(config.perimeters), "Perimeters");
-        EditText topLayers = field(Integer.toString(config.topLayers), "Top solid layers");
-        EditText bottomLayers = field(Integer.toString(config.bottomLayers), "Bottom solid layers");
-        EditText nozzleTemperature = field(String.format(Locale.US, "%.0f", config.nozzleTemperature), "Nozzle temperature (Â°C)");
-        EditText firstLayerNozzleTemperature = field(String.format(Locale.US, "%.0f", config.firstLayerNozzleTemperature), "First layer nozzle temperature (Â°C)");
-        String currentBuildPlate = nativeSetting(config, "curr_bed_type", "Hot Plate");
-        float displayedBedTemperature = selectedPlateTemperature(config, currentBuildPlate, false, config.bedTemperature);
-        float displayedFirstLayerBedTemperature = selectedPlateTemperature(config, currentBuildPlate, true, config.firstLayerBedTemperature);
-        EditText bedTemperature = field(String.format(Locale.US, "%.0f", displayedBedTemperature), "Selected plate temperature (Â°C)");
-        EditText firstLayerBedTemperature = field(String.format(Locale.US, "%.0f", displayedFirstLayerBedTemperature), "Selected plate first-layer temperature (Â°C)");
-        EditText extrusionMultiplier = field(String.format(Locale.US, "%.2f", config.extrusionMultiplier), "Flow / extrusion multiplier");
-        EditText maxVolumetricSpeed = field(String.format(Locale.US, "%.1f", config.maxVolumetricSpeed), "Max volumetric speed (mmÂ³/s)");
-        EditText travelSpeed = field(String.format(Locale.US, "%.0f", config.travelSpeed), "Travel speed (mm/s)");
-        EditText outerWallSpeed = field(String.format(Locale.US, "%.0f", config.outerWallSpeed), "Outer wall speed (mm/s)");
-        EditText innerWallSpeed = field(String.format(Locale.US, "%.0f", config.innerWallSpeed), "Inner wall speed (mm/s)");
-        EditText infillSpeed = field(String.format(Locale.US, "%.0f", config.infillSpeed), "Infill speed (mm/s)");
-        EditText initialLayerSpeed = field(String.format(Locale.US, "%.0f", config.initialLayerSpeed), "Initial layer speed (mm/s)");
-        EditText fanMin = field(String.format(Locale.US, "%.0f", config.fanMinPercent), "Minimum fan (%)");
-        EditText fanMax = field(String.format(Locale.US, "%.0f", config.fanMaxPercent), "Maximum fan (%)");
-        EditText threshold = field(String.format(Locale.US, "%.0f", config.supportThresholdDegrees), "Support overhang threshold (degrees)");
-        RadioGroup buildPlateTypes = choiceGroup(new String[][]{
-                {"Cool Plate", "Cool Plate"},
-                {"Engineering Plate", "Engineering Plate"},
-                {"Textured PEI Plate", "Textured PEI Plate"},
-                {"SuperTack Plate", "SuperTack Plate"},
-                {"Hot Plate", "Hot Plate"}
-        }, currentBuildPlate);
-        RadioGroup topSurfacePatterns = choiceGroup(new String[][]{
-                {"Monotonic", "monotoniclines"}, {"Rectilinear", "rectilinear"}, {"Concentric", "concentric"}
-        }, nativeSetting(config, "top_fill_pattern", "monotoniclines"));
-        RadioGroup bottomSurfacePatterns = choiceGroup(new String[][]{
-                {"Monotonic", "monotonic"}, {"Rectilinear", "rectilinear"}, {"Concentric", "concentric"}
-        }, nativeSetting(config, "bottom_fill_pattern", "monotonic"));
-        RadioGroup seamPositions = choiceGroup(new String[][]{
-                {"Aligned", "aligned"}, {"Nearest", "nearest"}, {"Rear", "rear"}, {"Random", "random"}
-        }, nativeSetting(config, "seam_position", "aligned"));
-        CheckBox ironing = new CheckBox(this);
-        ironing.setText("Iron top surfaces");
-        ironing.setTextColor(TEXT);
-        ironing.setChecked(nativeBoolean(config, "ironing", false));
-        EditText ironingFlow = field(nativeSetting(config, "ironing_flowrate", "10"), "Ironing flow (%)");
-        EditText bridgeSpeed = field(nativeSetting(config, "bridge_speed", "30"), "Bridge speed (mm/s)");
-        EditText defaultAcceleration = field(nativeSetting(config, "default_acceleration", "5000"), "Default acceleration (mm/sÂ²)");
-        CheckBox supports = new CheckBox(this);
-        supports.setText("Generate automatic supports");
-        supports.setTextColor(TEXT);
-        supports.setChecked(config.supports);
-
-        // Keep the common tree-support controls in the recipe surface instead
-        // of forcing phone users to edit a project file. These values travel
-        // through the same allowlisted native-settings boundary as the
-        // packaged profile, so edits remain portable and auditable.
-        String supportStyleValue = nativeSetting(config, "support_material_style", "organic");
-        RadioGroup supportStyles = new RadioGroup(this);
-        // The ordinary on-device fallback emits only conservative grid
-        // supports. Do not expose native tree labels there: selecting one
-        // would create a user expectation the fallback cannot meet. The
-        // native build keeps the source-backed choices visible, while its
-        // Bambu TreeSupport3D parity remains separately gated.
-        String[][] supportStyleOptions = BuildConfig.NATIVE_ENGINE_ENABLED
-                ? new String[][]{{"Organic tree", "organic"}, {"Slim tree", "tree"}, {"Grid", "grid"}}
-                : new String[][]{{"Grid (offline fallback)", "grid"}};
-        int selectedSupportStyle = 0;
-        for (int index = 0; index < supportStyleOptions.length; index++) {
-            RadioButton option = new RadioButton(this);
-            option.setId(View.generateViewId());
-            option.setText(supportStyleOptions[index][0]);
-            option.setTextColor(TEXT);
-            option.setTag(supportStyleOptions[index][1]);
-            supportStyles.addView(option);
-            if (supportStyleOptions[index][1].equalsIgnoreCase(supportStyleValue)) selectedSupportStyle = index;
-        }
-        supportStyles.check(supportStyles.getChildAt(selectedSupportStyle).getId());
-        EditText supportTopLayers = field(nativeSetting(config, "support_material_interface_layers", "2"), "Top interface layers (0â€“20)");
-        EditText supportBottomLayers = field(nativeSetting(config, "support_material_bottom_interface_layers", "2"), "Bottom interface layers (0â€“20)");
-        EditText supportXyDistance = field(nativeSetting(config, "support_material_xy_spacing", "0.35"), "Support XY distance (mm)");
-        EditText supportContactDistance = field(nativeSetting(config, "support_material_contact_distance", "0.2"), "Top contact gap (mm)");
-        EditText supportBottomContactDistance = field(nativeSetting(config, "support_material_bottom_contact_distance", "0.2"), "Bottom contact gap (mm)");
-        EditText supportSpacing = field(nativeSetting(config, "support_material_spacing", "2.5"), "Support spacing (mm)");
-        EditText supportSpeed = field(nativeSetting(config, "support_material_speed", "150"), "Support speed (mm/s)");
-        EditText supportInterfaceSpeed = field(nativeSetting(config, "support_material_interface_speed", "80"), "Interface speed (mm/s)");
-        EditText treeAngle = field(nativeSetting(config, "support_tree_angle", "45"), "Tree branch angle (degrees)");
-        boolean organicTreeStyle = "organic".equalsIgnoreCase(supportStyleValue);
-        String treeDistanceKey = organicTreeStyle
-                ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
-        String treeDiameterKey = organicTreeStyle
-                ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
-        EditText treeDistance = field(nativeSetting(config, treeDistanceKey,
-                organicTreeStyle ? "1" : "5"), "Tree branch distance (mm)");
-        EditText treeDiameter = field(nativeSetting(config, treeDiameterKey,
-                organicTreeStyle ? "2" : "5"), "Tree branch diameter (mm)");
-        Map<String, String> treeGeometryValues = new HashMap<>();
-        String[] displayedTreeStyle = {supportStyleValue};
-        treeGeometryValues.put(supportStyleValue + ":distance", treeDistance.getText().toString());
-        treeGeometryValues.put(supportStyleValue + ":diameter", treeDiameter.getText().toString());
-        supportStyles.setOnCheckedChangeListener((group, checkedId) -> {
-            RadioButton selected = group.findViewById(checkedId);
-            if (selected == null) return;
-            String nextStyle = String.valueOf(selected.getTag());
-            String previousStyle = displayedTreeStyle[0];
-            if (nextStyle.equals(previousStyle)) return;
-            treeGeometryValues.put(previousStyle + ":distance", treeDistance.getText().toString());
-            treeGeometryValues.put(previousStyle + ":diameter", treeDiameter.getText().toString());
-            boolean nextOrganic = "organic".equalsIgnoreCase(nextStyle);
-            String nextDistanceKey = nextOrganic
-                    ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
-            String nextDiameterKey = nextOrganic
-                    ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
-            treeDistance.setText(treeGeometryValues.getOrDefault(nextStyle + ":distance",
-                    nativeSetting(config, nextDistanceKey, nextOrganic ? "1" : "5")));
-            treeDiameter.setText(treeGeometryValues.getOrDefault(nextStyle + ":diameter",
-                    nativeSetting(config, nextDiameterKey, nextOrganic ? "2" : "5")));
-            displayedTreeStyle[0] = nextStyle;
-        });
-        EditText treeDiameterAngle = field(nativeSetting(config, "support_tree_branch_diameter_angle", "5"), "Branch thickening angle (degrees)");
-        EditText treeWallCount = field(nativeSetting(config, "support_tree_branch_diameter_double_wall", "0"), "Tree wall mode (0â€“4)");
-        fields.addView(sectionLabel("QUALITY"));
-        fields.addView(layer); fields.addView(firstLayer); fields.addView(infill);
-        fields.addView(perimeters); fields.addView(topLayers); fields.addView(bottomLayers);
-        fields.addView(sectionLabel("MATERIAL"));
-        Button materialScope = dialogButton("Review material, feed route & spool fit", v -> showMaterialScopeReview());
-        materialScope.setContentDescription("Review material compatibility, feed route and spool fit for the active planning printer");
-        fields.addView(materialScope, new LinearLayout.LayoutParams(-1, dp(46)));
-        TextView materialScopeNote = label("The active recipe stays profile-locked. This review explains compatible material and spool forms; it never changes temperatures or qualifies a printer send.", 12, MUTED);
-        materialScopeNote.setPadding(0, dp(4), 0, dp(8));
-        materialScopeNote.setLineSpacing(dp(2), 1f);
-        fields.addView(materialScopeNote);
-        fields.addView(nozzleTemperature); fields.addView(firstLayerNozzleTemperature);
-        fields.addView(label("BUILD PLATE", 10, GOLD)); fields.addView(buildPlateTypes);
-        fields.addView(label("The selected surface and its temperatures are used for this job. Confirm the physical plate before sending.", 12, MUTED));
-        fields.addView(bedTemperature); fields.addView(firstLayerBedTemperature);
-        fields.addView(extrusionMultiplier); fields.addView(maxVolumetricSpeed);
-        fields.addView(sectionLabel("MOTION & COOLING"));
-        fields.addView(travelSpeed); fields.addView(outerWallSpeed); fields.addView(innerWallSpeed);
-        fields.addView(infillSpeed); fields.addView(initialLayerSpeed); fields.addView(fanMin); fields.addView(fanMax);
-        fields.addView(sectionLabel("SURFACES & PATH"));
-        fields.addView(label("TOP SURFACE", 10, GOLD)); fields.addView(topSurfacePatterns);
-        fields.addView(label("BOTTOM SURFACE", 10, GOLD)); fields.addView(bottomSurfacePatterns);
-        fields.addView(label("SEAM", 10, GOLD)); fields.addView(seamPositions);
-        fields.addView(ironing); fields.addView(ironingFlow); fields.addView(bridgeSpeed); fields.addView(defaultAcceleration);
-        fields.addView(sectionLabel("SUPPORTS"));
-        fields.addView(supports); fields.addView(threshold);
-        fields.addView(label("STYLE", 10, GOLD));
-        fields.addView(supportStyles);
-        fields.addView(supportTopLayers); fields.addView(supportBottomLayers);
-        fields.addView(supportXyDistance); fields.addView(supportContactDistance); fields.addView(supportBottomContactDistance);
-        fields.addView(supportSpacing); fields.addView(supportSpeed); fields.addView(supportInterfaceSpeed);
-        fields.addView(label("TREE GEOMETRY", 10, GOLD));
-        fields.addView(treeAngle); fields.addView(treeDistance); fields.addView(treeDiameter);
-        fields.addView(treeDiameterAngle); fields.addView(treeWallCount);
-        String profileNote = (profile == null ? "A1 Mini Â· 0.4 mm nozzle Â· PLA" : profile.name)
-                + "\nTyped values are loaded from the pinned profile snapshot. Native engine parity is still a documented gate.";
-        if (supports.isChecked()) {
-            profileNote += BuildConfig.NATIVE_ENGINE_ENABLED
-                    ? "\nNative support output uses the integrated Orca TreeSupport3D path; Bambu tree(auto) parity is still not available for production printing."
-                    : "\nOffline fallback uses conservative grid supports for simple overhangs; native engine support remains required for production printing.";
-        }
-        if (profile == null || !profile.verified) profileNote += "\nThis profile is not approved for physical printing.";
-        TextView note = label(profileNote, 13, MUTED); note.setPadding(0, 18, 0, 0); fields.addView(note);
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.addView(fields);
-        new AlertDialog.Builder(this).setTitle("Print recipe").setView(scroll).setNegativeButton("Cancel", null).setPositiveButton("Apply", (d, w) -> {
-            try {
-                float nextLayer = clamp(Float.parseFloat(layer.getText().toString()), 0.08f, 0.40f);
-                float nextFirstLayer = clamp(Float.parseFloat(firstLayer.getText().toString()), 0.08f, 0.40f);
-                float nextInfill = clamp(Float.parseFloat(infill.getText().toString()) / 100f, 0f, 1f);
-                int nextPerimeters = Math.round(clamp(Float.parseFloat(perimeters.getText().toString()), 1f, 20f));
-                int nextTopLayers = Math.round(clamp(Float.parseFloat(topLayers.getText().toString()), 0f, 100f));
-                int nextBottomLayers = Math.round(clamp(Float.parseFloat(bottomLayers.getText().toString()), 0f, 100f));
-                float nextNozzleTemperature = clamp(Float.parseFloat(nozzleTemperature.getText().toString()), 0f, 400f);
-                float nextFirstLayerNozzleTemperature = clamp(Float.parseFloat(firstLayerNozzleTemperature.getText().toString()), 0f, 400f);
-                float nextBedTemperature = clamp(Float.parseFloat(bedTemperature.getText().toString()), 0f, 150f);
-                float nextFirstLayerBedTemperature = clamp(Float.parseFloat(firstLayerBedTemperature.getText().toString()), 0f, 150f);
-                String nextBuildPlate = selectedChoice(buildPlateTypes, "Hot Plate");
-                float nextExtrusionMultiplier = clamp(Float.parseFloat(extrusionMultiplier.getText().toString()), 0.5f, 2f);
-                float nextMaxVolumetricSpeed = clamp(Float.parseFloat(maxVolumetricSpeed.getText().toString()), 0.1f, 200f);
-                float nextTravelSpeed = clamp(Float.parseFloat(travelSpeed.getText().toString()), 1f, 2_000f);
-                float nextOuterWallSpeed = clamp(Float.parseFloat(outerWallSpeed.getText().toString()), 1f, 1_000f);
-                float nextInnerWallSpeed = clamp(Float.parseFloat(innerWallSpeed.getText().toString()), 1f, 1_000f);
-                float nextInfillSpeed = clamp(Float.parseFloat(infillSpeed.getText().toString()), 1f, 1_000f);
-                float nextInitialLayerSpeed = clamp(Float.parseFloat(initialLayerSpeed.getText().toString()), 1f, 1_000f);
-                float nextFanMin = clamp(Float.parseFloat(fanMin.getText().toString()), 0f, 100f);
-                float nextFanMax = Math.max(nextFanMin, clamp(Float.parseFloat(fanMax.getText().toString()), 0f, 100f));
-                float nextThreshold = clamp(Float.parseFloat(threshold.getText().toString()), 0f, 90f);
-                float nextIroningFlow = clamp(Float.parseFloat(ironingFlow.getText().toString().replace("%", "").trim()), 0f, 100f);
-                float nextBridgeSpeed = clamp(Float.parseFloat(bridgeSpeed.getText().toString()), 1f, 1_000f);
-                float nextDefaultAcceleration = clamp(Float.parseFloat(defaultAcceleration.getText().toString()), 1f, 100_000f);
-                int nextSupportTopLayers = Math.round(clamp(Float.parseFloat(supportTopLayers.getText().toString()), 0f, 20f));
-                int nextSupportBottomLayers = Math.round(clamp(Float.parseFloat(supportBottomLayers.getText().toString()), 0f, 20f));
-                float nextSupportXyDistance = clamp(Float.parseFloat(supportXyDistance.getText().toString()), 0.01f, 5f);
-                float nextSupportContactDistance = clamp(Float.parseFloat(supportContactDistance.getText().toString()), 0f, 2f);
-                float nextSupportBottomContactDistance = clamp(Float.parseFloat(supportBottomContactDistance.getText().toString()), 0f, 2f);
-                float nextSupportSpacing = clamp(Float.parseFloat(supportSpacing.getText().toString()), 0.5f, 10f);
-                float nextSupportSpeed = clamp(Float.parseFloat(supportSpeed.getText().toString()), 1f, 1_000f);
-                float nextSupportInterfaceSpeed = clamp(Float.parseFloat(supportInterfaceSpeed.getText().toString()), 1f, 1_000f);
-                float nextTreeAngle = clamp(Float.parseFloat(treeAngle.getText().toString()), 0f, 89f);
-                float nextTreeDistance = clamp(Float.parseFloat(treeDistance.getText().toString()), 0.1f, 100f);
-                float nextTreeDiameter = clamp(Float.parseFloat(treeDiameter.getText().toString()), 0.5f, 10f);
-                float nextTreeDiameterAngle = clamp(Float.parseFloat(treeDiameterAngle.getText().toString()), 0f, 89f);
-                int nextTreeWallCount = Math.round(clamp(Float.parseFloat(treeWallCount.getText().toString()), 0f, 4f));
-                config.layerHeight = nextLayer;
-                config.firstLayerHeight = nextFirstLayer;
-                config.infill = nextInfill;
-                config.perimeters = nextPerimeters;
-                config.topLayers = nextTopLayers;
-                config.bottomLayers = nextBottomLayers;
-                config.nozzleTemperature = nextNozzleTemperature;
-                config.firstLayerNozzleTemperature = nextFirstLayerNozzleTemperature;
-                config.bedTemperature = nextBedTemperature;
-                config.firstLayerBedTemperature = nextFirstLayerBedTemperature;
-                config.nativeSettings.put("curr_bed_type", nextBuildPlate);
-                config.nativeSettings.put(plateTemperatureKey(nextBuildPlate, false), number(nextBedTemperature));
-                config.nativeSettings.put(plateTemperatureKey(nextBuildPlate, true), number(nextFirstLayerBedTemperature));
-                config.extrusionMultiplier = nextExtrusionMultiplier;
-                config.maxVolumetricSpeed = nextMaxVolumetricSpeed;
-                config.travelSpeed = nextTravelSpeed;
-                config.outerWallSpeed = nextOuterWallSpeed;
-                config.innerWallSpeed = nextInnerWallSpeed;
-                config.infillSpeed = nextInfillSpeed;
-                config.initialLayerSpeed = nextInitialLayerSpeed;
-                config.fanMinPercent = nextFanMin;
-                config.fanMaxPercent = nextFanMax;
-                config.supports = supports.isChecked();
-                config.supportThresholdDegrees = nextThreshold;
-                config.nativeSettings.put("top_fill_pattern", selectedChoice(topSurfacePatterns, "monotoniclines"));
-                config.nativeSettings.put("bottom_fill_pattern", selectedChoice(bottomSurfacePatterns, "monotonic"));
-                config.nativeSettings.put("seam_position", selectedChoice(seamPositions, "aligned"));
-                config.nativeSettings.put("ironing", ironing.isChecked() ? "1" : "0");
-                config.nativeSettings.put("ironing_flowrate", number(nextIroningFlow) + "%");
-                config.nativeSettings.put("bridge_speed", number(nextBridgeSpeed));
-                config.nativeSettings.put("default_acceleration", number(nextDefaultAcceleration));
-                String selectedTreeStyle = String.valueOf(
-                        supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag());
-                config.nativeSettings.put("support_material_style", selectedTreeStyle);
-                config.nativeSettings.put("support_material_interface_layers", Integer.toString(nextSupportTopLayers));
-                config.nativeSettings.put("support_material_bottom_interface_layers", Integer.toString(nextSupportBottomLayers));
-                config.nativeSettings.put("support_material_xy_spacing", number(nextSupportXyDistance));
-                config.nativeSettings.put("support_material_contact_distance", number(nextSupportContactDistance));
-                config.nativeSettings.put("support_material_bottom_contact_distance", number(nextSupportBottomContactDistance));
-                config.nativeSettings.put("support_material_spacing", number(nextSupportSpacing));
-                config.nativeSettings.put("support_material_speed", number(nextSupportSpeed));
-                config.nativeSettings.put("support_material_interface_speed", number(nextSupportInterfaceSpeed));
-                config.nativeSettings.put("support_tree_angle", number(nextTreeAngle));
-                boolean selectedOrganicTree = "organic".equalsIgnoreCase(selectedTreeStyle);
-                config.nativeSettings.put(selectedOrganicTree
-                        ? "support_tree_branch_distance_organic" : "support_tree_branch_distance",
-                        number(nextTreeDistance));
-                config.nativeSettings.put(selectedOrganicTree
-                        ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter",
-                        number(nextTreeDiameter));
-                config.nativeSettings.put("support_tree_branch_diameter_angle", number(nextTreeDiameterAngle));
-                config.nativeSettings.put("support_tree_branch_diameter_double_wall", Integer.toString(nextTreeWallCount));
-                projectStore.saveRecipe(config);
-                slice = null;
-                stagedArtifact = null;
-                lastBatch = null;
-                viewport.setResult(null);
-                updateRecipeMarkers();
-                details.setText("Recipe applied Â· " + profilePrinterLabel() + " Â· " + String.format(Locale.US, "%.2f mm layer Â· %.0f%% infill Â· %d walls Â· supports %s", config.layerHeight, config.infill * 100, config.perimeters, config.supports ? "on" : "off"));
-                refreshActions();
-            } catch (Exception e) { Toast.makeText(this, "Recipe values were not valid", Toast.LENGTH_SHORT).show(); }
-        }).show();
-    }
-
-    /**
-     * Keep Bambu-published material/spool capability beside the actual recipe
-     * decision. This deliberately is not a material selector: choosing PETG
-     * while retaining a PLA profile would be an unsafe, misleading shortcut.
-     */
-    private void showMaterialScopeReview() {
-        if (profile == null) {
-            Toast.makeText(this, "Load a planning profile before reviewing materials", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
-            PrinterCapabilityCatalog.Printer printer = catalog.forProfile(profile);
-            if (printer == null) {
-                Toast.makeText(this, "No bounded material catalog is available for this profile", Toast.LENGTH_LONG).show();
-                return;
-            }
-            LinearLayout page = new LinearLayout(this);
-            page.setOrientation(LinearLayout.VERTICAL);
-            page.setPadding(dp(22), dp(8), dp(22), dp(4));
-            TextView active = label("ACTIVE PROFILE\n" + profile.name + "\n" + profile.filamentName
-                    + " Â· " + profile.material + " Â· " + String.format(Locale.US, "%.2f mm", profile.filamentDiameter), 14, TEXT);
-            active.setLineSpacing(dp(2), 1f);
-            page.addView(active);
-            TextView boundary = label("Compatibility is not a recipe. To change filament, select or import a source-backed material profile, then re-slice and review. Direct send remains " + printer.directSendState + ".", 12, RED);
-            boundary.setPadding(0, dp(10), 0, dp(6)); boundary.setLineSpacing(dp(2), 1f);
-            page.addView(boundary);
-            Button recipeButton = dialogButton("Choose material recipe", v -> showMaterialRecipePicker());
-            LinearLayout.LayoutParams recipeLp = new LinearLayout.LayoutParams(-1, dp(44));
-            recipeLp.topMargin = dp(6); page.addView(recipeButton, recipeLp);
-            Button importButton = dialogButton("Import a reviewed Bambu preset", v -> openBambuProfile());
-            LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(-1, dp(44));
-            importLp.topMargin = dp(6); page.addView(importButton, importLp);
-            TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
-            materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
-            for (PrinterCapabilityCatalog.Material material : printer.materials) {
-                TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus
-                        + (material.amsLiteStatus.isEmpty() ? "" : " Â· AMS Lite: " + material.amsLiteStatus)
-                        + " Â· Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT);
-                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
-            }
-            String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
-            if (!amsLiteSourceUrl.isEmpty()) {
-                final String sourceUrl = amsLiteSourceUrl;
-                Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
-                LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); page.addView(sourceButton, sourceLp);
-            }
-            TextView routes = label("FEED ROUTES", 10, GOLD); routes.setLetterSpacing(0.08f);
-            routes.setPadding(0, dp(12), 0, 0); page.addView(routes);
-            for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
-                TextView row = label(route.title + " Â· " + route.state + "\n" + route.note, 12, TEXT);
-                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
-            }
-            TextView forms = label("SPOOL FORM & FIT", 10, GOLD); forms.setLetterSpacing(0.08f);
-            forms.setPadding(0, dp(12), 0, 0); page.addView(forms);
-            for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
-                TextView row = label(form.title + " Â· " + form.state + "\n"
-                        + "Form: " + form.form + "\nRoutes: " + form.compatibleRoutes
-                        + "\nFit: " + form.geometry + "\n" + form.note, 12, TEXT);
-                row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
-            }
-            TextView source = label("Source/scope Â· " + printer.source + " Â· reviewed " + printer.reviewed, 10, MUTED);
-            source.setPadding(0, dp(12), 0, 0); source.setLineSpacing(dp(2), 1f); page.addView(source);
-            Button openSource = dialogButton("Open official Bambu source", v -> openCapabilitySource(printer.sourceUrl));
-            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(44)); sourceLp.topMargin = dp(8); page.addView(openSource, sourceLp);
-            ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true); scroll.addView(page);
-            new AlertDialog.Builder(this)
-                    .setTitle("Material & spool review")
-                    .setView(scroll)
-                    .setPositiveButton("Done", null)
-                    .show();
-        } catch (IOException error) {
-            Toast.makeText(this, "Material catalog is unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void openCapabilitySource(String sourceUrl) {
-        try {
-            Uri uri = Uri.parse(sourceUrl);
-            if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null
-                    || !(uri.getHost().equalsIgnoreCase("bambulab.com")
-                    || uri.getHost().toLowerCase(Locale.US).endsWith(".bambulab.com")))
-                throw new IllegalArgumentException("The capability source is not an official HTTPS URL");
-            startActivity(new Intent(Intent.ACTION_VIEW, uri));
-        } catch (Exception error) {
-            Toast.makeText(this, "Could not open the official source: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void showPlates() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current import, slice, or printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        saveCurrentPlate();
-        ArrayList<PlateStore.Plate> entries = plateStore.plates();
-        if (entries.isEmpty()) {
-            saveCurrentPlate();
-            entries = plateStore.plates();
-        }
-        String[] labels = new String[entries.size()];
-        int checked = -1;
-        for (int index = 0; index < entries.size(); index++) {
-            PlateStore.Plate plate = entries.get(index);
-            labels[index] = plate.summary();
-            if (plate.index == activePlateIndex) checked = index;
-        }
-        final ArrayList<PlateStore.Plate> choices = entries;
-        final boolean batchReady = lastBatch != null && !lastBatch.plates.isEmpty();
-        final int populatedPlates = populatedPlateCount(entries);
-        String batchAction = batchReady ? "Export batch" : "Slice all";
-        new AlertDialog.Builder(this)
-                .setTitle("Print plates")
-                .setMessage("Keep separate model sets for boxes, lids, parts, and future assemblies. Alloy stores up to " + PlateStore.MAX_PLATES
-                        + " local plate snapshots. " + populatedPlates + " plate" + (populatedPlates == 1 ? " is" : "s are")
-                        + " populated.")
-                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
-                    dialog.dismiss();
-                    switchPlate(choices.get(which).index);
-                })
-                .setPositiveButton(batchAction, (dialog, which) -> {
-                    if (batchReady) exportBatchArchive();
-                    else beginBatchSlice();
-                })
-                .setNeutralButton("New plate", (dialog, which) -> createPlate())
-                .setNegativeButton("Close", null)
-                .show();
-    }
-
-    private static int populatedPlateCount(ArrayList<PlateStore.Plate> plates) {
-        int count = 0;
-        if (plates == null) return count;
-        for (PlateStore.Plate plate : plates) {
-            if (plate != null && plate.uris != null && !plate.uris.isEmpty()) count++;
-        }
-        return count;
-    }
-
-    private void beginBatchSlice() {
-        requestNotificationPermissionIfNeeded(this::beginBatchSliceAfterPermission);
-    }
-
-    private void beginBatchSliceAfterPermission() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        saveCurrentPlate();
-        final ArrayList<PlateStore.Plate> plates = plateStore.plates();
-        if (populatedPlateCount(plates) == 0) {
-            Toast.makeText(this, "Add a model to at least one plate first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        lastBatch = null;
-        final String jobId = BatchSliceRequestStore.newJobId();
-        final Slicer.Config recipe = config.copy();
-        final String displayName = currentPlateLabel();
-        final int populated = populatedPlateCount(plates);
-        batchSlicing = true;
-        activeBatchSliceJobId = jobId;
-        status.setText("Batch  Â·  saving an offline requestâ€¦");
-        refreshActions();
-        activeBatchSnapshot = importExecutor.submit(() -> {
-            try {
-                BatchSliceRequestStore.write(getFilesDir(), getContentResolver(), jobId, plates, recipe, displayName);
-                batchSliceJobStore.clear();
-                batchSliceJobStore.begin(jobId, displayName, populated);
-                mainHandler.post(() -> {
-                    if (!jobId.equals(activeBatchSliceJobId) || isFinishing()) return;
-                    activeBatchSnapshot = null;
-                    try {
-                        BatchSliceJobService.start(this, jobId);
-                    } catch (Exception error) {
-                        batchSliceJobStore.fail(jobId, "Could not start batch slice: " + error.getMessage());
-                        activeBatchSliceJobId = null;
-                        batchSlicing = false;
-                        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch slice could not start");
-                        refreshActions();
-                        Toast.makeText(this, "Batch slice could not start: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (!jobId.equals(activeBatchSliceJobId) || isFinishing()) return;
-                    activeBatchSnapshot = null;
-                    activeBatchSliceJobId = null;
-                    batchSlicing = false;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  batch request could not be saved");
-                    refreshActions();
-                    Toast.makeText(this, "Batch request could not be saved: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private void cancelBatchSlice() {
-        if (!batchSlicing) return;
-        String jobId = activeBatchSliceJobId;
-        if (jobId != null && BatchSliceJobService.ownsJob(jobId)) {
-            try {
-                BatchSliceJobService.cancel(this, jobId);
-                status.setText("Batch  Â·  cancellingâ€¦");
-                refreshActions();
-            } catch (Exception error) {
-                Toast.makeText(this, "Batch cancellation failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
-        if (activeBatchSnapshot != null) activeBatchSnapshot.cancel(true);
-        if (jobId != null && batchSliceJobStore != null) batchSliceJobStore.cancel(jobId, "Batch slice cancelled");
-        activeBatchSnapshot = null;
-        activeBatchSliceJobId = null;
-        batchSlicing = false;
-        lastBatch = null;
-        status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-        refreshActions();
-    }
-
-    private void showBatchSummary(BatchSliceJobController.BatchResult result) {
-        if (result == null || result.plates.isEmpty()) return;
-        StringBuilder message = new StringBuilder("Each plate is an independent validated artifact. Choose one plate in Print plates before sending it to a printer.\n\n");
-        for (BatchSliceJobController.PlateResult plate : result.plates) {
-            Slicer.Result slice = plate.slice;
-            message.append("Plate ").append(plate.plate.index + 1).append("  Â·  ").append(plate.plate.name)
-                    .append("\n").append(slice.layers.size()).append(" layers  Â·  ")
-                    .append(String.format(Locale.US, "%.0f mm", slice.filamentMm));
-            if (slice.printTimeSeconds >= 0f) message.append("  Â·  ").append(formatDuration(slice.printTimeSeconds));
-            message.append("\n");
-        }
-        new AlertDialog.Builder(this)
-                .setTitle("All plates sliced")
-                .setMessage(message.toString().trim())
-                .setNegativeButton("Done", null)
-                .setPositiveButton("Export batch", (dialog, which) -> exportBatchArchive())
-                .show();
-    }
-
-    private void exportBatchArchive() {
-        if (lastBatch == null || lastBatch.plates.isEmpty()) {
-            Toast.makeText(this, "Slice the populated plates first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType(BatchArtifactArchive.MIME_TYPE);
-        intent.putExtra(Intent.EXTRA_TITLE, safeName(currentPlateLabel()) + "-plates.alloy-batch.zip");
-        startActivityForResult(intent, REQUEST_BATCH_EXPORT);
-    }
-
-    private void writeBatchArchive(Uri destination) {
-        if (destination == null || batchTransferring || lastBatch == null) return;
-        final BatchSliceJobController.BatchResult batch = lastBatch;
-        final long transferId = batchTransferIds.incrementAndGet();
-        activeBatchTransferId = transferId;
-        batchTransferring = true;
-        status.setText("Batch  Â·  validating portable archiveâ€¦");
-        refreshActions();
-        activeBatchTransfer = importExecutor.submit(() -> {
-            java.io.File temporary = new java.io.File(getCacheDir(), ".alloy-batch-" + transferId + ".part");
-            try {
-                try (java.io.OutputStream output = new java.io.FileOutputStream(temporary)) {
-                    BatchArtifactArchive.write(output, batch);
-                    output.flush();
-                }
-                BatchArtifactArchive.validate(temporary);
-                try (java.io.OutputStream output = getContentResolver().openOutputStream(destination);
-                     java.io.InputStream input = new java.io.FileInputStream(temporary)) {
-                    if (output == null) throw new IOException("The batch destination could not be opened");
-                    byte[] buffer = new byte[32 * 1024];
-                    int read;
-                    while ((read = input.read(buffer)) != -1) if (read > 0) output.write(buffer, 0, read);
-                    output.flush();
-                }
-                mainHandler.post(() -> {
-                    if (transferId != activeBatchTransferId || isFinishing()) return;
-                    batchTransferring = false;
-                    activeBatchTransfer = null;
-                    status.setText("Batch  Â·  portable archive saved");
-                    refreshActions();
-                    Toast.makeText(this, "Exported all plate artifacts", Toast.LENGTH_LONG).show();
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (transferId != activeBatchTransferId || isFinishing()) return;
-                    batchTransferring = false;
-                    activeBatchTransfer = null;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions();
-                    Toast.makeText(this, "Batch export failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            } finally {
-                if (temporary.exists() && !temporary.delete()) temporary.deleteOnExit();
-            }
-        });
-    }
-
-    private void createPlate() {
-        if (printerBusy || importing || slicing || batchSlicing || batchTransferring) {
-            Toast.makeText(this, "Finish the current import, slice, or printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            saveCurrentPlate();
-            PlateStore.Plate created = plateStore.createNext();
-            switchPlate(created.index);
-        } catch (Exception error) {
-            Toast.makeText(this, "New plate could not be created: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void switchPlate(int index) {
-        if (index < 0 || index >= PlateStore.MAX_PLATES || printerBusy || importing || slicing || batchSlicing || batchTransferring) return;
-        if (index == activePlateIndex && model != null) return;
-        saveCurrentPlate();
-        PlateStore.Plate target = plateStore.plateAt(index);
-        activePlateIndex = index;
-        plateStore.setActiveIndex(index);
-        slice = null;
-        stagedArtifact = null;
-        if (viewport != null) viewport.setResult(null);
-        updatePlateMarker();
-        if (target.uris.isEmpty()) {
-            plateImportInFlight = false;
-            clearLoadedModelForPlate();
-            if (modelHistoryStore != null) {
-                modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "New plate");
-                pruneModelCache();
-            }
-        } else {
-            plateImportInFlight = true;
-            restorePlateCheckpoint(target);
-            loadUris(target.uris, target.names, true);
-        }
-    }
-
-    private void restorePlateCheckpoint(PlateStore.Plate plate) {
-        if (plate == null || plate.uris.isEmpty()) {
-            projectStore.clearModel();
-            return;
-        }
-        projectStore.saveModels(plate.uris, plate.names);
-        projectStore.saveTransform(plate.scale, plate.rotationDegrees, plate.tiltXDegrees, plate.tiltYDegrees);
-        projectStore.saveSelectedPart(plate.selectedPart);
-        projectStore.savePartTransforms(new ArrayList<>(plate.partTransforms));
-        projectStore.saveGeometryRepair(plate.geometryRepairEnabled);
-    }
-
-    private void saveCurrentPlate() {
-        if (plateStore == null || plateImportInFlight) return;
-        ArrayList<String> names = new ArrayList<>();
-        for (int index = 0; index < modelUris.size(); index++) {
-            names.add(index < modelNames.size() ? modelNames.get(index) : "model.stl");
-        }
-        int selectedPart = viewport == null ? -1 : viewport.getSelectedPart();
-        plateStore.save(new PlateStore.Plate(activePlateIndex, currentPlateName(),
-                new ArrayList<>(modelUris), names, modelScale, modelRotationDegrees,
-                modelTiltXDegrees, modelTiltYDegrees, selectedPart, new ArrayList<>(partTransforms),
-                geometryRepairEnabled));
-        plateStore.setActiveIndex(activePlateIndex);
-    }
-
-    private PlateStore.Plate currentPlateSnapshot() {
-        ArrayList<String> names = new ArrayList<>();
-        for (int index = 0; index < modelUris.size(); index++) {
-            names.add(index < modelNames.size() ? modelNames.get(index) : "model.stl");
-        }
-        int selectedPart = viewport == null ? -1 : viewport.getSelectedPart();
-        return new PlateStore.Plate(activePlateIndex, currentPlateName(),
-                new ArrayList<>(modelUris), names, modelScale, modelRotationDegrees,
-                modelTiltXDegrees, modelTiltYDegrees, selectedPart,
-                new ArrayList<>(partTransforms), geometryRepairEnabled);
-    }
-
-    private void pruneModelCache() {
-        if (plateStore == null) return;
-        ArrayList<PlateStore.Plate> history = modelHistoryStore == null
-                ? null : modelHistoryStore.referencedPlates();
-        ArrayList<Uri> recent = new ArrayList<>();
-        if (importedModelStore != null) {
-            for (ImportedModelStore.Entry entry : importedModelStore.entries(getFilesDir())) {
-                if (entry != null && entry.uri != null) recent.add(entry.uri);
-            }
-        }
-        ModelStore.prune(getFilesDir(), plateStore.plates(), history, recent);
-    }
-
-    private void prepareModelMutation(String label) {
-        trustedPilotFixtureAssetPath = null;
-        if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
-        try {
-            modelHistoryStore.ensureCurrent(activePlateIndex, currentPlateSnapshot(), "Current model");
-            pruneModelCache();
-        } catch (RuntimeException error) {
-            // The edit remains local and visible, but the failure is explicit;
-            // never pretend an edit is undoable when its snapshot did not save.
-            Toast.makeText(this, "Edit history unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void finishModelMutation(String label) {
-        if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
-        try {
-            saveCurrentPlate();
-            modelHistoryStore.append(activePlateIndex, currentPlateSnapshot(), label);
-            pruneModelCache();
-            updateHistoryActions();
-        } catch (RuntimeException error) {
-            Toast.makeText(this, "Edit completed, but history could not be saved: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void resetModelHistory(String label) {
-        if (modelHistoryStore == null || plateStore == null || plateImportInFlight) return;
-        try {
-            modelHistoryStore.resetDocument(activePlateIndex, currentPlateSnapshot(), label);
-            pruneModelCache();
-        } catch (RuntimeException error) {
-            Toast.makeText(this, "Model history could not be initialized: " + error.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void updateHistoryActions() {
-        if (actions != null) refreshActions();
-    }
-
-    private void undoModel() {
-        if (!canMutateModel()) return;
-        PlateStore.Plate target;
-        try { target = modelHistoryStore.undo(activePlateIndex); }
-        catch (RuntimeException error) {
-            Toast.makeText(this, "Undo history is invalid: " + error.getMessage(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (target == null) {
-            Toast.makeText(this, "Nothing to undo", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        restoreHistorySnapshot(target, "Undo");
-    }
-
-    private void redoModel() {
-        if (!canMutateModel()) return;
-        PlateStore.Plate target;
-        try { target = modelHistoryStore.redo(activePlateIndex); }
-        catch (RuntimeException error) {
-            Toast.makeText(this, "Redo history is invalid: " + error.getMessage(), Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (target == null) {
-            Toast.makeText(this, "Nothing to redo", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        restoreHistorySnapshot(target, "Redo");
-    }
-
-    private boolean canMutateModel() {
-        if (modelHistoryStore == null || model == null || printerBusy || importing || slicing || batchSlicing
-                || projectTransferring || batchTransferring || visualizing || modeling || repairingGeometry) {
-            Toast.makeText(this, "Finish the current operation before changing model history", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        return true;
-    }
-
-    private void restoreHistorySnapshot(PlateStore.Plate target, String action) {
-        if (target == null || target.index != activePlateIndex) return;
-        saveCurrentPlate();
-        slice = null;
-        stagedArtifact = null;
-        lastBatch = null;
-        if (viewport != null) viewport.setResult(null);
-        plateStore.save(target);
-        restorePlateCheckpoint(target);
-        if (target.uris.isEmpty()) {
-            clearLoadedModelForPlate();
-            plateStore.save(target);
-            modelHistoryStore.ensureCurrent(activePlateIndex, target, action + " state");
-            status.setText(currentPlateLabel() + "  Â·  " + action.toLowerCase(Locale.US) + " complete");
-            pruneModelCache();
-            return;
-        }
-        plateImportInFlight = true;
-        status.setText(action + "  Â·  restoring modelâ€¦");
-        refreshActions();
-        loadUris(target.uris, target.names, true);
-    }
-
-    private void showModelHistory() {
-        if (modelHistoryStore == null) return;
-        ArrayList<String> labels = modelHistoryStore.labels(activePlateIndex);
-        if (labels.isEmpty()) {
-            new AlertDialog.Builder(this).setTitle("Model edit history")
-                    .setMessage("Edits to this plate will appear here. Undo and redo retain bounded model snapshots locally on this phone.")
-                    .setPositiveButton("Done", null).show();
-            return;
-        }
-        CharSequence[] entries = labels.toArray(new CharSequence[0]);
-        new AlertDialog.Builder(this).setTitle("Model edit history")
-                .setMessage(currentPlateLabel() + "  Â·  " + modelHistoryStore.summary(activePlateIndex))
-                .setItems(entries, null)
-                .setPositiveButton("Done", null)
-                .show();
-    }
-
-    private void clearLoadedModelForPlate() {
-        cancelImport();
-        cancelGeometryRepair();
-        if (sliceJobs != null) sliceJobs.cancel();
-        if (batchSliceJobs != null) batchSliceJobs.cancel();
-        batchSlicing = false;
-        slicing = false;
-        model = null;
-        sourceModel = null;
-        unmodifiedSourceModel = null;
-        geometryRepairEnabled = false;
-        partTransforms.clear();
-        modelUris.clear();
-        modelNames.clear();
-        modelScale = 1f;
-        modelRotationDegrees = 0f;
-        modelTiltXDegrees = 0f;
-        modelTiltYDegrees = 0f;
-        slice = null;
-        stagedArtifact = null;
-        lastBatch = null;
-        if (batchSliceJobStore != null) batchSliceJobStore.clear();
-        activeBatchSliceJobId = null;
-        plateImportInFlight = false;
-        projectStore.clearModel();
-        plateStore.save(PlateStore.Plate.empty(activePlateIndex));
-        pruneModelCache();
-        if (viewport != null) {
-            viewport.setModel(null);
-            viewport.setResult(null);
-        }
-        modelMeta.setText("NEW PLATE\n" + profileShortLabel());
-        status.setText(currentPlateLabel() + "  Â·  Import a model to begin");
-        details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
-        updatePlateMarker();
-        refreshActions();
-    }
-
-    private void saveProjectArchive() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        saveCurrentPlate();
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType(ProjectArchive.MIME_TYPE);
-        intent.putExtra(Intent.EXTRA_TITLE, safeName(currentPlateLabel()) + ".alloy.zip");
-        startActivityForResult(intent, REQUEST_PROJECT_EXPORT);
-    }
-
-    private void openProjectArchive() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType(ProjectArchive.MIME_TYPE);
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{ProjectArchive.MIME_TYPE, "application/octet-stream"});
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivityForResult(intent, REQUEST_PROJECT_OPEN);
-    }
-
-    private void writeProjectArchive(Uri destination) {
-        if (destination == null || projectTransferring || batchTransferring) return;
-        saveCurrentPlate();
-        final ArrayList<PlateStore.Plate> plates = plateStore.plates();
-        final Slicer.Config recipe = config.copy();
-        final int active = activePlateIndex;
-        final String historyName = model == null ? currentPlateLabel() : model.displayName;
-        final int historyModelCount = projectModelCount(plates);
-        final int historyPlateCount = plates.size();
-        final byte[] thumbnail = viewport == null ? null : viewport.thumbnailPng(512);
-        final ArrayList<ModelHistoryStore.Timeline> modelHistory = modelHistoryStore == null
-                ? new ArrayList<>() : modelHistoryStore.exportTimelines();
-        final long transferId = projectTransferIds.incrementAndGet();
-        activeProjectTransferId = transferId;
-        projectTransferring = true;
-        status.setText("Project  Â·  saving portable archiveâ€¦");
-        refreshActions();
-        activeProjectTransfer = importExecutor.submit(() -> {
-            try (java.io.OutputStream output = getContentResolver().openOutputStream(destination)) {
-                if (output == null) throw new IllegalArgumentException("The project destination could not be opened");
-                ProjectArchive.write(output, active, plates, recipe,
-                        uri -> getContentResolver().openInputStream(uri), inventoryStore.snapshot(), thumbnail,
-                        modelHistory);
-                output.flush();
-                mainHandler.post(() -> {
-                    if (transferId != activeProjectTransferId || isFinishing()) return;
-                    projectTransferring = false;
-                    activeProjectTransfer = null;
-                    try {
-                        projectHistoryStore.record(historyName, destination, historyModelCount, historyPlateCount);
-                    } catch (Exception ignored) {
-                        // History is an enhancement; a successfully written archive remains usable.
-                    }
-                    status.setText("Project  Â·  portable archive saved");
-                    refreshActions();
-                    Toast.makeText(this, "Saved .alloy.zip project", Toast.LENGTH_LONG).show();
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (transferId != activeProjectTransferId || isFinishing()) return;
-                    projectTransferring = false;
-                    activeProjectTransfer = null;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions();
-                    Toast.makeText(this, "Project save failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private void readProjectArchive(Uri source) {
-        if (source == null || printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            if (printerBusy || importing || slicing || batchSlicing || batchTransferring)
-                Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        final String historyName = displayName(source);
-        final long transferId = projectTransferIds.incrementAndGet();
-        activeProjectTransferId = transferId;
-        projectTransferring = true;
-        status.setText("Project  Â·  opening portable archiveâ€¦");
-        refreshActions();
-        activeProjectTransfer = importExecutor.submit(() -> {
-            try (InputStream input = getContentResolver().openInputStream(source)) {
-                if (input == null) throw new IllegalArgumentException("The project archive could not be opened");
-                ProjectArchive.ImportedProject imported = ProjectArchive.read(input, new java.io.File(getFilesDir(), "projects"));
-                mainHandler.post(() -> {
-                    if (transferId != activeProjectTransferId || isFinishing()) return;
-                    projectTransferring = false;
-                    activeProjectTransfer = null;
-                    try {
-                        applyImportedProject(imported);
-                        ProjectArchive.pruneStoredProjects(new java.io.File(getFilesDir(), "projects"), imported.plates);
-                        projectHistoryStore.record(historyName, source, projectModelCount(imported.plates), imported.plates.size());
-                        Toast.makeText(this, "Opened portable Alloy project", Toast.LENGTH_LONG).show();
-                    } catch (Exception error) {
-                        Toast.makeText(this, "Project could not be opened: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                        refreshActions();
-                    }
-                });
-            } catch (Exception error) {
-                mainHandler.post(() -> {
-                    if (transferId != activeProjectTransferId || isFinishing()) return;
-                    projectTransferring = false;
-                    activeProjectTransfer = null;
-                    status.setText(model == null ? "Import a model to begin" : "Prepare  Â·  " + model.displayName);
-                    refreshActions();
-                    Toast.makeText(this, "Project open failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                });
-            }
-        });
-    }
-
-    private void applyImportedProject(ProjectArchive.ImportedProject imported) throws Exception {
-        if (imported == null || imported.plates == null || imported.plates.isEmpty())
-            throw new IllegalArgumentException("The project contains no plates");
-        if (imported.inventorySnapshot != null) inventoryStore.restoreSnapshot(imported.inventorySnapshot);
-        cancelImport();
-        cancelGeometryRepair();
-        cancelNativeBoolean();
-        sliceJobs.cancel();
-        batchSliceJobs.cancel();
-        batchSlicing = false;
-        slicing = false;
-        model = null;
-        sourceModel = null;
-        unmodifiedSourceModel = null;
-        geometryRepairEnabled = false;
-        partTransforms.clear();
-        modelUris.clear();
-        modelNames.clear();
-        modelScale = 1f;
-        modelRotationDegrees = 0f;
-        modelTiltXDegrees = 0f;
-        modelTiltYDegrees = 0f;
-        slice = null;
-        stagedArtifact = null;
-        lastBatch = null;
-        if (batchSliceJobStore != null) batchSliceJobStore.clear();
-        activeBatchSliceJobId = null;
-        plateImportInFlight = false;
-        projectStore.clearModel();
-        if (modelHistoryStore != null) modelHistoryStore.clearAll();
-        plateStore.clear();
-        for (PlateStore.Plate plate : imported.plates) plateStore.save(plate);
-        if (modelHistoryStore != null && imported.history != null && !imported.history.isEmpty())
-            modelHistoryStore.importTimelines(imported.history);
-        activePlateIndex = imported.activePlateIndex;
-        plateStore.setActiveIndex(activePlateIndex);
-        copyConfig(imported.config, config);
-        projectStore.saveRecipe(config);
-        updateInventorySummary();
-        viewport.setModel(null);
-        viewport.setResult(null);
-        updateRecipeMarkers();
-        updatePlateMarker();
-        PlateStore.Plate target = plateStore.activePlate();
-        if (target.uris.isEmpty()) {
-            modelMeta.setText("NEW PLATE\n" + profileShortLabel());
-            status.setText(currentPlateLabel() + "  Â·  Import a model to begin");
-            details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
-            refreshActions();
-        } else {
-            plateImportInFlight = true;
-            restorePlateCheckpoint(target);
-            loadUris(target.uris, target.names, true);
-        }
-    }
-
-    private static int projectModelCount(ArrayList<PlateStore.Plate> plates) {
-        int count = 0;
-        if (plates == null) return count;
-        for (PlateStore.Plate plate : plates) if (plate != null && plate.uris != null) count += plate.uris.size();
-        return count;
-    }
-
-    private static void copyConfig(Slicer.Config source, Slicer.Config target) {
-        if (source == null || target == null) return;
-        target.layerHeight = source.layerHeight;
-        target.firstLayerHeight = source.firstLayerHeight;
-        target.nozzle = source.nozzle;
-        target.filamentDiameter = source.filamentDiameter;
-        target.infill = source.infill;
-        target.bedX = source.bedX;
-        target.bedY = source.bedY;
-        target.bedZ = source.bedZ;
-        target.printer = source.printer;
-        target.filament = source.filament;
-        target.nozzleTemperature = source.nozzleTemperature;
-        target.firstLayerNozzleTemperature = source.firstLayerNozzleTemperature;
-        target.bedTemperature = source.bedTemperature;
-        target.firstLayerBedTemperature = source.firstLayerBedTemperature;
-        target.extrusionMultiplier = source.extrusionMultiplier;
-        target.maxVolumetricSpeed = source.maxVolumetricSpeed;
-        target.travelSpeed = source.travelSpeed;
-        target.outerWallSpeed = source.outerWallSpeed;
-        target.innerWallSpeed = source.innerWallSpeed;
-        target.infillSpeed = source.infillSpeed;
-        target.initialLayerSpeed = source.initialLayerSpeed;
-        target.fanMinPercent = source.fanMinPercent;
-        target.fanMaxPercent = source.fanMaxPercent;
-        target.supports = source.supports;
-        target.supportThresholdDegrees = source.supportThresholdDegrees;
-        target.perimeters = source.perimeters;
-        target.topLayers = source.topLayers;
-        target.bottomLayers = source.bottomLayers;
-        target.nativeSettings.clear();
-        target.nativeSettings.putAll(source.nativeSettings);
-    }
-
-    private void showProjectMenu() {
-        new AlertDialog.Builder(this)
-                .setTitle("Project")
-                .setItems(new String[]{"New project", "Print plates", "Open model atlas", "A1 Mini 3D study", "Save current 3D view (PNG)", "Review active profile", "Import Bambu profile(s)", "Export active profile", "Reset imported profile", "Save project archive", "Open project archive", "Project history", "Forget saved model"}, (dialog, which) -> {
-                    if (which == 0) resetProject();
-                    if (which == 1) showPlates();
-                    if (which == 2) showModelLibrary();
-                    if (which == 3) showPrinterStudy();
-                    if (which == 4) openViewExport();
-                    if (which == 5) showProfileReview();
-                    if (which == 6) openBambuProfile();
-                    if (which == 7) openProfileExport();
-                    if (which == 8) resetImportedProfile();
-                    if (which == 9) saveProjectArchive();
-                    if (which == 10) openProjectArchive();
-                    if (which == 11) showProjectHistory();
-                    if (which == 12) {
-                        if (printerBusy || slicing || batchSlicing || batchTransferring) {
-                            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        if (modelHistoryStore != null) modelHistoryStore.clearDocument(activePlateIndex);
-                        clearLoadedModelForPlate();
-                        Toast.makeText(this, "Saved model forgotten", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Close", null)
-                .show();
-    }
-
-    private void showProjectHistory() {
-        if (printerBusy || importing || slicing || batchSlicing || projectTransferring || batchTransferring) {
-            Toast.makeText(this, "Finish the current operation first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        ArrayList<ProjectHistoryStore.Record> records = projectHistoryStore.records();
-        if (records.isEmpty()) {
-            new AlertDialog.Builder(this).setTitle("Project history")
-                    .setMessage("Saved and opened portable projects will appear here.")
-                    .setPositiveButton("Done", null).show();
-            return;
-        }
-        String[] labels = new String[records.size()];
-        for (int index = 0; index < records.size(); index++) labels[index] = records.get(index).summary();
-        new AlertDialog.Builder(this).setTitle("Project history")
-                .setMessage("Recent portable projects Â· stored locally on this phone")
-                .setItems(labels, (dialog, which) -> {
-                    ProjectHistoryStore.Record record = records.get(which);
-                    if (record.archiveUri.length() == 0) {
-                        Toast.makeText(this, "This history record has no portable archive to reopen", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    Uri archive = Uri.parse(record.archiveUri);
-                    rememberUriPermission(archive, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    readProjectArchive(archive);
-                })
-                .setNeutralButton("Clear", (dialog, which) -> {
-                    projectHistoryStore.clear();
-                    Toast.makeText(this, "Project history cleared", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Close", null).show();
-    }
-
-    private void resetProject() {
-        if (printerBusy || slicing || batchSlicing || batchTransferring) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        cancelImport();
-        cancelGeometryRepair();
-        cancelNativeBoolean();
-        sliceJobs.cancel();
-        batchSliceJobs.cancel();
-        batchSlicing = false;
-        model = null;
-        sourceModel = null;
-        unmodifiedSourceModel = null;
-        geometryRepairEnabled = false;
-        partTransforms.clear();
-        modelUris.clear();
-        modelNames.clear();
-        modelScale = 1f;
-        modelRotationDegrees = 0f;
-        modelTiltXDegrees = 0f;
-        modelTiltYDegrees = 0f;
-        slice = null;
-        stagedArtifact = null;
-        lastBatch = null;
-        if (batchSliceJobStore != null) batchSliceJobStore.clear();
-        activeBatchSliceJobId = null;
-        slicing = false;
-        plateImportInFlight = false;
-        if (modelHistoryStore != null) modelHistoryStore.clearAll();
-        projectStore.clearModel();
-        plateStore.save(PlateStore.Plate.empty(activePlateIndex));
-        pruneModelCache();
-        viewport.setModel(null);
-        viewport.setResult(null);
-        modelMeta.setText("NEW PROJECT\n" + profileShortLabel());
-        status.setText(currentPlateLabel() + "  Â·  Import a model to begin");
-        details.setText("STL, OBJ, 3MF and STEP  Â·  " + profileBuildVolumeLabel() + " build volume");
-        updatePlateMarker();
-        refreshActions();
-    }
-
-    private EditText textField(String value, String hint) {
-        EditText field = new EditText(this);
-        field.setText(value);
-        field.setHint(hint);
-        field.setTextColor(TEXT);
-        field.setHintTextColor(MUTED);
-        field.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
-        return field;
-    }
-
-    private TextView sectionLabel(String text) {
-        TextView view = label(text, 10, GOLD);
-        view.setTypeface(null, android.graphics.Typeface.BOLD);
-        view.setLetterSpacing(0.12f);
-        view.setPadding(0, 18, 0, 2);
-        return view;
-    }
-
-    private EditText field(String value, String hint) { return field(value, hint, false); }
-    private EditText field(String value, String hint, boolean signed) { EditText field = new EditText(this); field.setText(value); field.setHint(hint); field.setTextColor(TEXT); field.setHintTextColor(MUTED); field.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL | (signed ? android.text.InputType.TYPE_NUMBER_FLAG_SIGNED : 0)); return field; }
-    private static String nativeSetting(Slicer.Config config, String key, String fallback) {
-        if (config == null || key == null) return fallback;
-        String value = config.nativeSettings.get(key);
-        return value == null || value.trim().length() == 0 ? fallback : value;
-    }
-    private static String plateTemperatureKey(String plate, boolean initialLayer) {
-        String value = plate == null ? "" : plate.toLowerCase(Locale.US);
-        String suffix = initialLayer ? "_initial_layer" : "";
-        if (value.contains("cool")) return "cool_plate_temp" + suffix;
-        if (value.contains("engineering") || value.startsWith("eng")) return "eng_plate_temp" + suffix;
-        if (value.contains("supertack") || value.contains("super tack")) return "supertack_plate_temp" + suffix;
-        if (value.contains("textured")) return "textured_plate_temp" + suffix;
-        return "hot_plate_temp" + suffix;
-    }
-    private static float selectedPlateTemperature(Slicer.Config config, String plate, boolean initialLayer, float fallback) {
-        String raw = nativeSetting(config, plateTemperatureKey(plate, initialLayer), "").trim();
-        if (raw.length() == 0) return fallback;
-        int comma = raw.indexOf(',');
-        if (comma >= 0) raw = raw.substring(0, comma).trim();
-        try {
-            float value = Float.parseFloat(raw);
-            return finite(value) && value >= 0f && value <= 150f ? value : fallback;
-        } catch (NumberFormatException ignored) {
-            return fallback;
-        }
-    }
-    private RadioGroup choiceGroup(String[][] options, String selected) {
-        RadioGroup group = new RadioGroup(this);
-        int selectedIndex = 0;
-        for (int index = 0; index < options.length; index++) {
-            RadioButton option = new RadioButton(this);
-            option.setId(View.generateViewId());
-            option.setText(options[index][0]);
-            option.setTextColor(TEXT);
-            option.setTag(options[index][1]);
-            group.addView(option);
-            if (options[index][1].equalsIgnoreCase(selected)) selectedIndex = index;
-        }
-        if (group.getChildCount() > 0) group.check(group.getChildAt(selectedIndex).getId());
-        return group;
-    }
-    private static String selectedChoice(RadioGroup group, String fallback) {
-        if (group == null) return fallback;
-        View selected = group.findViewById(group.getCheckedRadioButtonId());
-        Object tag = selected == null ? null : selected.getTag();
-        return tag == null ? fallback : String.valueOf(tag);
-    }
-    private static boolean nativeBoolean(Slicer.Config config, String key, boolean fallback) {
-        String value = nativeSetting(config, key, fallback ? "1" : "0").trim();
-        return "1".equals(value) || "true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value);
-    }
-    private static String number(float value) { return String.format(Locale.US, "%.5f", value); }
-    private static float clamp(float value, float min, float max) { return Math.max(min, Math.min(max, value)); }
-    private static boolean finite(float value) { return !Float.isNaN(value) && !Float.isInfinite(value); }
-    private static String safeName(String name) {
-        String value = name == null ? "alloy-job" : name.replaceAll("[^A-Za-z0-9._-]", "_").replaceAll("(?i)(\\.(stl|3mf|gcode))+$", "");
-        if (value.length() == 0) return "alloy-job";
-        return value.length() > 150 ? value.substring(0, 150) : value;
-    }
-
-    @Override public void onBackPressed() {
-        if (importing) {
-            cancelImport();
-            return;
-        }
-        if (repairingGeometry) {
-            cancelGeometryRepair();
-            return;
-        }
-        if (projectTransferring || batchTransferring) {
-            Toast.makeText(this, projectTransferring ? "Project file transfer is still running" : "Batch export is still running", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (batchSlicing) {
-            cancelBatchSlice();
-            return;
-        }
-        if (slicing) {
-            cancelSlice();
-            return;
-        }
-        if (printerBusy) {
-            Toast.makeText(this, "Finish or cancel the active printer job first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (slice != null) { slice = null; viewport.setResult(null); refreshActions(); status.setText("Prepare  Â·  " + model.displayName); return; }
-        super.onBackPressed();
-    }
-
-    @Override protected void onPause() {
-        saveCurrentPlate();
-        if (viewport != null) viewport.onHostPause();
-        super.onPause();
-    }
-
-    @Override protected void onResume() {
-        super.onResume();
-        if (viewport != null) viewport.onHostResume();
-        refreshPrinterUi();
-        refreshSliceUi();
-        refreshBatchSliceUi();
-    }
-
-    @Override protected void onDestroy() {
-        dismissSliceProgressLoader();
-        if (printerEventReceiver != null) {
-            try { unregisterReceiver(printerEventReceiver); } catch (Exception ignored) { }
-            printerEventReceiver = null;
-        }
-        if (sliceEventReceiver != null) {
-            try { unregisterReceiver(sliceEventReceiver); } catch (Exception ignored) { }
-            sliceEventReceiver = null;
-        }
-        if (batchSliceEventReceiver != null) {
-            try { unregisterReceiver(batchSliceEventReceiver); } catch (Exception ignored) { }
-            batchSliceEventReceiver = null;
-        }
-        cancelImport();
-        cancelGeometryRepair();
-        cancelVisualization();
-        cancelNativeBoolean();
-        activeCertificateInspectionId = certificateInspectionIds.incrementAndGet();
-        if (activeCertificateInspection != null) activeCertificateInspection.cancel(true);
-        activeProjectTransferId = projectTransferIds.incrementAndGet();
-        if (activeProjectTransfer != null) activeProjectTransfer.cancel(true);
-        activeBatchTransferId = batchTransferIds.incrementAndGet();
-        if (activeBatchTransfer != null) activeBatchTransfer.cancel(true);
-        if (activeDiscovery != null) {
-            activeDiscovery.close();
-            activeDiscovery = null;
-        }
-        if (activeBatchSnapshot != null && !BatchSliceJobService.ownsAnyJob()) activeBatchSnapshot.cancel(true);
-        if (activeProfileImport != null) activeProfileImport.cancel(true);
-        importExecutor.shutdownNow();
-        mainHandler.removeCallbacksAndMessages(null);
-        if (sliceJobs != null) sliceJobs.close();
-        if (batchSliceJobs != null) batchSliceJobs.close();
-        if (printerTransport != null) printerTransport.close();
-        super.onDestroy();
-    }
-}
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éí×~5×¤èµ©hºÚn¶X§zÍ\XÚØYÙHÛÛK›X˜[YØK˜[ÞNÂ‚š[\Ü[™›ÚY“X[šY™\ÝÂš[\Ü[™›ÚY˜\XÝ]š]NÂš[\Ü[™›ÚY˜\[\X[ÙÎÂš[\Ü[™›ÚY˜\‘X[ÙÎÂš[\Ü[™›ÚY˜ÛÛ[XÝ]š]S›Ý›Ý[™^Ù\[ÛŽÂš[\Ü[™›ÚY˜ÛÛ[œ™\ËÛÛÜ”Ý]S\ÝÂš[\Ü[™›ÚY˜ÛÛ[œ›ØYØ\Ý™XÙZ]™\ŽÂš[\Ü[™›ÚY˜ÛÛ[Û\]NÂš[\Ü[™›ÚY˜ÛÛ[’[[Âš[\Ü[™›ÚY˜ÛÛ[’[[š[\ŽÂš[\Ü[™›ÚY˜ÛÛ[œK”XÚØYÙSX[˜YÙ\ŽÂš[\Ü[™›ÚY™Ü˜\XÜËš]X\Âš[\Ü[™›ÚY™Ü˜\XÜËš]X\˜XÝÜžNÂš[\Ü[™›ÚY™Ü˜\XÜËÛÛÜŽÂš[\Ü[™›ÚY™Ü˜\XÜË™˜]ØX›KÛÛÜ‘˜]ØX›NÂš[\Ü[™›ÚY›™]•\šNÂš[\Ü[™›ÚY›ÜË[™NÂš[\Ü[™›ÚY›ÜËZ[Âš[\Ü[™›ÚY›ÜË’[™\ŽÂš[\Ü[™›ÚY›ÜË“ÛÜ\ŽÂš[\Ü[™›ÚYœ›ÝšY\‹“Ü[˜X›PÛÛ[[œÎÂš[\Ü[™›ÚYšY]Ë‘Ü˜]š]NÂš[\Ü[™›ÚYšY]Ë•šY]ÎÂš[\Ü[™›ÚYšY]Ë•Ú[™ÝÎÂš[\Ü[™›ÚYšY]Ë•Ú[™ÝÒ[œÙ]ÎÂš[\Ü[™›ÚYÚYÙ]]ÛŽÂš[\Ü[™›ÚYÚYÙ]ÚXÚÐ›ÞÂš[\Ü[™›ÚYÚYÙ]‘Y]^Âš[\Ü[™›ÚYÚYÙ]‘œ˜[YS^[Ý]Âš[\Ü[™›ÚYÚYÙ]’Üš^›Û[ØÜ›ÛšY]ÎÂš[\Ü[™›ÚYÚYÙ]’[XYÙUšY]ÎÂš[\Ü[™›ÚYÚYÙ]“[™X\“^[Ý]Âš[\Ü[™›ÚYÚYÙ]”˜Y[Ð]ÛŽÂš[\Ü[™›ÚYÚYÙ]”˜Y[ÑÜ›Ý\Âš[\Ü[™›ÚYÚYÙ]”ØÜ›ÛšY]ÎÂš[\Ü[™›ÚYÚYÙ]”ÙYZÐ˜\ŽÂš[\Ü[™›ÚYÚYÙ]•^šY]ÎÂš[\Ü[™›ÚYÚYÙ]•Ø\ÝÂ‚š[\Ü˜]˜Kš[Ë’SÑ^Ù\[ÛŽÂš[\Ü˜]˜Kš[Ë’[œ]Ý™X[NÂš[\Ü˜]˜K][\œ˜^S\ÝÂš[\Ü˜]˜K][\œ˜^\ÎÂš[\Ü˜]˜K][’\ÚX\Âš[\Ü˜]˜K][“\ÝÂš[\Ü˜]˜K][“ØØ[NÂš[\Ü˜]˜K][“X\Âš[\Ü˜]˜K][˜ÛÛ˜Ý\œ™[Ø[˜Ù[][Û‘^Ù\[ÛŽÂš[\Ü˜]˜K][˜ÛÛ˜Ý\œ™[‘^XÝ]Ü”Ù\šXÙNÂš[\Ü˜]˜K][˜ÛÛ˜Ý\œ™[‘^XÝ]ÜœÎÂš[\Ü˜]˜K][˜ÛÛ˜Ý\œ™[‘]\™NÂš[\Ü˜]˜K][˜ÛÛ˜Ý\œ™[˜]ÛZXË]ÛZXÓÛ™ÎÂ‚‹ÊŠˆ[ÞHŒH\ÚËY›ÝÈÚ[ˆ[\Ü8¡¤ˆ™\\™H8¡¤ˆÛXÙH8¡¤ˆ[œÜXÝ8¡¤ˆ^Üˆ
+‹ÂœX›XÈš[˜[Û\ÜÈXZ[XÝ]š]H^[™ÈXÝ]š]HÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÓÔSˆHNÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÑVÔ•HŽÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÔ“Ò‘PÕÑVÔ•HÎÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÔ“Ò‘PÕÓÔSˆHÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÐUÒÑVÔ•HNÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÓ“ÕQ’PÐUSÓ”ÈHŽÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÔ“Ñ’SHHÎÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÔ“Ñ’SWÑVÔ•HÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÕ’QU×ÑVÔ•HNÂˆš]˜]HÝ]XÈš[˜[[‘TUQTÕÕ’TÕPSVUSÓ—ÑVÔ•HLÂˆš]˜]HÝ]XÈš[˜[Ýš[™ÈSTÔ•QÔ“Ñ’SWÑ’SHHœ›Ùš[\ËÚ[\ÜYX˜[XKšœÛÛˆŽÂˆš]˜]HÝ]XÈš[˜[Ýš[™È•S‘QÔ“Ñ’SWÔ’S•T—ÒQH˜[™YÜ›Ùš[WÜš[\—ÚYŽÂˆš]˜]HÝ]XÈš[˜[Ýš[™È•S‘QÔ“Ñ’SWÒQH˜[™YÜ›Ùš[WÚYŽÂˆš]˜]HÝ]XÈš[˜[[TÕÔ–WÔ‘TÑUHÂˆš]˜]HÝ]XÈš[˜[[TÕÔ–WÔ‘TÕÔ‘HHNÂˆš]˜]HÝ]XÈš[˜[[TÕÔ–WÓUUUSÓˆHŽÂˆš]˜]HÝ]XÈš[˜[Ýš[™È“ÕQ’PÐUSÓ—ÔT“RTÔÒSÓ—Ô“ÓTQH››ÝYšXØ][Û—Ü\›Z\ÜÚ[Û—Ü›Û\YŽÂˆš]˜]HÝ]XÈš[˜[Ýš[™ÈSSQT”ÒU‘WÒS•“×ÔÒÕÓˆHš[[Y\œÚ]™WÚ[›×ÜÚÝÛˆŽÂˆËÈÙY\H™\œÚ[Û™YX\šÙ\ˆÛÈ[ˆ[œÝ[][™XYH\ÛZ\ÜÙYHX\›BˆËÈ›ÝÝ\H[›ÈÝ[™XÙZ]™\ÈHš\œÝÛ\ÚYÝ\YY[[Ù[\›ÂˆËÈšY]ÈÛ˜ÙHY\ˆ\Èš\ÝX[\™]šY]ÈZ[\ÝÛ™K‚ˆš]˜]HÝ]XÈš[˜[Ýš[™ÈSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓˆHš[[Y\œÚ]™WÚ[›×Ý™\œÚ[ÛˆŽÂˆš]˜]HÝ]XÈš[˜[[ÕT”‘S•ÒSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓˆHŽÂˆš]˜]HÝ]XÈš[˜[Ýš[™È’T”ÕÔ•S—ÓÓ“ÐT‘S‘×Õ‘T”ÒSÓˆH™š\œÝÜ[—ÛÛ˜›Ø\™[™×Ý™\œÚ[ÛˆŽÂˆš]˜]HÝ]XÈš[˜[[ÕT”‘S•Ñ’T”ÕÔ•S—ÓÓ“ÐT‘S‘×Õ‘T”ÒSÓˆHNÂˆš]˜]HÝ]XÈš[˜[[‘ÈHÛÛÜ‹œ™ØŠ‹KJNÂˆš]˜]HÝ]XÈš[˜[[ÕT‘PÑHHÛÛÜ‹•ÒUNÂˆš]˜]HÝ]XÈš[˜[[S‘SHÛÛÜ‹œ™ØŠŒÍËŒÍŒÊNÂˆš]˜]HÝ]XÈš[˜[[VHÛÛÜ‹œ™ØŠÌŽKÊNÂˆš]˜]HÝ]XÈš[˜[[UUQHÛÛÜ‹œ™ØŠLL‹LLJNÂˆš]˜]HÝ]XÈš[˜[[S’ÈHÛÛÜ‹œ™ØŠ‹ŒKM
+NÂˆš]˜]HÝ]XÈš[˜[[ÓÓHÛÛÜ‹œ™ØŠM‹LË
+NÂˆš]˜]HÝ]XÈš[˜[[Ô‘QSˆHÛÛÜ‹œ™ØŠËLKLŠNÂˆš]˜]HÝ]XÈš[˜[[SP‘TˆHÛÛÜ‹œ™ØŠNLŒKÌJNÂˆš]˜]HÝ]XÈš[˜[[‘QHÛÛÜ‹œ™ØŠNKŽKM
+NÂˆš]˜]HÝ]XÈš[˜[Ýš[™Ö×HÕQS×Ñ’S’TÒTÈHÂˆ“˜]\˜[H‹“X]H›XÚÈ‹\˜ÝXÈÚ]H‹”ØY™]HÜ˜[™ÙH‹“Y][XÈ‚ˆNÂ‚ˆš]˜]H[™X\“^[Ý]›ÛÝXÝ[ÛœË^Y\’[œÜXÝÜŽÂˆš]˜]H\˜Ó˜]šYØ][Û˜\ˆ\˜Ó˜]šYØ][ÛŽÂˆš]˜]HÙYZÐ˜\ˆ^Y\”ÙYZÎÂˆš]˜]H^šY]È^Y\’[œÜXÝÜ“X™[Âˆš]˜]H^šY]ÈÝ]\Ë]Z[Ë[Ù[Y]K[™[ÜžTÝ[[X\žK[™[ÜžTÝ]\ÑÝÂˆš]˜]H^šY]Èš[\“X\šÙ\•˜[YKX]\šX[X\šÙ\•˜[YK]X[]SX\šÙ\•˜[YKÝ\ÜÓX\šÙ\•˜[YK]SX\šÙ\•˜[YNÂˆš]˜]HšY]Èš[\“X\šÙ\‹X]\šX[X\šÙ\ŽÂˆš]˜]HšY]ÜÜšY]ÈšY]ÜÜÂˆš]˜]HY\Ú[Ù[[Ù[ÛÝ\˜ÙS[Ù[[›[ÙYšYYÛÝ\˜ÙS[Ù[Âˆš]˜]Hš[˜[\œ˜^S\ÝY\Ú[Ù[”\˜[œÙ›Ü›Oˆ\˜[œÙ›Ü›\ÈH™]È\œ˜^S\ÝŠ
+NÂˆš]˜]Hš[˜[\œ˜^S\Ý\šOˆ[Ù[\š\ÈH™]È\œ˜^S\ÝŠ
+NÂˆš]˜]Hš[˜[\œ˜^S\ÝÝš[™Ïˆ[Ù[˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÂˆš]˜]H›Ø][Ù[ØØ[HHY‹[Ù[›Ý][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÎÂˆš]˜]H›ÛÛX[ˆÙ[ÛY]žT™\Z\‘[˜X›YÂˆš]˜]H›ÛÛX[ˆ™\Z\š[™ÑÙ[ÛY]žNÂˆš]˜]HÛXÙ\‹”™\Ý[ÛXÙNÂˆš]˜]H›ÛÛX[ˆÛXÚ[™ÎÂˆš]˜]H›ÛÛX[ˆ˜]ÚÛXÚ[™ÎÂˆš]˜]H˜]ÚÛXÙR›ØÛÛ›Û\‹˜]Ú™\Ý[\Ý˜]ÚÂˆš]˜]Hš[˜[ÛXÙ\‹ÛÛ™šYÈÛÛ™šYÈH™]ÈÛXÙ\‹ÛÛ™šYÊ
+NÂˆš]˜]H[™[ÜžTÝÜ™H[™[ÜžTÝÜ™NÂˆš]˜]H[\ÜY[Ù[ÝÜ™H[\ÜY[Ù[ÝÜ™NÂˆš]˜]H›Ú™XÝÝÜ™H›Ú™XÝÝÜ™NÂˆš]˜]H›Ú™XÝ\ÝÜžTÝÜ™H›Ú™XÝ\ÝÜžTÝÜ™NÂˆš]˜]H[Ù[\ÝÜžTÝÜ™H[Ù[\ÝÜžTÝÜ™NÂˆš]˜]H]TÝÜ™H]TÝÜ™NÂˆš]˜]H[XÝ]™T]R[™^Âˆš]˜]Hš[\’›Ø”ÝÜ™Hš[\’›Ø”ÝÜ™NÂˆš]˜]Hš[\Ü™Y[X[ÝÜ™HÜ™Y[X[ÝÜ™NÂˆš]˜]Hš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™Hš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™NÂˆš]˜]H˜[XS[•˜[œÜÜš[\•˜[œÜÜÂˆš]˜]H˜[XTš[\‘\ØÛÝ™\žK”ØØ[ˆXÝ]™Q\ØÛÝ™\žNÂˆš]˜]Hš[\•˜[œÜÜ\Y˜XÝÝYÙY\Y˜XÝÂˆËÈÙ]Û›HY\ˆ[ˆ[ÝXÚY[™Yš^\™Hš[š\Ú\È[\Ü[™Ëˆ\Ù\‚ˆËÈ[\ÜË™\ÝÜ™Y›Ú™XÝÈ[™[Ù[ÛY]žH]]][ÛœÈÛX\ˆ\È›ÛÙ‹‚ˆš]˜]HÝš[™È\ÝY[Ýš^\™P\ÜÙ]]ÂˆÊŠ‚ˆ
+ˆH™XÛÝ™\™Y\Y˜XÝ™[Û™ÜÈÈH[\œ\Yš[\ˆ˜[œØXÝ[Û‹ˆ
+ˆ›ÝÈÚXÚ]™\ˆ[Ù[H\Ù\ˆØYÈ™^ˆÙY\]Ù\\˜]Hœ›ÛHBˆ
+ˆÝ\œ™[ÛXÙHÛÈ[Ù[[\ÜÜ]HÝÚ]Ú[™ÈØ[››ÝXØÚY[[H\˜\ÙBˆ
+ˆH]šY[˜ÙH™YYY›Üˆ^XÚ]™XÛÝ™\žH™]šY]Ë‚ˆ
+‹Âˆš]˜]Hš[\•˜[œÜÜ\Y˜XÝ™XÛÝ™\™Y\Y˜XÝÂˆš]˜]Hš[\•˜[œÜÜ”š[\•\™Ù]XÝ]™Tš[\•\™Ù]Âˆš]˜]HÝš[™ÈXÝ]™Tš[\’›Ø’YÂˆš]˜]H›ÛÛX[ˆš[XÝ]™NÂˆš]˜]H›ÛÛX[ˆš[\\ÞNÂˆš]˜]Hœ›ØYØ\Ý™XÙZ]™\ˆš[\‘]™[™XÙZ]™\ŽÂˆš]˜]Hœ›ØYØ\Ý™XÙZ]™\ˆÛXÙQ]™[™XÙZ]™\ŽÂˆš]˜]Hœ›ØYØ\Ý™XÙZ]™\ˆ˜]ÚÛXÙQ]™[™XÙZ]™\ŽÂˆš]˜]HÛXÙR›Ø”ÝÜ™HÛXÙR›Ø”ÝÜ™NÂˆš]˜]HÝš[™ÈXÝ]™TÛXÙR›Ø’YÂˆš]˜]HX[ÙÈÛXÙT›ÙÜ™\ÜÑX[ÙÎÂˆš]˜]Hš[[Y[ÝÙY\ØY\ˆÛXÙT›ÙÜ™\ÜÓØY\ŽÂˆš]˜]H˜]ÚÛXÙR›Ø”ÝÜ™H˜]ÚÛXÙR›Ø”ÝÜ™NÂˆš]˜]HÝš[™ÈXÝ]™P˜]ÚÛXÙR›Ø’YÂˆš]˜]H›ÛÛX[ˆ˜]Ú™\ÝÜš[™ÎÂˆš]˜]H›ÛÛX[ˆ[\Ü[™ÎÂˆš]˜]H›ÛÛX[ˆ›Ú™XÝ˜[œÙ™\œš[™ÎÂˆš]˜]H›ÛÛX[ˆ˜]Ú˜[œÙ™\œš[™ÎÂˆš]˜]H›ÛÛX[ˆ›Ùš[R[\Ü[™ÎÂˆš]˜]H›ÛÛX[ˆš\ÝX[^š[™ÎÂˆš]˜]H›ÛÛX[ˆÜ[š[™Ôš]˜]PLTÝYNÂˆš]˜]H›ÛÛX[ˆ[Ù[[™ÎÂˆš]˜]H›ÛÛX[ˆ]R[\Ü[‘›YÚÂˆš]˜]Hš[˜[[™\ˆXZ[’[™\ˆH™]È[™\ŠÛÜ\‹™Ù]XZ[“ÛÜ\Š
+JNÂˆš]˜]Hš[˜[^XÝ]Ü”Ù\šXÙH[\Ü^XÝ]ÜˆH^XÝ]ÜœË›™]ÔÚ[™ÛU™XY^XÝ]ÜŠˆOˆÂˆ™XY™XYH™]È™XY
+‹˜[ÞKZ[\ÜŠNÂˆ™XYœÙ]š[Üš]J™XY““Ô“WÔ’SÔ’UJNÂˆ™]\›ˆ™XYÂˆJNÂˆš]˜]Hš[˜[]ÛZXÓÛ™È[\ÜYÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]H]\™OÏˆXÝ]™R[\ÜÂˆš]˜]HÛ™ÈXÝ]™R[\ÜYÂˆÊŠˆ™]™[HÝ[YØÝ[Y[›ÝšY\ˆœ›ÛH˜\[™ÈHÛ™K[Û›HÙ\ÜÚ[Û‹ˆ
+‹Âˆš]˜]H[›˜X›H[\Ü[Y[Ý][›˜X›NÂˆš]˜]Hš[˜[]ÛZXÓÛ™ÈÙ[ÛY]žT™\Z\’YÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]H]\™OÏˆXÝ]™QÙ[ÛY]žT™\Z\ŽÂˆš]˜]HÛ™ÈXÝ]™QÙ[ÛY]žT™\Z\’YÂˆš]˜]Hš[˜[]ÛZXÓÛ™È›Ú™XÝ˜[œÙ™\’YÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]H]\™OÏˆXÝ]™T›Ú™XÝ˜[œÙ™\ŽÂˆš]˜]HÛ™ÈXÝ]™T›Ú™XÝ˜[œÙ™\’YÂˆš]˜]Hš[˜[]ÛZXÓÛ™È˜]Ú˜[œÙ™\’YÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]H]\™OÏˆXÝ]™P˜]Ú˜[œÙ™\ŽÂˆš]˜]HÛ™ÈXÝ]™P˜]Ú˜[œÙ™\’YÂˆš]˜]H]\™OÏˆXÝ]™Uš\ÝX[^˜][ÛŽÂˆš]˜]Hš[˜[]ÛZXÓÛ™Èš\ÝX[^˜][Û’YÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]HÛ™ÈXÝ]™Uš\ÝX[^˜][Û’YÂˆš]˜]Hž]V×H[™[™Õš\ÝX[^˜][Û”™ÎÂˆš]˜]H]\™OÏˆXÝ]™PÙ\YšXØ]R[œÜXÝ[ÛŽÂˆš]˜]Hš[˜[]ÛZXÓÛ™ÈÙ\YšXØ]R[œÜXÝ[Û’YÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]HÛ™ÈXÝ]™PÙ\YšXØ]R[œÜXÝ[Û’YÂˆš]˜]H]\™OÏˆXÝ]™S[Ù[[™ÎÂˆš]˜]Hš[˜[]ÛZXÓÛ™È[Ù[[™ÒYÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]HÛ™ÈXÝ]™S[Ù[[™ÒYÂˆš]˜]H]\™OÏˆXÝ]™P˜]ÚÛ˜\ÚÝÂˆš]˜]H[›˜X›H[™[™Ó›ÝYšXØ][ÛXÝ[ÛŽÂˆš]˜]HÛXÙR›ØÛÛ›Û\ˆÛXÙR›ØœÎÂˆš]˜]H˜]ÚÛXÙR›ØÛÛ›Û\ˆ˜]ÚÛXÙR›ØœÎÂˆš]˜]H›Ùš[PØ][ÙË”›Ùš[H›Ùš[NÂˆš]˜]H]\™OÏˆXÝ]™T›Ùš[R[\ÜÂˆš]˜]Hš[˜[]ÛZXÓÛ™È›Ùš[R[\ÜYÈH™]È]ÛZXÓÛ™Ê
+NÂˆš]˜]HÛ™ÈXÝ]™T›Ùš[R[\ÜYÂˆš]˜]H[›˜X›H›Ùš[R[\Ü[Y[Ý][›˜X›NÂ‚ˆÝ™\œšYHX›XÈ›ÚYÛÜ™X]J[™HÝ]JHÂˆÝ\\‹›ÛÜ™X]JÝ]JNÂˆÚ[™ÝÈÚ[™ÝÈHÙ]Ú[™ÝÊ
+NÂˆÚ[™ÝËœÙ]Ý]\Ð˜\ÛÛÜŠ‘ÊNÂˆÚ[™ÝËœÙ]˜]šYØ][Û˜\ÛÛÜŠ‘ÊNÂˆÚ[™ÝË™Ù]XÛÜ•šY]Ê
+KœÙ]Þ\Ý[UZUš\ÚXš[]JšY]Ë”ÖTÕSWÕRWÑ“Q×ÓQÒÔÕUT×ÐTˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÓQÒÓU’QÐUSÓ—ÐTŠNÂˆ[™[ÜžTÝÜ™HH™]È[™[ÜžTÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÚ[™[ÜžH‹SÑWÔ’UUJJNÂˆ™]È[™[ÜžT™XÛÛ˜Ú[X][Û”ÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÚ[™[ÜžWÜ™XÛÛ˜Ú[X][Ûˆ‹SÑWÔ’UUJJBˆ™˜Z[Š[™[ÜžTÝÜ™JNÂˆ[\ÜY[Ù[ÝÜ™HH™]È[\ÜY[Ù[ÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÛ[Ù[ÛXœ˜\žH‹SÑWÔ’UUJJNÂˆ›Ú™XÝÝÜ™HH™]È›Ú™XÝÝÜ™JÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJJNÂˆ›Ú™XÝ\ÝÜžTÝÜ™HH™]È›Ú™XÝ\ÝÜžTÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÜ›Ú™XÝÚ\ÝÜžH‹SÑWÔ’UUJJNÂˆ]TÝÜ™HH™]È]TÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÜ]\È‹SÑWÔ’UUJJNÂˆ[Ù[\ÝÜžTÝÜ™HH™]È[Ù[\ÝÜžTÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÛ[Ù[Ú\ÝÜžH‹SÑWÔ’UUJJNÂˆ›Ú™XÝ\˜Ú]™Kœ[™TÝÜ™Y›Ú™XÝÊ™]È˜]˜Kš[Ë‘š[JÙ]š[\Ñ\Š
+Kœ›Ú™XÝÈŠK]TÝÜ™Kœ]\Ê
+JNÂˆ[™S[Ù[ØXÚJ
+NÂˆXÝ]™T]R[™^H]TÝÜ™K˜XÝ]™R[™^
+
+NÂˆš[\’›Ø”ÝÜ™HH™]Èš[\’›Ø”ÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÜš[\—Ú›Øˆ‹SÑWÔ’UUJJNÂˆš[\’›Ø”ÝÜ™K’›Øˆ™XÛÝ™\™Y›ØˆHš[\’›Ø”ÝÜ™Kœ™XÛÝ™\Y\”™\Ý\
+š[\’›Ø”Ù\šXÙK›ÝÛœÐ[žR›ØŠ
+JNÂˆYˆ
+™XÛÝ™\™Y›ØˆOH[	‰ˆ™XÛÝ™\™Y›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]KÓÓTUQˆ	‰ˆ™XÛÝ™\™Y›Ø‹™š[[Y[[HˆŠHÂˆžHÂˆ[™[ÜžT™XÛÛ˜Ú[X][Û”ÝÜ™H™XÛÛ˜Ú[X][ÛˆH™]È[™[ÜžT™XÛÛ˜Ú[X][Û”ÝÜ™JˆÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÚ[™[ÜžWÜ™XÛÛ˜Ú[X][Ûˆ‹SÑWÔ’UUJJNÂˆ™XÛÛ˜Ú[X][Û‹™[œ]Y]YJ™XÛÝ™\™Y›Ø‹š›Ø’Y™XÛÝ™\™Y›Ø‹™š[[Y[ˆ™XÛÝ™\™Y›Ø‹™š[[Y[[K™XÛÝ™\™Y›Ø‹™š[[Y[X[Y]\“[JNÂˆ™XÛÛ˜Ú[X][Û‹™˜Z[Š[™[ÜžTÝÜ™JNÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈH\˜X›H]Y]YH™[XZ[œÈHÛÝ\˜ÙHÙˆ]›ÜˆH™^][˜Ú‚ˆBˆBˆYˆ
+™XÛÝ™\™Y›ØˆOH[	‰ˆ™XÛÝ™\™Y›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆžHÂˆ™XÛÝ™\™Y\Y˜XÝH™XÛÝ™\”š[\\Y˜XÝ
+™XÛÝ™\™Y›ØŠNÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈHZ\ÜÚ[™ÈÜˆ]šXÝY\Y˜XÝ™]™\ˆ™XÛÛY\ÈH™X\ÛÛˆÂˆËÈ™]žHHš[\ˆ›ØŽÈHÚXÚÜÚ[™[XZ[œÈ˜Z[XÛÜÙY‚ˆBˆBˆÜ™Y[X[ÝÜ™HH™]Èš[\Ü™Y[X[ÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÜš[\ˆ‹SÑWÔ’UUJJNÂˆš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™HH™]Èš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™JˆÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÝš\ÝX[^˜][Ûˆ‹SÑWÔ’UUJJNÂˆÛXÙR›Ø”ÝÜ™HH™]ÈÛXÙR›Ø”ÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWÜÛXÙWÚ›Øˆ‹SÑWÔ’UUJJNÂˆÛXÙR›Ø”ÝÜ™K’›Øˆ^\Ý[™ÔÛXÙHHÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆ›ÛÛX[ˆ]™TÛXÙHH^\Ý[™ÔÛXÙHOH[	‰ˆÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ^\Ý[™ÔÛXÙKš›Ø’Y
+NÂˆÛXÙR›Ø”ÝÜ™K’›Øˆ™XÛÝ™\™YÛXÙHHÛXÙR›Ø”ÝÜ™Kœ™XÛÝ™\Y\”™\Ý\
+]™TÛXÙJNÂˆYˆ
+™XÛÝ™\™YÛXÙHOH[	‰ˆ
+™XÛÝ™\™YÛXÙKœÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”UQUQQˆ™XÛÝ™\™YÛXÙKœÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”•S“’S‘ÊH	‰ˆÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ™XÛÝ™\™YÛXÙKš›Ø’Y
+JHÂˆXÝ]™TÛXÙR›Ø’YH™XÛÝ™\™YÛXÙKš›Ø’YÂˆÛXÚ[™ÈHYNÂˆBˆ˜]ÚÛXÙR›Ø”ÝÜ™HH™]È˜]ÚÛXÙR›Ø”ÝÜ™JÙ]Ú\™Y™Y™\™[˜Ù\Ê˜[ÞWØ˜]ÚÜÛXÙWÚ›Øˆ‹SÑWÔ’UUJJNÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K’›Øˆ^\Ý[™Ð˜]ÚH˜]ÚÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆ›ÛÛX[ˆ]™P˜]ÚH^\Ý[™Ð˜]ÚOH[	‰ˆ˜]ÚÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ^\Ý[™Ð˜]Úš›Ø’Y
+NÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K’›Øˆ™XÛÝ™\™Y˜]ÚH˜]ÚÛXÙR›Ø”ÝÜ™Kœ™XÛÝ™\Y\”™\Ý\
+]™P˜]Ú
+NÂˆYˆ
+™XÛÝ™\™Y˜]ÚOH[	‰ˆ
+™XÛÝ™\™Y˜]ÚœÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”UQUQQˆ™XÛÝ™\™Y˜]ÚœÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”•S“’S‘ÊH	‰ˆ˜]ÚÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ™XÛÝ™\™Y˜]Úš›Ø’Y
+JHÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH™XÛÝ™\™Y˜]Úš›Ø’YÂˆ˜]ÚÛXÚ[™ÈHYNÂˆBˆžHÂˆ[™›ÚY˜ÛÛ[”Ú\™Y™Y™\™[˜Ù\È›Ùš[T™Y™\™[˜Ù\ÈHÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJNÂˆÝš[™È[™Yš[\’YH›Ùš[T™Y™\™[˜Ù\Ë™Ù]Ýš[™Ê•S‘QÔ“Ñ’SWÔ’S•T—ÒQ˜˜[XK˜LK[Z[šHŠNÂˆÝš[™È[™Y›Ùš[RYH›Ùš[T™Y™\™[˜Ù\Ë™Ù]Ýš[™Ê•S‘QÔ“Ñ’SWÒQˆŠNÂˆ›Ùš[HH[™Y›Ùš[RYš\Ñ[\J
+BˆÈ›Ùš[PØ][ÙË›ØY[š]X[žTš[\’Y
+Ù]\ÜÙ]Ê
+K[™Yš[\’Y
+Bˆˆ›Ùš[PØ][ÙË›ØY[›š[™ÐžRY
+Ù]\ÜÙ]Ê
+K[™Y›Ùš[RY
+NÂˆ˜]˜Kš[Ë‘š[H[\ÜY›Ùš[Qš[HH™]È˜]˜Kš[Ë‘š[JÙ]š[\Ñ\Š
+KSTÔ•QÔ“Ñ’SWÑ’SJNÂˆYˆ
+[\ÜY›Ùš[Qš[Kš\Ñš[J
+JHÂˆžHÂˆžH
+[œ]Ý™X[H[œ]H™]È˜]˜Kš[Ë‘š[R[œ]Ý™X[J[\ÜY›Ùš[Qš[JJHÂˆ›Ùš[HH›Ùš[PØ][ÙË›ØY
+[œ]
+NÂˆBˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈH[XYÙYš]˜]HÝ™\œšYH]\Ý˜[˜XÚÈÈBˆËÈXÚØYÙY›Ùš[H˜]\ˆ[ˆX]š[™È[ˆ[‹X\YYˆËÈ™XÚ\H[ˆY[[ÜžK‚ˆBˆBˆ›Ùš[K˜\UÊÛÛ™šYÊNÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈÙY\HÛÛœÙ\˜]]™H[‹XÛÙHY˜][ÈYˆHXÚØYÙY›Ùš[H\È[˜]˜Z[X›K‚ˆBˆ›Ú™XÝÝÜ™Kœ™\ÝÜ™T™XÚ\JÛÛ™šYÊNÂˆÛXÙ\‘[™Ú[™H[™Ú[™HHZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÑSP“QˆÈ™]È˜]]™TÛXÙ\‘[™Ú[™JÙ]ØXÚQ\Š
+KZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÕ‘T’Q’QQ
+Bˆˆ™]ÈYØXÞSÙ™›[™Q[™Ú[™J
+NÂˆÛXÙR›ØœÈH™]ÈÛXÙR›ØÛÛ›Û\Š[™Ú[™JNÂˆ˜]ÚÛXÙR›ØœÈH™]È˜]ÚÛXÙR›ØÛÛ›Û\Š[™Ú[™JNÂˆZ[ZJ
+NÂˆ™YÚ\Ý\”š[\‘]™[Ê
+NÂˆ™YÚ\Ý\”ÛXÙQ]™[Ê
+NÂˆ™YÚ\Ý\˜]ÚÛXÙQ]™[Ê
+NÂˆ™Yœ™\Úš[\•ZJ
+NÂˆ™Yœ™\ÚÛXÙUZJ
+NÂˆ™Yœ™\Ú˜]ÚÛXÙUZJ
+NÂˆ\šH[˜ÛÛZ[™ÈH[Ù[\šQœ›ÛR[[
+Ù][[
+
+JNÂˆYˆ
+[˜ÛÛZ[™ÈOH[
+HÂˆ™[Y[X™\•\šT\›Z\ÜÚ[ÛŠ[˜ÛÛZ[™ËÙ][[
+
+K™Ù]›YÜÊ
+JNÂˆØY\šJ[˜ÛÛZ[™Ë˜[ÙJNÂˆH[ÙHÂˆ]TÝÜ™K”]HXÝ]™T]HH]TÝÜ™K˜XÝ]™T]J
+NÂˆYˆ
+XXÝ]™T]K\š\Ëš\Ñ[\J
+JHÂˆ™\ÝÜ™T]PÚXÚÜÚ[
+XÝ]™T]JNÂˆØY\š\ÊXÝ]™T]K\š\ËXÝ]™T]K›˜[Y\ËYJNÂˆH[ÙHÂˆ›Ú™XÝÝÜ™K”Ø]™Y›Ú™XÝØ]™YH›Ú™XÝÝÜ™KœØ]™Y›Ú™XÝ
+
+NÂˆYˆ
+Ø]™YOH[
+HÂˆØY\š\ÊØ]™Y\š\ËØ]™Y›˜[Y\ËYJNÂˆH[ÙHÂˆËÈÚ]™HHœ™\Ú[œÝ[[ˆ[[YYX][H[œÜXÝX›HÑ[Ù[‚ˆËÈÝÛ™\ˆš\ÝX[\™]šY]ÈZ[ÈYHÝ\YY™YXYÚXÂˆËÈ\ÚYÛˆ›ÝYÚ[ˆÜ[Û˜[Ø][ÙÈÝ™\›^NÈÜ™[˜\žBˆËÈZ[È™]Z[ˆH[ÞKX]]Ü™YÚÝØØ\ÙKˆ›Ý]ÂˆËÈX]\šX[^™H›ÝYÚHØ[YHÙ™›[™HØXÚH›Ý[™\žK‚ˆ[Ù[Ø][ÙË‘[žHÝÛ™\”Ý\\Hš]˜]SÝÛ™\”Ý\\[Ù[
+
+NÂˆYˆ
+ÝÛ™\”Ý\\OH[
+HØYÚÝØØ\ÙS[Ù[
+
+NÂˆ[ÙHØY\ÜÙ][Ù[
+ÝÛ™\”Ý\\˜\ÜÙ]]ÝÛ™\”Ý\\›˜[YJNÂˆÜ[š[™Ôš]˜]PLTÝYHH\Ð[™YLT™Y™\™[˜ÙJ
+NÂˆËÈHÝ\YY[™Ù™ˆ\È[ˆ[[Y\œÚ]™H™\Ù[][Ûˆš\œÝˆËÈ›ÝY\™[HHÛXÙ\ˆØ[˜\ËˆXZÙH]^\šY[˜ÙHš\ÚX›BˆËÈÛ˜ÙHÛˆHÙ[Z[™[Hœ™\Ú[œÝ[ÜˆÛ˜ÙHY\ˆBˆËÈš\ÝX[\™]šY]È\Ü˜YNÈÝXœÙ\]Y[][˜Ú\È™]\›‚ˆËÈ\™XÝHÈH›Ú™XÝÛÈ\È™]™\ˆ™XÛÛY\ÈBˆËÈ›ØÚÚ[™ÈÙ[ÛÛYHØÜ™Y[‹ˆHÛ›ÛÛX[ˆ\È™]Z[™YˆËÈ›Üˆ˜XÚÝØ\™ÈÛÛ\]Xš[]H]H™\œÚ[Û™YX\šÙ\‚ˆËÈXZÙ\ÈH\Ü˜YH]^XÚ]‚ˆ[[›Õ™\œÚ[ÛˆHÂˆžHÂˆ[›Õ™\œÚ[ÛˆHÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJBˆ™Ù][
+SSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓ‹
+NÂˆHØ]Ú
+Û\ÜÐØ\Ý^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈH™\žHX\›HZ[\ÙYÛ›HSSQT”ÒU‘WÒS•“×ÔÒÕÓŽÂˆËÈ™X]]YØXÞH™Y™\™[˜ÙHÚ\H\È™\œÚ[Ûˆ™\›Ë‚ˆBˆYˆ
+[›Õ™\œÚ[ÛˆÕT”‘S•ÒSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓˆ	‰ˆYš\œÝ[“Û˜›Ø\™[™Ô[™[™Ê
+JHÂˆÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJK™Y]
+
+Bˆœ][
+SSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓ‹ÕT”‘S•ÒSSQT”ÒU‘WÒS•“×Õ‘T”ÒSÓŠBˆœ]›ÛÛX[ŠSSQT”ÒU‘WÒS•“×ÔÒÕÓ‹YJBˆ˜\J
+NÂˆXZ[’[™\‹œÜÝ[^YY
+
+
+HOˆÂˆYˆ
+\Ñš[š\Ú[™Ê
+H[Ù[OH[
+H™]\›ŽÂˆËÈHš]˜]Hš\ÝX[\™]šY]ÈZ[\ÈYX[ÂˆËÈXZÙHHÝ\YYLHZ[šHÝYH\ØÛÝ™\˜X›BˆËÈ[[YYX][Nˆ[™ÛˆHXXÚ[™K™XÙY[™ÂˆËÈ]\È[™ØØ[H›ÜÈš\œÝˆHÝ\YYˆËÈ™YXYÚXËØ›ÞÜ\ÈØ][ÙÈ™[XZ[œÈ]˜Z[X›BˆËÈ›ÝYÚH[Ù[ÛÜšÜÜXÙH[™]\Ë‚ˆYˆ
+\Ð[™YLT™Y™\™[˜ÙJ
+JHÂˆÜ[š[™Ôš]˜]PLTÝYHH˜[ÙNÂˆÚÝÔš[\”ÝYJ
+NÂˆBˆ[ÙHÚÝÒ[[Y\œÚ]™UšY]Ê
+NÂˆKÍL
+NÂˆBˆBˆBˆBˆYˆ
+[˜ÛÛZ[™ÈOH[
+HØÚY[Qš\œÝ[“Û˜›Ø\™[™Ê
+NÂˆB‚ˆÊŠ‚ˆ
+ˆ\ÚÈÛ›HÚ[ˆH\Ù\ˆÝ\ÈH˜XÚÙÜ›Ý[™XØ\X›H›Ø‹ˆ™\]Y\Ý[™È\Âˆ
+ˆÛˆ][˜ÚØœØÝ\™\ÈHš\œÝ\[ˆÑÝYH[™Ú]™\È›ÈÛÛ^›ÜˆÚBˆ
+ˆ[ÞH™YYÈ›ÝYšXØ][ÛœËˆH›ØˆÝ[Ý\ÈYˆH\Ù\ˆXÛ[™\Ë‚ˆ
+‹Âˆš]˜]H›ÚY™\]Y\Ý›ÝYšXØ][Û”\›Z\ÜÚ[Û’Y“™YYY
+[›˜X›HY\”\›Z\ÜÚ[ÛŠHÂˆYˆ
+Y\”\›Z\ÜÚ[ÛˆOH[
+H™]\›ŽÂˆYˆ
+Z[•‘T”ÒSÓ‹”Ñ×ÒS•ÌÂˆÚXÚÔÙ[”\›Z\ÜÚ[ÛŠX[šY™\Ýœ\›Z\ÜÚ[Û‹”ÔÕÓ“ÕQ’PÐUSÓ”ÊHOHXÚØYÙSX[˜YÙ\‹”T“RTÔÒSÓ—ÑÔS•QˆÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJK™Ù]›ÛÛX[Š“ÕQ’PÐUSÓ—ÔT“RTÔÒSÓ—Ô“ÓTQ˜[ÙJJHÂˆY\”\›Z\ÜÚ[Û‹œ[Š
+NÂˆ™]\›ŽÂˆBˆ[™[™Ó›ÝYšXØ][ÛXÝ[ÛˆHY\”\›Z\ÜÚ[ÛŽÂˆÙ]™Y™\™[˜Ù\ÊSÑWÔ’UUJK™Y]
+
+Kœ]›ÛÛX[Š“ÕQ’PÐUSÓ—ÔT“RTÔÒSÓ—Ô“ÓTQYJK˜\J
+NÂˆ™\]Y\Ý\›Z\ÜÚ[ÛœÊ™]ÈÝš[™Ö×^ÓX[šY™\Ýœ\›Z\ÜÚ[Û‹”ÔÕÓ“ÕQ’PÐUSÓ”ßK‘TUQTÕÓ“ÕQ’PÐUSÓ”ÊNÂˆB‚ˆÝ™\œšYHX›XÈ›ÚYÛ”™\]Y\Ý\›Z\ÜÚ[ÛœÔ™\Ý[
+[™\]Y\ÝÛÙKÝš[™Ö×H\›Z\ÜÚ[ÛœË[×HÜ˜[™\Ý[ÊHÂˆÝ\\‹›Û”™\]Y\Ý\›Z\ÜÚ[ÛœÔ™\Ý[
+™\]Y\ÝÛÙK\›Z\ÜÚ[ÛœËÜ˜[™\Ý[ÊNÂˆYˆ
+™\]Y\ÝÛÙHOH‘TUQTÕÓ“ÕQ’PÐUSÓ”ÊHÂˆ[›˜X›HY\”\›Z\ÜÚ[ÛˆH[™[™Ó›ÝYšXØ][ÛXÝ[ÛŽÂˆ[™[™Ó›ÝYšXØ][ÛXÝ[ÛˆH[ÂˆYˆ
+Ü˜[™\Ý[ÈOH[Ü˜[™\Ý[Ë›[™ÝOHˆÜ˜[™\Ý[ÖÌHOHXÚØYÙSX[˜YÙ\‹”T“RTÔÒSÓ—ÑÔS•Q
+HÂˆØ\Ý›XZÙU^
+\Ë“›ÝYšXØ][ÛœÈ\™HÙ™ŽÈ›Øˆ›ÙÜ™\ÜÈ™[XZ[œÈ]˜Z[X›H[œÚYH[ÞH‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆYˆ
+Y\”\›Z\ÜÚ[ÛˆOH[
+HXZ[’[™\‹œÜÝ
+Y\”\›Z\ÜÚ[ÛŠNÂˆBˆB‚ˆÝ™\œšYH›ÝXÝY›ÚYÛ“™]Ò[[
+[[[[
+HÂˆÝ\\‹›Û“™]Ò[[
+[[
+NÂˆÙ][[
+[[
+NÂˆ\šH[˜ÛÛZ[™ÈH[Ù[\šQœ›ÛR[[
+[[
+NÂˆYˆ
+[˜ÛÛZ[™ÈOH[
+H™]\›ŽÂˆ™[Y[X™\•\šT\›Z\ÜÚ[ÛŠ[˜ÛÛZ[™Ë[[™Ù]›YÜÊ
+JNÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆ™Y›Ü™HÜ[š[™È[›Ý\ˆ[Ù[‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆØY\šJ[˜ÛÛZ[™Ë˜[ÙJNÂˆB‚ˆÊŠˆXØÙ\›Ý›Ü›X[š[HÜ[œÈ[™[™›ÚYÚ\™K\ÚY][™Ù™œËˆ
+‹ÂˆÝ\™\ÜÕØ\›š[™ÜÊ™\™XØ][ÛˆŠBˆÝ]XÈ\šH[Ù[\šQœ›ÛR[[
+[[[[
+HÂˆYˆ
+[[OH[
+H™]\›ˆ[ÂˆYˆ
+[[™Ù]]J
+HOH[
+H™]\›ˆ[[™Ù]]J
+NÂˆØš™XÝÝ™X[HH[[™Ù]\˜Ù[X›Q^˜J[[‘VWÔÕ‘PSJNÂˆ™]\›ˆÝ™X[H[œÝ[˜Ù[Ùˆ\šHÈ
+\šJHÝ™X[Hˆ[ÂˆB‚ˆš]˜]H›ÚY™YÚ\Ý\”š[\‘]™[Ê
+HÂˆš[\‘]™[™XÙZ]™\ˆH™]Èœ›ØYØ\Ý™XÙZ]™\Š
+HÂˆÝ™\œšYHX›XÈ›ÚYÛ”™XÙZ]™J[™›ÚY˜ÛÛ[ÛÛ^ÛÛ^[[[[
+HÂˆ[™Tš[\‘]™[
+[[
+NÂˆBˆNÂˆ[[š[\ˆš[\ˆH™]È[[š[\Šš[\’›Ø”Ù\šXÙKPÕSÓ—ÔÕUTÊNÂˆYˆ
+Z[•‘T”ÒSÓ‹”Ñ×ÒS•HÌÊH™YÚ\Ý\”™XÙZ]™\Šš[\‘]™[™XÙZ]™\‹š[\‹‘PÑRU‘T—Ó“ÕÑVÔ•Q
+NÂˆ[ÙH™YÚ\Ý\”™XÙZ]™\Šš[\‘]™[™XÙZ]™\‹š[\ŠNÂˆB‚ˆš]˜]H›ÚY™YÚ\Ý\”ÛXÙQ]™[Ê
+HÂˆÛXÙQ]™[™XÙZ]™\ˆH™]Èœ›ØYØ\Ý™XÙZ]™\Š
+HÂˆÝ™\œšYHX›XÈ›ÚYÛ”™XÙZ]™J[™›ÚY˜ÛÛ[ÛÛ^ÛÛ^[[[[
+HÂˆ[™TÛXÙQ]™[
+[[
+NÂˆBˆNÂˆ[[š[\ˆš[\ˆH™]È[[š[\ŠÛXÙR›Ø”Ù\šXÙKPÕSÓ—ÔÕUTÊNÂˆYˆ
+Z[•‘T”ÒSÓ‹”Ñ×ÒS•HÌÊH™YÚ\Ý\”™XÙZ]™\ŠÛXÙQ]™[™XÙZ]™\‹š[\‹‘PÑRU‘T—Ó“ÕÑVÔ•Q
+NÂˆ[ÙH™YÚ\Ý\”™XÙZ]™\ŠÛXÙQ]™[™XÙZ]™\‹š[\ŠNÂˆB‚ˆš]˜]H›ÚY™YÚ\Ý\˜]ÚÛXÙQ]™[Ê
+HÂˆ˜]ÚÛXÙQ]™[™XÙZ]™\ˆH™]Èœ›ØYØ\Ý™XÙZ]™\Š
+HÂˆÝ™\œšYHX›XÈ›ÚYÛ”™XÙZ]™J[™›ÚY˜ÛÛ[ÛÛ^ÛÛ^[[[[
+HÂˆ[™P˜]ÚÛXÙQ]™[
+[[
+NÂˆBˆNÂˆ[[š[\ˆš[\ˆH™]È[[š[\Š˜]ÚÛXÙR›Ø”Ù\šXÙKPÕSÓ—ÔÕUTÊNÂˆYˆ
+Z[•‘T”ÒSÓ‹”Ñ×ÒS•HÌÊH™YÚ\Ý\”™XÙZ]™\Š˜]ÚÛXÙQ]™[™XÙZ]™\‹š[\‹‘PÑRU‘T—Ó“ÕÑVÔ•Q
+NÂˆ[ÙH™YÚ\Ý\”™XÙZ]™\Š˜]ÚÛXÙQ]™[™XÙZ]™\‹š[\ŠNÂˆB‚ˆš]˜]H›ÚY[™P˜]ÚÛXÙQ]™[
+[[[[
+HÂˆYˆ
+[[OH[˜]ÚÛXÙR›Ø”ÝÜ™HOH[Ý]\ÈOH[
+H™]\›ŽÂˆÝš[™È›Ø’YH[[™Ù]Ýš[™Ñ^˜J˜]ÚÛXÙR›Ø”Ù\šXÙK‘VWÒ“Ð—ÒQ
+NÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K’›ØˆÝ\œ™[H˜]ÚÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+Ý\œ™[OH[›Ø’YOH[Z›Ø’Y™\]X[ÊÝ\œ™[š›Ø’Y
+JH™]\›ŽÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]HÝ]NÂˆžHÈÝ]HH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K˜[YSÙŠ[[™Ù]Ýš[™Ñ^˜J˜]ÚÛXÙR›Ø”Ù\šXÙK‘VWÔÕUJJNÈBˆØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈ™]\›ŽÈBˆ[›ÙÜ™\ÜÈH[[™Ù][^˜J˜]ÚÛXÙR›Ø”Ù\šXÙK‘VWÔ“ÑÔ‘TÔËÝ\œ™[œ›ÙÜ™\ÜÊNÂˆÝš[™È\ÙHH[[™Ù]Ýš[™Ñ^˜J˜]ÚÛXÙR›Ø”Ù\šXÙK‘VWÔTÑJNÂˆÝš[™È]Z[H[[™Ù]Ýš[™Ñ^˜J˜]ÚÛXÙR›Ø”Ù\šXÙK‘VWÑURS
+NÂˆYˆ
+Ý]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”UQUQQÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”•S“’S‘ÊHÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH›Ø’YÂˆ˜]ÚÛXÚ[™ÈHYNÂˆÝ]\ËœÙ]^
+˜]Ú0­Èˆ
+È
+›ÙÜ™\ÜÈÈÛÜšÚ[™Èˆˆ›ÙÜ™\ÜÈ
+È‰HŠBˆ
+Èˆ0­Èˆ
+È
+\ÙHOH[\ÙK›[™Ý
+
+HOHÈœ›ØÙ\ÜÚ[™Èˆˆ\ÙJJNÂˆH[ÙHYˆ
+Ý]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]KÓÓTUQ
+HÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+˜]Ú0­È˜[Y][™È]H™\Ý[ø )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆ™\ÝÜ™Q›Ü™YÜ›Ý[™˜]Ú\Þ[˜ÊYJNÂˆ™]\›ŽÂˆH[ÙHYˆ
+Ý]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]KÐSÑSQ
+HÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È˜]ÚÛXÙHØ[˜Ù[YŠNÂˆH[ÙHYˆ
+Ý]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È™]š[Ý\È˜]Ú™YYÈ™]šY]ÈŠNÂˆH[ÙHYˆ
+Ý]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K‘RSQ
+HÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È˜]ÚÛXÙH˜Z[YŠNÂˆYˆ
+]Z[OH[	‰ˆ]Z[›[™Ý
+
+Hˆ
+BˆØ\Ý›XZÙU^
+\Ë]Z[Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚY™Yœ™\Ú˜]ÚÛXÙUZJ
+HÂˆYˆ
+˜]ÚÛXÙR›Ø”ÝÜ™HOH[Ý]\ÈOH[
+H™]\›ŽÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K’›Øˆ›ØˆH˜]ÚÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+›ØˆOH[
+H™]\›ŽÂˆYˆ
+
+›Ø‹œÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”UQUQQ›Ø‹œÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”•S“’S‘ÊBˆ	‰ˆ˜]ÚÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ›Ø‹š›Ø’Y
+JHÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH›Ø‹š›Ø’YÂˆ˜]ÚÛXÚ[™ÈHYNÂˆÝ]\ËœÙ]^
+˜]Ú0­Èˆ
+È
+›Ø‹œ›ÙÜ™\ÜÈˆÈ›Ø‹œ›ÙÜ™\ÜÈ
+È‰H0­ÈˆˆˆŠH
+È›Ø‹œ\ÙJNÂˆH[ÙHYˆ
+›Ø‹œÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]KÓÓTUQ	‰ˆ[Ù[OH[	‰ˆ\Ý˜]ÚOH[
+HÂˆ™\ÝÜ™Q›Ü™YÜ›Ý[™˜]Ú\Þ[˜Ê˜[ÙJNÂˆH[ÙHYˆ
+›Ø‹œÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q	‰ˆX˜]ÚÛXÚ[™ÊHÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È™]š[Ý\È˜]Ú™YYÈ™]šY]ÈŠNÂˆBˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆÊŠˆ™ZY˜]HHÛÛ\]Y\˜X›H˜]ÚÛ›HÚ[ˆ]È›Ú™XÝš[™Ù\œš[Ý[X]Ú\Ëˆ
+‹Âˆš]˜]H›ÚY™\ÝÜ™Q›Ü™YÜ›Ý[™˜]Ú\Þ[˜Ê›ÛÛX[ˆÚÝÔÝ[[X\žJHÂˆYˆ
+˜]Ú™\ÝÜš[™È˜]ÚÛXÙR›Ø”ÝÜ™HOH[[Ù[OH[
+H™]\›ŽÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K’›Øˆ›ØˆH˜]ÚÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+›ØˆOH[›Ø‹œÝ]HOH˜]ÚÛXÙR›Ø”ÝÜ™K”Ý]KÓÓTUQ
+H™]\›ŽÂˆš[˜[Ýš[™È›Ø’YH›Ø‹š›Ø’YÂˆš[˜[\œ˜^S\Ý]TÝÜ™K”]OˆÝ\œ™[]\ÈH]TÝÜ™Kœ]\Ê
+NÂˆš[˜[ÛXÙ\‹ÛÛ™šYÈÝ\œ™[ÛÛ™šYÈHÛÛ™šYË˜ÛÜJ
+NÂˆš[˜[Ýš[™ÈÝ\œ™[›Ú™XÝ\ÚÂˆžHÈÝ\œ™[›Ú™XÝ\ÚH˜]ÚÛXÙT™\]Y\ÝÝÜ™K™š[™Ù\œš[
+Ý\œ™[]\ËÝ\œ™[ÛÛ™šYÊNÈBˆØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÈ™]\›ŽÈBˆ˜]Ú™\ÝÜš[™ÈHYNÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžHÂˆ˜]ÚÛXÙT™\]Y\ÝÝÜ™K”™\]Y\Ý™\]Y\ÝH˜]ÚÛXÙT™\]Y\ÝÝÜ™Kœ™XY
+Ù]š[\Ñ\Š
+K›Ø’Y
+NÂˆYˆ
+\™\]Y\Ýœ›Ú™XÝÚLM‹™\]X[ÒYÛ›Ü™PØ\ÙJÝ\œ™[›Ú™XÝ\Ú
+H\Ø[YPÛÛ™šYÊ™\]Y\Ý˜ÛÛ™šYËÝ\œ™[ÛÛ™šYÊJBˆ›ÝÈ™]ÈSÑ^Ù\[ÛŠ•HÛÛ\]Y˜]Ú™[Û™ÜÈÈHY™™\™[›Ú™XÝÜˆ™XÚ\HŠNÂˆ˜]ÚÛXÙR›ØÛÛ›Û\‹˜]Ú™\Ý[™\ÝÜ™YH˜]ÚÛXÙT™\Ý[ÝÜ™Kœ™XY
+Ù]š[\Ñ\Š
+KÙ]ÛÛ[™\ÛÛ™\Š
+K™\]Y\Ýˆ˜]ÚÛXÙT™\]Y\ÝÝÜ™Kš›Ø‘\™XÝÜžJÙ]š[\Ñ\Š
+K›Ø’Y
+JNÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆ˜]Ú™\ÝÜš[™ÈH˜[ÙNÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[ÂˆYˆ
+Z›Ø’Y™\]X[ÊXÝ]™P˜]Ú›Ø’YÜ‘[\J
+JH\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ\Ý˜]ÚH™\ÝÜ™YÂˆš[™˜]Ú™\Ý[
+™\ÝÜ™Y
+NÂˆÝ]\ËœÙ]^
+’[œÜXÝ0­Èˆ
+È™\ÝÜ™Yœ]\ËœÚ^™J
+H
+Èˆ]\È™XYHŠNÂˆ]Z[ËœÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰Y]\È0­È	Y^Y\œÈ0­È	KŒˆ[Hš[[Y[0­È	\È‹ˆ™\ÝÜ™Yœ]\ËœÚ^™J
+K™\ÝÜ™YÝ[^Y\œÊ
+K™\ÝÜ™YÝ[š[[Y[[J
+Kˆ™\ÝÜ™YÝ[š[[YTÙXÛÛ™Ê
+HˆˆÈ›Ü›X]\˜][ÛŠ™\ÝÜ™YÝ[š[[YTÙXÛÛ™Ê
+JHˆ[YH[™[™ÈŠJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆYˆ
+ÚÝÔÝ[[X\žJHÚÝÐ˜]ÚÝ[[X\žJ™\ÝÜ™Y
+NÂˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆ˜]Ú™\ÝÜš[™ÈH˜[ÙNÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[ÂˆYˆ
+\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆÝ]\ËœÙ]^
+”™\\™H0­ÈÛÛ\]Y˜]Ú™YYÈ™]šY]ÈŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë˜]Ú™\Ý[ÛÝ[›Ý™H™]˜[Y]Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]HÝš[™ÈXÝ]™P˜]Ú›Ø’YÜ‘[\J
+HÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K’›Øˆ›ØˆH˜]ÚÛXÙR›Ø”ÝÜ™HOH[È[ˆ˜]ÚÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆ™]\›ˆ›ØˆOH[Èˆˆˆ›Ø‹š›Ø’YÂˆB‚ˆš]˜]H›ÚYš[™˜]Ú™\Ý[
+˜]ÚÛXÙR›ØÛÛ›Û\‹˜]Ú™\Ý[™\Ý[
+HÂˆYˆ
+™\Ý[OH[
+H™]\›ŽÂˆ›Üˆ
+˜]ÚÛXÙR›ØÛÛ›Û\‹”]T™\Ý[]Hˆ™\Ý[œ]\ÊHÂˆYˆ
+]Kœ]Kš[™^OHXÝ]™T]R[™^
+HÛÛ[YNÂˆ[Ù[H]K›[Ù[ÂˆÛXÙHH]KœÛXÙNÂˆÝYÙY\Y˜XÝH]K˜\Y˜XÝÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]™\Ý[
+ÛXÙJNÂˆ[Ù[Y]KœÙ]^
+šY]ÜÜ\Ü^S˜[YJ[Ù[™\Ü^S˜[YJH
+È—ˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆ™]\›ŽÂˆBˆB‚ˆš]˜]H›ÚY[™TÛXÙQ]™[
+[[[[
+HÂˆYˆ
+[[OH[ÛXÙR›Ø”ÝÜ™HOH[
+H™]\›ŽÂˆÝš[™È›Ø’YH[[™Ù]Ýš[™Ñ^˜JÛXÙR›Ø”Ù\šXÙK‘VWÒ“Ð—ÒQ
+NÂˆÛXÙR›Ø”ÝÜ™K’›ØˆÝ\œ™[HÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+Ý\œ™[OH[›Ø’YOH[Z›Ø’Y™\]X[ÊÝ\œ™[š›Ø’Y
+JH™]\›ŽÂˆÛXÙR›Ø”ÝÜ™K”Ý]HÝ]NÂˆžHÈÝ]HHÛXÙR›Ø”ÝÜ™K”Ý]K˜[YSÙŠ[[™Ù]Ýš[™Ñ^˜JÛXÙR›Ø”Ù\šXÙK‘VWÔÕUJJNÈBˆØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈ™]\›ŽÈBˆ[›ÙÜ™\ÜÈH[[™Ù][^˜JÛXÙR›Ø”Ù\šXÙK‘VWÔ“ÑÔ‘TÔËÝ\œ™[œ›ÙÜ™\ÜÊNÂˆÝš[™È\ÙHH[[™Ù]Ýš[™Ñ^˜JÛXÙR›Ø”Ù\šXÙK‘VWÔTÑJNÂˆÝš[™È]Z[H[[™Ù]Ýš[™Ñ^˜JÛXÙR›Ø”Ù\šXÙK‘VWÑURS
+NÂˆYˆ
+Ý]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”UQUQQÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”•S“’S‘ÊHÂˆXÝ]™TÛXÙR›Ø’YH›Ø’YÂˆÛXÚ[™ÈHYNÂˆÝ]\ËœÙ]^
+”ÛXÙH0­Èˆ
+È
+›ÙÜ™\ÜÈÈÛÜšÚ[™Èˆˆ›ÙÜ™\ÜÈ
+È‰HŠBˆ
+Èˆ0­Èˆ
+È
+\ÙHOH[\ÙK›[™Ý
+
+HOHÈœ›ØÙ\ÜÚ[™Èˆˆ\ÙJJNÂˆÚÝÔÛXÙT›ÙÜ™\ÜÓØY\Š›ÙÜ™\ÜË\ÙJNÂˆH[ÙHYˆ
+Ý]HOHÛXÙR›Ø”ÝÜ™K”Ý]KÓÓTUQ
+HÂˆXÝ]™TÛXÙR›Ø’YH[ÂˆÛXÚ[™ÈH˜[ÙNÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆYˆ
+\™\ÝÜ™Q›Ü™YÜ›Ý[™ÛXÙRY“X]Ú[™Ê
+JHÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­ÈÛXÙH™\Ý[™YYÈ™]šY]ÈŠNÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHÛÛ\]Y]]ÈØØ[™\Ý[ÛÝ[›Ý™H™]˜[Y]Y‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆH[ÙHYˆ
+Ý]HOHÛXÙR›Ø”ÝÜ™K”Ý]KÐSÑSQ
+HÂˆXÝ]™TÛXÙR›Ø’YH[ÂˆÛXÚ[™ÈH˜[ÙNÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­ÈÛXÙHØ[˜Ù[YŠNÂˆH[ÙHYˆ
+Ý]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆXÝ]™TÛXÙR›Ø’YH[ÂˆÛXÚ[™ÈH˜[ÙNÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È™]š[Ý\ÈÛXÙH™YYÈ™]šY]ÈŠNÂˆH[ÙHYˆ
+Ý]HOHÛXÙR›Ø”ÝÜ™K”Ý]K‘RSQ
+HÂˆXÝ]™TÛXÙR›Ø’YH[ÂˆÛXÚ[™ÈH˜[ÙNÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­ÈÛXÙH˜Z[YŠNÂˆYˆ
+]Z[OH[	‰ˆ]Z[›[™Ý
+
+Hˆ
+BˆØ\Ý›XZÙU^
+\Ë]Z[Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚY™Yœ™\ÚÛXÙUZJ
+HÂˆYˆ
+ÛXÙR›Ø”ÝÜ™HOH[Ý]\ÈOH[
+H™]\›ŽÂˆÛXÙR›Ø”ÝÜ™K’›Øˆ›ØˆHÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+›ØˆOH[
+H™]\›ŽÂˆYˆ
+
+›Ø‹œÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”UQUQQ›Ø‹œÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]K”•S“’S‘ÊBˆ	‰ˆÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ›Ø‹š›Ø’Y
+JHÂˆXÝ]™TÛXÙR›Ø’YH›Ø‹š›Ø’YÂˆÛXÚ[™ÈHYNÂˆÝ]\ËœÙ]^
+”ÛXÙH0­Èˆ
+È
+›Ø‹œ›ÙÜ™\ÜÈˆÈ›Ø‹œ›ÙÜ™\ÜÈ
+È‰H0­ÈˆˆˆŠH
+È›Ø‹œ\ÙJNÂˆÚÝÔÛXÙT›ÙÜ™\ÜÓØY\Š›Ø‹œ›ÙÜ™\ÜË›Ø‹œ\ÙJNÂˆH[ÙHYˆ
+›Ø‹œÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]KÓÓTUQ	‰ˆ[Ù[OH[
+HÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆYˆ
+™\ÝÜ™Q›Ü™YÜ›Ý[™ÛXÙRY“X]Ú[™Ê
+JHÂˆÝ]\ËœÙ]^
+’[œÜXÝ0­Èˆ
+ÈÛXÙK›^Y\œËœÚ^™J
+H
+Èˆ^Y\œÈŠNÂˆ]Z[ËœÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ[Hš[[Y[0­È	\È0­È	YØ\›š[™ÊÊH‹ÛXÙK™š[[Y[[KˆÛXÙKœš[[YTÙXÛÛ™ÈˆÈ[YH[™[™Èˆˆ›Ü›X]\˜][ÛŠÛXÙKœš[[YTÙXÛÛ™ÊKÛXÙKØ\›š[™ÜÊJNÂˆBˆBˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆÊŠ‚ˆ
+ˆÛXÚ[™È\[œÈ[ˆH\˜X›H›Ü™YÜ›Ý[™Ù\šXÙKˆ\ÈÝ\™˜XÙHZ\œ›ÜœÂˆ
+ˆ]ÈXÝX[›ÙÜ™\ÜÈ[™Ù™™\œÈHš\ÚX›HØ[˜Ù[][Ûˆ›Ý]NÈ]™]™\‚ˆ
+ˆX[Y˜XÝ\™\ÈÛÛ\][Ûˆ\ÝÈXZÙHH[š[X][ÛˆÛÚÈÛ\ÚY‚ˆ
+‹Âˆš]˜]H›ÚYÚÝÔÛXÙT›ÙÜ™\ÜÓØY\Š[›ÙÜ™\ÜËÝš[™È\ÙJHÂˆYˆ
+\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆYˆ
+ÛXÙT›ÙÜ™\ÜÑX[ÙÈOH[
+HÂˆÛXÙT›ÙÜ™\ÜÑX[ÙÈH™]ÈX[ÙÊ\ÊNÂˆÛXÙT›ÙÜ™\ÜÑX[ÙËœ™\]Y\ÝÚ[™ÝÑ™X]\™JÚ[™ÝË‘‘PUT‘WÓ“×ÕUJNÂˆÛXÙT›ÙÜ™\ÜÑX[ÙËœÙ]Ø[˜Ù[X›J˜[ÙJNÂˆœ˜[YS^[Ý]YÙHH™]Èœ˜[YS^[Ý]
+\ÊNÂˆYÙKœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹œ™ØŠK
+JNÂˆÛXÙT›ÙÜ™\ÜÓØY\ˆH™]Èš[[Y[ÝÙY\ØY\Š\ÊNÂˆYÙK˜YšY]ÊÛXÙT›ÙÜ™\ÜÓØY\‹™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊLKLJJNÂˆ^šY]ÈØ[˜Ù[HX™[
+Ø[˜Ù[ÛXÙH‹MÛÛÜ‹œ™ØŠNNN
+JNÂˆØ[˜Ù[œÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆØ[˜Ù[œÙ]Y[™Ê
+N
+K
+LŠK
+N
+K
+LŠJNÂˆØ[˜Ù[œÙ]ÛÛ[\ØÜš\[ÛŠØ[˜Ù[ÛXÚ[™ÈŠNÂˆØ[˜Ù[œÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆØ[˜Ù[ÛXÙJ
+JNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈØ[˜Ù[H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹ˆÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+NÂˆØ[˜Ù[ÜX\™Ú[ˆH
+
+NÂˆYÙK˜YšY]ÊØ[˜Ù[Ø[˜Ù[
+NÂˆÛXÙT›ÙÜ™\ÜÑX[ÙËœÙ]ÛÛ[šY]ÊYÙJNÂˆÚ[™ÝÈX[ÙÕÚ[™ÝÈHÛXÙT›ÙÜ™\ÜÑX[ÙË™Ù]Ú[™ÝÊ
+NÂˆYˆ
+X[ÙÕÚ[™ÝÈOH[
+HÂˆX[ÙÕÚ[™ÝËœÙ]˜XÚÙÜ›Ý[™˜]ØX›J™]ÈÛÛÜ‘˜]ØX›JÛÛÜ‹œ™ØŠK
+JJNÂˆX[ÙÕÚ[™ÝËœÙ][P[[Ý[
+ŠNÂˆBˆBˆÛXÙT›ÙÜ™\ÜÓØY\‹œÙ]›ÙÜ™\ÜÊ›ÙÜ™\ÜË\ÙJNÂˆYˆ
+\ÛXÙT›ÙÜ™\ÜÑX[ÙËš\ÔÚÝÚ[™Ê
+JHÂˆÛXÙT›ÙÜ™\ÜÑX[ÙËœÚÝÊ
+NÂˆÚ[™ÝÈX[ÙÕÚ[™ÝÈHÛXÙT›ÙÜ™\ÜÑX[ÙË™Ù]Ú[™ÝÊ
+NÂˆYˆ
+X[ÙÕÚ[™ÝÈOH[
+HX[ÙÕÚ[™ÝËœÙ]^[Ý]
+LKLJNÂˆBˆB‚ˆš]˜]H›ÚY\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+HÂˆYˆ
+ÛXÙT›ÙÜ™\ÜÑX[ÙÈOH[	‰ˆÛXÙT›ÙÜ™\ÜÑX[ÙËš\ÔÚÝÚ[™Ê
+JHÛXÙT›ÙÜ™\ÜÑX[ÙË™\ÛZ\ÜÊ
+NÂˆÛXÙT›ÙÜ™\ÜÑX[ÙÈH[ÂˆÛXÙT›ÙÜ™\ÜÓØY\ˆH[ÂˆB‚ˆÊŠˆ™X]XÚHÛÛ\]YÙ\šXÙH™\Ý[Û›HÈH^XÝ[Ù[[™™XÚ\H]Ü™X]Y]ˆ
+‹Âˆš]˜]H›ÛÛX[ˆ™\ÝÜ™Q›Ü™YÜ›Ý[™ÛXÙRY“X]Ú[™Ê
+HÂˆYˆ
+ÛXÙR›Ø”ÝÜ™HOH[[Ù[OH[
+H™]\›ˆ˜[ÙNÂˆÛXÙR›Ø”ÝÜ™K’›Øˆ›ØˆHÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+›ØˆOH[›Ø‹œÝ]HOHÛXÙR›Ø”ÝÜ™K”Ý]KÓÓTUQ
+H™]\›ˆ˜[ÙNÂˆžHÂˆYˆ
+Z›Ø‹›[Ù[ÚLM‹™\]X[ÒYÛ›Ü™PØ\ÙJÛXÙT™\]Y\ÝÝÜ™K™š[™Ù\œš[
+[Ù[
+JJH™]\›ˆ˜[ÙNÂˆÛXÙT™\]Y\ÝÝÜ™K”™\]Y\Ý™\]Y\ÝHÛXÙT™\]Y\ÝÝÜ™Kœ™XY
+Ù]š[\Ñ\Š
+K›Ø‹š›Ø’Y
+NÂˆYˆ
+\Ø[YPÛÛ™šYÊ™\]Y\Ý˜ÛÛ™šYËÛÛ™šYÊJH™]\›ˆ˜[ÙNÂˆÛXÙ\‹”™\Ý[™\ÝÜ™YHÛXÙT™\Ý[ÝÜ™Kœ™XY
+ÛXÙT™\]Y\ÝÝÜ™Kš›Ø‘\™XÝÜžJÙ]š[\Ñ\Š
+K›Ø‹š›Ø’Y
+K™\]Y\Ý˜ÛÛ™šYÊNÂˆš[\•˜[œÜÜ\Y˜XÝ\Y˜XÝH\Y˜XÝÝÜ™Kœ™XÛÝ™\ŠÙ]š[\Ñ\Š
+K›Ø‹˜\Y˜XÝ˜[YK›Ø‹˜\Y˜XÝÚ^™K›Ø‹˜\Y˜XÝÚLMŠNÂˆÛXÙHH™\ÝÜ™YÂˆÝYÙY\Y˜XÝH\Y˜XÝÂˆ\Ý˜]ÚH[ÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]™\Ý[
+™\ÝÜ™Y
+NÂˆ[Ù[Y]KœÙ]^
+šY]ÜÜ\Ü^S˜[YJ[Ù[™\Ü^S˜[YJH
+È—ˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆ]Z[ËœÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ[Hš[[Y[0­È	\È0­È	YØ\›š[™ÊÊH‹™\ÝÜ™Y™š[[Y[[Kˆ™\ÝÜ™Yœš[[YTÙXÛÛ™ÈˆÈ[YH[™[™Èˆˆ›Ü›X]\˜][ÛŠ™\ÝÜ™Yœš[[YTÙXÛÛ™ÊK™\ÝÜ™YØ\›š[™ÜÊJNÂˆ™]\›ˆYNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆ™]\›ˆ˜[ÙNÂˆBˆB‚ˆš]˜]HÝ]XÈ›ÛÛX[ˆØ[YPÛÛ™šYÊÛXÙ\‹ÛÛ™šYÈYÛXÙ\‹ÛÛ™šYÈšYÚ
+HÂˆYˆ
+YOH[šYÚOH[
+H™]\›ˆ˜[ÙNÂˆ™]\›ˆÛÜÙJY›^Y\’ZYÚšYÚ›^Y\’ZYÚ
+H	‰ˆÛÜÙJY™š\œÝ^Y\’ZYÚšYÚ™š\œÝ^Y\’ZYÚ
+Bˆ	‰ˆÛÜÙJY››Þž›KšYÚ››Þž›JH	‰ˆÛÜÙJY™š[[Y[X[Y]\‹šYÚ™š[[Y[X[Y]\ŠBˆ	‰ˆÛÜÙJYš[™š[šYÚš[™š[
+H	‰ˆÛÜÙJY˜™YšYÚ˜™Y
+H	‰ˆÛÜÙJY˜™YKšYÚ˜™YJBˆ	‰ˆÛÜÙJY˜™Y‹šYÚ˜™YŠH	‰ˆØY™Q\]X[ÊYœš[\‹šYÚœš[\ŠH	‰ˆØY™Q\]X[ÊY™š[[Y[šYÚ™š[[Y[
+Bˆ	‰ˆÛÜÙJY››Þž›U[\\˜]\™KšYÚ››Þž›U[\\˜]\™JH	‰ˆÛÜÙJY™š\œÝ^Y\“›Þž›U[\\˜]\™KšYÚ™š\œÝ^Y\“›Þž›U[\\˜]\™JBˆ	‰ˆÛÜÙJY˜™Y[\\˜]\™KšYÚ˜™Y[\\˜]\™JH	‰ˆÛÜÙJY™š\œÝ^Y\™Y[\\˜]\™KšYÚ™š\œÝ^Y\™Y[\\˜]\™JBˆ	‰ˆÛÜÙJY™^\Ú[Û“][\Y\‹šYÚ™^\Ú[Û“][\Y\ŠH	‰ˆÛÜÙJY›X^›Û[Y]šXÔÜYYšYÚ›X^›Û[Y]šXÔÜYY
+Bˆ	‰ˆÛÜÙJY˜]™[ÜYYšYÚ˜]™[ÜYY
+H	‰ˆÛÜÙJY›Ý]\•Ø[ÜYYšYÚ›Ý]\•Ø[ÜYY
+Bˆ	‰ˆÛÜÙJYš[›™\•Ø[ÜYYšYÚš[›™\•Ø[ÜYY
+H	‰ˆÛÜÙJYš[™š[ÜYYšYÚš[™š[ÜYY
+Bˆ	‰ˆÛÜÙJYš[š]X[^Y\”ÜYYšYÚš[š]X[^Y\”ÜYY
+H	‰ˆÛÜÙJY™˜[“Z[”\˜Ù[šYÚ™˜[“Z[”\˜Ù[
+Bˆ	‰ˆÛÜÙJY™˜[“X^\˜Ù[šYÚ™˜[“X^\˜Ù[
+H	‰ˆYœÝ\ÜÈOHšYÚœÝ\ÜÂˆ	‰ˆÛÜÙJYœÝ\Ü™\ÚÛYÜ™Y\ËšYÚœÝ\Ü™\ÚÛYÜ™Y\ÊH	‰ˆYœ\š[Y]\œÈOHšYÚœ\š[Y]\œÂˆ	‰ˆYÜ^Y\œÈOHšYÚÜ^Y\œÈ	‰ˆY˜›ÝÛS^Y\œÈOHšYÚ˜›ÝÛS^Y\œÂˆ	‰ˆY›˜]]™TÙ][™ÜË™\]X[ÊšYÚ›˜]]™TÙ][™ÜÊNÂˆB‚ˆš]˜]HÝ]XÈ›ÛÛX[ˆÛÜÙJ›Ø]Y›Ø]šYÚ
+HÈ™]\›ˆX]˜XœÊYHšYÚ
+HHŒYŽÈBˆš]˜]HÝ]XÈ›ÛÛX[ˆØY™Q\]X[ÊÝš[™ÈYÝš[™ÈšYÚ
+HÈ™]\›ˆYOH[ÈšYÚOH[ˆY™\]X[ÊšYÚ
+NÈB‚ˆš]˜]H›ÚY[™Tš[\‘]™[
+[[[[
+HÂˆYˆ
+[[OH[š[\’›Ø”ÝÜ™HOH[
+H™]\›ŽÂˆÝš[™È›Ø’YH[[™Ù]Ýš[™Ñ^˜Jš[\’›Ø”Ù\šXÙK‘VWÒ“Ð—ÒQ
+NÂˆš[\’›Ø”ÝÜ™K’›ØˆÝ\œ™[Hš[\’›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+Ý\œ™[OH[›Ø’YOH[Z›Ø’Y™\]X[ÊÝ\œ™[š›Ø’Y
+JH™]\›ŽÂˆÝš[™È[˜ÛÙYH[[™Ù]Ýš[™Ñ^˜Jš[\’›Ø”Ù\šXÙK‘VWÔÕUJNÂˆš[\•˜[œÜÜ”Ý]HÝ]NÂˆžHÈÝ]HHš[\•˜[œÜÜ”Ý]K˜[YSÙŠ[˜ÛÙY
+NÈBˆØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈ™]\›ŽÈBˆ[›ÙÜ™\ÜÈH[[™Ù][^˜Jš[\’›Ø”Ù\šXÙK‘VWÔ“ÑÔ‘TÔËLJNÂˆÝš[™È\ÙHH[[™Ù]Ýš[™Ñ^˜Jš[\’›Ø”Ù\šXÙK‘VWÔTÑJNÂˆÝš[™È]Z[H[[™Ù]Ýš[™Ñ^˜Jš[\’›Ø”Ù\šXÙK‘VWÑURS
+NÂˆYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K•TÐQS‘È	‰ˆ›ÙÜ™\ÜÈH
+HÂˆÝ]\ËœÙ]^
+”š[\ˆ0­Èˆ
+È›ÙÜ™\ÜÈ
+È‰H0­Èˆ
+È
+\ÙHOH[È•\ØY[™È\Y˜XÝˆˆ\ÙJJNÂˆH[ÙHYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K•TÐQQ
+HÂˆXÝ]™Tš[\’›Ø’YHÝ\œ™[š›Ø’YÂˆXÝ]™Tš[\•\™Ù]Hš[\•\™Ù]
+Ý\œ™[
+NÂˆš[XÝ]™HH˜[ÙNÂˆš[\\ÞHH˜[ÙNÂˆ™XÛÝ™\•\ØYY\Y˜XÝ
+Ý\œ™[
+NÂˆÝ]\ËœÙ]^
+”š[\ˆ0­È\Y˜XÝ\ØYY0­È™XYHÈÝ\ŠNÂˆH[ÙHYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]KÓÓ“‘PÕS‘ÈÝ]HOHš[\•˜[œÜÜ”Ý]K”ÕT•Ô‘TUQTÕQˆÝ]HOHš[\•˜[œÜÜ”Ý]K”•S“’S‘ÈÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑWÔ‘TUQTÕQˆÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑQÝ]HOHš[\•˜[œÜÜ”Ý]K”‘TÕSQWÔ‘TUQTÕQˆÝ]HOHš[\•˜[œÜÜ”Ý]KÐSÑSÔ‘TUQTÕQ
+HÂˆXÝ]™Tš[\’›Ø’YHÝ\œ™[š›Ø’YÂˆXÝ]™Tš[\•\™Ù]Hš[\•\™Ù]
+Ý\œ™[
+NÂˆš[XÝ]™HHÝ]HOHš[\•˜[œÜÜ”Ý]K”ÕT•Ô‘TUQTÕQˆÝ]HOHš[\•˜[œÜÜ”Ý]K”•S“’S‘ÈÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑWÔ‘TUQTÕQˆÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑQÝ]HOHš[\•˜[œÜÜ”Ý]K”‘TÕSQWÔ‘TUQTÕQˆÝ]HOHš[\•˜[œÜÜ”Ý]KÐSÑSÔ‘TUQTÕQÂˆš[\\ÞHHYNÂˆÝ]\ËœÙ]^
+”š[\ˆ0­Èˆ
+ÈÝ]K›˜[YJ
+JNÂˆH[ÙHYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆš[XÝ]™HH˜[ÙNÂˆš[\\ÞHH˜[ÙNÂˆXÝ]™Tš[\•\™Ù]H[ÂˆXÝ]™Tš[\’›Ø’YH[Âˆ™XÛÝ™\•\ØYY\Y˜XÝ
+Ý\œ™[
+NÂˆÝ]\ËœÙ]^
+”š[\ˆ0­È™XÛÝ™\žH™]šY]È™\]Z\™YŠNÂˆH[ÙHYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K‘RSQÝ]HOHš[\•˜[œÜÜ”Ý]KÓÓTUQˆÝ]HOHš[\•˜[œÜÜ”Ý]KÐSÑSQ
+HÂˆš[XÝ]™HH˜[ÙNÂˆš[\\ÞHH˜[ÙNÂˆXÝ]™Tš[\•\™Ù]H[ÂˆXÝ]™Tš[\’›Ø’YH[ÂˆYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]KÓÓTUQ
+H\]R[™[ÜžTÝ[[X\žJ
+NÂˆÝ]\ËœÙ]^
+”š[\ˆ0­Èˆ
+ÈÝ]K›˜[YJ
+JNÂˆYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K‘RSQ	‰ˆ]Z[OH[	‰ˆ]Z[›[™Ý
+
+Hˆ
+BˆØ\Ý›XZÙU^
+\Ë”š[\ˆ›Øˆ˜Z[Yˆˆ
+È]Z[Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚY™Yœ™\Úš[\•ZJ
+HÂˆYˆ
+š[\’›Ø”ÝÜ™HOH[
+H™]\›ŽÂˆš[\’›Ø”ÝÜ™K’›Øˆ›ØˆHš[\’›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+›ØˆOH[
+H™]\›ŽÂˆYˆ
+›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K•TÐQQ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+Bˆ™XÛÝ™\•\ØYY\Y˜XÝ
+›ØŠNÂˆYˆ
+›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]KÓÓ“‘PÕS‘È›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K•TÐQS‘Âˆ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”ÕT•Ô‘TUQTÕQ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”•S“’S‘Âˆ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑWÔ‘TUQTÕQ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑQˆ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘TÕSQWÔ‘TUQTÕQ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]KÐSÑSÔ‘TUQTÕQ
+HÂˆXÝ]™Tš[\’›Ø’YH›Ø‹š›Ø’YÂˆXÝ]™Tš[\•\™Ù]Hš[\•\™Ù]
+›ØŠNÂˆš[XÝ]™HH›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”ÕT•Ô‘TUQTÕQˆ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”•S“’S‘È›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑWÔ‘TUQTÕQˆ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑQ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘TÕSQWÔ‘TUQTÕQˆ›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]KÐSÑSÔ‘TUQTÕQÂˆš[\\ÞHHYNÂˆÝ]\ËœÙ]^
+”š[\ˆ0­Èˆ
+È›Ø‹œÝ]K›˜[YJ
+JNÂˆH[ÙHYˆ
+›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K•TÐQQ
+HÂˆXÝ]™Tš[\’›Ø’YH›Ø‹š›Ø’YÂˆXÝ]™Tš[\•\™Ù]Hš[\•\™Ù]
+›ØŠNÂˆš[XÝ]™HH˜[ÙNÂˆš[\\ÞHH˜[ÙNÂˆÝ]\ËœÙ]^
+”š[\ˆ0­È\Y˜XÝ\ØYY0­È™XYHÈÝ\ŠNÂˆH[ÙHYˆ
+›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆXÝ]™Tš[\•\™Ù]H[ÂˆXÝ]™Tš[\’›Ø’YH[Âˆš[XÝ]™HH˜[ÙNÂˆš[\\ÞHH˜[ÙNÂˆBˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚY™XÛÝ™\•\ØYY\Y˜XÝ
+š[\’›Ø”ÝÜ™K’›Øˆ›ØŠHÂˆžHÂˆ™XÛÝ™\™Y\Y˜XÝH™XÛÝ™\”š[\\Y˜XÝ
+›ØŠNÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆ™XÛÝ™\™Y\Y˜XÝH[ÂˆBˆB‚ˆš]˜]Hš[\•˜[œÜÜ\Y˜XÝ™XÛÝ™\”š[\\Y˜XÝ
+š[\’›Ø”ÝÜ™K’›Øˆ›ØŠH›ÝÜÈ^Ù\[ÛˆÂˆYˆ
+Z[ÛÛ™šYË”TÒPÐSÔSÕÑSP“Q
+HÂˆ™]\›ˆ\Y˜XÝÝÜ™Kœ™XÛÝ™\‘›ÜLSZ[šS›ÔÝ\Ü[Ý
+Ù]š[\Ñ\Š
+K›Ø‹˜\Y˜XÝ˜[YKˆ›Ø‹˜\Y˜XÝÚ^™K›Ø‹˜\Y˜XÝÚLMŠNÂˆBˆ™]\›ˆ\Y˜XÝÝÜ™Kœ™XÛÝ™\‘›Ü”\ÚXØ[š[
+Ù]š[\Ñ\Š
+K›Ø‹˜\Y˜XÝ˜[YKˆ›Ø‹˜\Y˜XÝÚ^™K›Ø‹˜\Y˜XÝÚLMŠNÂˆB‚ˆš]˜]Hš[\•˜[œÜÜ”š[\•\™Ù]š[\•\™Ù]
+š[\’›Ø”ÝÜ™K’›Øˆ›ØŠHÂˆžHÈ™]\›ˆ™]Èš[\•˜[œÜÜ”š[\•\™Ù]
+›Ø‹œš[\“˜[YK›Ø‹šÜÝ›Ø‹œÙ\šX[
+NÈBˆØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈ™]\›ˆ[ÈBˆB‚ˆš]˜]H›ÚYZ[ZJ
+HÂˆ›ÛÝH™]È[™X\“^[Ý]
+\ÊNÂˆ›ÛÝœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆ›ÛÝœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠ‘ÊNÂˆ›ÛÝœÙ]Y[™Ê
+N
+K
+LŠK
+N
+K
+NÂˆËÈ[™›ÚYMH[™›Ü˜Ù\ÈYÙK]ËYYÙH›Üˆ\™Ù]ÍKˆÙY\HÛÜšÜÚÜˆËÈXY\ˆ[™›ÝÛHXÝ[Ûˆ˜Z[ÛX\ˆÙˆÞ\Ý[H˜\œÈÛˆ]™\žHTK‚ˆ›ÛÝœÙ]Û\UÚ[™ÝÒ[œÙ]Ó\Ý[™\Š
+šY]Ë[œÙ]ÊHOˆÂˆ[ÜÂˆ[›ÝÛNÂˆYˆ
+Z[•‘T”ÒSÓ‹”Ñ×ÒS•HÌ
+HÂˆ[™›ÚY™Ü˜\XÜË’[œÙ]È˜\œÈH[œÙ]Ë™Ù][œÙ]ÊÚ[™ÝÒ[œÙ]Ë•\KœÞ\Ý[P˜\œÊ
+JNÂˆÜH˜\œËÜÂˆ›ÝÛHH˜\œË˜›ÝÛNÂˆH[ÙHÂˆÜH[œÙ]Ë™Ù]Þ\Ý[UÚ[™ÝÒ[œÙ]Ü
+
+NÂˆ›ÝÛHH[œÙ]Ë™Ù]Þ\Ý[UÚ[™ÝÒ[œÙ]›ÝÛJ
+NÂˆBˆšY]ËœÙ]Y[™Ê
+N
+K
+LŠH
+ÈÜ
+N
+K›ÝÛJNÂˆ™]\›ˆ[œÙ]ÎÂˆJNÂ‚ˆ›ÛÝ˜YšY]ÊZ[XY\Š
+K™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ÍŠJJNÂ‚ˆÝ]\ÈHX™[
+’[\ÜH[Ù[È™YÚ[ˆ‹LËUUQ
+NÂˆÝ]\ËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆÝ]\ËœÙ]Y[™Ê
+M
+K
+M
+K
+NÂˆÝ]\ËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠŒÎKŒÍ‹ŒÌ
+KÛÛÜ‹œ™ØŠŒŒ‹ŒM‹ŒŠKKM
+JNÂˆ›ÛÝ˜YšY]ÊÝ]\Ë™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ŠJJNÂ‚ˆœ˜[YS^[Ý]ÛÜšÜÜXÙHH™]Èœ˜[YS^[Ý]
+\ÊNÂˆÛÜšÜÜXÙKœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊK‹Ž
+JNÂˆÛÜšÜÜXÙKœÙ]Û\ÓÝ][™JYJNÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈÛÜšÜÜXÙSH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLKJNÂˆÛÜšÜÜXÙSÜX\™Ú[ˆH
+L
+NÂˆÛÜšÜÜXÙS˜›ÝÛSX\™Ú[ˆH
+L
+NÂˆšY]ÜÜH™]ÈšY]ÜÜšY]Ê\ÊNÂˆšY]ÜÜœÙ]\Ù[XÝ[Û“\Ý[™\Š\OˆÂˆYˆ
+[Ù[OH[[Ù[œ\ÈOH[\\H[Ù[œ\Ë›[™Ý
+H™]\›ŽÂˆYˆ
+[[Ù[\š\Ëš\Ñ[\J
+JH›Ú™XÝÝÜ™KœØ]™TÙ[XÝY\
+\
+NÂˆØ]™PÝ\œ™[]J
+NÂˆÝ]\ËœÙ]^
+”™\\™H0­È›ØÝ\ÙYÛˆˆ
+È[Ù[œ\ÖÜ\K›˜[YJNÂˆJNÂˆÛÜšÜÜXÙK˜YšY]ÊšY]ÜÜ™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊLKLJJNÂ‚ˆ[Ù[Y]HHX™[
+“‘UÈ“Ò‘PÕˆˆ
+È›Ùš[TÚÜX™[
+
+KLUUQ
+NÂˆ[Ù[Y]KœÙ]]\”ÜXÚ[™ÊŒL™ŠNÂˆ[Ù[Y]KœÙ][™TÜXÚ[™Ê‹KŒŠNÂˆ[Ù[Y]KœÙ]X^ÚY
+
+ML
+JNÂˆ[Ù[Y]KœÙ]X^[™\ÊÊNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈY]SH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+LÌŠKL‹Ü˜]š]K•ÔÜ˜]š]K”ÕT•
+NÂˆY]SœÙ]X\™Ú[œÊ
+MŠK
+MŠK
+NÂˆ[Ù[Y]KœÙ]Y[™Ê
+LŠK
+JK
+LŠK
+JJNÂˆ[Ù[Y]KœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹˜\™ØŠŒÍ‹MKMKMJKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKM
+JNÂˆ[Ù[Y]KœÙ][]˜][ÛŠ
+ŠJNÂˆÛÜšÜÜXÙK˜YšY]Ê[Ù[Y]KY]S
+NÂ‚ˆ^šY]Èš]HÛÛ›Û
+¸¢¦H‹‘š][Ù[‹ˆOˆÈšY]ÜÜ™š][Ù[
+
+NÈØ\Ý›XZÙU^
+\Ë“[Ù[š]YÈHZ[]H‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÈJNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\Èš]H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆš]œÙ]X\™Ú[œÊ
+MŠK
+MŠK
+NÂˆÛÜšÜÜXÙK˜YšY]Êš]š]
+NÂ‚ˆ^šY]ÈÜ˜š]HÛÛ›Û
+¸¡®È‹”™\Ù]šY]È‹ˆOˆÈšY]ÜÜœ™\Ù]šY]Ê
+NÈØ\Ý›XZÙU^
+\Ë•šY]È™\Ù]‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÈJNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÜ˜š]H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆÜ˜š]œÙ]X\™Ú[œÊ
+Ì
+K
+MŠK
+NÂˆÛÜšÜÜXÙK˜YšY]ÊÜ˜š]Ü˜š]
+NÂ‚ˆËÈÙY\HÝXš™XÝ[›ØœÝXÝYˆ\ÙHYÜÈÚ][ˆHØ[YHÜ˜š]\ÂˆËÈH™Y™\™[˜ÙHÛÛ™šYÝ\˜]Üˆ[œÝXYÙˆ™XÛÛZ[™ÈHÙXÛÛ™ÛÛ˜\ˆÛ‚ˆËÈÜÙˆH[Ù[‚ˆËÈHXY\ˆ[™XYHÝÛœÈHÝYHÚÜÝ]ˆ™\Ù\™HHY[™ˆËÈšYÚ[™\È™\ÚYHHÝXš™XÝ›ÜˆÛÛ^[ÈÛÈ^HÈ›ÝˆËÈÛÛYHÚ]HY]Y]HØ\™ÜˆHš]Ü™\Ù]ÛÛ›ÛË‚ˆÛÜšÜÜXÙK˜YšY]ÊX\šÙ\Š¸¥¨È‹”š[\ˆ‹›Ùš[Tš[\“X™[
+
+KˆOˆÚÝÔš[\”Ý]\Ê
+KÜ˜]š]K•ÔÜ˜]š]K”ÕT•
+MŠK
+ML
+JJNÂˆÛÜšÜÜXÙK˜YšY]ÊX\šÙ\Š“H‹“X]\šX[‹›Ùš[SX]\šX[X™[
+
+KˆOˆÚÝÔ™XÚ\J
+KÜ˜]š]K•ÔÜ˜]š]K‘S‘
+MŠK
+ML
+JJNÂˆÛÜšÜÜXÙK˜YšY]ÊX\šÙ\Š[YÙ\‹ÔÝš[™ÊXÝ]™T]R[™^
+ÈJK”]H‹Ý\œ™[]SX™[
+
+KˆOˆÚÝÔ]\Ê
+KÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+MŠJJNÂˆÛÜšÜÜXÙK˜YšY]ÊX\šÙ\ŠÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ‹ÛÛ™šYË›^Y\’ZYÚ
+K”]X[]H‹“^Y\ˆZYÚ‹ˆOˆÚÝÔ™XÚ\J
+KÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+Ì
+JJNÂˆÛÜšÜÜXÙK˜YšY]ÊX\šÙ\Š¸£ H‹”Ý\ÜÈ‹ÛÛ™šYËœÝ\ÜÈÈ]]ÈÝ\ÜÈˆˆ“Ù™ˆ‹ˆOˆÚÝÔ™XÚ\J
+KÜ˜]š]K“ÕÓHÜ˜]š]K‘S‘
+ŒŠK
+ŒŠJJNÂˆÛÜšÜÜXÙK˜YšY]ÊX\šÙ\Š¸¡¥È‹\œ˜[™ÙH‹”ØØ[HÈ[ÈXÚÈ‹ˆOˆÚÝÔ™\\™J
+KÜ˜]š]K“ÕÓHÜ˜]š]K”ÕT•
+ŒŠK
+ŒŠJJNÂ‚ˆ›ÛÝ˜YšY]ÊÛÜšÜÜXÙKÛÜšÜÜXÙS
+NÂˆ›ÛÝ˜YšY]ÊZ[[™[ÜžTÝš\
+
+K™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ÍŠJJNÂ‚ˆ]Z[ÈHX™[
+”ÕÐ’‹ÓQˆ[™ÕT0­Èˆ
+È›Ùš[PZ[›Û[YSX™[
+
+H
+ÈˆZ[›Û[YH‹L‹UUQ
+NÂˆ]Z[ËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ]Z[ËœÙ]Y[™Ê
+M
+K
+M
+K
+NÂˆ]Z[ËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠŒÎKŒÍ‹ŒÌ
+KÛÛÜ‹œ™ØŠŒŒ‹ŒM‹ŒŠKKM
+JNÂˆ]Z[ËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÔ\Ê
+JNÂˆ]Z[ËœÙ]ÛÛ[\ØÜš\[ÛŠ“[Ù[[Y[œÚ[ÛœÈ[™\\ÝŠNÂˆ[™X\“^[Ý]“^[Ý]\˜[\È]Z[ÓH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ŠJNÂˆ]Z[Ó˜›ÝÛSX\™Ú[ˆH
+
+NÂˆ›ÛÝ˜YšY]Ê]Z[Ë]Z[Ó
+NÂ‚ˆËÈ[˜[ZXÈ\ÚÈXÝ[ÛœÈÝ^H[ˆ\ÈÙ™‹\ØÜ™Y[ˆÛÝ\˜ÙHÙˆ]ˆBˆËÈ\\ˆÝ\™HšYÙÙ\œÈÛ™HÛÛ^X[™^Ý\ÈHÝÙ\ˆ›[Ü™H‚ˆËÈ\Ý[˜][Ûˆ^ÜÙ\ÈH™[XZ[š[™È›Ý]\Ëˆ\È]›ÚYÈ\›š[™ÈBˆËÈÛÛ^X[˜\ˆ[È[ˆ[œÝXÝ\™Y\ÝÙˆ]™\žHXÝ[Û‹‚ˆXÝ[ÛœÈH™]È[™X\“^[Ý]
+\ÊNÂˆXÝ[ÛœËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]’Ô’V“Ó•S
+NÂˆ\˜Ó˜]šYØ][ÛˆH™]È\˜Ó˜]šYØ][Û˜\Š\ÊNÂˆ\˜Ó˜]šYØ][Û‹œÙ]\Ý[™\Š™]È\˜Ó˜]šYØ][Û˜\‹“\Ý[™\Š
+HÂˆÝ™\œšYHX›XÈ›ÚYÛÛÛ^
+
+HÈÜ[\˜ÐÛÛ^
+
+NÈBˆÝ™\œšYHX›XÈ›ÚYÛ”ÙX\˜Ú
+
+HÈÚÝÓ[Ù[Xœ˜\žJ
+NÈBˆÝ™\œšYHX›XÈ›ÚYÛ[\Ê
+HÈÚÝÔš[\”™XY[™\ÜÊ
+NÈBˆÝ™\œšYHX›XÈ›ÚYÛ’ÛYJ
+HÂˆYˆ
+šY]ÜÜOH[
+HšY]ÜÜœ™\Ù]šY]Ê
+NÂˆÝ]\ËœÙ]^
+[Ù[OH[È”Ý\0­ÈÚÛÜÙHH[Ù[ˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆBˆÝ™\œšYHX›XÈ›ÚYÛ“Xœ˜\žJ
+HÈÚÝÓ[Ù[Xœ˜\žJ
+NÈBˆÝ™\œšYHX›XÈ›ÚYÛ”™\\™J
+HÈÚÝÔ™\\™J
+NÈBˆÝ™\œšYHX›XÈ›ÚYÛ’\ÝÜžJ
+HÈÚÝÓ[Ù[\ÝÜžJ
+NÈBˆÝ™\œšYHX›XÈ›ÚYÛ“[Ü™J
+HÈÚÝÓ[Ü™PXÝ[ÛœÊ
+NÈBˆJNÂˆ›ÛÝ˜YšY]Ê\˜Ó˜]šYØ][Û‹™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+LMŠJJNÂ‚ˆ^Y\’[œÜXÝÜˆH™]È[™X\“^[Ý]
+\ÊNÂˆ^Y\’[œÜXÝÜ‹œÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆ^Y\’[œÜXÝÜ‹œÙ]Y[™Ê
+LŠK
+ŠK
+LŠK
+NÂˆ^Y\’[œÜXÝÜ‹œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠŒÎKŒÍ‹ŒÌ
+KÛÛÜ‹œ™ØŠŒŒ‹ŒM‹ŒŠKKM
+JNÂˆ^Y\’[œÜXÝÜ“X™[HX™[
+“VQTˆS”ÔPÕSÓˆ‹LUUQ
+NÂˆ^Y\’[œÜXÝÜ“X™[œÙ]ÛÛ[\ØÜš\[ÛŠ”Ù[XÝYÛÛ]^Y\ˆ]Z[ÈŠNÂˆ^Y\’[œÜXÝÜ‹˜YšY]Ê^Y\’[œÜXÝÜ“X™[™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ŒŠJJNÂˆ^Y\”ÙYZÈH™]ÈÙYZÐ˜\Š\ÊNÂˆ^Y\”ÙYZËœÙ]ÛÛ[\ØÜš\[ÛŠ•ÛÛ]^Y\ˆØÜX˜™\ˆŠNÂˆ^Y\”ÙYZËœÙ]X^
+
+NÂˆ^Y\”ÙYZËœÙ]Û”ÙYZÐ˜\Ú[™ÙS\Ý[™\Š™]ÈÙYZÐ˜\‹“Û”ÙYZÐ˜\Ú[™ÙS\Ý[™\Š
+HÂˆÝ™\œšYHX›XÈ›ÚYÛ”›ÙÜ™\ÜÐÚ[™ÙY
+ÙYZÐ˜\ˆÙYZÐ˜\‹[›ÙÜ™\ÜË›ÛÛX[ˆœ›ÛU\Ù\ŠHÂˆYˆ
+Yœ›ÛU\Ù\ˆÛXÙHOH[ÛXÙK›^Y\œÈOH[ÛXÙK›^Y\œËš\Ñ[\J
+JH™]\›ŽÂˆšY]ÜÜœÙ]Ù[XÝY^Y\Š›ÙÜ™\ÜÊNÂˆÛXÙ\‹“^Y\ˆ^Y\ˆHÛXÙK›^Y\œË™Ù]
+›ÙÜ™\ÜÊNÂˆ^Y\’[œÜXÝÜ“X™[œÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË“VQTˆ	YÈ	Y0­Èˆ	KŒ™ˆ[H0­È	YÙYÛY[È‹ˆ›ÙÜ™\ÜÈ
+ÈKÛXÙK›^Y\œËœÚ^™J
+K^Y\‹ž‹^Y\‹œÙYÛY[ËœÚ^™J
+JJNÂˆÝ]\ËœÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË’[œÜXÝ0­È^Y\ˆ	YÈ	Y0­Èˆ	KŒ™ˆ[H0­È	YÙYÛY[È‹ˆ›ÙÜ™\ÜÈ
+ÈKÛXÙK›^Y\œËœÚ^™J
+K^Y\‹ž‹^Y\‹œÙYÛY[ËœÚ^™J
+JJNÂˆBˆÝ™\œšYHX›XÈ›ÚYÛ”Ý\˜XÚÚ[™ÕÝXÚ
+ÙYZÐ˜\ˆÙYZÐ˜\ŠHÈBˆÝ™\œšYHX›XÈ›ÚYÛ”ÝÜ˜XÚÚ[™ÕÝXÚ
+ÙYZÐ˜\ˆÙYZÐ˜\ŠHÈBˆJNÂˆ^Y\’[œÜXÝÜ‹˜YšY]Ê^Y\”ÙYZË™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+Í
+JJNÂˆ[™X\“^[Ý]“^[Ý]\˜[\È[œÜXÝÜ“H™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+Œ
+JNÂˆ[œÜXÝÜ“˜›ÝÛSX\™Ú[ˆH
+
+NÂˆ›ÛÝ˜YšY]Ê^Y\’[œÜXÝÜ‹[œÜXÝÜ“
+NÂˆÙ]ÛÛ[šY]Ê›ÛÝ
+NÂˆ›ÛÝœ™\]Y\Ý\R[œÙ]Ê
+NÂˆ\]T™XÚ\SX\šÙ\œÊ
+NÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆÊŠˆH\Ý˜XÝ[Û‹Yœ™YH™\Ù[][ÛˆÝ\™˜XÙH›ÜˆH[Ù[[™ÛÛ]ˆ
+‹Âˆš]˜]H›ÚYÚÝÒ[[Y\œÚ]™UšY]Ê
+HÂˆYˆ
+[Ù[OH[
+HÂˆØ\Ý›XZÙU^
+\Ë’[\ÜÜˆÜ™X]HH[Ù[™Y›Ü™HÜ[š[™ÈHÑšY]È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆš[˜[X[ÙÈX[ÙÈH™]ÈX[ÙÊ\ÊNÂˆX[ÙËœ™\]Y\ÝÚ[™ÝÑ™X]\™JÚ[™ÝË‘‘PUT‘WÓ“×ÕUJNÂˆ[™X\“^[Ý]YÙHH™]È[™X\“^[Ý]
+\ÊNÂˆYÙKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆYÙKœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•ÒUJNÂˆYÙKœÙ]Y[™Ê
+NÂ‚ˆœ˜[YS^[Ý]ÝYÙHH™]Èœ˜[YS^[Ý]
+\ÊNÂˆÝYÙKœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•ÒUJNÂˆÝYÙKœÙ]Û\ÓÝ][™J˜[ÙJNÂˆšY]ÜÜšY]ÈØÙ[™HH™]ÈšY]ÜÜšY]Ê\ÊNÂˆËÈ[[Y\œÚ]™HÝYHÙY\ÈHÙ[XÝY[Ù[\ÈH\›ËX]Ú[™ÈBˆËÈÝ\YYÛÛ™šYÝ\˜]Üˆ™Y™\™[˜ÙKˆHXZ[ˆÛÜšÜÜXÙH™]Z[œÈBˆËÈÛÛ^X[š[\ˆ[™[ÜNÈ\ÈšY]È\È›Üˆ[œÜXÝ[™ÈH\‚ˆØÙ[™KœÙ]™\Ù[][Û“[ÙJ˜[ÙJNÂˆØÙ[™KœÙ]ÛX[”™\Ù[][ÛŠYJNÂˆØÙ[™KœÙ][Ù[
+[Ù[
+NÂˆØÙ[™KœÙ]™\Ý[
+ÛXÙJNÂˆØÙ[™KœÙ]Ù[XÝY\
+šY]ÜÜOH[ÈLHˆšY]ÜÜ™Ù]Ù[XÝY\
+
+JNÂˆÝYÙK˜YšY]ÊØÙ[™K™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊLKLJJNÂ‚ˆ^šY]È]HHX™[
+™\Ù[][Û•]J[Ù[™\Ü^S˜[YJH
+È—ˆ‚ˆ
+È›Ùš[SX]\šX[X™[
+
+H
+Èˆ0­Èˆ
+ÈÝ\œ™[]SX™[
+
+KLËV
+NÂˆ]KœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆ]KœÙ][™TÜXÚ[™ÊËKŒŠNÂˆËÈÙY\H]H˜YÙH[ˆ]ÈÝÛˆš\ÝX[[™HÛˆ˜\œ›ÝÈÛ™\ÎÈBˆËÈÝ\YYÛÛ™šYÝ\˜]Üˆ™Y™\™[˜ÙH\ÈÙ[™\›Ý\È\ÚÝÜÚ]\ÜXÙKˆËÈÚ[H[™›ÚY™\Ù[][ÛˆÝ\™˜XÙ\ÈØ[ˆ™HÛ›HÍŒÚYK‚ˆ]KœÙ]X^ÚY
+
+NJJNÂˆ]KœÙ]X^[™\ÊŠNÂˆ]KœÙ]Y[™Ê
+MŠK
+LŠK
+MŠK
+LŠJNÂˆ]KœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹˜\™ØŠMKMKMJKÛÛÜ‹œ™ØŠŒÌKŒŽŒŒJKKN
+JNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\È]SH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]K•ÔÜ˜]š]K”ÕT•
+NÂˆ]SœÙ]X\™Ú[œÊ
+M
+K
+M
+K
+NÂˆÝYÙK˜YšY]Ê]K]S
+NÂ‚ˆ[XYÙUšY]ÈÙÛÈH[ÞSÙÛÊ
+NÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÙÛÓH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+NÂˆÙÛÓÜX\™Ú[ˆH
+M
+NÂˆÝYÙK˜YšY]ÊÙÛËÙÛÓ
+NÂ‚ˆ^šY]ÈÛÜÙHHÛÛ›Û
+°åÈ‹ÛÜÙH[[Y\œÚ]™HÑšY]È‹ˆOˆX[ÙË™\ÛZ\ÜÊ
+JNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÛÜÙSH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆÛÜÙSœÙ]X\™Ú[œÊ
+M
+K
+M
+K
+NÂˆÝYÙK˜YšY]ÊÛÜÙKÛÜÙS
+NÂˆ^šY]Èš]HÛÛ›Û
+¸¢¦H‹‘š][Ù[[ˆ[[Y\œÚ]™HšY]È‹ˆOˆØÙ[™K™š][Ù[
+
+JNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\Èš]H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆš]œÙ]X\™Ú[œÊ
+Ž
+K
+M
+K
+NÂˆÝYÙK˜YšY]Êš]š]
+NÂˆY™\Ù[][Û\X\˜[˜ÙPÛÛ›ÛÊÝYÙKØÙ[™K
+LŒŠJNÂ‚ˆ^šY]È[HX™[
+‘QÈÈÔ’U0­ÈSÒÈ“ÓÓH0­ÈTHT•È“ÐÕTÈ‹KUUQ
+NÂˆ[œÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆ[œÙ]]\”ÜXÚ[™ÊŒŠNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\È[H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹
+Ì
+KÜ˜]š]K“ÕÓHÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+NÂˆ[˜›ÝÛSX\™Ú[ˆH
+LŠNÂˆÝYÙK˜YšY]Ê[[
+NÂ‚ˆËÈ\ÙH\™H[X™\˜][HYÚÙZYÚØ[Ý]ÎˆH[Ù[™[XZ[œÈBˆËÈ\›ÈÚ[HHØ[YH›ÙXÝ›ØØX[\žH\ÈHÝ\YY™Y™\™[˜ÙBˆËÈY[YšY\ÈHš[ÛÛ^\›Ý[™]‚ˆËÈH™Y™\™[˜ÙH\ÈH\ÚÝÜ\Ú^™YÙ[\™Y˜YÙKˆÛˆHÛ™K›ÜˆËÈ][ÈHÜ[ˆ\\ˆÝYÙHÛÈ]™]™\ˆÛÛ\]\ÈÚ]H]K‚ˆÝYÙK˜YšY]ÊØÙ[™UYÊŒH‹”UH‹Ý\œ™[]SX™[
+
+KÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+
+JJNÂˆËÈÚ]™HXXÚØ[Ý]HYXØ]Yš\ÝX[[™KˆÙ[\‹]™\XØ[ˆËÈXÙ[Y[ÛÚÜÈ˜[[˜ÙYÛˆH\ÚÝÜØ[˜\Ë]ÛˆH[Û™BˆËÈ]]È[ÈÝ™\ˆH\›ÈY\ÚÜˆH\X\˜[˜ÙHÛÛ›ÛÈ[™ˆËÈXZÙ\ÈHÝYH™Y[ZÙH[ˆX\›HXYÈÝ™\›^K‚ˆÝYÙK˜YšY]ÊØÙ[™UYÊ“H‹“PUT’PS‹›Ùš[SX]\šX[X™[
+
+KÜ˜]š]K•ÔÜ˜]š]K”ÕT•
+MŠK
+LÍŠJJNÂˆÝYÙK˜YšY]ÊØÙ[™UYÊ¸£ H‹”ÕTÔ•È‹ÛÛ™šYËœÝ\ÜÈÈUUÈˆˆ“Ñ‘ˆ‹Ü˜]š]K“ÕÓHÜ˜]š]K‘S‘
+MŠK
+MM
+JJNÂˆÝYÙK˜YšY]ÊØÙ[™UYÊ¸¥¨È‹”’S•Tˆ‹›Ùš[Tš[\“X™[
+
+KÕ\\Ø\ÙJØØ[K•TÊKÜ˜]š]K“ÕÓHÜ˜]š]K”ÕT•
+ŒŠK
+ŒŠJJNÂˆYÙK˜YšY]ÊÝYÙK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLKJJNÂ‚ˆ[™X\“^[Ý]›ÛÝ\ˆH™]È[™X\“^[Ý]
+\ÊNÂˆ›ÛÝ\‹œÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ›ÛÝ\‹œÙ]Y[™Ê
+M
+K
+L
+K
+M
+K
+M
+JNÂˆ›ÛÝ\‹œÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•ÒUJNÂˆ^šY]ÈY]HHX™[
+Ý\œ™[]SX™[
+
+H
+Èˆ0­Èˆ
+È›Ùš[TÚÜX™[
+
+KLKUUQ
+NÂˆY]KœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆY]KœÙ]Ú[™ÛS[™JYJNÂˆY]KœÙ][\Ú^™J[™›ÚY^•^][Ë•[˜Ø]P]‘S‘
+NÂˆY]KœÙ]Z[•ÚY
+
+LL
+JNÂˆ›ÛÝ\‹˜YšY]ÊY]K™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+L
+KJJNÂˆ]ÛˆÝYHHX[ÙÐ]ÛŠLHÝYH‹ˆOˆÂˆX[ÙË™\ÛZ\ÜÊ
+NÂˆÚÝÔš[\”ÝYJ
+NÂˆJNÂˆÝYKœÙ]ÛÛ[\ØÜš\[ÛŠ“Ü[ˆLHZ[šHš\ÝX[ÝYHŠNÂˆ›ÛÝ\‹˜YšY]ÊÝYK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹
+L
+JJNÂˆYˆ
+ÛXÙHOH[
+HÂˆ]Ûˆ]HX[ÙÐ]ÛŠ”]šY]È‹[
+NÂˆ]œÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆØÙ[™KœÙ]ÛÛ]Û›J\ØÙ[™Kš\ÕÛÛ]Û›J
+JNÂˆ]œÙ]^
+ØÙ[™Kš\ÕÛÛ]Û›J
+HÈ“[Ù[šY]Èˆˆ”]šY]ÈŠNÂˆJNÂˆ›ÛÝ\‹˜YšY]Ê]™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹
+L
+JJNÂˆBˆYˆ
+[Ù[œ\ÈOH[	‰ˆ[Ù[œ\Ë›[™ÝˆJHÂˆ]Ûˆ\ÜÙ[X›HHX[ÙÐ]ÛŠ‘^ÙH‹[
+NÂˆ\ÜÙ[X›KœÙ]ÛÛ[\ØÜš\[ÛŠ•ÙÙÛH^ÙY\ÜÙ[X›HšY]ÈŠNÂˆ\ÜÙ[X›KœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆ›ÛÛX[ˆ^ÙYH\ØÙ[™Kš\Ñ^ÙY™\Ù[][ÛŠ
+NÂˆØÙ[™KœÙ]^ÙY™\Ù[][ÛŠ^ÙY
+NÂˆ\ÜÙ[X›KœÙ]^
+^ÙYÈ\ÜÙ[X›Hˆˆ‘^ÙHŠNÂˆØ\Ý›XZÙU^
+\Ë^ÙYÈ‘^ÙY[œÜXÝ[ÛˆšY]Èˆˆ\ÜÙ[X›Y[œÜXÝ[ÛˆšY]È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJNÂˆ›ÛÝ\‹˜YšY]Ê\ÜÙ[X›K™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹
+L
+JJNÂˆBˆ]Ûˆœ˜[Z[™ÈHX[ÙÐ]ÛŠ“XXÚ[™HšY]È‹[
+NÂˆœ˜[Z[™ËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆ›ÛÛX[ˆXXÚ[™HHœ˜[Z[™Ë™Ù]^
+
+KÔÝš[™Ê
+K™\]X[Ê“XXÚ[™HšY]ÈŠNÂˆØÙ[™KœÙ]™\Ù[][Û“[ÙJXXÚ[™JNÂˆØÙ[™KœÙ]ÛX[”™\Ù[][ÛŠ[XXÚ[™JNÂˆœ˜[Z[™ËœÙ]^
+XXÚ[™HÈ’\›ÈšY]Èˆˆ“XXÚ[™HšY]ÈŠNÂˆJNÂˆ›ÛÝ\‹˜YšY]Êœ˜[Z[™Ë™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹
+L
+JJNÂˆ]ÛˆÛ™HHX[ÙÐ]ÛŠ‘Û™H‹ˆOˆX[ÙË™\ÛZ\ÜÊ
+JNÂˆÛ™KœÙ]^Ú^™JLÊNÂˆÛ™KœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈÛ™SH™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+M
+KJNÂˆÛ™S›YX\™Ú[ˆH
+
+NÂˆ›ÛÝ\‹˜YšY]ÊÛ™KÛ™S
+NÂˆYÙK˜YšY]Ê›ÛÝ\‹™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+Î
+JJNÂ‚ˆX[ÙËœÙ]ÛÛ[šY]ÊYÙJNÂˆX[ÙËœÙ]Û‘\ÛZ\ÜÓ\Ý[™\ŠYÛ›Ü™YOˆØÙ[™K›Û’ÜÝ]\ÙJ
+JNÂˆX[ÙËœÚÝÊ
+NÂˆÚ[™ÝÈÚ[™ÝÈHX[ÙË™Ù]Ú[™ÝÊ
+NÂˆYˆ
+Ú[™ÝÈOH[
+HÂˆÚ[™ÝËœÙ]˜XÚÙÜ›Ý[™˜]ØX›T™\ÛÝ\˜ÙJ[™›ÚY”‹˜ÛÛÜ‹˜[œÜ\™[
+NÂˆÚ[™ÝËœÙ]^[Ý]
+LKLJNÂˆ[\”™\Ù[][Û“[ÙJÚ[™ÝÊNÂˆBˆB‚ˆš]˜]H]ÛˆX[ÙÐ]ÛŠÝš[™È^šY]Ë“ÛÛXÚÓ\Ý[™\ˆ\Ý[™\ŠHÂˆ]Ûˆ]ÛˆH™]È]ÛŠ\ÊNÂˆ]Û‹œÙ]^
+^
+NÂˆ]Û‹œÙ]^Ú^™JLŠNÂˆ]Û‹œÙ]^ÛÛÜŠV
+NÂˆ]Û‹œÙ][Ø\Ê˜[ÙJNÂˆ]Û‹œÙ]Ý]S\Ý[š[X]ÜŠ[
+NÂˆ]Û‹œÙ]Z[’ZYÚ
+
+
+JNÂˆ]Û‹œÙ]Y[™Ê
+M
+K
+M
+K
+NÂˆ]Û‹œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKN
+JNÂˆ]Û‹œÙ]ÛÛXÚÓ\Ý[™\Š\Ý[™\ŠNÂˆ™]\›ˆ]ÛŽÂˆB‚ˆÊŠˆ™[[Ý™H]›Ü›HÚ›ÛYHÚ[HH™\Ù[][ÛˆÝYH\ÈÛˆØÜ™Y[‹ˆ
+‹Âˆš]˜]H›ÚY[\”™\Ù[][Û“[ÙJÚ[™ÝÈÚ[™ÝÊHÂˆYˆ
+Ú[™ÝÈOH[
+H™]\›ŽÂˆËÈX[ÙÈÚ[™ÝÜÈØ[ˆœšYY›H[š\š]HÜÝXÝ]š]IÜÈÞ\Ý[KX˜\‚ˆËÈÛXÞH\š[™ÈHÛÛ][˜ÚˆHÝYH\ÈH[X›YY›ÙXÝˆËÈÝ\™˜XÙKÛÈXZÙH[ØÜ™Y[ˆ[ˆ^XÚ]Ú[™ÝÈ›Ü\H\ÈÙ[\ÂˆËÈ[ˆ[œÙ]È™\]Y\ÝÈÝ\Ú\ÙHÝ]\ËÛ˜]šYØ][ÛˆÚ›ÛYHØ[ˆ\X\‚ˆËÈÝ™\ˆX\šÙ][™ÈØ\\™\È[™Ú[™ÙHHÛÛ\ÜÚ][Û‹‚ˆÚ[™ÝË˜Y›YÜÊ[™›ÚYšY]Ë•Ú[™ÝÓX[˜YÙ\‹“^[Ý]\˜[\Ë‘“Q×Ñ•SÐÔ‘QSŠNÂˆYˆ
+Z[•‘T”ÒSÓ‹”Ñ×ÒS•HÌ
+HÂˆÚ[™ÝËœÙ]XÛÜ‘š]ÔÞ\Ý[UÚ[™ÝÜÊ˜[ÙJNÂˆ[™›ÚYšY]Ë•Ú[™ÝÒ[œÙ]ÐÛÛ›Û\ˆÛÛ›Û\ˆHÚ[™ÝË™Ù][œÙ]ÐÛÛ›Û\Š
+NÂˆYˆ
+ÛÛ›Û\ˆOH[
+HÂˆÛÛ›Û\‹šYJÚ[™ÝÒ[œÙ]Ë•\KœÞ\Ý[P˜\œÊ
+JNÂˆÛÛ›Û\‹œÙ]Þ\Ý[P˜\œÐ™Z]š[ÜŠˆ[™›ÚYšY]Ë•Ú[™ÝÒ[œÙ]ÐÛÛ›Û\‹‘RU’SÔ—ÔÒÕ×ÕS”ÒQS•ÐT”×Ð–WÔÕÒTJNÂˆBˆH[ÙHÂˆÚ[™ÝË™Ù]XÛÜ•šY]Ê
+KœÙ]Þ\Ý[UZUš\ÚXš[]JˆšY]Ë”ÖTÕSWÕRWÑ“Q×Ñ•SÐÔ‘QS‚ˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÒQWÓU’QÐUSÓ‚ˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÒSSQT”ÒU‘WÔÕPÒÖBˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÓVSÕUÑ•SÐÔ‘QS‚ˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÓVSÕUÒQWÓU’QÐUSÓ‚ˆšY]Ë”ÖTÕSWÕRWÑ“Q×ÓVSÕUÔÕP“JNÂˆBˆB‚ˆÊŠ‚ˆ
+ˆ™\Ù[][ÛˆÛÛ›ÛÈ\™H[[[Û˜[H[œÚYHHÑÝYÙHÛÈBˆ
+ˆš\ÝX[™X]Y[\È\ØÛÝ™\˜X›Kˆ^HÛ›HÚ[™ÙH™[™\™\ˆ[šY›Ü›\ÎÂˆ
+ˆÙ[ÛY]žK™XÚ\\ËÛXÙ\È[™š[\ˆÛÛ[X[™È™[XZ[ˆ[ÝXÚY‚ˆ
+‹Âˆš]˜]H›ÚYY™\Ù[][Û\X\˜[˜ÙPÛÛ›ÛÊœ˜[YS^[Ý]ÝYÙKšY]ÜÜšY]ÈØÙ[™K[ÜX\™Ú[ŠHÂˆ]Ûˆš[š\ÚHX[ÙÐ]ÛŠÕQS×Ñ’S’TÒTÖÜØÙ[™K™Ù]š[š\Ú[ÙJ
+WK[
+NÂˆš[š\ÚœÙ]^Ú^™JL
+NÂˆš[š\ÚœÙ]Z[•ÚY
+
+LLŠJNÂˆš[š\ÚœÙ]ÛÛ[\ØÜš\[ÛŠÞXÛHÝY[Èš[š\ÚŠNÂˆš[š\ÚœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆ[™^H
+ØÙ[™K™Ù]š[š\Ú[ÙJ
+H
+ÈJH	HÕQS×Ñ’S’TÒTË›[™ÝÂˆØÙ[™KœÙ]š[š\Ú[ÙJ™^
+NÂˆš[š\ÚœÙ]^
+ÕQS×Ñ’S’TÒTÖÛ™^JNÂˆØ\Ý›XZÙU^
+\Ë”ÝY[Èš[š\Ú0­Èˆ
+ÈÕQS×Ñ’S’TÒTÖÛ™^KØ\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\Èš[š\ÚH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹
+
+KÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆš[š\ÚœÙ]X\™Ú[œÊÜX\™Ú[‹
+M
+K
+NÂˆÝYÙK˜YšY]Êš[š\Úš[š\Ú
+NÂ‚ˆ]Ûˆ[YHHX[ÙÐ]ÛŠ“YÚÝYÙH‹[
+NÂˆ[YKœÙ]^Ú^™JL
+NÂˆ[YKœÙ]Z[•ÚY
+
+LLŠJNÂˆ[YKœÙ]ÛÛ[\ØÜš\[ÛŠ•ÙÙÛHÝY[ÈÝYÙH[YHŠNÂˆ[YKœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆ›ÛÛX[ˆ\šÈH\ØÙ[™Kš\ÓšYÚÝYÙJ
+NÂˆØÙ[™KœÙ]šYÚÝYÙJ\šÊNÂˆ[YKœÙ]^
+\šÈÈ‘\šÈÝYÙHˆˆ“YÚÝYÙHŠNÂˆØ\Ý›XZÙU^
+\Ë\šÈÈ‘\šÈÝY[ÈÝYÙHˆˆ“YÚÝY[ÈÝYÙH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\È[YSH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹
+
+KÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆ[YSœÙ]X\™Ú[œÊÜX\™Ú[ˆ
+È
+
+K
+M
+K
+NÂˆÝYÙK˜YšY]Ê[YK[YS
+NÂˆB‚ˆš]˜]HšY]ÈØÙ[™UYÊÝš[™ÈÛ\Ýš[™È^YXœ›ÝËÝš[™È˜[YK[Ü˜]š]Kˆ[Üš^›Û[X\™Ú[‹[™\XØ[X\™Ú[ŠHÂˆ[™X\“^[Ý]YÈH™]È[™X\“^[Ý]
+\ÊNÂˆYËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]’Ô’V“Ó•S
+NÂˆYËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆYËœÙ]Y[™Ê
+ŠK
+JK
+LŠK
+JJNÂˆYËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹˜\™ØŠ‹MKMKMJKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKŒŠJNÂˆYËœÙ][]˜][ÛŠ
+
+JNÂˆ^šY]ÈXÛÛˆHX™[
+Û\Û\›[™Ý
+
+HˆˆÈHˆLËS’ÊNÂˆXÛÛ‹œÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆXÛÛ‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆXÛÛ‹œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠËŒÍÊKÛÛÜ‹œ™ØŠNLKNMÌJKKMÊJNÂˆYË˜YšY]ÊXÛÛ‹™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ÌŠK
+ÌŠJJNÂˆ[™X\“^[Ý]ÛÜHH™]È[™X\“^[Ý]
+\ÊNÂˆÛÜKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆÛÜKœÙ]Y[™Ê
+ÊK
+NÂˆ^šY]ÈÛX[HX™[
+^YXœ›ÝËUUQ
+NÂˆÛX[œÙ]]\”ÜXÚ[™ÊŒŠNÂˆ^šY]ÈXZ[ˆHX™[
+˜[YKLKV
+NÂˆXZ[‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆÛÜK˜YšY]ÊÛX[
+NÂˆÛÜK˜YšY]ÊXZ[ŠNÂˆYË˜YšY]ÊÛÜJNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]JNÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K”ÕT•
+HOH
+H›YX\™Ú[ˆHÜš^›Û[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K‘S‘
+HOH
+HœšYÚX\™Ú[ˆHÜš^›Û[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K•Ô
+HOH
+HÜX\™Ú[ˆH™\XØ[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K“ÕÓJHOH
+H˜›ÝÛSX\™Ú[ˆH™\XØ[X\™Ú[ŽÂˆYËœÙ]^[Ý]\˜[\Ê
+NÂˆ™]\›ˆYÎÂˆB‚ˆÊŠˆH]ZY]\ˆÛÛ™šYÝ\˜]Üˆ[›ÜˆHÝ[™[Û™HXXÚ[™HX\šÙ][™ÈÝYKˆ
+‹Âˆš]˜]HšY]ÈÛÛ\XÝØÙ[™UYÊÝš[™ÈÛ\Ýš[™È^YXœ›ÝËÝš[™È˜[YK[Ü˜]š]Kˆ[Üš^›Û[X\™Ú[‹[™\XØ[X\™Ú[ŠHÂˆ[™X\“^[Ý]YÈH™]È[™X\“^[Ý]
+\ÊNÂˆYËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]’Ô’V“Ó•S
+NÂˆYËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆYËœÙ]Y[™Ê
+ÊK
+ŠK
+ÊK
+ŠJNÂˆYËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹˜\™ØŠŒÎMKMKMJKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKN
+JNÂˆYËœÙ][]˜][ÛŠ
+ÊJNÂˆ^šY]ÈXÛÛˆHX™[
+Û\Û\›[™Ý
+
+HˆˆÈÈˆLS’ÊNÂˆXÛÛ‹œÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆXÛÛ‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆXÛÛ‹œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠËŒÍÊKÛÛÜ‹œ™ØŠNLKNMÌJKKLŠJNÂˆYË˜YšY]ÊXÛÛ‹™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ŒŠK
+ŒŠJJNÂˆ[™X\“^[Ý]ÛÜHH™]È[™X\“^[Ý]
+\ÊNÂˆÛÜKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆÛÜKœÙ]Y[™Ê
+ŠK
+NÂˆ^šY]ÈÛX[HX™[
+^YXœ›ÝË‹UUQ
+NÂˆÛX[œÙ]]\”ÜXÚ[™ÊŒÙŠNÂˆ^šY]ÈXZ[ˆHX™[
+˜[YKKV
+NÂˆXZ[‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆÛÜK˜YšY]ÊÛX[
+NÂˆÛÜK˜YšY]ÊXZ[ŠNÂˆYË˜YšY]ÊÛÜJNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]JNÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K”ÕT•
+HOH
+H›YX\™Ú[ˆHÜš^›Û[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K‘S‘
+HOH
+HœšYÚX\™Ú[ˆHÜš^›Û[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K•Ô
+HOH
+HÜX\™Ú[ˆH™\XØ[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K“ÕÓJHOH
+H˜›ÝÛSX\™Ú[ˆH™\XØ[X\™Ú[ŽÂˆYËœÙ]^[Ý]\˜[\Ê
+NÂˆ™]\›ˆYÎÂˆB‚ˆš]˜]HšY]ÈZ[XY\Š
+HÂˆœ˜[YS^[Ý]XY\ˆH™]Èœ˜[YS^[Ý]
+\ÊNÂˆËÈH[™Y›Ùš[H\ÈÛÝ\˜ÙKX˜XÚÙY]\ÚXØ[\š[›Û[Ý[Û‚ˆËÈ™[XZ[œÈHÙ\\˜]HØ]H[[H˜]]™KÜ[[YH[™™X[\š[\‚ˆËÈXØÙ\[˜ÙH]šY[˜ÙH\ÈÛÛ\]Kˆ]›ÚY™\Ù[[™È][[[Û˜[ˆËÈ˜Z[XÛÜÙYÝ]H\ÈYˆH›Ùš[HÙ\™HX[›Ü›YYÜˆ[\ÝY‚ˆÝš[™È›Ùš[TÝ]HH›Ùš[HOH[	‰ˆ›Ùš[K™\šYšYYÈ”“Ñ’SH‘T’Q’QQˆˆ”“Ñ’SH‘U’QUÈ‘TURT‘QŽÂˆ^šY]ÈÛÛ^HX™[
+•ÓÔ’ÔÒÔ”Ó‘KQ’T”Õ0­Èˆ
+È›Ùš[TÝ]KKUUQ
+NÂˆÛÛ^œÙ]]\”ÜXÚ[™ÊŒLYŠNÂˆÛÛ^œÙ][™TÜXÚ[™Ê‹KŒŠNÂˆËÈÙY\HÛÛ^X[ÛÜH™[ÝÈHÙ[\™YÛÜ™X\šÈÛˆ˜\œ›ÝÂˆËÈÛ™\ÎÈHÛ™È›Ùš[HÝ]H]\Ý™]™\ˆ™[™\ˆ[™\›™X]HÙÛË‚ˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÛÛ^H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]K“ÕÓHÜ˜]š]K”ÕT•
+NÂˆÛÛ^›YX\™Ú[ˆH
+
+NÂˆÛÛ^˜›ÝÛSX\™Ú[ˆHÂˆXY\‹˜YšY]ÊÛÛ^ÛÛ^
+NÂˆÛÛ^œÙ]ÛÛ[\ØÜš\[ÛŠ“Ü[ˆX\›Žˆ™YÚ[›™\ˆÝZYKX]\šX[È[™›ÝX›\ÚÛÝ[™ÈŠNÂˆÛÛ^œÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÓX\›’XŠ
+JNÂ‚ˆËÈH™X[X\šÈÝÛœÈHš\ÝX[Ù[™HÙˆHXY\‹ˆ]\ÈÛ\YˆËÈÈHÚ\˜ÛK˜]\ˆ[ˆ™Z[™ÈØØ[YÝÛˆ[œÚYHÛ™KÛÈH›XÚÂˆËÈšY[[™[Z[›Ý\È]\š[™È™]Z[ˆH[[™YXÛÛˆ™X]Y[‚ˆ[XYÙUšY]ÈÙÛÈH[ÞSÙÛÊ
+NÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÙÛÓH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+NÂˆÙÛÓÜX\™Ú[ˆHÂˆXY\‹˜YšY]ÊÙÛËÙÛÓ
+NÂ‚ˆ[™X\“^[Ý]YÛÛ›ÛÈH™]È[™X\“^[Ý]
+\ÊNÂˆYÛÛ›ÛËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ^šY]Èš[\”ÝYHHÛÛ›Û
+ŒÑ‹“Ü[ˆ[Ù[ÑÝYH‹ˆOˆÂˆYˆ
+[Ù[OH[
+HÚÝÓ[Ù[Xœ˜\žJ
+NÂˆ[ÙHÚÝÒ[[Y\œÚ]™UšY]Ê
+NÂˆJNÂˆ^šY]ÈXXÚ[™TÝYHHÛÛ›Û
+LH‹“Ü[ˆLHZ[šHÑÝYH‹ˆOˆÚÝÔš[\”ÝYJ
+JNÂˆYÛÛ›ÛË˜YšY]Êš[\”ÝYK™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠJJNÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈXXÚ[™TÝYSH™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠJNÂˆXXÚ[™TÝYS›YX\™Ú[ˆH
+ŠNÂˆYÛÛ›ÛË˜YšY]ÊXXÚ[™TÝYKXXÚ[™TÝYS
+NÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈYÛÛ›ÛÓH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]K•ÔÜ˜]š]K”ÕT•
+NÂˆYÛÛ›ÛÓ›YX\™Ú[ˆH
+ŠNÂˆXY\‹˜YšY]ÊYÛÛ›ÛËYÛÛ›ÛÓ
+NÂ‚ˆ[™X\“^[Ý]šYÚÛÛ›ÛÈH™]È[™X\“^[Ý]
+\ÊNÂˆšYÚÛÛ›ÛËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ^šY]È[™[ÜžHHÛÛ›Û
+¸¥©ˆ‹•ÛÜšÜÚÜ[™[ÜžH‹ˆOˆÚÝÒ[™[ÜžJ
+JNÂˆ^šY]ÈY[HHÛÛ›Û
+°­È‹”›Ú™XÝY[H‹ˆOˆÚÝÔ›Ú™XÝY[J
+JNÂˆ[™X\“^[Ý]“^[Ý]\˜[\Èš[\’[™[ÜžSH™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠJNÂˆšYÚÛÛ›ÛË˜YšY]Ê[™[ÜžKš[\’[™[ÜžS
+NÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈY[SH™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠJNÂˆY[S›YX\™Ú[ˆH
+ŠNÂˆšYÚÛÛ›ÛË˜YšY]ÊY[KY[S
+NÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈšYÚÛÛ›ÛÓH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆšYÚÛÛ›ÛÓœšYÚX\™Ú[ˆH
+ŠNÂˆXY\‹˜YšY]ÊšYÚÛÛ›ÛËšYÚÛÛ›ÛÓ
+NÂˆ™]\›ˆXY\ŽÂˆB‚ˆÊŠˆHÝ[™[Û™HLHZ[šHÝYHXZÙ\ÈHÝ\YYÜ™]šY]ÙYš[\ˆ[Ù[\ØÛÝ™\˜X›Kˆ
+‹Âˆš]˜]H›ÚYÚÝÔš[\”ÝYJ
+HÂˆš[˜[X[ÙÈX[ÙÈH™]ÈX[ÙÊ\ÊNÂˆX[ÙËœ™\]Y\ÝÚ[™ÝÑ™X]\™JÚ[™ÝË‘‘PUT‘WÓ“×ÕUJNÂˆ[™X\“^[Ý]YÙHH™]È[™X\“^[Ý]
+\ÊNÂˆYÙKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆYÙKœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•ÒUJNÂˆYÙKœÙ]Y[™Ê
+NÂ‚ˆœ˜[YS^[Ý]ÝYÙHH™]Èœ˜[YS^[Ý]
+\ÊNÂˆÝYÙKœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•ÒUJNÂˆÝYÙKœÙ]Û\ÓÝ][™J˜[ÙJNÂˆšY]ÜÜšY]ÈØÙ[™HH™]ÈšY]ÜÜšY]Ê\ÊNÂˆØÙ[™KœÙ]XXÚ[™TÝYJYJNÂˆØÙ[™KœÙ]™\Ù[][Û“[ÙJYJNÂˆØÙ[™KœÙ]ÛX[”™\Ù[][ÛŠ˜[ÙJNÂˆËÈÝ\[ˆHYÚZ\žH™X]Y[\ÙYžHHÝ\YY›ÙXÝˆËÈ™Y™\™[˜ÙKˆH\X\˜[˜ÙHÛÛ›ÛÝ[^ÜÙ\ÈH\šÈÝYKˆËÈ]Hš\œÝœ˜[YHÚÝ[XZÙHHXXÚ[™H[™]ÈØØ[H›ÜÂˆËÈ[[YYX][H\ØÛÝ™\˜X›H[œÝXYÙˆY[™È[H[ˆH›XÚÈšY[‚ˆØÙ[™KœÙ]šYÚÝYÙJ˜[ÙJNÂˆØÙ[™KœÙ][Ù[
+[
+NÂˆÝYÙK˜YšY]ÊØÙ[™K™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊLKLJJNÂ‚ˆ^šY]È]HHX™[
+LHRS’W˜[XHX—ŒN0åÈN0åÈNSH‹KV
+NÂˆ]KœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆ]KœÙ]]\”ÜXÚ[™ÊŒ™ŠNÂˆ]KœÙ][™TÜXÚ[™ÊËKŒŠNÂˆ]KœÙ]Y[™Ê
+ŠK
+ŠK
+ŠK
+ŠJNÂˆ]KœÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•S”ÔT‘S•
+NÂˆœ˜[YS^[Ý]“^[Ý]\˜[\È]SH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŒMJKL‹Ü˜]š]K•ÔÜ˜]š]K”ÕT•
+NÂˆ]SœÙ]X\™Ú[œÊ
+Œ
+K
+N
+K
+NÂˆÝYÙK˜YšY]Ê]K]S
+NÂˆ[XYÙUšY]ÈÙÛÈH[ÞSÙÛÊ
+NÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÙÛÓH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•S
+NÂˆÙÛÓÜX\™Ú[ˆH
+LŠNÂˆÝYÙK˜YšY]ÊÙÛËÙÛÓ
+NÂˆ^šY]ÈÛÜÙHHÛÛ›Û
+°åÈ‹ÛÜÙHLHZ[šHÑÝYH‹ˆOˆX[ÙË™\ÛZ\ÜÊ
+JNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈÛÜÙSH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆÛÜÙSœÙ]X\™Ú[œÊ
+M
+K
+M
+K
+NÂˆÝYÙK˜YšY]ÊÛÜÙKÛÜÙS
+NÂˆ^šY]Èš]HÛÛ›Û
+¸¢¦H‹‘š]LHZ[šH[ˆÝYHšY]È‹ˆOˆØÙ[™K™š][Ù[
+
+JNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\Èš]H™]Èœ˜[YS^[Ý]“^[Ý]\˜[\Ê
+ŠK
+ŠKÜ˜]š]K•ÔÜ˜]š]K‘S‘
+NÂˆš]œÙ]X\™Ú[œÊ
+Ž
+K
+M
+K
+NÂˆÝYÙK˜YšY]Êš]š]
+NÂˆËÈHÝ\YY™Y™\™[˜ÙH\ÈHØ[H›ÙXÝÛÛ™šYÝ\˜]ÜŽˆØ[Ý]ÂˆËÈÜ˜š]H\›ÈÝXš™XÝÚ[HÛÛ›ÛÈÝ^H]ZY]]HYÙ\Ë‚ˆËÈÙY\H™[™\™\ˆÛÛ›ÛÈ]˜Z[X›H›ÝYÚHØÙ[™H]Ù[‹]ˆËÈÈ›Ý][HÛZ[˜]HHš\œÝX\šÙ][™Èœ˜[YK‚ˆËÈX]ÚHÝ\YYÛÛ™šYÝ\˜]Ü‰ÜÈš\ÝX[Ü˜[[X\ŽˆÛ™H]ZY]Ú^™BˆËÈÙ[XÝÜˆX›Ý™HH\›ËX]\šX[[™›Þž›HÙ[XÝÜœÈÜ˜š][™È]ˆËÈ[™Û›HÛÈÛX[ÛÛ^Ù[XÝÜœÈ™X\ˆHÝÙ\ˆYÙKˆBˆËÈX™[È\™H™\Ù[][Û‹[Û›NÈš[\ˆÛÛ™šYÝ\˜][Ûˆ™[XZ[œÈ[ˆBˆËÈXÝX[™\\˜][Ûˆ[™Z\š[™È›ÝÜË‚ˆËÈÙY\HÛÛ™šYÝ\˜X›HX™[È[ˆ]ZY]ÜØ›ÝÛH˜[™ËˆHÛ\‚ˆËÈÜ˜š]^[Ý]]X]\šX[[™›Þž›H[È\™XÝHÝ™\ˆBˆËÈXXÚ[™IÜÈØ[žH[™\šYÚÈÛˆÜ˜Z]Û™\ËØœØÝ\š[™ÈBˆËÈ™\žHY\Ú\ÈÝYH\ÈYX[È™\Ù[‚ˆËÈHš]]ÛˆØØÝ\Y\ÈH\\‹\šYÚÛÛ›Û˜Z[ˆÙY\[ˆËÈ™YHÛÛ™šYÝ\˜]ÜˆØ[Ý]È™[ÝÈ]˜Z[ÛˆÜ˜Z]ØÜ™Y[œÎÂˆËÈH™]š[Ý\ÈÎ›ÝÈÛÛYYÚ]H›Þž›H[[™š]]Û‚ˆËÈÛˆ˜\œ›ÝÈ]šXÙ\ËXZÚ[™ÈHš\œÝœ˜[YH™Y[ZÙHHXYÈQ‚ˆËÈX]™HH[ÛÛ›ÛZZYÚ\ÈÝXÚ\ÜXÚ[™È™[ÝÈHš]]Û‹‚ˆËÈÛˆ[[œÙHÛ™\ÈLÝ[[™YÛˆ]˜Z[Y\ˆÝ]\ÂˆËÈ˜\‹ÝÚ[™ÝÈ[œÙ]ÈÙ\™H\YYÈHÝYÙK‚ˆ[Ø[Ý]ÜH
+MŒ
+NÂˆšY]ÈÚ^™UYÈHÛÛ\XÝØÙ[™UYÊ¸¥¨H‹”ÒV‘H‹ŒN0åÈN0åÈNSH‹ˆÜ˜]š]K•ÔÜ˜]š]KÑS•T—ÒÔ’V“Ó•SØ[Ý]Ü
+NÂˆÚ^™UYËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆØÙ[™K™š][Ù[
+
+NÂˆØ\Ý›XZÙU^
+\ËLHZ[šH›Û[YH0­ÈN0åÈN0åÈN[H‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJNÂˆÝYÙK˜YšY]ÊÚ^™UYÊNÂˆšY]ÈX]\šX[YÈHÛÛ\XÝØÙ[™UYÊ¸¥ã‹“PUT’PS‹“UTSH‹ˆÜ˜]š]K•ÔÜ˜]š]K”ÕT•
+
+KØ[Ý]Ü
+NÂˆX]\šX[YËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆ[™^H
+ØÙ[™K™Ù]š[š\Ú[ÙJ
+H
+ÈJH	HNÂˆØÙ[™KœÙ]š[š\Ú[ÙJ™^
+NÂˆÝš[™Ö×Hš[š\Ú\ÈHÈ“˜]\˜[H‹“X]H›XÚÈ‹”Ú[ÈÚ]H‹”ÚYÛ˜[Ü˜[™ÙH‹”ÝY[›YHŸNÂˆØ\Ý›XZÙU^
+\Ë”™]šY]Èš[š\Ú0­Èˆ
+Èš[š\Ú\ÖÛ™^KØ\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJNÂˆÝYÙK˜YšY]ÊX]\šX[YÊNÂˆšY]È›Þž›UYÈHÛÛ\XÝØÙ[™UYÊ¸£ H‹““Ö–“H‹ŒSH‹ˆÜ˜]š]K•ÔÜ˜]š]K‘S‘
+
+KØ[Ý]Ü
+NÂˆ›Þž›UYËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÔ›Ùš[T™]šY]Ê
+JNÂˆÝYÙK˜YšY]Ê›Þž›UYÊNÂˆšY]Èš[\•YÈHÛÛ\XÝØÙ[™UYÊLH‹”’S•Tˆ‹LHRS’H‹ˆÜ˜]š]K“ÕÓHÜ˜]š]K”ÕT•
+LŠK
+N
+JNÂˆš[\•YËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÔš[\”Ý]\Ê
+JNÂˆÝYÙK˜YšY]Êš[\•YÊNÂˆšY]ÈØØ[UYÈHÛÛ\XÝØÙ[™UYÊ¸¢b‹”ÐÐSH‹ÐSˆ0­ÈS0­ÈÑVH‹ˆÜ˜]š]K“ÕÓHÜ˜]š]K‘S‘
+LŠK
+N
+JNÂˆØØ[UYËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÂˆYˆ
+[Ù[OH[
+HÂˆØ\Ý›XZÙU^
+\Ë’[\ÜH[Ù[È\ÙHÛ›ÝÛ‹Y[Y[œÚ[ÛˆØØ[[™È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆH[ÙHÂˆÚÝÔØØ[UÒÛ›ÝÛ‘[Y[œÚ[ÛŠ
+NÂˆBˆJNÂˆÝYÙK˜YšY]ÊØØ[UYÊNÂˆYÙK˜YšY]ÊÝYÙK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLKJJNÂ‚ˆ[™X\“^[Ý]›ÛÝ\ˆH™]È[™X\“^[Ý]
+\ÊNÂˆ›ÛÝ\‹œÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆ›ÛÝ\‹œÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ›ÛÝ\‹œÙ]Y[™Ê
+N
+K
+L
+K
+N
+K
+LŠJNÂˆ›ÛÝ\‹œÙ]˜XÚÙÜ›Ý[™ÛÛÜŠÛÛÜ‹•ÒUJNÂˆ^šY]È›ÝHHX™[
+SÖH0­ÈLHRS’H‹KUUQ
+NÂˆ›ÝKœÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆ›ÝKœÙ]^[YÛ›Y[
+šY]Ë•VÐSQÓ“QS•ÐÑS•TŠNÂˆ›ÝKœÙ][™TÜXÚ[™ÊKKŒŠNÂˆ›ÛÝ\‹˜YšY]Ê›ÝK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ŒŠJJNÂˆ[™X\“^[Ý]›ÛÝ\XÝ[ÛœÈH™]È[™X\“^[Ý]
+\ÊNÂˆ›ÛÝ\XÝ[ÛœËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]’Ô’V“Ó•S
+NÂˆ›ÛÝ\XÝ[ÛœËœÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆ]ÛˆÛ™HHX[ÙÐ]ÛŠ‘Û™H‹ˆOˆX[ÙË™\ÛZ\ÜÊ
+JNÂˆÛ™KœÙ]^Ú^™JLÊNÂˆÛ™KœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈÛ™SH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+
+JNÂˆ›ÛÝ\XÝ[ÛœË˜YšY]ÊÛ™KÛ™S
+NÂˆ›ÛÝ\‹˜YšY]Ê›ÛÝ\XÝ[ÛœË™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+
+JJNÂˆYÙK˜YšY]Ê›ÛÝ\‹™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+
+JJNÂ‚ˆX[ÙËœÙ]ÛÛ[šY]ÊYÙJNÂˆX[ÙËœÙ]Û‘\ÛZ\ÜÓ\Ý[™\ŠYÛ›Ü™YOˆØÙ[™K›Û’ÜÝ]\ÙJ
+JNÂˆX[ÙËœÚÝÊ
+NÂˆÚ[™ÝÈÚ[™ÝÈHX[ÙË™Ù]Ú[™ÝÊ
+NÂˆYˆ
+Ú[™ÝÈOH[
+HÂˆÚ[™ÝËœÙ]˜XÚÙÜ›Ý[™˜]ØX›T™\ÛÝ\˜ÙJ[™›ÚY”‹˜ÛÛÜ‹˜[œÜ\™[
+NÂˆÚ[™ÝËœÙ]^[Ý]
+LKLJNÂˆ[\”™\Ù[][Û“[ÙJÚ[™ÝÊNÂˆBˆB‚ˆš]˜]H[™X\“^[Ý]Z[[™[ÜžTÝš\
+
+HÂˆ[™X\“^[Ý]Ø\™H™]È[™X\“^[Ý]
+\ÊNÂˆØ\™œÙ]ÜšY[][ÛŠ[™X\“^[Ý]’Ô’V“Ó•S
+NÂˆØ\™œÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆØ\™œÙ]Y[™Ê
+M
+K
+
+K
+L
+K
+
+JNÂˆØ\™œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKŒ
+JNÂ‚ˆ[™[ÜžTÝ]\ÑÝHX™[
+¸¥ãÈ‹M‹Ô‘QSŠNÂˆ[™[ÜžTÝ]\ÑÝœÙ]ÛÛ[\ØÜš\[ÛŠ•ÛÜšÜÚÜ[™[ÜžHÝ]\ÈŠNÂˆØ\™˜YšY]Ê[™[ÜžTÝ]\ÑÝ™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ŠKLŠJNÂˆ[™X\“^[Ý]ÛÜHH™]È[™X\“^[Ý]
+\ÊNÂˆÛÜKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆ^šY]È]HHX™[
+•ÛÜšÜÚÜ[™[ÜžH‹LËV
+NÂˆ]KœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆ[™[ÜžTÝ[[X\žHHX™[
+ˆ‹LKUUQ
+NÂˆÛÜK˜YšY]Ê]JNÂˆÛÜK˜YšY]Ê[™[ÜžTÝ[[X\žJNÂˆØ\™˜YšY]ÊÛÜK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹JJNÂˆ^šY]ÈÜ[ˆHX™[
+•’QUÈ‹LÓÓ
+NÂˆÜ[‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆÜ[‹œÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆÜ[‹œÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÒ[™[ÜžJ
+JNÂˆØ\™˜YšY]ÊÜ[‹™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+N
+KLJJNÂˆ\]R[™[ÜžTÝ[[X\žJ
+NÂˆ™]\›ˆØ\™ÂˆB‚ˆš]˜]H›ÚY\]R[™[ÜžTÝ[[X\žJ
+HÂˆ[™[Ü™\ˆHÂˆ[Ù\šXÙHHÂˆ[][[ÛˆHÂˆ[ÝØÚÕ[šÛ›ÝÛˆHÂˆ[Ù\šXÙU[šÛ›ÝÛˆHÂˆ›Üˆ
+[™[ÜžTÝÜ™K’][H][Hˆ[™[ÜžTÝÜ™Kš][\Ê
+JHÂˆ›ÛÛX[ˆÝÈH][K›™YYÔ™[Ü™\Š
+NÂˆ›ÛÛX[ˆ\ÙY\H][K›™YYÔÙ\šXÙP][[ÛŠ
+NÂˆYˆ
+ÝÊH™[Ü™\ŠÊÎÂˆYˆ
+\ÙY\
+HÙ\šXÙJÊÎÂˆYˆ
+ÝÈ\ÙY\
+H][[ÛŠÊÎÂˆYˆ
+Z][Kœ]X[]PÛÛ™š\›YY
+HÝØÚÕ[šÛ›ÝÛŠÊÎÂˆYˆ
+Z][KœÙ\šXÙR\ÝÜžPÛÛ™š\›YY
+HÙ\šXÙU[šÛ›ÝÛŠÊÎÂˆBˆÝš[™ÈÝ[[X\žHH][[ÛˆˆˆÈ][[Ûˆ
+Èˆ][Hˆ
+È
+][[ÛˆOHHÈˆˆˆœÈŠH
+Èˆ™YY][[Ûˆ0­È‚ˆ
+È™[Ü™\ˆ
+Èˆ™[Ü™\ˆ0­Èˆ
+ÈÙ\šXÙH
+ÈˆÙ\šXÙHYH‚ˆ
+È
+ÝØÚÕ[šÛ›ÝÛˆ
+ÈÙ\šXÙU[šÛ›ÝÛˆOHÈˆˆˆˆ0­È‚ˆ
+ÈÝØÚÕ[šÛ›ÝÛˆ
+ÈˆÝØÚÈ[šÛ›ÝÛˆ0­Èˆ
+ÈÙ\šXÙU[šÛ›ÝÛˆ
+ÈˆÙ\šXÙH\ÝÜšY\È[šÛ›ÝÛˆŠBˆˆÝØÚÕ[šÛ›ÝÛˆˆÙ\šXÙU[šÛ›ÝÛˆˆˆÈÝØÚÕ[šÛ›ÝÛˆ
+ÈˆÝØÚÈ[[Ý[È›Ý™XÛÜ™Y0­Èˆ
+ÈÙ\šXÙU[šÛ›ÝÛˆ
+ÈˆÙ\šXÙH\ÝÜšY\È[šÛ›ÝÛˆ‚ˆˆ”ÝØÚÈ™XÛÜ™Y0­È›ÈÙ\šXÙHYHŽÂˆ[™[ÜžTÝ[[X\žKœÙ]^
+Ý[[X\žJNÂˆYˆ
+[™[ÜžTÝ]\ÑÝOH[
+HÂˆ[ÛÛÜˆH™[Ü™\ˆˆÈ‘QˆÙ\šXÙHˆÈSP‘T‚ˆˆÝØÚÕ[šÛ›ÝÛˆˆÙ\šXÙU[šÛ›ÝÛˆˆÈUUQˆÔ‘QSŽÂˆ[™[ÜžTÝ]\ÑÝœÙ]^ÛÛÜŠÛÛÜŠNÂˆ[™[ÜžTÝ]\ÑÝœÙ]ÛÛ[\ØÜš\[ÛŠÝ[[X\žJNÂˆBˆB‚ˆš]˜]H^šY]ÈX™[
+Ýš[™È^›Ø]Ú^™K[ÛÛÜŠHÂˆ^šY]ÈšY]ÈH™]È^šY]Ê\ÊNÂˆšY]ËœÙ]^
+^
+NÂˆšY]ËœÙ]^Ú^™JÚ^™JNÂˆšY]ËœÙ]^ÛÛÜŠÛÛÜŠNÂˆšY]ËœÙ]›Û™X]\™TÙ][™ÜÊšÙ\›ˆŠNÂˆ™]\›ˆšY]ÎÂˆB‚ˆÊŠˆÙY\H[™XZ[›ÙXÝÚ[ÛÛœÚ\Ý[XÜ›ÜÜÈÛ™H[œÚ]Y\Ëˆ
+‹Âˆš]˜]H[
+›Ø]˜[YJHÂˆ™]\›ˆX]œ›Ý[™
+˜[YH
+ˆÙ]™\ÛÝ\˜Ù\Ê
+K™Ù]\Ü^SY]šXÜÊ
+K™[œÚ]JNÂˆB‚ˆš]˜]HÝš[™È›Ùš[TÚÜX™[
+
+HÂˆ™]\›ˆ›Ùš[HOH[ÈLHRS’H0­ÈSH“Ö–“Hˆˆ›Ùš[K›˜[YKÕ\\Ø\ÙJØØ[K•TÊNÂˆB‚ˆš]˜]HÝš[™ÈšY]ÜÜ\Ü^S˜[YJÝš[™È˜[YJHÂˆÝš[™È˜[YHH˜[YHOH[È“SÑSˆˆ˜[YKš[J
+NÂˆYˆ
+˜[YK›[™Ý
+
+HOH
+H˜[YHH“SÑSŽÂˆYˆ
+SÖHÒÕÐÐTÑH“Ö‹™\]X[ÒYÛ›Ü™PØ\ÙJ˜[YJJH˜[YHH”ÒÕÐÐTÑH“ÖŽÂˆ˜[YHH˜[YKÕ\\Ø\ÙJØØ[K•TÊNÂˆ™]\›ˆ˜[YK›[™Ý
+
+HˆÈ˜[YKœÝXœÝš[™Ê
+Kš[J
+H
+È¸ )ˆˆˆ˜[YNÂˆB‚ˆÊŠˆÙY\š[\Þ\Ý[KZX]žHÐQ˜[Y\ÈYÚX›H[ˆHÛX[™\Ù[][Ûˆ]Kˆ
+‹Âˆš]˜]HÝš[™È™\Ù[][Û•]JÝš[™È˜[YJHÂˆÝš[™È˜[YHH˜[YHOH[È“SÑSˆˆ˜[YKš[J
+KÓÝÙ\Ø\ÙJØØ[K•TÊNÂˆYˆ
+˜[YK˜ÛÛZ[œÊœ™YXYÚXÈŠH	‰ˆ˜[YK˜ÛÛZ[œÊ˜\ÜÙ[X›HŠJH™]\›ˆ”‘QPQÒPÈTÔÑSP“HŽÂˆYˆ
+˜[YK˜ÛÛZ[œÊœ™YXYÚXÈŠH	‰ˆ˜[YK˜ÛÛZ[œÊ˜Ú\ÜÚ\ÈŠJH™]\›ˆ”‘QPQÒPÈÒTÔÒTÈŽÂˆYˆ
+˜[YK˜ÛÛZ[œÊœ™YXYÚXÈŠH	‰ˆ˜[YK˜ÛÛZ[œÊ˜™^™[ŠJH™]\›ˆ”‘QPQÒPÈ‘V‘SŽÂˆYˆ
+˜[YK˜ÛÛZ[œÊœÚÝØØ\ÙHŠJH™]\›ˆ”ÒÕÐÐTÑH“ÖŽÂˆÝš[™ÈÛÛ\XÝHšY]ÜÜ\Ü^S˜[YJ˜[YJNÂˆ™]\›ˆÛÛ\XÝ›[™Ý
+
+HˆNÈÛÛ\XÝœÝXœÝš[™ÊN
+Kš[J
+H
+È¸ )ˆˆˆÛÛ\XÝÂˆB‚ˆš]˜]HÝš[™È›Ùš[Tš[\“X™[
+
+HÂˆYˆ
+›Ùš[HOH[
+H™]\›ˆLHZ[šHŽÂˆÝš[™ÈX™[H›Ùš[K›˜[YHOH[ÈLHZ[šHˆˆ›Ùš[K›˜[YNÂˆ[Ù\\˜]ÜˆHX™[š[™^ÙŠˆ0­ÈŠNÂˆYˆ
+Ù\\˜]Üˆˆ
+HX™[HX™[œÝXœÝš[™ÊÙ\\˜]ÜŠNÂˆYˆ
+X™[ÓÝÙ\Ø\ÙJØØ[K•TÊK˜ÛÛZ[œÊ˜LHZ[šHŠJH™]\›ˆLHZ[šHŽÂˆ™]\›ˆX™[›[™Ý
+
+HˆÈX™[œÝXœÝš[™Ê
+Kš[J
+H
+È¸ )ˆˆˆX™[ÂˆB‚ˆš]˜]HÝš[™È›Ùš[SX]\šX[X™[
+
+HÂˆ™]\›ˆ›Ùš[HOH[È”H˜\ÚXÈˆˆ›Ùš[K™š[[Y[˜[YKœ™\XÙJ˜[XH‹ˆŠNÂˆB‚ˆš]˜]HÝš[™È›Ùš[PZ[›Û[YSX™[
+
+HÂˆ™]\›ˆ›Ùš[HOH[ÈŒN0åÈN0åÈN[Hˆˆ›Ùš[K˜Z[›Û[YSX™[
+
+NÂˆB‚ˆÊŠˆXÝ]™H[Y[œÚ[ÛœÈ\™H›Ùš[KY\š]™Y›Ý[™YÈH\ØÛÜÙYLKÔTÈX^[][Kˆ
+‹Âˆš]˜]H›Ø]XÝ]™P™Y
+
+HÈ™]\›ˆš[š]JÛÛ™šYË˜™Y
+HÈÛ[\
+ÛÛ™šYË˜™YY‹M™ŠHˆNŽÈBˆš]˜]H›Ø]XÝ]™P™YJ
+HÈ™]\›ˆš[š]JÛÛ™šYË˜™YJHÈÛ[\
+ÛÛ™šYË˜™YKY‹M™ŠHˆNŽÈBˆš]˜]H›Ø]XÝ]™P™YŠ
+HÈ™]\›ˆš[š]JÛÛ™šYË˜™YŠHÈÛ[\
+ÛÛ™šYË˜™Y‹Y‹M™ŠHˆNŽÈB‚ˆš]˜]H›ÚY™\]Z\™PXÝ]™PZ[›Û[YJY\Ú[Ù[Ø[™Y]JH›ÝÜÈSÑ^Ù\[ÛˆÂˆYˆ
+Ø[™Y]HOH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ‘Ù[™\˜]Y[Ù[\È[\HŠNÂˆ›Ø]ÚYHØ[™Y]K›X^HØ[™Y]K›Z[–Âˆ›Ø]\HØ[™Y]K›X^HHØ[™Y]K›Z[–NÂˆ›Ø]ZYÚHØ[™Y]K›X^ˆHØ[™Y]K›Z[–ŽÂˆYˆ
+ÚYˆXÝ]™P™Y
+
+H
+ÈŒYˆ\ˆXÝ]™P™YJ
+H
+ÈŒYˆZYÚˆXÝ]™P™YŠ
+H
+ÈŒYŠBˆ›ÝÈ™]ÈSÑ^Ù\[ÛŠ‘Ù[™\˜]Y[Ù[^ÙYYÈHˆ
+È›Ùš[PZ[›Û[YSX™[
+
+H
+Èˆ‚ˆ
+È›Ùš[Tš[\“X™[
+
+H
+ÈˆZ[›Û[YHŠNÂˆB‚ˆš]˜]HÝš[™ÈÝ\œ™[]SX™[
+
+HÂˆ™]\›ˆ”]Hˆ
+È
+XÝ]™T]R[™^
+ÈJNÂˆB‚ˆš]˜]HÝš[™ÈÝ\œ™[]S˜[YJ
+HÂˆYˆ
+[Ù[OH[[Ù[™\Ü^S˜[YHOH[[Ù[™\Ü^S˜[YKš[J
+K›[™Ý
+
+HOH
+Bˆ™]\›ˆÝ\œ™[]SX™[
+
+NÂˆ™]\›ˆÝ\œ™[]SX™[
+
+H
+Èˆ0­Èˆ
+È[Ù[™\Ü^S˜[YNÂˆB‚ˆš]˜]H›ÚY\]T]SX\šÙ\Š
+HÂˆYˆ
+]SX\šÙ\•˜[YHOH[
+H]SX\šÙ\•˜[YKœÙ]^
+Ý\œ™[]SX™[
+
+JNÂˆB‚ˆš]˜]H]ÛˆXÝ[ÛŠÝš[™È^šY]Ë“ÛÛXÚÓ\Ý[™\ˆ\Ý[™\ŠHÂˆ]Ûˆ]ÛˆH™]È]ÛŠ\ÊNÂˆ]Û‹œÙ]^
+^
+NÂˆ]Û‹œÙ]^Ú^™JLŠNÂˆ]Û‹œÙ]^ÛÛÜŠV
+NÂˆ]Û‹œÙ][Ø\Ê˜[ÙJNÂˆ]Û‹œÙ]ÛÛXÚÓ\Ý[™\Š\Ý[™\ŠNÂˆ]Û‹œÙ]Z[’ZYÚ
+
+
+JNÂˆ]Û‹œÙ]Y[™Ê
+M
+K
+M
+K
+NÂˆ]Û‹œÙ]Ý]S\Ý[š[X]ÜŠ[
+NÂˆ]Û‹œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKN
+JNÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹
+L
+JNÂˆœÙ]X\™Ú[œÊ
+ÊK
+ÊK
+NÂˆXÝ[ÛœË˜YšY]Ê]Û‹
+NÂˆ™]\›ˆ]ÛŽÂˆB‚ˆš]˜]H^šY]ÈÛÛ›Û
+Ýš[™ÈÛ\Ýš[™È\ØÜš\[Û‹šY]Ë“ÛÛXÚÓ\Ý[™\ˆ\Ý[™\ŠHÂˆ^šY]ÈšY]ÈHX™[
+Û\ŒS’ÊNÂˆšY]ËœÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆšY]ËœÙ]ÛÛ[\ØÜš\[ÛŠ\ØÜš\[ÛŠNÂˆšY]ËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKK
+JNÂˆšY]ËœÙ][]˜][ÛŠ
+ÊJNÂˆšY]ËœÙ]ÛÛXÚÓ\Ý[™\Š\Ý[™\ŠNÂˆ™]\›ˆšY]ÎÂˆB‚ˆš]˜]HšY]ÈX\šÙ\ŠÝš[™ÈÛ\Ýš[™È^YXœ›ÝËÝš[™È˜[YKšY]Ë“ÛÛXÚÓ\Ý[™\ˆ\Ý[™\‹[Ü˜]š]K[X\™Ú[‹[™\XØ[X\™Ú[ŠHÂˆ[™X\“^[Ý][H™]È[™X\“^[Ý]
+\ÊNÂˆ[œÙ]ÜšY[][ÛŠ[™X\“^[Ý]’Ô’V“Ó•S
+NÂˆ[œÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ[œÙ]Y[™Ê
+ŠK
+JK
+LJK
+JJNÂˆ[œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒM‹ŒLKŒJKK
+JNÂˆ[œÙ][]˜][ÛŠ
+JJNÂˆ^šY]È˜YÙHHX™[
+Û\Û\›[™Ý
+
+HˆˆÈˆLËS’ÊNÂˆ˜YÙKœÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆ˜YÙKœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆ˜YÙKœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠËŒÍÊKÛÛÜ‹œ™ØŠNLKNMÌJKKMÊJNÂˆ[˜YšY]Ê˜YÙK™]È[™X\“^[Ý]“^[Ý]\˜[\Ê
+ÌÊK
+ÌÊJJNÂˆ[™X\“^[Ý]ÛÜHH™]È[™X\“^[Ý]
+\ÊNÂˆÛÜKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆÛÜKœÙ]Y[™Ê
+ŠK
+NÂˆ^šY]ÈÛX[HX™[
+^YXœ›ÝËÕ\\Ø\ÙJØØ[K•TÊKUUQ
+NÂˆÛX[œÙ]]\”ÜXÚ[™ÊŒŠNÂˆ^šY]ÈXZ[ˆHX™[
+˜[YKLKV
+NÂˆXZ[‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆYˆ
+”]X[]H‹™\]X[Ê^YXœ›ÝÊJH]X[]SX\šÙ\•˜[YHHXZ[ŽÂˆYˆ
+”Ý\ÜÈ‹™\]X[Ê^YXœ›ÝÊJHÝ\ÜÓX\šÙ\•˜[YHHXZ[ŽÂˆYˆ
+”]H‹™\]X[Ê^YXœ›ÝÊJH]SX\šÙ\•˜[YHHXZ[ŽÂˆYˆ
+”š[\ˆ‹™\]X[Ê^YXœ›ÝÊJHÈš[\“X\šÙ\•˜[YHHXZ[ŽÈš[\“X\šÙ\ˆH[ÈBˆYˆ
+“X]\šX[‹™\]X[Ê^YXœ›ÝÊJHÈX]\šX[X\šÙ\•˜[YHHXZ[ŽÈX]\šX[X\šÙ\ˆH[ÈBˆÛÜK˜YšY]ÊÛX[
+NÂˆÛÜK˜YšY]ÊXZ[ŠNÂˆ[˜YšY]ÊÛÜJNÂˆ[œÙ]ÛÛ[\ØÜš\[ÛŠ^YXœ›ÝÈ
+ÈŽˆˆ
+È˜[YJNÂˆ[œÙ]ÛÛXÚÓ\Ý[™\Š\Ý[™\ŠNÂˆœ˜[YS^[Ý]“^[Ý]\˜[\ÈH™]Èœ˜[YS^[Ý]“^[Ý]\˜[\ÊL‹L‹Ü˜]š]JNÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K”ÕT•
+HOH
+H›YX\™Ú[ˆHX\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K‘S‘
+HOH
+HœšYÚX\™Ú[ˆHX\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K•Ô
+HOH
+HÜX\™Ú[ˆH™\XØ[X\™Ú[ŽÂˆYˆ
+
+Ü˜]š]H	ˆÜ˜]š]K“ÕÓJHOH
+H˜›ÝÛSX\™Ú[ˆH™\XØ[X\™Ú[ŽÂˆ[œÙ]^[Ý]\˜[\Ê
+NÂˆ™]\›ˆ[ÂˆB‚ˆš]˜]H›ÚY\]T™XÚ\SX\šÙ\œÊ
+HÂˆYˆ
+š[\“X\šÙ\•˜[YHOH[
+Hš[\“X\šÙ\•˜[YKœÙ]^
+›Ùš[Tš[\“X™[
+
+JNÂˆYˆ
+š[\“X\šÙ\ˆOH[
+Hš[\“X\šÙ\‹œÙ]ÛÛ[\ØÜš\[ÛŠ”š[\Žˆˆ
+È›Ùš[Tš[\“X™[
+
+JNÂˆYˆ
+X]\šX[X\šÙ\•˜[YHOH[
+HX]\šX[X\šÙ\•˜[YKœÙ]^
+›Ùš[SX]\šX[X™[
+
+JNÂˆYˆ
+X]\šX[X\šÙ\ˆOH[
+HX]\šX[X\šÙ\‹œÙ]ÛÛ[\ØÜš\[ÛŠ“X]\šX[ˆˆ
+È›Ùš[SX]\šX[X™[
+
+JNÂˆYˆ
+]X[]SX\šÙ\•˜[YHOH[
+H]X[]SX\šÙ\•˜[YKœÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ[H‹ÛÛ™šYË›^Y\’ZYÚ
+JNÂˆYˆ
+Ý\ÜÓX\šÙ\•˜[YHOH[
+HÝ\ÜÓX\šÙ\•˜[YKœÙ]^
+ÛÛ™šYËœÝ\ÜÈÈ]]ÈÝ\ÜÈˆˆ“Ù™ˆŠNÂˆYˆ
+šY]ÜÜOH[
+HšY]ÜÜœÙ]Z[›Û[YJÛÛ™šYË˜™YÛÛ™šYË˜™YKÛÛ™šYË˜™YŠNÂˆB‚ˆš]˜]H[™›ÚY™Ü˜\XÜË™˜]ØX›K‘˜]ØX›H›Ý[™
+[š[[Ý›ÚÙK[Ý›ÚÙUÚY[˜Y]\ÊHÂˆ[™›ÚY™Ü˜\XÜË™˜]ØX›K‘Ü˜YY[˜]ØX›H˜]ØX›HH™]È[™›ÚY™Ü˜\XÜË™˜]ØX›K‘Ü˜YY[˜]ØX›J
+NÂˆ˜]ØX›KœÙ]ÛÛÜŠš[
+NÂˆ˜]ØX›KœÙ]Ý›ÚÙJ
+Ý›ÚÙUÚY
+KÝ›ÚÙJNÂˆ˜]ØX›KœÙ]ÛÜ›™\”˜Y]\Ê
+˜Y]\ÊJNÂˆ™]\›ˆ˜]ØX›NÂˆB‚ˆÊŠˆÛ™HYHX\šÈ]™\ž]Ú\™NˆÙ[™YÚ\˜ÛKXÛ\Y[™™]™\ˆÚ[šÈ[ÈH˜YÙKˆ
+‹Âˆš]˜]H[XYÙUšY]È[ÞSÙÛÊ
+HÂˆ[XYÙUšY]ÈÙÛÈH™]È[XYÙUšY]Ê\ÊNÂˆÙÛËœÙ][XYÙT™\ÛÝ\˜ÙJ‹™˜]ØX›K˜[ÞWÛÙÛÊNÂˆÙÛËœÙ]ØØ[U\J[XYÙUšY]Ë”ØØ[U\KÑS•T—ÐÔ“Ô
+NÂˆÙÛËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹“PÒËÛÛÜ‹œ™ØŠNKŒŒLJKKŒJJNÂˆÙÛËœÙ]Û\ÓÝ][™JYJNÂˆÙÛËœÙ]ÛÛ[\ØÜš\[ÛŠ[ÞHŠNÂˆ™]\›ˆÙÛÎÂˆB‚ˆš]˜]H›ÚYÚÝÔš[\”Ý]\Ê
+HÂˆš[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[ÈHØ]™YÜ™Y[X[Ê
+NÂˆÝš[™ÈÝ]\Õ]HH›Ùš[HOH[È”š[\ˆÝ]\Èˆˆ›Ùš[Tš[\“X™[
+
+NÂˆÝš[™ÈZ\š[™ÈHÜ™Y[X[ÈOH[È“›Èš[\ˆ\ÈZ\™Yˆˆˆ”Z\™Y\™Ù]ˆˆ
+ÈÜ™Y[X[Ë›˜[YH
+Èˆ0­Èˆ
+ÈÜ™Y[X[ËšÜÝˆ
+È—“[Ù[ˆˆ
+È
+Ü™Y[X[Ë›[Ù[›[™Ý
+
+HOHÈ››ÝÛÛ™š\›YYˆˆÜ™Y[X[Ë›[Ù[
+Bˆ
+È
+Ü™Y[X[Ë˜Ù\YšXØ]Qš[™Ù\œš[›[™Ý
+
+HˆÈ—Ù\YšXØ]H[ŽˆÛÛ™šYÝ\™Yˆˆ—Ù\YšXØ]H[Žˆ›ÝÛÛ™šYÝ\™YŠNÂˆš[\’›Ø”ÝÜ™K’›Øˆ™]š[Ý\Ò›ØˆHš[\’›Ø”ÝÜ™K›ØY
+
+NÂˆš[\”™XY[™\ÜË”™\Ü™XY[™\ÜÈHš[\”™XY[™\ÜÔ™\Ü
+
+NÂˆÝš[™ÐZ[\ˆ™XY[™\ÜÕ^H™]ÈÝš[™ÐZ[\Š™XY[™\ÜËœÝ[[X\žJ
+JNÂˆ›Üˆ
+š[\”™XY[™\ÜËÚXÚÈÚXÚÈˆ™XY[™\ÜË˜ÚXÚÜÊ
+JHÂˆ™XY[™\ÜÕ^˜\[™
+—ˆŠK˜\[™
+ÚXÚËœ\ÜÙY
+
+HÈ¸§$ÈˆˆˆHŠBˆ˜\[™
+ÚXÚË›X™[
+K˜\[™
+ˆ0­ÈŠK˜\[™
+ÚXÚË™]Z[
+NÂˆBˆYˆ
+™]š[Ý\Ò›ØˆOH[	‰ˆ™]š[Ý\Ò›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆZ\š[™È
+ÏH——•SÓÓ‘’T“QQ“Ð—ˆˆ
+È™]š[Ý\Ò›Ø‹œÝ[[X\žJ
+H
+È—ˆˆ
+È™]š[Ý\Ò›Ø‹™]Z[ˆ
+È——ˆˆ
+È
+™XÛÝ™\™Y\Y˜XÝOH[ˆÈ•HÝYÙY\Y˜XÝÛÝ[›Ý™H™]˜[Y]YÈÙ[™[™È\È›ØÚÙYˆ‚ˆˆ•HÝYÙY\Y˜XÝØ\È™XÛÝ™\™Y[™]ÈXÚØYÙKÚ^™H[™ÒKLMˆY[]HÙ\™H™]˜[Y]YˆŠBˆ
+È—•™\šYžHHš[\‰ÜÈ\ÚXØ[Ø\Ý]H™Y›Ü™H\ÛZ\ÜÚ[™È\È™XÛÜ™ˆŽÂˆBˆ[\X[ÙËZ[\ˆX[ÙÈH™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]JÝ]\Õ]JBˆœÙ]Y\ÜØYÙJˆˆ
+È
+›Ùš[HOH[ÈÛÛœÙ\˜]]™H˜[˜XÚÈ›Ùš[Hˆˆ›Ùš[K›˜[YJBˆ
+È——”›Ùš[HÝ]\Îˆˆ
+È
+›Ùš[HOH[	‰ˆ›Ùš[K™\šYšYYÈ™\šYšYYˆˆ[™\šYšYYŠBˆ
+È—”ÛÝ\˜ÙNˆˆ
+È
+›Ùš[HOH[È˜Z[Z[ˆ˜[˜XÚÈˆˆ›Ùš[Kœ›Ý™[˜[˜ÙTÛÝ\˜ÙJBˆ
+È——ˆˆ
+ÈZ\š[™Âˆ
+È——”’S•‘PQS‘TÔ×ˆˆ
+È™XY[™\ÜÕ^ˆ
+È——“Sˆ\ØYØÛÛ›ÛÝ^\È™Z[™H˜[œÜÜ[™\ÚXØ[\š[\ˆØ]\Ëˆ\ÈØÜ™Y[ˆØ[ˆ›Ø™HHZ\™YÙ\šXÙ\ÎÈ]Ù\È›ÝÝ\Hš[ˆŠBˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+BˆœÙ]ÜÚ]]™P]ÛŠÜ™Y[X[ÈOH[È”Z\ˆÈ\ÝSˆˆˆ”™Yœ™\Ú[[Y]žH‹
+YÛ›Ü™YÚXÚ
+HOˆÂˆYˆ
+Ü™Y[X[ÈOH[
+HÚÝÔš[\”Z\š[™Ê
+NÂˆ[ÙH™Yœ™\Úš[\”Ý]\Ê
+NÂˆJNÂˆYˆ
+Ü™Y[X[ÈOH[	‰ˆ
+™]š[Ý\Ò›ØˆOH[™]š[Ý\Ò›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+JBˆX[ÙËœÙ]™]]˜[]ÛŠ”Z\ˆÈ\ÝSˆ‹
+YÛ›Ü™YÚXÚ
+HOˆÚÝÔš[\”Z\š[™Ê
+JNÂˆYˆ
+™]š[Ý\Ò›ØˆOH[	‰ˆ™]š[Ý\Ò›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆX[ÙËœÙ]™]]˜[]ÛŠ‘\ÛZ\ÜÈ™XÛÜ™‹
+YÛ›Ü™YÚXÚ
+HOˆÂˆš[\’›Ø”ÝÜ™K˜ÛX\Š
+NÂˆ™XÛÝ™\™Y\Y˜XÝH[ÂˆÝ]\ËœÙ]^
+”š[\ˆ0­È™XÛÝ™\žH™XÛÜ™\ÛZ\ÜÙYŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆJNÂˆBˆX[ÙËœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚY™Yœ™\Úš[\”Ý]\Ê
+HÂˆš[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[ÈHØ]™YÜ™Y[X[Ê
+NÂˆYˆ
+Ü™Y[X[ÈOH[
+HÂˆÚÝÔš[\”Z\š[™Ê
+NÂˆ™]\›ŽÂˆBˆžHÂˆYˆ
+š[\•˜[œÜÜOH[
+Hš[\•˜[œÜÜ˜ÛÜÙJ
+NÂˆYˆ
+XÜ™Y[X[Ëš\ÐÙ\YšXØ]T[Š
+JHÂˆØ\Ý›XZÙU^
+\Ë”™XY[™Ø]™HHš[\ˆÙ\YšXØ]Hš[™Ù\œš[™Y›Ü™HÚXÚÚ[™ÈSˆÝ]\È‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÚÝÔš[\”Z\š[™Ê
+NÂˆ™]\›ŽÂˆBˆ˜[XS[•˜[œÜÜ˜[œÜÜH˜[XS[•˜[œÜÜœ[›™Y
+Ü™Y[X[ËÜ™Y[X[Ë˜Ù\YšXØ]Qš[™Ù\œš[
+NÂˆš[\•˜[œÜÜH˜[œÜÜÂˆš[\•˜[œÜÜ”š[\•\™Ù]\™Ù]H™]Èš[\•˜[œÜÜ”š[\•\™Ù]
+ˆÜ™Y[X[Ë›˜[YKÜ™Y[X[ËšÜÝÜ™Y[X[ËœÙ\šX[
+NÂˆÝ]\ËœÙ]^
+”š[\ˆ0­È™XY[™È[[Y]žx )ˆŠNÂˆ˜[œÜÜœ™XYÝ]\Ê\™Ù]
+Ý]K]Z[
+HOˆ[“Û•ZU™XY
+
+
+HOˆÂˆYˆ
+\Ñš[š\Ú[™Ê
+Hš[\•˜[œÜÜOH˜[œÜÜ
+H™]\›ŽÂˆYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K”‘PQJHÝ]\ËœÙ]^
+”š[\ˆ0­Èˆ
+È]Z[
+NÂˆ[ÙHYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K”ÕUT×ÕSÓÓ‘’T“QQ
+HÂˆÝ]\ËœÙ]^
+”š[\ˆ0­ÈÝ]\È[˜ÛÛ™š\›YYŠNÂˆØ\Ý›XZÙU^
+\Ë]Z[Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆ[ÙHYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K‘RSQ
+HÂˆÝ]\ËœÙ]^
+”š[\ˆ0­ÈÝ]\È[˜]˜Z[X›HŠNÂˆØ\Ý›XZÙU^
+\Ë”š[\ˆÝ]\È˜Z[Yˆˆ
+È]Z[Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”š[\ˆÝ]\ÈÛÝ[›Ý™YÚ[Žˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÚÝÔš[\”Z\š[™Ê
+HÂˆYˆ
+š[\\ÞHÛXÚ[™È˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HXÝ]™Hš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆš[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈÝ\œ™[HØ]™YÜ™Y[X[Ê
+NÂˆY]^˜[YHH^šY[
+Ý\œ™[OH[È›Ùš[Tš[\“X™[
+
+HˆÝ\œ™[›˜[YK”š[\ˆ˜[YHŠNÂˆY]^ÜÝH^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[šÜÝ“SˆTÜˆÜÝ˜[YHŠNÂˆY]^Ù\šX[H^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[œÙ\šX[”š[\ˆÙ\šX[ŠNÂˆY]^[Ù[ÛÙHH^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[›[Ù[ˆ˜[XH[Ù[ÛÙH
+ŒHHLHZ[šNÈ™\]Z\™Y›ÜˆÝ\œ™[[Ý
+HŠNÂˆY]^XØÙ\ÜÐÛÙHH^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[˜XØÙ\ÜÐÛÙK‘]™[Ü\‹ÓSˆXØÙ\ÜÈÛÙHŠNÂˆXØÙ\ÜÐÛÙKœÙ][œ]\J[™›ÚY^’[œ]\K•TWÐÓTÔ×ÕV[™›ÚY^’[œ]\K•TWÕVÕT’PUSÓ—ÔTÔÕÓÔ‘
+NÂˆY]^š[™Ù\œš[H^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[˜Ù\YšXØ]Qš[™Ù\œš[“Ü[Û˜[ÒKLMˆÙ\YšXØ]Hš[™Ù\œš[ŠNÂˆšY[Ë˜YšY]Ê˜[YJNÈšY[Ë˜YšY]ÊÜÝ
+NÈšY[Ë˜YšY]ÊÙ\šX[
+NÈšY[Ë˜YšY]Ê[Ù[ÛÙJNÂˆšY[Ë˜YšY]ÊXØÙ\ÜÐÛÙJNÈšY[Ë˜YšY]Êš[™Ù\œš[
+NÂˆš[˜[[\X[ÙÖ×HZ\š[™ÑX[ÙÔ™YˆH™]È[\X[ÙÖÌWNÂˆ]Ûˆš[™š[\ˆH™]È]ÛŠ\ÊNÂˆš[™š[\‹œÙ]^
+‘š[™š[\ˆÛˆÚKQšHŠNÂˆš[™š[\‹œÙ][Ø\Ê˜[ÙJNÂˆš[™š[\‹œÙ]^ÛÛÜŠÓÓ
+NÂˆš[™š[\‹œÙ]ÛÛXÚÓ\Ý[™\ŠšY]ÈOˆÂˆYˆ
+XÝ]™Q\ØÛÝ™\žHOH[
+HXÝ]™Q\ØÛÝ™\žK˜ÛÜÙJ
+NÂˆš[™š[\‹œÙ][˜X›Y
+˜[ÙJNÂˆš[™š[\‹œÙ]^
+”ÙX\˜Ú[™ÈØØ[™]ÛÜšø )ˆŠNÂˆXÝ]™Q\ØÛÝ™\žHH˜[XTš[\‘\ØÛÝ™\žK™\ØÛÝ™\Š\ËWÌ™]È˜[XTš[\‘\ØÛÝ™\žKØ[˜XÚÊ
+HÂˆÝ™\œšYHX›XÈ›ÚYÛÛÛ\]J\Ý˜[XTš[\‘\ØÛÝ™\žK”š[\ˆš[\œÊHÂˆ[“Û•ZU™XY
+
+
+HOˆÂˆYˆ
+\Ñš[š\Ú[™Ê
+HZ\š[™ÑX[ÙÔ™Y–ÌHOH[\Z\š[™ÑX[ÙÔ™Y–ÌKš\ÔÚÝÚ[™Ê
+JH™]\›ŽÂˆš[™š[\‹œÙ][˜X›Y
+YJNÂˆš[™š[\‹œÙ]^
+‘š[™š[\ˆÛˆÚKQšHŠNÂˆYˆ
+š[\œËš\Ñ[\J
+JHÂˆØ\Ý›XZÙU^
+XZ[XÝ]š]K\Ëˆ“›È˜[XHš[\ˆ[››Ý[˜ÙY]Ù[‹ˆžHX[X[T[žHÛˆ›ØÚÙYÕ“Sˆ™]ÛÜšÜËˆ‹ˆØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆH[ÙHÂˆÚÝÑ\ØÛÝ™\™Yš[\œÊš[\œË˜[YKÜÝÙ\šX[[Ù[ÛÙJNÂˆBˆJNÂˆB‚ˆÝ™\œšYHX›XÈ›ÚYÛ‘\œ›ÜŠ^Ù\[Ûˆ\œ›ÜŠHÂˆ[“Û•ZU™XY
+
+
+HOˆÂˆYˆ
+\Ñš[š\Ú[™Ê
+HZ\š[™ÑX[ÙÔ™Y–ÌHOH[\Z\š[™ÑX[ÙÔ™Y–ÌKš\ÔÚÝÚ[™Ê
+JH™]\›ŽÂˆš[™š[\‹œÙ][˜X›Y
+YJNÂˆš[™š[\‹œÙ]^
+‘š[™š[\ˆÛˆÚKQšHŠNÂˆØ\Ý›XZÙU^
+XZ[XÝ]š]K\Ëˆ•ÚKQšH\ØÛÝ™\žH[˜]˜Z[X›Nˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆJNÂˆšY[Ë˜YšY]Êš[™š[\ŠNÂˆ^šY]È›ÝHHX™[
+‘\ØÛÝ™\žH\È™XY[Û›H[™š[ÈHš[\ˆ˜[YKÜÝÙ\šX[[™[Ù[ÛÙNÈHXØÙ\ÜÈÛÙH\È™]™\ˆœ›ØYØ\ÝˆLHZ[šKLH[™TÈ[›š[™È›Ùš[\ÈØ[ˆ™H™]šY]ÙY\™K]HÝ\œ™[\ÚXØ[[Ý\È[X™\˜][H™\ÝšXÝYÈ[Ù[ŒH
+LHZ[šJH\È[ˆ^XÚ]HØ]™YÙ\YšXØ]Hš[™Ù\œš[ˆÙ\YšXØ]H[œÜXÝ[Ûˆ\ÈHÛ›H[˜]][XØ]Y™]ÛÜšÈÝ\È[ÞH™]™\ˆÙ[™ÈTUÑ•ÛÛ[X[™ÈÝ™\ˆ[ˆ[œ[›™YÙ\ÜÚ[Û‹ˆZ\š[™ÈÝÜ™\ÈHÙXÜ™]Û›H[ˆ[™›ÚYÙ^\ÝÜ™KX˜XÚÙY[˜Üž\Y™Y™\™[˜Ù\Ëˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM‹
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆ]Ûˆ[œÜXÝÙ\YšXØ]HH™]È]ÛŠ\ÊNÂˆ[œÜXÝÙ\YšXØ]KœÙ]^
+”™XYš[\ˆÙ\YšXØ]HŠNÂˆ[œÜXÝÙ\YšXØ]KœÙ][Ø\Ê˜[ÙJNÂˆ[œÜXÝÙ\YšXØ]KœÙ]^ÛÛÜŠÓÓ
+NÂˆ[œÜXÝÙ\YšXØ]KœÙ]ÛÛXÚÓ\Ý[™\ŠšY]ÈOˆÂˆÝš[™ÈÜÝ˜[YHHÜÝ™Ù]^
+
+KÔÝš[™Ê
+Kš[J
+NÂˆXÝ]™PÙ\YšXØ]R[œÜXÝ[Û’YHÙ\YšXØ]R[œÜXÝ[Û’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆÛ™È[œÜXÝ[Û’YHXÝ]™PÙ\YšXØ]R[œÜXÝ[Û’YÂˆYˆ
+XÝ]™PÙ\YšXØ]R[œÜXÝ[ÛˆOH[
+HXÝ]™PÙ\YšXØ]R[œÜXÝ[Û‹˜Ø[˜Ù[
+YJNÂˆ[œÜXÝÙ\YšXØ]KœÙ][˜X›Y
+˜[ÙJNÂˆ[œÜXÝÙ\YšXØ]KœÙ]^
+”™XY[™ÈÙ\YšXØ]x )ˆŠNÂˆXÝ]™PÙ\YšXØ]R[œÜXÝ[ÛˆH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžHÂˆÝš[™ÈYÙ\ÝH˜[XS[•˜[œÜÜš[œÜXÝÙ\YšXØ]Qš[™Ù\œš[
+ÜÝ˜[YJNÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+\Ñš[š\Ú[™Ê
+H[œÜXÝ[Û’YOHXÝ]™PÙ\YšXØ]R[œÜXÝ[Û’Y
+H™]\›ŽÂˆš[™Ù\œš[œÙ]^
+\Ü^Qš[™Ù\œš[
+YÙ\Ý
+JNÂˆ[œÜXÝÙ\YšXØ]KœÙ]^
+‘š[™Ù\œš[ØYYŠNÂˆ[œÜXÝÙ\YšXØ]KœÙ][˜X›Y
+YJNÂˆØ\Ý›XZÙU^
+\Ë‘š[™Ù\œš[ØYYÈ\Ø]™H[™›Ø™HÈZ\ˆ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+\Ñš[š\Ú[™Ê
+H[œÜXÝ[Û’YOHXÝ]™PÙ\YšXØ]R[œÜXÝ[Û’Y
+H™]\›ŽÂˆ[œÜXÝÙ\YšXØ]KœÙ]^
+”™XYš[\ˆÙ\YšXØ]HŠNÂˆ[œÜXÝÙ\YšXØ]KœÙ][˜X›Y
+YJNÂˆØ\Ý›XZÙU^
+\ËÙ\YšXØ]H[œÜXÝ[Ûˆ˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆJNÂˆšY[Ë˜YšY]Ê[œÜXÝÙ\YšXØ]JNÂˆ[\X[ÙÈZ\š[™ÑX[ÙÈH™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”Z\ˆš[\ˆŠBˆœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ”Ø]™H[™›Ø™H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆš[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[ÈH™]Èš[\Ü™Y[X[ÝÜ™KÜ™Y[X[Êˆ˜[YK™Ù]^
+
+KÔÝš[™Ê
+KÜÝ™Ù]^
+
+KÔÝš[™Ê
+KÙ\šX[™Ù]^
+
+KÔÝš[™Ê
+KˆXØÙ\ÜÐÛÙK™Ù]^
+
+KÔÝš[™Ê
+Kš[™Ù\œš[™Ù]^
+
+KÔÝš[™Ê
+Kˆ[Ù[ÛÙK™Ù]^
+
+KÔÝš[™Ê
+JNÂˆYˆ
+XÜ™Y[X[Ëš\ÐÙ\YšXØ]T[Š
+JHÂˆ›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ”™XY[™Ø]™HHš[\ˆÙ\YšXØ]Hš[™Ù\œš[™Y›Ü™H›Øš[™ÈSˆÙ\šXÙ\ÈŠNÂˆBˆÜ™Y[X[ÝÜ™KœØ]™JÜ™Y[X[ÊNÂˆYˆ
+š[\•˜[œÜÜOH[
+Hš[\•˜[œÜÜ˜ÛÜÙJ
+NÂˆš[\•˜[œÜÜH˜[XS[•˜[œÜÜœ[›™Y
+Ü™Y[X[ËÜ™Y[X[Ë˜Ù\YšXØ]Qš[™Ù\œš[
+NÂˆš[\•˜[œÜÜ”š[\•\™Ù]\™Ù]H™]Èš[\•˜[œÜÜ”š[\•\™Ù]
+Ü™Y[X[Ë›˜[YKÜ™Y[X[ËšÜÝÜ™Y[X[ËœÙ\šX[
+NÂˆÝ]\ËœÙ]^
+”š[\ˆ0­È›Øš[™ÈSˆÙ\šXÙ\ø )ˆŠNÂˆš[\•˜[œÜÜœ›Ø™J\™Ù]
+Ý]K]Z[
+HOˆ[“Û•ZU™XY
+
+
+HOˆÂˆÝ]\ËœÙ]^
+Ý]HOHš[\•˜[œÜÜ”Ý]K”‘PQHÈ”š[\ˆ0­ÈSˆÙ\šXÙ\È™XYHˆˆ”š[\ˆ0­Èˆ
+ÈÝ]JNÂˆYˆ
+Ý]HOHš[\•˜[œÜÜ”Ý]K‘RSQ
+HØ\Ý›XZÙU^
+\Ë”š[\ˆ›Ø™H˜Z[Yˆˆ
+È]Z[Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”š[\ˆZ\š[™È˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJBˆ˜Ü™X]J
+NÂˆZ\š[™ÑX[ÙÔ™Y–ÌHHZ\š[™ÑX[ÙÎÂˆZ\š[™ÑX[ÙËœÙ]Û‘\ÛZ\ÜÓ\Ý[™\ŠX[ÙÈOˆÂˆYˆ
+XÝ]™Q\ØÛÝ™\žHOH[
+HÂˆXÝ]™Q\ØÛÝ™\žK˜ÛÜÙJ
+NÂˆXÝ]™Q\ØÛÝ™\žHH[ÂˆBˆJNÂˆZ\š[™ÑX[ÙËœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÑ\ØÛÝ™\™Yš[\œÊ\Ý˜[XTš[\‘\ØÛÝ™\žK”š[\ˆš[\œËˆY]^˜[YKY]^ÜÝY]^Ù\šX[Y]^[Ù[ÛÙJHÂˆYˆ
+š[\œÈOH[š[\œËš\Ñ[\J
+JH™]\›ŽÂˆÝš[™Ö×HX™[ÈH™]ÈÝš[™ÖÜš[\œËœÚ^™J
+WNÂˆ›Üˆ
+[[™^HÈ[™^š[\œËœÚ^™J
+NÈ[™^
+ÊÊHÂˆ˜[XTš[\‘\ØÛÝ™\žK”š[\ˆš[\ˆHš[\œË™Ù]
+[™^
+NÂˆX™[ÖÚ[™^HHš[\‹œÝ[[X\žJ
+H
+È
+š[\‹š\ÐLSZ[šJ
+HÈˆˆˆˆ0­È›Ùš[H™]šY]È™YYYŠNÂˆBˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”š[\œÈ›Ý[™ÛˆÚKQšHŠBˆœÙ]][\ÊX™[Ë
+X[ÙËÚXÚ
+HOˆÂˆYˆ
+ÚXÚÚXÚHš[\œËœÚ^™J
+JH™]\›ŽÂˆ˜[XTš[\‘\ØÛÝ™\žK”š[\ˆš[\ˆHš[\œË™Ù]
+ÚXÚ
+NÂˆ˜[YKœÙ]^
+š[\‹›˜[YJNÂˆÜÝœÙ]^
+š[\‹šÜÝ
+NÂˆÙ\šX[œÙ]^
+š[\‹œÙ\šX[
+NÂˆ[Ù[ÛÙKœÙ]^
+š[\‹›[Ù[
+NÂˆØ\Ý›XZÙU^
+\Ëˆš[\‹š\Ó[“[ÙJ
+HÈ”š[\ˆ]Z[Èš[YÈ[\ˆHXØÙ\ÜÈÛÙHÈÛÛ[YH‚ˆˆ”š[\ˆ\È›ÝY™\\Ú[™ÈSˆ[ÙNÈ™]šY]È™Y›Ü™HZ\š[™È‹ˆØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]Hš[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈØ]™YÜ™Y[X[Ê
+HÂˆžHÈ™]\›ˆÜ™Y[X[ÝÜ™HOH[È[ˆÜ™Y[X[ÝÜ™K›ØY
+
+NÈBˆØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈ™]\›ˆ[ÈBˆB‚ˆš]˜]HÝ]XÈÝš[™È\Ü^Qš[™Ù\œš[
+Ýš[™ÈYÙ\Ý
+HÂˆYˆ
+YÙ\ÝOH[YYÙ\Ý›X]Ú\Ê–ÌNXKYKQ—^ÍHŠJH™]\›ˆYÙ\ÝOH[ÈˆˆˆYÙ\ÝÂˆÝš[™È›Ü›X[^™YHYÙ\ÝÓÝÙ\Ø\ÙJØØ[K•TÊNÂˆÝš[™ÐZ[\ˆ\Ü^HH™]ÈÝš[™ÐZ[\ŠMJNÂˆ›Üˆ
+[[™^HÈ[™^›Ü›X[^™Y›[™Ý
+
+NÈ[™^
+ÊÊHÂˆYˆ
+[™^ˆ	‰ˆ[™^	HˆOH
+H\Ü^K˜\[™
+	Î‰ÊNÂˆ\Ü^K˜\[™
+›Ü›X[^™Y˜Ú\]
+[™^
+JNÂˆBˆ™]\›ˆ\Ü^KÔÝš[™Ê
+NÂˆB‚ˆš]˜]H›ÚY^Z[•[œÝ\ÜY
+Ýš[™È™X]\™JHÂˆØ\Ý›XZÙU^
+\Ë™X]\™H
+Èˆ\È™\Ù\™Y›ÜˆH˜[Y]Y˜]]™H[™Ú[™H‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÒ[™[ÜžJ
+HÂˆ[™X\“^[Ý]ÛÛ[H™]È[™X\“^[Ý]
+\ÊNÂˆÛÛ[œÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆÛÛ[œÙ]Y[™Ê‹
+NÂˆ^šY]È[›ÈHX™[
+HØØ[ÛÜšÜÚÜYÙ\ˆ›ÜˆÛÛËÜ\™\È[™ÜÛÛËˆÝØÚÈÝ\È\È›Ý™XÛÜ™Y8 %›Ý™\›È[™›Ý]XÝYžHHš[\‹ˆ[\ˆHÚXÚÙY[[Ý[È™XÛÜ™Ù\šXÙHÛ›HY\ˆ]\[œËˆ‹L‹UUQ
+NÂˆ[›ËœÙ][™TÜXÚ[™ÊËKŒŠNÂˆ[›ËœÙ]Y[™ÊM
+NÂˆÛÛ[˜YšY]Ê[›Ë™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLKLŠJNÂˆ]ÛˆYH™]È]ÛŠ\ÊNÂˆYœÙ]^
+YÛÜšÜÚÜ][HŠNÂˆYœÙ][Ø\Ê˜[ÙJNÂˆYœÙ]^ÛÛÜŠÓÓ
+NÂˆYœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÐY[™[ÜžR][J
+JNÂˆYœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKMŠJNÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈYH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+NÂˆYœÙ]X\™Ú[œÊL
+NÂˆÛÛ[˜YšY]ÊYY
+NÂˆ›Üˆ
+[™[ÜžTÝÜ™K’][H][Hˆ[™[ÜžTÝÜ™K›Ü™\™Y›Ü][[ÛŠ[™[ÜžTÝÜ™Kš][\Ê
+JJBˆÛÛ[˜YšY]Ê[™[ÜžT›ÝÊ][JJNÂ‚ˆØÜ›ÛšY]ÈØÜ›ÛH™]ÈØÜ›ÛšY]Ê\ÊNÂˆØÜ›ÛœÙ]š[šY]ÜÜ
+YJNÂˆØÜ›Û˜YšY]ÊÛÛ[
+NÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J•ÛÜšÜÚÜ[™[ÜžHŠBˆœÙ]šY]ÊØÜ›Û
+BˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÐY[™[ÜžR][J
+HÂˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^˜[YHH^šY[
+ˆ‹’][H˜[YHŠNÂˆY]^Ø]YÛÜžHH^šY[
+•ÛÛ‹Ø]YÛÜžH
+ÛÛÛÛœÝ[XX›KÜ\™x )ŠHŠNÂˆY]^[š]H^šY[
+™XXÚ‹•[š]
+XXÚÜÛÛË›Ý\ø )ŠHŠNÂˆY]^]X[]HHšY[
+ˆ‹Ý\œ™[]X[]H0­È[\ˆÚXÚÙY[[Ý[ŠNÂˆY]^Z[š[][HHšY[
+Œ‹”™[Ü™\ˆ™[ÝÈ\È]X[]HŠNÂˆY]^[\˜[HšY[
+Œ‹”Ù\šXÙH[\˜[[ˆ^\È
+H›Û™JHŠNÂˆY]^Ø\™HH^šY[
+’[œÜXÝÛX[‹Üˆ™\XÙH\È™YYY‹Ø\™H›Ý\ÈŠNÂˆšY[Ë˜YšY]Ê˜[YJNÈšY[Ë˜YšY]ÊØ]YÛÜžJNÈšY[Ë˜YšY]Ê[š]
+NÂˆšY[Ë˜YšY]Ê]X[]JNÈšY[Ë˜YšY]ÊZ[š[][JNÈšY[Ë˜YšY]Ê[\˜[
+NÈšY[Ë˜YšY]ÊØ\™JNÂˆ^šY]È›ÝHHX™[
+’][\È\™HÝÜ™YÛ›HÛˆ\ÈÛ™KˆYH[[Ý[[ÝH\ÚXØ[HÚXÚÙYˆHÙ\šXÙH[\˜[Ý\ÈÛ›HY\ˆ[ÝH™XÛÜ™HÛÛ\]YÙ\šXÙKˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM‹
+NÂˆšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]JYÛÜšÜÚÜ][HŠBˆœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠY‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ[™[ÜžTÝÜ™K’][HYYH[™[ÜžTÝÜ™K˜YÝ\ÝÛJˆ˜[YK™Ù]^
+
+KÔÝš[™Ê
+KØ]YÛÜžK™Ù]^
+
+KÔÝš[™Ê
+K[š]™Ù]^
+
+KÔÝš[™Ê
+Kˆ[YÙ\‹œ\œÙR[
+]X[]K™Ù]^
+
+KÔÝš[™Ê
+JKˆ[YÙ\‹œ\œÙR[
+Z[š[][K™Ù]^
+
+KÔÝš[™Ê
+JKˆ[YÙ\‹œ\œÙR[
+[\˜[™Ù]^
+
+KÔÝš[™Ê
+JKØ\™K™Ù]^
+
+KÔÝš[™Ê
+JNÂˆ\]R[™[ÜžTÝ[[X\žJ
+NÂˆØ\Ý›XZÙU^
+\ËYY›˜[YH
+ÈˆYYÈ[™[ÜžH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆX[ÙË™\ÛZ\ÜÊ
+NÂˆÚÝÒ[™[ÜžJ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë’[™[ÜžH˜[Y\ÈÙ\™H›Ý˜[Y‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJBˆœÚÝÊ
+NÂˆB‚ˆš]˜]HšY]È[™[ÜžT›ÝÊ[™[ÜžTÝÜ™K’][H][JHÂˆ[™X\“^[Ý]›ÝÈH™]È[™X\“^[Ý]
+\ÊNÂˆ›ÝËœÙ]Ü˜]š]JÜ˜]š]KÑS•T—Õ‘T•PÐS
+NÂˆ›ÝËœÙ]Y[™ÊLLLL
+NÂˆ[Ý]\ÐÛÛÜˆH[™[ÜžTÝ]\ÐÛÛÜŠ][JNÂˆ›ÝËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+Ý]\ÐÛÛÜˆOH‘QÈÛÛÜ‹œ™ØŠMKKŠHˆÝ]\ÐÛÛÜˆOHSP‘TˆÈÛÛÜ‹œ™ØŠMKLŒÎJHˆÕT‘PÑKÛÛÜ‹œ™ØŠŒ‹ŒŒ‹ŒLÊKKMŠJNÂˆ›ÝËœÙ][]˜][ÛŠŠNÂˆ[™X\“^[Ý]“^[Ý]\˜[\È›ÝÓH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLKLŠNÂˆ›ÝÓœÙ]X\™Ú[œÊ
+NÂ‚ˆ^šY]ÈXÛÛˆHX™[
+][K™Û\
+
+KMKÝ]\ÐÛÛÜŠNÂˆXÛÛ‹œÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆXÛÛ‹œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆXÛÛ‹œÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹œ™ØŠËŒÍÊKÛÛÜ‹œ™ØŠŒM‹ŒLKŒJKKŒŠJNÂˆ›ÝË˜YšY]ÊXÛÛ‹™]È[™X\“^[Ý]“^[Ý]\˜[\Ê‹ŠJNÂ‚ˆ[™X\“^[Ý]ÛÜHH™]È[™X\“^[Ý]
+\ÊNÂˆÛÜKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆÛÜKœÙ]Y[™ÊL
+NÂˆ^šY]È˜[YHHX™[
+][K›˜[YKLËV
+NÂˆ˜[YKœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆÝš[™È\ØYÙHH][K\ØYÙSX™[
+
+NÂˆ^šY]ÈY]HHX™[
+][K˜Ø]YÛÜžH
+Èˆ0­Èˆ
+È][Kœ]X[]SX™[
+
+Bˆ
+È
+\ØYÙK›[™Ý
+
+HOHÈˆˆˆˆ0­Èˆ
+È\ØYÙJKLKUUQ
+NÂˆ^šY]ÈØÚY[HHX™[
+][KœÙ\šXÙSX™[
+
+KL][K›™YYÔÙ\šXÙP][[ÛŠ
+HÈÝ]\ÐÛÛÜˆˆUUQ
+NÂˆ^šY]ÈØ\™HHX™[
+][K˜Ø\™KLUUQ
+NÂˆØ\™KœÙ]X^[™\ÊŠNÂˆËÈHÛÛ\XÝÝØÚÈØ]YÙHXZÙ\ÈH™[Ü™\ˆÝ]HYÚX›HÚ]Ý]ˆËÈÜ[š[™ÈH][KˆHØØ[H\È[[[Û˜[H™[]]™HÈ›Ý\‚ˆËÈZ[š[][K\ÝØÚÈ[š]ËÛÈH[ÜÛÛÜˆÜ\™HÙ\È›Ý\Ø\X\‚ˆËÈ[ÈH™X\›KY[\H˜\ˆÚ[HH™\›Ë\ÝØÚÈ][H™[XZ[œÈØš[Ý\Ë‚ˆ[™›ÚYÚYÙ]”›ÙÜ™\ÜÐ˜\ˆÝØÚÈH™]È[™›ÚYÚYÙ]”›ÙÜ™\ÜÐ˜\Šˆ\Ë[[™›ÚY”‹˜]‹œ›ÙÜ™\ÜÐ˜\”Ý[RÜš^›Û[
+NÂˆ[Ø]YÙSX^HX]›X^
+KX]›X^
+][Kœ]X[]KX]›X^
+K][K›Z[š[][H
+ˆ
+JJNÂˆÝØÚËœÙ]X^
+Ø]YÙSX^
+NÂˆÝØÚËœÙ]›ÙÜ™\ÜÊ][Kœ]X[]PÛÛ™š\›YYÈX]›X^
+X]›Z[ŠØ]YÙSX^][Kœ]X[]JJHˆ
+NÂˆÝØÚËœÙ]›ÙÜ™\ÜÕ[\Ý
+ÛÛÜ”Ý]S\Ý˜[YSÙŠÝ]\ÐÛÛÜŠJNÂˆÝØÚËœÙ]š\ÚXš[]J][Kœ]X[]PÛÛ™š\›YYÈšY]Ë•’TÒP“HˆšY]Ë‘ÓÓ‘JNÂˆÝØÚËœÙ]ÛÛ[\ØÜš\[ÛŠ][K›˜[YH
+ÈˆÝØÚÎˆˆ
+È][Kœ]X[]SX™[
+
+JNÂˆÛÜK˜YšY]Ê˜[YJNÂˆÛÜK˜YšY]ÊY]JNÂˆÛÜK˜YšY]ÊÝØÚË™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+JJJNÂˆÛÜK˜YšY]ÊØÚY[JNÂˆÛÜK˜YšY]ÊØ\™JNÂˆ›ÝË˜YšY]ÊÛÜK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊL‹JJNÂ‚ˆ^šY]ÈÝ]\ÈHX™[
+][KœÝ]\ÓX™[
+
+KKÝ]\ÐÛÛÜŠNÂˆÝ]\ËœÙ]Ü˜]š]JÜ˜]š]KÑS•TŠNÂˆÝ]\ËœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆÝ]\ËœÙ]]\”ÜXÚ[™ÊŒŠNÂˆÝ]\ËœÙ]˜XÚÙÜ›Ý[™
+›Ý[™
+ÛÛÜ‹•ÒUKÝ]\ÐÛÛÜ‹KM
+JNÂˆ›ÝË˜YšY]ÊÝ]\Ë™]È[™X\“^[Ý]“^[Ý]\˜[\ÊÍ‹Ì
+JNÂˆ›ÝËœÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÒ[™[ÜžR][J][JJNÂˆ›ÝËœÙ]ÛÛ[\ØÜš\[ÛŠ][K›˜[YH
+Èˆ[™[ÜžHÝ]\Îˆˆ
+È][KœÝ]\ÓX™[
+
+JNÂˆ›ÝËœÙ]^[Ý]\˜[\Ê›ÝÓ
+NÂˆ™]\›ˆ›ÝÎÂˆB‚ˆš]˜]H[[™[ÜžTÝ]\ÐÛÛÜŠ[™[ÜžTÝÜ™K’][H][JHÂˆYˆ
+][K›™YYÔ™[Ü™\Š
+JH™]\›ˆ‘QÂˆYˆ
+][K›™YYÔÙ\šXÙP][[ÛŠ
+JH™]\›ˆSP‘TŽÂˆYˆ
+Z][Kœ]X[]PÛÛ™š\›YYZ][KœÙ\šXÙR\ÝÜžPÛÛ™š\›YY
+H™]\›ˆUUQÂˆ™]\›ˆÔ‘QSŽÂˆB‚ˆš]˜]H›ÚYÚÝÒ[™[ÜžR][J[™[ÜžTÝÜ™K’][H][JHÂˆ›ÛÛX[ˆÜ˜[\ÈH][K\Ù\ÑÜ˜[\Ê
+NÂˆ\œ˜^S\ÝÝš[™ÏˆXÝ[Û“\ÝH™]È\œ˜^S\ÝŠ
+NÂˆXÝ[Û“\Ý˜Y
+][Kœ]X[]PÛÛ™š\›YYÈ”Ù]^XÝ]X[]Hˆˆ”™XÛÜ™Ý\œ™[]X[]HŠNÂˆYˆ
+][Kœ]X[]PÛÛ™š\›YY
+HÂˆXÝ[Û“\Ý˜Y
+Ü˜[\ÈÈYLÈˆˆYÛ™HŠNÂˆXÝ[Û“\Ý˜Y
+Ü˜[\ÈÈ•\ÙHLÈˆˆ•\ÙHÛ™HŠNÂˆBˆXÝ[Û“\Ý˜Y
+][KœÙ\šXÙR\ÝÜžPÛÛ™š\›YYÈ“X\šÈÙ\šXÙYˆˆ”™XÛÜ™Ù\šXÙHÛ™HŠNÂˆYˆ
+][Kš\ÐÝ\ÝÛJ
+JHXÝ[Û“\Ý˜Y
+”™[[Ý™H][HŠNÂˆÝš[™Ö×HXÝ[ÛœÈHXÝ[Û“\ÝÐ\œ˜^J™]ÈÝš[™ÖÌJNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J][K›˜[YJBˆœÙ]Y\ÜØYÙJ][K˜Ø]YÛÜžH
+È—ˆˆ
+È][Kœ]X[]SX™[
+
+Bˆ
+È
+][K\ØYÙSX™[
+
+K›[™Ý
+
+HOHÈˆˆˆ—ˆˆ
+È][K\ØYÙSX™[
+
+JBˆ
+È——ˆˆ
+È][K˜Ø\™H
+È—ˆˆ
+È][KœÙ\šXÙSX™[
+
+Bˆ
+È——Ý\œ™[Ý]Nˆˆ
+È][KœÝ]\ÓX™[
+
+JBˆœÙ]][\ÊXÝ[ÛœË
+X[ÙËÚXÚ
+HOˆÂˆÝš[™ÈÙ[XÝYHXÝ[ÛœÖÝÚXÚNÂˆYˆ
+”Ù]^XÝ]X[]H‹™\]X[ÊÙ[XÝY
+H”™XÛÜ™Ý\œ™[]X[]H‹™\]X[ÊÙ[XÝY
+JHÂˆÚÝÔÙ][™[ÜžT]X[]J][KX[ÙÊNÂˆ™]\›ŽÂˆBˆYˆ
+Ù[XÝY™\]X[ÊÜ˜[\ÈÈYLÈˆˆYÛ™HŠJHÂˆYˆ
+Ü˜[\ÊH[™[ÜžTÝÜ™K˜Y]X[]J][KL
+NÈ[ÙH[™[ÜžTÝÜ™K˜YÛ™J][JNÂˆH[ÙHYˆ
+Ù[XÝY™\]X[ÊÜ˜[\ÈÈ•\ÙHLÈˆˆ•\ÙHÛ™HŠJHÂˆYˆ
+Ü˜[\ÊH[™[ÜžTÝÜ™K\ÙT]X[]J][KL
+NÈ[ÙH[™[ÜžTÝÜ™K\ÙSÛ™J][JNÂˆH[ÙHYˆ
+“X\šÈÙ\šXÙY‹™\]X[ÊÙ[XÝY
+H”™XÛÜ™Ù\šXÙHÛ™H‹™\]X[ÊÙ[XÝY
+JHÂˆ[™[ÜžTÝÜ™K›X\šÔÙ\šXÙY
+][JNÂˆH[ÙHYˆ
+”™[[Ý™H][H‹™\]X[ÊÙ[XÝY
+H	‰ˆ][Kš\ÐÝ\ÝÛJ
+JHÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”™[[Ý™Hˆ
+È][K›˜[YH
+ÈÈŠBˆœÙ]Y\ÜØYÙJ•\È™[[Ý™\ÈHÝ\ÝÛH[™[ÜžH™XÛÜ™œ›ÛH\ÈÛ™KˆŠBˆœÙ]™YØ]]™P]ÛŠ’ÙY\‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ”™[[Ý™H‹
+YÛ›Ü™YÛÛ™š\›YY
+HOˆÂˆ[™[ÜžTÝÜ™K™[]J][JNÂˆ\]R[™[ÜžTÝ[[X\žJ
+NÂˆØ\Ý›XZÙU^
+\Ë][K›˜[YH
+Èˆ™[[Ý™Y‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJBˆœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ\]R[™[ÜžTÝ[[X\žJ
+NÂˆØ\Ý›XZÙU^
+\Ë][K›˜[YH
+Èˆ\]Y‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJBˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÔÙ][™[ÜžT]X[]J[™[ÜžTÝÜ™K’][H][K[™›ÚY˜ÛÛ[‘X[ÙÒ[\™˜XÙH][QX[ÙÊHÂˆY]^]X[]HHšY[
+][Kœ]X[]PÛÛ™š\›YYÈÝš[™Ë˜[YSÙŠ][Kœ]X[]JHˆˆ‹ˆ][K[š]™\]X[ÒYÛ›Ü™PØ\ÙJ™ÈŠHÈ‘^XÝÝ\œ™[]X[]H[ˆÜ˜[\Èˆˆ‘^XÝÝ\œ™[]X[]H0­Èˆ
+È][K[š]
+NÂˆ]X[]KœÙ][œ]\J[™›ÚY^’[œ]\K•TWÐÓTÔ×Ó•SP‘TŠNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J][Kœ]X[]PÛÛ™š\›YYÈ”Ù]^XÝ]X[]Hˆˆ”™XÛÜ™Ý\œ™[]X[]HŠBˆœÙ]Y\ÜØYÙJ‘[\ˆH[[Ý[[ÝH\ÚXØ[HÚXÚÙYˆ[ÞHØ[››Ý™XYÜÛÛÜˆÜ\™HÝØÚÈœ›ÛHHš[\‹ˆŠBˆœÙ]šY]Ê]X[]JBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ”Ø]™HÚXÚÙY[[Ý[‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ[[[Ý[H[YÙ\‹œ\œÙR[
+]X[]K™Ù]^
+
+KÔÝš[™Ê
+Kš[J
+JNÂˆ[™[ÜžTÝÜ™KœÙ]^XÝ]X[]J][K[[Ý[
+NÂˆ\]R[™[ÜžTÝ[[X\žJ
+NÂˆ][QX[ÙË™\ÛZ\ÜÊ
+NÂˆÚÝÒ[™[ÜžJ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë‘[\ˆH˜[YÚÛK[[X™\ˆ]X[]H‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJBˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÔ\Ê
+HÂˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[Ù[OH[[Ù[œ\ÈOH[[Ù[œ\Ë›[™ÝOH
+HÂˆØ\Ý›XZÙU^
+\Ë’[\ÜH[Ù[™Y›Ü™HšY]Ú[™È\È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆÝš[™Ö×HX™[ÈH™]ÈÝš[™ÖÛ[Ù[œ\Ë›[™Ý
+ÈWNÂˆX™[ÖÌHH[\È0­Èˆ
+È
+[Ù[šX[™Û\Ë›[™ÝÈÊH
+ÈˆšX[™Û\ÈŽÂˆ›Üˆ
+[[™^HÈ[™^[Ù[œ\Ë›[™ÝÈ[™^
+ÊÊHÂˆY\Ú[Ù[”\\H[Ù[œ\ÖÚ[™^NÂˆY\Ú[Ù[”\›Ý[™È›Ý[™ÈH[Ù[œ\›Ý[™Ê[™^
+NÂˆX™[ÖÚ[™^
+ÈWHHÝš[™Ë™›Ü›X]
+ØØ[K•TË‰\È0­È	KŒYˆ0åÈ	KŒYˆ0åÈ	KŒYˆ[H0­È	YšX[™Û\È‹ˆ\›˜[YK›Ý[™ËÚY
+
+K›Ý[™Ë™\
+
+K›Ý[™ËšZYÚ
+
+K\šX[™ÛPÛÝ[
+NÂˆBˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J“[Ù[\ÈŠBˆœÙ]Y\ÜØYÙJ”Ù[XÝH\Èœš[™È]›ÜØ\™[ˆHÑšY]Ë——‘Ù[ÛY]žNˆˆ
+È[Ù[™Ù[ÛY]žT™\Ü
+
+KœÝ[[X\žJ
+Bˆ
+È
+Ù[ÛY]žT™\Z\‘[˜X›YÈ——ÛÛœÙ\˜]]™H™\Z\ˆ\ÈXÝ]™H›Üˆ\È]KˆˆˆˆŠJBˆœÙ]Ú[™ÛPÚÚXÙR][\ÊX™[ËšY]ÜÜ™Ù]Ù[XÝY\
+
+H
+ÈK
+X[ÙËÚXÚ
+HOˆÂˆšY]ÜÜœÙ]Ù[XÝY\
+ÚXÚHJNÂˆYˆ
+[[Ù[\š\Ëš\Ñ[\J
+JH›Ú™XÝÝÜ™KœØ]™TÙ[XÝY\
+ÚXÚHJNÂˆØ]™PÝ\œ™[]J
+NÂˆÝ]\ËœÙ]^
+ÚXÚOHÈ”™\\™H0­ÈÚÝÚ[™È[\Èˆˆ”™\\™H0­È›ØÝ\ÙYÛˆˆ
+È[Ù[œ\ÖÝÚXÚHWK›˜[YJNÂˆJBˆœÙ]™]]˜[]ÛŠ•˜[œÙ›Ü›H‹
+X[ÙËÚXÚ
+HOˆÂˆ[Ù[XÝYHšY]ÜÜ™Ù]Ù[XÝY\
+
+NÂˆYˆ
+Ù[XÝY
+HÂˆØ\Ý›XZÙU^
+\Ë”Ù[XÝH\™Y›Ü™H˜[œÙ›Ü›Z[™È]‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆX[ÙË™\ÛZ\ÜÊ
+NÂˆÚÝÔ\˜[œÙ›Ü›JÙ[XÝY
+NÂˆJBˆœÙ]™YØ]]™P]ÛŠÙ[ÛY]žT™\Z\‘[˜X›YÈ“ÜšYÚ[˜[Ù[ÛY]žHˆˆ”™\Z\ˆÙ[ÛY]žH‹ˆ
+X[ÙËÚXÚ
+HOˆÂˆYˆ
+Ù[ÛY]žT™\Z\‘[˜X›Y
+H™\ÝÜ™SÜšYÚ[˜[Ù[ÛY]žJ
+NÂˆ[ÙH™\Z\‘Ù[ÛY]žJ
+NÂˆJBˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÔ\˜[œÙ›Ü›J[\[™^
+HÂˆYˆ
+ÛÝ\˜ÙS[Ù[OH[[Ù[OH[\[™^\[™^H[Ù[œ\Ë›[™Ý
+H™]\›ŽÂˆY\Ú[Ù[”\˜[œÙ›Ü›HÝ\œ™[H\˜[œÙ›Ü›P]
+\[™^
+NÂˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^ØØ[HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹Ý\œ™[œØØ[H
+ˆLŠK”\ØØ[H
+	JHŠNÂˆY]^›Ý][ÛˆHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹Ý\œ™[œ›Ý][Û‘YÜ™Y\ÊK”\›Ý][Ûˆ
+YÜ™Y\ÊH‹YJNÂˆY]^[HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹Ý\œ™[[YÜ™Y\ÊK•[
+YÜ™Y\ÊH‹YJNÂˆY]^[HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹Ý\œ™[[QYÜ™Y\ÊK•[H
+YÜ™Y\ÊH‹YJNÂˆY]^Ù™œÙ]HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹Ý\œ™[›Ù™œÙ]
+K“[Ý™H
+[JH‹YJNÂˆY]^Ù™œÙ]HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹Ý\œ™[›Ù™œÙ]JK“[Ý™HH
+[JH‹YJNÂˆšY[Ë˜YšY]ÊØØ[JNÈšY[Ë˜YšY]Ê›Ý][ÛŠNÈšY[Ë˜YšY]Ê[
+NÈšY[Ë˜YšY]Ê[JNÈšY[Ë˜YšY]ÊÙ™œÙ]
+NÈšY[Ë˜YšY]ÊÙ™œÙ]JNÂˆ^šY]È›ÝHHX™[
+•˜[œÙ›Ü›Z[™ÈÛ™H\™\Ù\™\ÈHÝ\ˆ\Ëˆ[ÞH™K[]™[ÈH\ÜÙ[X›HÛˆH™Y[™\ØØ\™È[žH™]š[Ý\ÈÛXÙKˆ‹LËUUQ
+NÂˆ›ÝKœÙ]Y[™ÊN
+NÂˆšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J•˜[œÙ›Ü›H0­Èˆ
+È[Ù[œ\ÖÜ\[™^K›˜[YJBˆœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ\H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ›Ø]™^ØØ[HHÛ[\
+›Ø]œ\œÙQ›Ø]
+ØØ[K™Ù]^
+
+KÔÝš[™Ê
+JHÈL‹ŒY‹LŠNÂˆ›Ø]™^›Ý][ÛˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+›Ý][Û‹™Ù]^
+
+KÔÝš[™Ê
+JKLÍŒ‹ÍŒŠNÂˆ›Ø]™^[HÛ[\
+›Ø]œ\œÙQ›Ø]
+[™Ù]^
+
+KÔÝš[™Ê
+JKLÍŒ‹ÍŒŠNÂˆ›Ø]™^[HHÛ[\
+›Ø]œ\œÙQ›Ø]
+[K™Ù]^
+
+KÔÝš[™Ê
+JKLÍŒ‹ÍŒŠNÂˆ›Ø]™^Ù™œÙ]HÛ[\
+›Ø]œ\œÙQ›Ø]
+Ù™œÙ]™Ù]^
+
+KÔÝš[™Ê
+JKLWÌ‹WÌŠNÂˆ›Ø]™^Ù™œÙ]HHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ù™œÙ]K™Ù]^
+
+KÔÝš[™Ê
+JKLWÌ‹WÌŠNÂˆ™\\™S[Ù[]]][ÛŠ•˜[œÙ›Ü›H0­Èˆ
+È[Ù[œ\ÖÜ\[™^K›˜[YJNÂˆÚ[H
+\˜[œÙ›Ü›\ËœÚ^™J
+HH\[™^
+H\˜[œÙ›Ü›\Ë˜Y
+Y\Ú[Ù[”\˜[œÙ›Ü›KšY[]J
+JNÂˆ\˜[œÙ›Ü›\ËœÙ]
+\[™^™]ÈY\Ú[Ù[”\˜[œÙ›Ü›J™^ØØ[K™^›Ý][Û‹™^[™^[K™^Ù™œÙ]™^Ù™œÙ]JJNÂˆ›Ú™XÝÝÜ™KœØ]™T\˜[œÙ›Ü›\Ê\˜[œÙ›Ü›\ÊNÂˆØ]™PÝ\œ™[]J
+NÂˆ[Ù[H™XZ[[Ù[
+[Ù[™\Ü^S˜[YJNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[ÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]Ù[XÝY\
+\[™^
+NÂˆ[Ù[Y]KœÙ]^
+šY]ÜÜ\Ü^S˜[YJ[Ù[™\Ü^S˜[YJH
+È—ˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+”™\\™H0­È˜[œÙ›Ü›YYˆ
+È[Ù[œ\ÖÜ\[™^K›˜[YJNÂˆ]Z[ËœÙ]^
+[Ù[]Z[Ê[Ù[
+JNÂˆš[š\Ú[Ù[]]][ÛŠ•˜[œÙ›Ü›H0­Èˆ
+È[Ù[œ\ÖÜ\[™^K›˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”\˜[œÙ›Ü›H˜[Y\ÈÙ\™H›Ý˜[Y‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆBˆJBˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚY™\Z\‘Ù[ÛY]žJ
+HÂˆYˆ
+š[\\ÞHÛXÚ[™È˜]ÚÛXÚ[™È[\Ü[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆ™Y›Ü™H™\Z\š[™ÈÙ[ÛY]žH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+™\Z\š[™ÑÙ[ÛY]žHÛÝ\˜ÙS[Ù[OH[[Ù[OH[
+H™]\›ŽÂˆ™\\™S[Ù[]]][ÛŠ”™\Z\ˆÙ[ÛY]žHŠNÂˆš[˜[Y\Ú[Ù[[œ]HÛÝ\˜ÙS[Ù[Âˆš[˜[Ýš[™È˜[YHH[Ù[™\Ü^S˜[YNÂˆš[˜[Û™È™\Z\’YHÙ[ÛY]žT™\Z\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆXÝ]™QÙ[ÛY]žT™\Z\’YH™\Z\’YÂˆ™\Z\š[™ÑÙ[ÛY]žHHYNÂˆÝ]\ËœÙ]^
+”™\\™H0­È™\Z\š[™ÈÙ[ÛY]žx )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™QÙ[ÛY]žT™\Z\ˆH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžHÂˆY\Ú[Ù[”™\Z\”™\Ý[™\Ý[H[œ]œ™\Z\Š˜[YJNÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+™\Z\’YOHXÝ]™QÙ[ÛY]žT™\Z\’Y\™\Z\š[™ÑÙ[ÛY]žH\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ™\Z\š[™ÑÙ[ÛY]žHH˜[ÙNÂˆXÝ]™QÙ[ÛY]žT™\Z\ˆH[ÂˆžHÂˆÛÝ\˜ÙS[Ù[H™\Ý[›Y\ÚÂˆÙ[ÛY]žT™\Z\‘[˜X›YHYNÂˆ[Ù[H™XZ[[Ù[
+˜[YJNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[Âˆ›Ú™XÝÝÜ™KœØ]™QÙ[ÛY]žT™\Z\ŠYJNÂˆØ]™PÝ\œ™[]J
+NÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]™\Ý[
+[
+NÂˆÝ]\ËœÙ]^
+”™\\™H0­ÈÙ[ÛY]žH™\Z\™YŠNÂˆ]Z[ËœÙ]^
+[Ù[]Z[Ê[Ù[
+JNÂˆš[š\Ú[Ù[]]][ÛŠ”™\Z\ˆÙ[ÛY]žHŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë™\Ý[œ™\ÜœÝ[[X\žJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”™\Z\™YÙ[ÛY]žHÛÝ[›Ý™H\YYˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆBˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+™\Z\’YOHXÝ]™QÙ[ÛY]žT™\Z\’Y\™\Z\š[™ÑÙ[ÛY]žH\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ™\Z\š[™ÑÙ[ÛY]žHH˜[ÙNÂˆXÝ]™QÙ[ÛY]žT™\Z\ˆH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë‘Ù[ÛY]žH™\Z\ˆ˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]H›ÚY™\ÝÜ™SÜšYÚ[˜[Ù[ÛY]žJ
+HÂˆYˆ
+š[\\ÞHÛXÚ[™È˜]ÚÛXÚ[™È[\Ü[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆ™Y›Ü™H™\ÝÜš[™ÈÙ[ÛY]žH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[›[ÙYšYYÛÝ\˜ÙS[Ù[OH[[Ù[OH[
+H™]\›ŽÂˆžHÂˆ™\\™S[Ù[]]][ÛŠ”™\ÝÜ™HÜšYÚ[˜[Ù[ÛY]žHŠNÂˆÛÝ\˜ÙS[Ù[H[›[ÙYšYYÛÝ\˜ÙS[Ù[ÂˆÙ[ÛY]žT™\Z\‘[˜X›YH˜[ÙNÂˆ›Ú™XÝÝÜ™KœØ]™QÙ[ÛY]žT™\Z\Š˜[ÙJNÂˆ[Ù[H™XZ[[Ù[
+[Ù[™\Ü^S˜[YJNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆØ]™PÝ\œ™[]J
+NÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]™\Ý[
+[
+NÂˆÝ]\ËœÙ]^
+”™\\™H0­ÈÜšYÚ[˜[Ù[ÛY]žH™\ÝÜ™YŠNÂˆ]Z[ËœÙ]^
+[Ù[]Z[Ê[Ù[
+JNÂˆš[š\Ú[Ù[]]][ÛŠ”™\ÝÜ™HÜšYÚ[˜[Ù[ÛY]žHŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë“ÜšYÚ[˜[Ù[ÛY]žHÛÝ[›Ý™H™\ÝÜ™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]HÞ[˜Ú›Ûš^™Y›ÚYØ[˜Ù[Ù[ÛY]žT™\Z\Š
+HÂˆXÝ]™QÙ[ÛY]žT™\Z\’YHÙ[ÛY]žT™\Z\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆYˆ
+XÝ]™QÙ[ÛY]žT™\Z\ˆOH[
+HÂˆXÝ]™QÙ[ÛY]žT™\Z\‹˜Ø[˜Ù[
+YJNÂˆXÝ]™QÙ[ÛY]žT™\Z\ˆH[ÂˆBˆYˆ
+\™\Z\š[™ÑÙ[ÛY]žJH™]\›ŽÂˆ™\Z\š[™ÑÙ[ÛY]žHH˜[ÙNÂˆYˆ
+Ý]\ÈOH[
+HÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆYˆ
+XÝ[ÛœÈOH[
+H™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]HY\Ú[Ù[”\˜[œÙ›Ü›H\˜[œÙ›Ü›P]
+[[™^
+HÂˆ™]\›ˆ[™^H	‰ˆ[™^\˜[œÙ›Ü›\ËœÚ^™J
+BˆÈ\˜[œÙ›Ü›\Ë™Ù]
+[™^
+HˆY\Ú[Ù[”\˜[œÙ›Ü›KšY[]J
+NÂˆB‚ˆš]˜]HÝš[™È[Ù[]Z[ÊY\Ú[Ù[˜[YJHÂˆ[\ÛÝ[H˜[YKœ\ÈOH[ÈHˆ˜[YKœ\Ë›[™ÝÂˆ™]\›ˆÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ0åÈ	KŒYˆ0åÈ	KŒYˆ[H0­È	YšX[™Û\È0­È	Y	\È0­È	\È0­ÈÙ[\™YÛˆ	\È]H‹ˆ˜[YK›X^H˜[YK›Z[–˜[YK›X^HH˜[YK›Z[–K˜[YK›X^ˆH˜[YK›Z[–‹ˆ˜[YKšX[™Û\Ë›[™ÝÈË\ÛÝ[\ÛÝ[OHHÈœ\ˆˆœ\È‹ˆ˜[YK™Ù[ÛY]žT™\Ü
+
+KœÝ[[X\žJ
+K›Ùš[Tš[\“X™[
+
+JNÂˆB‚ˆš]˜]H›ÚY™Yœ™\ÚXÝ[ÛœÊ
+HÂˆXÝ[ÛœËœ™[[Ý™P[šY]ÜÊ
+NÂˆËÈ[Ý^\È]˜Z[X›H\š[™È]™\žH\ÚÈÝ]Kˆ]\È[[[Û˜[HBˆËÈ™XY[Û›H›Ý]Nˆ\ÜÛÛœÈX^H^Z[ˆH›ØÚÙYØ]K™]™\ˆÜ[ˆ]‚ˆXÝ[ÛŠ“X\›ˆ‹ˆOˆÚÝÓX\›’XŠ
+JNÂˆYˆ
+›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ›Ú™XÝ˜[œÙ™\œš[™ÈÈ”›Ú™XÝš[x )ˆˆˆ˜]Ú\˜Ú]™x )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆH[ÙHYˆ
+š\ÝX[^š[™ÊHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ•š\ÝX[^š[™ø )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆXÝ[ÛŠØ[˜Ù[‹ˆOˆØ[˜Ù[š\ÝX[^˜][ÛŠ
+JKœÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+[Ù[[™ÊHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ“[Ù[[™ø )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆXÝ[ÛŠØ[˜Ù[‹ˆOˆØ[˜Ù[˜]]™P›ÛÛX[Š
+JKœÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+™\Z\š[™ÑÙ[ÛY]žJHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ”™\Z\š[™ÈÙ[ÛY]žx )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆ]ÛˆØ[˜Ù[HXÝ[ÛŠØ[˜Ù[‹ˆOˆØ[˜Ù[Ù[ÛY]žT™\Z\Š
+JNÂˆØ[˜Ù[œÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+[\Ü[™ÊHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ“ØY[™È[Ù[8 )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆ]ÛˆØ[˜Ù[HXÝ[ÛŠØ[˜Ù[‹ˆOˆØ[˜Ù[[\Ü
+
+JNÂˆØ[˜Ù[œÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+[Ù[OH[	‰ˆ
+˜]ÚÛXÚ[™ÈÛXÚ[™ÊJHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ˜]ÚÛXÚ[™ÈÈ”ÛXÚ[™È]\ø )ˆˆˆ”ÛXÚ[™ø )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆ]ÛˆØ[˜Ù[HXÝ[ÛŠØ[˜Ù[‹ˆOˆÂˆYˆ
+˜]ÚÛXÚ[™ÊHØ[˜Ù[˜]ÚÛXÙJ
+NÈ[ÙHØ[˜Ù[ÛXÙJ
+NÂˆJNÂˆØ[˜Ù[œÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+[Ù[OH[
+HÂˆXÝ[ÛŠ’[\Ü[Ù[‹ˆOˆÜ[“[Ù[
+
+JNÂˆXÝ[ÛŠLHÑ‹ˆOˆÚÝÔš[\”ÝYJ
+JNÂˆXÝ[ÛŠ“[Ù[‹ˆOˆÚÝÓ[Ù[ÛÜšØ™[˜Ú
+
+JNÂˆXÝ[ÛŠ“Xœ˜\žH‹ˆOˆÚÝÓ[Ù[Xœ˜\žJ
+JNÂˆXÝ[ÛŠ”›Ùš[H‹ˆOˆÚÝÔ›Ùš[T™]šY]Ê
+JNÂˆXÝ[ÛŠ”™XÚ\H‹ˆOˆÚÝÔ™XÚ\J
+JNÂˆXÝ[ÛŠ”š[™XY[™\ÜÈ‹ˆOˆÚÝÔš[\”™XY[™\ÜÊ
+JNÂˆYˆ
+\Ôš[\”™XÛÝ™\žJ
+JHÂˆ]Ûˆ™]šY]ÈHXÝ[ÛŠ”™]šY]Èš[\ˆ›Øˆ‹ˆOˆÚÝÔš[\”Ý]\Ê
+JNÂˆ™]šY]ËœÙ]^ÛÛÜŠ‘Q
+NÂˆBˆY\ØYYš[XÝ[ÛŠ
+NÂˆH[ÙHYˆ
+˜]ÚÛXÚ[™ÊHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ”ÛXÚ[™È]\ø )ˆ‹[
+NÈ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆ]ÛˆØ[˜Ù[HXÝ[ÛŠØ[˜Ù[‹ˆOˆØ[˜Ù[˜]ÚÛXÙJ
+JNÈØ[˜Ù[œÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+ÛXÚ[™ÊHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ”ÛXÚ[™ø )ˆ‹[
+NÈ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆ]ÛˆØ[˜Ù[HXÝ[ÛŠØ[˜Ù[‹ˆOˆØ[˜Ù[ÛXÙJ
+JNÈØ[˜Ù[œÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+ÛXÙHOH[
+HÂˆXÝ[ÛŠ’[\Ü[›Ý\ˆ‹ˆOˆÜ[“[Ù[
+
+JNÂˆXÝ[ÛŠLHÑ‹ˆOˆÚÝÔš[\”ÝYJ
+JNÂˆXÝ[ÛŠ“[Ù[‹ˆOˆÚÝÓ[Ù[ÛÜšØ™[˜Ú
+
+JNÂˆXÝ[ÛŠ“Xœ˜\žH‹ˆOˆÚÝÓ[Ù[Xœ˜\žJ
+JNÂˆXÝ[ÛŠ“[Ù[Ñ‹ˆOˆÚÝÒ[[Y\œÚ]™UšY]Ê
+JNÂˆXÝ[ÛŠ”š[™XY[™\ÜÈ‹ˆOˆÚÝÔš[\”™XY[™\ÜÊ
+JNÂˆY\ÝÜžPXÝ[ÛœÊ
+NÂˆXÝ[ÛŠ•š\ÝX[^™H‹ˆOˆÚÝÕš\ÝX[^˜][ÛŠ
+JNÂˆYˆ
+[Ù[œ\ÈOH[	‰ˆ[Ù[œ\Ë›[™ÝˆJHXÝ[ÛŠ”\È‹ˆOˆÚÝÔ\Ê
+JNÂˆYˆ
+[Ù[œ\ÈOH[	‰ˆ[Ù[œ\Ë›[™ÝˆJHXÝ[ÛŠ\œ˜[™ÙH‹ˆOˆ]]Ð\œ˜[™ÙT\Ê
+JNÂˆXÝ[ÛŠ”›Ùš[H‹ˆOˆÚÝÔ›Ùš[T™]šY]Ê
+JNÂˆXÝ[ÛŠ”™\\™H‹ˆOˆÚÝÔ™\\™J
+JNÂˆ]ÛˆÛXÙP]ÛˆHXÝ[ÛŠ”ÛXÙH‹ˆOˆÝ\ÛXÙJ
+JNÂˆÛXÙP]Û‹œÙ]^ÛÛÜŠÓÓ
+NÂˆYˆ
+\Ôš[\”™XÛÝ™\žJ
+JHÂˆ]Ûˆ™]šY]ÈHXÝ[ÛŠ”™]šY]Èš[\ˆ›Øˆ‹ˆOˆÚÝÔš[\”Ý]\Ê
+JNÂˆ™]šY]ËœÙ]^ÛÛÜŠ‘Q
+NÂˆBˆY\ØYYš[XÝ[ÛŠ
+NÂˆH[ÙHÂˆXÝ[ÛŠ“[Ù[‹ˆOˆÚÝÓ[Ù[ÛÜšØ™[˜Ú
+
+JNÂˆXÝ[ÛŠLHÑ‹ˆOˆÚÝÔš[\”ÝYJ
+JNÂˆXÝ[ÛŠ“Xœ˜\žH‹ˆOˆÚÝÓ[Ù[Xœ˜\žJ
+JNÂˆXÝ[ÛŠ“[Ù[Ñ‹ˆOˆÚÝÒ[[Y\œÚ]™UšY]Ê
+JNÂˆXÝ[ÛŠ”š[™XY[™\ÜÈ‹ˆOˆÚÝÔš[\”™XY[™\ÜÊ
+JNÂˆY\ÝÜžPXÝ[ÛœÊ
+NÂˆXÝ[ÛŠ•š\ÝX[^™H‹ˆOˆÚÝÕš\ÝX[^˜][ÛŠ
+JNÂˆXÝ[ÛŠ”™\\™H‹ˆOˆÚÝÔ™\\™J
+JNÂˆXÝ[ÛŠ”›Ùš[H‹ˆOˆÚÝÔ›Ùš[T™]šY]Ê
+JNÂˆYˆ
+[Ù[œ\ÈOH[	‰ˆ[Ù[œ\Ë›[™ÝˆJHXÝ[ÛŠ”\È‹ˆOˆÚÝÔ\Ê
+JNÂˆXÝ[ÛŠ”š[[ˆ‹ˆOˆÚÝÔš[[Š
+JNÂˆXÝ[ÛŠ’[œÜXÝ‹ˆOˆÚÝÒ[œÜXÝ[ÛŠ
+JNÂˆXÝ[ÛŠšY]ÜÜš\ÕÛÛ]Û›J
+HÈ“[Ù[šY]Èˆˆ”]šY]È‹ˆOˆÂˆšY]ÜÜœÙ]ÛÛ]Û›J]šY]ÜÜš\ÕÛÛ]Û›J
+JNÂˆÝ]\ËœÙ]^
+šY]ÜÜš\ÕÛÛ]Û›J
+HÈ’[œÜXÝ0­ÈÜYÝÛˆÛÛ]ˆˆ’[œÜXÝ0­È[Ù[šY]ÈŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆJNÂˆXÝ[ÛŠ“^Y\ˆ8¢$ˆ‹ˆOˆÚ[™ÙS^Y\ŠLJJNÂˆXÝ[ÛŠ“^Y\ˆ
+È‹ˆOˆÚ[™ÙS^Y\ŠJJNÂˆYˆ
+\Ý˜]ÚOH[	‰ˆ[\Ý˜]Úœ]\Ëš\Ñ[\J
+JHÂˆ]Ûˆ˜]ÚHXÝ[ÛŠ‘^Ü[]\È‹ˆOˆ^Ü˜]Ú\˜Ú]™J
+JNÂˆ˜]ÚœÙ]^ÛÛÜŠÓÓ
+NÂˆBˆYˆ
+š[XÝ]™H	‰ˆXÝ]™Tš[\•\™Ù]OH[
+HÂˆš[\’›Ø”ÝÜ™K’›ØˆXÝ]™R›ØˆHš[\’›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+XÝ]™R›ØˆOH[	‰ˆXÝ]™R›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”UTÑQ
+HÂˆ]Ûˆ™\Ý[YHHXÝ[ÛŠ”™\Ý[YHš[‹ˆOˆ™\Ý[YTš[
+
+JNÂˆ™\Ý[YKœÙ]^ÛÛÜŠÓÓ
+NÂˆH[ÙHYˆ
+XÝ]™R›ØˆOH[	‰ˆXÝ]™R›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”•S“’S‘ÊHÂˆ]Ûˆ]\ÙHHXÝ[ÛŠ”]\ÙHš[‹ˆOˆ]\ÙTš[
+
+JNÂˆ]\ÙKœÙ]^ÛÛÜŠÓÓ
+NÂˆBˆ]ÛˆØ[˜Ù[HXÝ[ÛŠØ[˜Ù[š[‹ˆOˆØ[˜Ù[š[
+
+JNÂˆØ[˜Ù[œÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+š[\\ÞJHÂˆ]Ûˆ\ÞHHXÝ[ÛŠ•\ØY[™ø )ˆ‹[
+NÂˆ\ÞKœÙ][˜X›Y
+˜[ÙJNÂˆH[ÙHÂˆš[\’›Ø”ÝÜ™K’›Øˆ™]š[Ý\Ò›ØˆHš[\’›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+™]š[Ý\Ò›ØˆOH[	‰ˆ™]š[Ý\Ò›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆ]Ûˆ™]šY]ÈHXÝ[ÛŠ”™]šY]Èš[\ˆ›Øˆ‹ˆOˆÚÝÔš[\”Ý]\Ê
+JNÂˆ™]šY]ËœÙ]^ÛÛÜŠ‘Q
+NÂˆH[ÙHYˆ
+\Õ\ØYYš[\\Y˜XÝ
+
+JHÂˆY\ØYYš[XÝ[ÛŠ
+NÂˆH[ÙHYˆ
+š[\”™XY[™\ÜÔ™\Ü
+
+K˜Ø[”Ù[™
+
+JHÂˆ]ÛˆÙ[™HXÝ[ÛŠ”Ù[™Èš[\ˆ‹ˆOˆÙ[™Ôš[\Š
+JNÂˆÙ[™œÙ]^ÛÛÜŠÓÓ
+NÂˆBˆBˆ]Ûˆ^ÜHXÝ[ÛŠ‘^ÜŒÛYˆ‹ˆOˆ^ÜXÚØYÙJ
+JNÈ^ÜœÙ]^ÛÛÜŠÓÓ
+NÂˆXÝ[ÛŠ”Ú\™HXÚØYÙH‹ˆOˆÚ\™TXÚØYÙJ
+JNÂˆXÝ[ÛŠ•žH˜[XH[™H‹ˆOˆÚ\™UÐ˜[XR[™J
+JNÂˆBˆYˆ
+\˜Ó˜]šYØ][ÛˆOH[
+H\˜Ó˜]šYØ][Û‹œÙ]ÛÛ^X™[
+\˜ÐÛÛ^X™[
+
+JNÂˆ\]S^Y\’[œÜXÝÜŠ
+NÂˆB‚ˆš]˜]HÝš[™È\˜ÐÛÛ^X™[
+
+HÂˆYˆ
+›Ú™XÝ˜[œÙ™\œš[™ÊH™]\›ˆ”Ø]š[™È›Ú™XÝŽÂˆYˆ
+˜]Ú˜[œÙ™\œš[™ÊH™]\›ˆ”Ø]š[™È]\ÈŽÂˆYˆ
+š\ÝX[^š[™ÊH™]\›ˆ•š\ÝX[^š[™ÈŽÂˆYˆ
+[\Ü[™ÊH™]\›ˆ’[\Ü[™ÈŽÂˆYˆ
+[Ù[[™ÊH™]\›ˆ“[Ù[[™ÈŽÂˆYˆ
+™\Z\š[™ÑÙ[ÛY]žJH™]\›ˆ”™\Z\š[™ÈŽÂˆYˆ
+˜]ÚÛXÚ[™ÊH™]\›ˆ”ÛXÚ[™È]\ÈŽÂˆYˆ
+ÛXÚ[™ÊH™]\›ˆ”ÛXÚ[™ÈŽÂˆYˆ
+š[\\ÞJH™]\›ˆ”Ù[™[™È›ØˆŽÂˆYˆ
+š[XÝ]™JH™]\›ˆ”š[\ˆÝ]\ÈŽÂˆYˆ
+[Ù[OH[
+H™]\›ˆ”Ý\H›Ú™XÝŽÂˆ™]\›ˆÛXÙHOH[È”™\\™Hˆˆ’[œÜXÝŽÂˆB‚ˆÊŠ‚ˆ
+ˆH\\ˆ\˜È\È[X™\˜][HHÚ[™ÛKÝ]K\ÜXÚYšXÈXÝ[Û‹ˆ]\Âˆ
+ˆ›ÝHY[Nˆ\È™\Ù\™\ÈHš\ÝX[Y\˜\˜ÚHÙˆHÛË[]™[[Bˆ
+ˆ˜]šYØ][Ûˆ[™YX[œÈH\[Ø^\ÈY˜[˜Ù\ÈHš[ÛÜšÙ›ÝË‚ˆ
+‹Âˆš]˜]H›ÚYÜ[\˜ÐÛÛ^
+
+HÂˆYˆ
+›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™Èš\ÝX[^š[™È[\Ü[™È[Ù[[™Âˆ™\Z\š[™ÑÙ[ÛY]žH˜]ÚÛXÚ[™ÈÛXÚ[™Èš[\\ÞHš[XÝ]™JHÂˆÚÝÐXÝ]™P\˜ÓÜ\˜][ÛŠ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[Ù[OH[
+HÂˆÜ[“[Ù[
+
+NÂˆ™]\›ŽÂˆBˆYˆ
+ÛXÙHOH[
+HÂˆÚÝÔ™\\™J
+NÂˆ™]\›ŽÂˆBˆÚÝÒ[œÜXÝ[ÛŠ
+NÂˆB‚ˆÊŠˆÝ\™˜XÙHHÛ™Ë\[›š[™ÈÜ\˜][ÛˆÚ]Ý]™[Ü[š[™ÈHÛØ˜[XÝ[ÛˆY[Kˆ
+‹Âˆš]˜]H›ÚYÚÝÐXÝ]™P\˜ÓÜ\˜][ÛŠ
+HÂˆÝš[™ÈX™[H\˜ÐÛÛ^X™[
+
+NÂˆ]ÛˆØ[˜Ù[Hš[™XÝ[ÛŠØ[˜Ù[ŠNÂˆ[\X[ÙËZ[\ˆZ[\ˆH™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]JX™[
+BˆœÙ]Y\ÜØYÙJX™[
+Èˆ\È[ˆ›ÙÜ™\ÜËˆ[ÞHÚ[ÙY\\ÈÛÜšÈÛ‹Y]šXÙH[™™\Ù\™HHÝ\œ™[›Ú™XÝˆŠBˆœÙ]™YØ]]™P]ÛŠ’ÙY\ÛÜšÚ[™È‹[
+NÂˆYˆ
+Ø[˜Ù[OH[	‰ˆØ[˜Ù[š\Ñ[˜X›Y
+
+JHÂˆZ[\‹œÙ]ÜÚ]]™P]ÛŠØ[˜Ù[‹
+X[ÙËÚXÚ
+HOˆØ[˜Ù[œ\™›Ü›PÛXÚÊ
+JNÂˆH[ÙHYˆ
+š[XÝ]™JHÂˆZ[\‹œÙ]ÜÚ]]™P]ÛŠ•šY]Èš[\ˆ‹
+X[ÙËÚXÚ
+HOˆÚÝÔš[\”Ý]\Ê
+JNÂˆH[ÙHÂˆZ[\‹œÙ]ÜÚ]]™P]ÛŠ“ÒÈ‹[
+NÂˆBˆZ[\‹œÚÝÊ
+NÂˆB‚ˆš]˜]H]Ûˆš[™XÝ[ÛŠÝš[™ÈX™[
+HÂˆYˆ
+XÝ[ÛœÈOH[
+H™]\›ˆ[Âˆ›Üˆ
+[[™^HÈ[™^XÝ[ÛœË™Ù]Ú[ÛÝ[
+
+NÈ[™^
+ÊÊHÂˆšY]ÈÚ[HXÝ[ÛœË™Ù]Ú[]
+[™^
+NÂˆYˆ
+Ú[[œÝ[˜Ù[Ùˆ]Ûˆ	‰ˆX™[™\]X[Ê
+
+]ÛŠHÚ[
+K™Ù]^
+
+KÔÝš[™Ê
+JJHÂˆ™]\›ˆ
+]ÛŠHÚ[ÂˆBˆBˆ™]\›ˆ[ÂˆB‚ˆÊŠˆHÝÙ\ˆ[\Ú\È\ÈH^XÚ]Ý™\™›ÝÈ›Ý]K™]™\ˆH\\ˆXÝ[Û‹ˆ
+‹Âˆš]˜]H›ÚYÚÝÓ[Ü™PXÝ[ÛœÊ
+HÂˆYˆ
+XÝ[ÛœÈOH[XÝ[ÛœË™Ù]Ú[ÛÝ[
+
+HOH
+H™]\›ŽÂˆ\œ˜^S\ÝÝš[™ÏˆX™[ÈH™]È\œ˜^S\ÝŠ
+NÂˆ\œ˜^S\ÝšY]Ïˆ\Ý[˜][ÛœÈH™]È\œ˜^S\ÝŠ
+NÂˆ›Üˆ
+[[™^HÈ[™^XÝ[ÛœË™Ù]Ú[ÛÝ[
+
+NÈ[™^
+ÊÊHÂˆšY]ÈÚ[HXÝ[ÛœË™Ù]Ú[]
+[™^
+NÂˆYˆ
+JÚ[[œÝ[˜Ù[Ùˆ]ÛŠJHÛÛ[YNÂˆ]Ûˆ]ÛˆH
+]ÛŠHÚ[ÂˆÝš[™ÈX™[H]Û‹™Ù]^
+
+KÔÝš[™Ê
+NÂˆËÈš[X\žH\Ý[˜][ÛœÈ[™XYH]™HYXØ]YÛÛ›ÛÈ[ˆBˆËÈÝÙ\ˆÝ\™HÜˆ\™HH\\ˆÝ\™IÜÈ\™XÝ™^XÝ[Û‹‚ˆYˆ
+’[\Ü[Ù[‹™\]X[ÊX™[
+H’[\Ü[›Ý\ˆ‹™\]X[ÊX™[
+Bˆ”™\\™H‹™\]X[ÊX™[
+H’[œÜXÝ‹™\]X[ÊX™[
+Bˆ“Xœ˜\žH‹™\]X[ÊX™[
+H“[Ù[‹™\]X[ÊX™[
+Bˆ’\ÝÜžH‹™\]X[ÊX™[
+JHÛÛ[YNÂˆYˆ
+X]Û‹š\Ñ[˜X›Y
+
+JHX™[
+ÏHˆ0­ÈÛÜšÚ[™ÈŽÂˆX™[Ë˜Y
+X™[
+NÂˆ\Ý[˜][ÛœË˜Y
+]ÛŠNÂˆBˆYˆ
+X™[Ëš\Ñ[\J
+JH™]\›ŽÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J“[Ü™HŠBˆœÙ]][\ÊX™[ËÐ\œ˜^J™]ÈÝš[™ÖÌJK
+X[ÙËÚXÚ
+HOˆÂˆšY]È\™Ù]H\Ý[˜][ÛœË™Ù]
+ÚXÚ
+NÂˆYˆ
+\™Ù]š\Ñ[˜X›Y
+
+JH\™Ù]œ\™›Ü›PÛXÚÊ
+NÂˆJBˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+BˆœÚÝÊ
+NÂˆB‚ˆÊŠˆØÜXˆHÙ[XÝYÛÛ]^Y\ˆ\™XÝHÛˆHÛ™Kˆ
+‹Âˆš]˜]H›ÚY\]S^Y\’[œÜXÝÜŠ
+HÂˆYˆ
+^Y\’[œÜXÝÜˆOH[^Y\”ÙYZÈOH[^Y\’[œÜXÝÜ“X™[OH[
+H™]\›ŽÂˆ›ÛÛX[ˆ]˜Z[X›HHÛXÙHOH[	‰ˆÛXÙK›^Y\œÈOH[	‰ˆ\ÛXÙK›^Y\œËš\Ñ[\J
+NÂˆ^Y\’[œÜXÝÜ‹œÙ]š\ÚXš[]J]˜Z[X›HÈšY]Ë•’TÒP“HˆšY]Ë‘ÓÓ‘JNÂˆYˆ
+X]˜Z[X›JH™]\›ŽÂˆ[X^HX]›X^
+ÛXÙK›^Y\œËœÚ^™J
+HHJNÂˆ[Ù[XÝYHšY]ÜÜOH[ÈX^ˆšY]ÜÜ™Ù]Ù[XÝY^Y\Š
+NÂˆYˆ
+Ù[XÝY
+HÙ[XÝYHX^ÂˆÙ[XÝYHX]›X^
+X]›Z[ŠX^Ù[XÝY
+JNÂˆ^Y\”ÙYZËœÙ]X^
+X^
+NÂˆYˆ
+^Y\”ÙYZË™Ù]›ÙÜ™\ÜÊ
+HOHÙ[XÝY
+H^Y\”ÙYZËœÙ]›ÙÜ™\ÜÊÙ[XÝY
+NÂˆÛXÙ\‹“^Y\ˆ^Y\ˆHÛXÙK›^Y\œË™Ù]
+Ù[XÝY
+NÂˆ^Y\’[œÜXÝÜ“X™[œÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË“VQTˆ	YÈ	Y0­Èˆ	KŒ™ˆ[H0­È	YÙYÛY[È‹ˆÙ[XÝY
+ÈKÛXÙK›^Y\œËœÚ^™J
+K^Y\‹ž‹^Y\‹œÙYÛY[ËœÚ^™J
+JJNÂˆB‚ˆš]˜]H›ÚYY\ÝÜžPXÝ[ÛœÊ
+HÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[[Ù[OH[
+H™]\›ŽÂˆ›ÛÛX[ˆ[™ÈH[Ù[\ÝÜžTÝÜ™K˜Ø[•[™ÊXÝ]™T]R[™^
+NÂˆ›ÛÛX[ˆ™YÈH[Ù[\ÝÜžTÝÜ™K˜Ø[”™YÊXÝ]™T]R[™^
+NÂˆYˆ
+[™ÊHÂˆ]Ûˆ]ÛˆHXÝ[ÛŠ•[™È‹ˆOˆ[™Ó[Ù[
+
+JNÂˆ]Û‹œÙ]^ÛÛÜŠÓÓ
+NÂˆBˆYˆ
+™YÊHÂˆ]Ûˆ]ÛˆHXÝ[ÛŠ”™YÈ‹ˆOˆ™YÓ[Ù[
+
+JNÂˆ]Û‹œÙ]^ÛÛÜŠÓÓ
+NÂˆBˆYˆ
+[™È™YÊHXÝ[ÛŠ’\ÝÜžH‹ˆOˆÚÝÓ[Ù[\ÝÜžJ
+JNÂˆB‚ˆš]˜]H›ÚYÙ[™Ôš[\Š
+HÂˆš[\”™XY[™\ÜË”™\Ü™XY[™\ÜÈHš[\”™XY[™\ÜÔ™\Ü
+
+NÂˆYˆ
+\™XY[™\ÜË˜Ø[”Ù[™
+
+JHÂˆØ\Ý›XZÙU^
+\Ë™XY[™\ÜËœÝ[[X\žJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÚÝÔš[\”™XY[™\ÜÊ
+NÂˆ™]\›ŽÂˆBˆš[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[ÈHØ]™YÜ™Y[X[Ê
+NÂˆYˆ
+Ü™Y[X[ÈOH[
+HÂˆØ\Ý›XZÙU^
+\Ë”Z\ˆHš[\ˆ[™ÛXÙHH˜[Y]Y\Y˜XÝš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+XÜ™Y[X[Ëš\ÐÙ\YšXØ]T[Š
+JHÂˆØ\Ý›XZÙU^
+\ËYHš[\‰ÜÈÒKLMˆÙ\YšXØ]H[ˆ™Y›Ü™H\ÚXØ[š[[™È‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÚÝÔš[\”Z\š[™Ê
+NÂˆ™]\›ŽÂˆBˆš[\’›Ø”ÝÜ™K’›Øˆ™]š[Ý\Ò›ØˆHš[\’›Ø”ÝÜ™K›ØY
+
+NÂˆYˆ
+™]š[Ý\Ò›ØˆOH[	‰ˆ™]š[Ý\Ò›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K”‘PÓÕ‘T–WÔ‘TURT‘Q
+HÂˆØ\Ý›XZÙU^
+\Ë”™]šY]ÈH[˜ÛÛ™š\›YYš[\ˆ›Øˆ[ˆš[\ˆÝ]\Èš\œÝ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÚÝÔš[\”Ý]\Ê
+NÂˆ™]\›ŽÂˆBˆYˆ
+™]š[Ý\Ò›ØˆOH[	‰ˆ™]š[Ý\Ò›Ø‹œÝ]HOHš[\•˜[œÜÜ”Ý]K•TÐQQ	‰ˆ™XÛÝ™\™Y\Y˜XÝOH[
+HÂˆš[\•˜[œÜÜ”š[\•\™Ù]\ØYY\™Ù]Hš[\•\™Ù]
+™]š[Ý\Ò›ØŠNÂˆYˆ
+\ØYY\™Ù]OH[
+HÂˆXÝ]™Tš[\•\™Ù]H\ØYY\™Ù]ÂˆXÝ]™Tš[\’›Ø’YH™]š[Ý\Ò›Ø‹š›Ø’YÂˆÚÝÔÝ\ÛÛ™š\›X][ÛŠ\ØYY\™Ù]ˆ™]š[Ý\Ò›Ø‹œ™[[ÝT]›[™Ý
+
+HOHÈ‹Èˆ
+È™XÛÝ™\™Y\Y˜XÝ™\Ü^S˜[YHˆ™]š[Ý\Ò›Ø‹œ™[[ÝT]ˆ™XÛÝ™\™Y\Y˜XÝ™]š[Ý\Ò›Ø‹š›Ø’Y
+NÂˆ™]\›ŽÂˆBˆBˆYˆ
+ÝYÙY\Y˜XÝOH[
+HÂˆØ\Ý›XZÙU^
+\Ë”Z\ˆHš[\ˆ[™ÛXÙHH˜[Y]Y\Y˜XÝš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆËÈH›Ü™YÜ›Ý[™ÛXÙHØ[ˆš[š\ÚÚ]Ý]HÓTÈÝ\™˜XÙKˆ™K\ÝYÙBˆËÈÛ›H]H\Ù\‹]š\ÚX›H[™Ù™ˆÛÈSˆ\ØYÈ[Ø^\ÈØ\œžHBˆËÈ˜[XK\™XÛÙÛš^™Y™]šY]ÈÚ]Ý]ÛÝ\[™ÈHÙ\šXÙHÈRK‚ˆYˆ
+P\Y˜XÝÝÜ™Kš\Õ[X›˜Z[
+ÝYÙY\Y˜XÝœÛÝ\˜ÙQš[JJHÂˆÝYÙY\Y˜XÝH\Y˜XÝÝÜ™KœÝYÙJÙ]š[\Ñ\Š
+K[Ù[ÛXÙKÛÛ™šYËˆ\Y˜XÝ\Ü^S˜[YJ
+KšY]ÜÜ[X›˜Z[™ÊLLŠJNÂˆBˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”š[\ˆ™]šY]ÈÝYÚ[™È˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+Z[ÛÛ™šYË”TÒPÐSÔSÕÑSP“Q
+HÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J•\ØYÛÛ›ÛY[ÝXÚØYÙOÈŠBˆœÙ]Y\ÜØYÙJ”SÕ•RS0­È\ÈØ[ˆ\ØYÛ›HH[›™Y[™YLHZ[šHHš^\™HÚ]Ý\ÜÈÙ™‹ˆ]ÛÛXÝÈXØÙ\[˜ÙH]šY[˜ÙNÈ]Ù\È›Ý]X[YžHÜ™[˜\žH\™XÝš[[™ËˆŠBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ•\ØY[Ý‹
+X[ÙËÚXÚ
+HOˆ™YÚ[”š[\•\ØY
+Ü™Y[X[ÊJBˆœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ™YÚ[”š[\•\ØY
+Ü™Y[X[ÊNÂˆB‚ˆš]˜]H›ÚY™YÚ[”š[\•\ØY
+š[\Ü™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[ÊHÂˆš[\”™XY[™\ÜË”™\Ü™XY[™\ÜÈHš[\”™XY[™\ÜÔ™\Ü
+
+NÂˆYˆ
+\™XY[™\ÜË˜Ø[”Ù[™
+
+HÜ™Y[X[ÈOH[ÝYÙY\Y˜XÝOH[
+HÂˆØ\Ý›XZÙU^
+\Ë™XY[™\ÜËœÝ[[X\žJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÚÝÔš[\”™XY[™\ÜÊ
+NÂˆ™]\›ŽÂˆBˆš[˜[š[\•˜[œÜÜ\Y˜XÝ\Y˜XÝHÝYÙY\Y˜XÝÂˆš[·ã]z¶‰žËkºwµçT•PÐS
+NÈÛÛ[˜YšY]Ê^\ÊNÈÛÛ[˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J“Z\œ›ÜˆÝ\œ™[[Ù[ŠKœÙ]šY]ÊÛÛ[
+BˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ“Z\œ›Üˆ‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ›ÛÛX[ˆ^\ÈH›ÛÛX[‹••QK™\]X[Ê^\Ë™š[™šY]ÐžRY
+^\Ë™Ù]ÚXÚÙY˜Y[Ð]Û’Y
+
+JK™Ù]YÊ
+JNÂˆÝš[™È^\ÈH^\ÈÈ–ˆˆ–HŽÂˆY\Ú[Ù[Z\œ›Ü™YH[Ù[ÛÜšØ™[˜Ú›Z\œ›ÜŠ[Ù[™\Ü^S˜[YH
+Èˆ0­ÈZ\œ›Üˆˆ
+È^\Ë[Ù[^\ÊNÂˆ[œÝ[Ù[™\˜]Y[Ù[
+Z\œ›Ü™Y[Ù[™\Ü^S˜[YH
+Èˆ0­ÈZ\œ›Üˆˆ
+È^\ÊNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë“Z\œ›ÜˆÛÝ[›Ý™HÜ™X]Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJKœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÓ[Ù[\œ˜^J
+HÂˆYˆ
+[Ù[OH[
+HÂˆØ\Ý›XZÙU^
+\Ë’[\ÜÜˆÜ™X]HH[Ù[™Y›Ü™H\XØ][™È]‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÈšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^ÛÜY\ÈHšY[
+Œˆ‹ÛÜY\È
+¸ $ÌÌŠHŠNÂˆšY[Ë˜YšY]ÊÛÜY\ÊNÂˆ^šY]È›ÝHHX™[
+Ü™X]\È™\X]YÛÜY\ÈÚ]H]\›Z[š\ÝXÈH[HÛX\˜[˜ÙHÚ[ˆXÚËˆH™\Ý[™[XZ[œÈ[ˆY]X›H˜[YY\\\ÜÙ[X›H[™]\Ýš]Hˆ
+È›Ùš[PZ[›Û[YSX™[
+
+H
+Èˆˆ
+È›Ùš[Tš[\“X™[
+
+H
+Èˆ[™[ÜKˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J‘\XØ]HÝ\œ™[[Ù[ŠKœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠÜ™X]H\œ˜^H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ[ÛÝ[HX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+ÛÜY\Ë™Ù]^
+
+KÔÝš[™Ê
+JK™‹Ì™ŠJNÂˆY\Ú[Ù[Ù[™\˜]YH[Ù[ÛÜšØ™[˜Ú˜Ü™X]P\œ˜^J[Ù[™\Ü^S˜[YH
+Èˆ0­È\œ˜^H‹[Ù[ÛÝ[ˆXÝ]™P™Y
+
+KXÝ]™P™YJ
+KXÝ]™P™YŠ
+JNÂˆ[œÝ[Ù[™\˜]Y[Ù[
+Ù[™\˜]Y[Ù[™\Ü^S˜[YH
+Èˆ0­Èˆ
+ÈÛÝ[
+ÈˆÛÜY\ÈŠNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë\œ˜^HÛÝ[›Ý™HÜ™X]Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJKœÚÝÊ
+NÂˆB‚ˆÊŠˆÛÛ™šYÝ\™HH˜]]™H^XÝ\ÛÛYÜ\˜][Ûˆ\Ú[™ÈHÝ\œ™[[Ù[\ÈHš\œÝÜ\˜[™ˆ
+‹Âˆš]˜]H›ÚYÚÝÐ›ÛÛX[“Ü\˜][ÛŠ
+HÂˆYˆ
+PZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÑSP“Q
+HÂˆ^Z[•[œÝ\ÜY
+‘^XÝÛÛY[Ù[[™ÈŠNÂˆ™]\›ŽÂˆBˆYˆ
+[Ù[OH[
+HÂˆØ\Ý›XZÙU^
+\Ë’[\ÜÜˆÜ™X]HH[Ù[™Y›Ü™H›ÛÛX[ˆY][™È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÈšY[ËœÙ]Y[™ÊŽŽ
+NÂ‚ˆ^šY]ÈÜ\˜][Û“X™[HX™[
+“ÔTUSÓˆ‹LÓÓ
+NÂˆÜ\˜][Û“X™[œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆšY[Ë˜YšY]ÊÜ\˜][Û“X™[
+NÂˆ˜Y[ÑÜ›Ý\Ü\˜][ÛœÈH™]È˜Y[ÑÜ›Ý\
+\ÊNÂˆÝš[™Ö×HÜ\˜][Û“˜[Y\ÈHÈ•[š[Ûˆ0­ÈYš[Z]]™H‹”ÝX˜XÝ0­ÈÝ]š[Z]]™H‹’[\œÙXÝ0­ÈÙY\Ý™\›\ŸNÂˆ›Üˆ
+[[™^HÈ[™^Ü\˜][Û“˜[Y\Ë›[™ÝÈ[™^
+ÊÊHÂˆ˜Y[Ð]ÛˆÜ[ÛˆH™]È˜Y[Ð]ÛŠ\ÊNÂˆÜ[Û‹œÙ]Y
+šY]Ë™Ù[™\˜]UšY]ÒY
+
+JNÂˆÜ[Û‹œÙ]^
+Ü\˜][Û“˜[Y\ÖÚ[™^JNÈÜ[Û‹œÙ]^ÛÛÜŠV
+NÈÜ[Û‹œÙ]YÊ[™^
+NÂˆÜ\˜][ÛœË˜YšY]ÊÜ[ÛŠNÂˆBˆÜ\˜][ÛœË˜ÚXÚÊÜ\˜][ÛœË™Ù]Ú[]
+˜]]™QÙ[ÛY]žKÕU
+K™Ù]Y
+
+JNÂˆšY[Ë˜YšY]ÊÜ\˜][ÛœÊNÂ‚ˆ^šY]Èš[Z]]™SX™[HX™[
+•ÓÓ’SRUU‘H‹LÓÓ
+NÂˆš[Z]]™SX™[œÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆš[Z]]™SX™[œÙ]Y[™ÊL‹
+NÈšY[Ë˜YšY]Êš[Z]]™SX™[
+NÂˆ˜Y[ÑÜ›Ý\š[Z]]™\ÈH™]È˜Y[ÑÜ›Ý\
+\ÊNÂˆ[Ù[ÛÜšØ™[˜Ú”š[Z]]™V×H]˜Z[X›HH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K˜[Y\Ê
+NÂˆ›Üˆ
+[[™^HÈ[™^]˜Z[X›K›[™ÝÈ[™^
+ÊÊHÂˆ˜Y[Ð]ÛˆÜ[ÛˆH™]È˜Y[Ð]ÛŠ\ÊNÂˆÜ[Û‹œÙ]Y
+šY]Ë™Ù[™\˜]UšY]ÒY
+
+JNÂˆÜ[Û‹œÙ]^
+]˜Z[X›VÚ[™^K›X™[
+NÈÜ[Û‹œÙ]^ÛÛÜŠV
+NÈÜ[Û‹œÙ]YÊ[™^
+NÂˆš[Z]]™\Ë˜YšY]ÊÜ[ÛŠNÂˆBˆš[Z]]™\Ë˜ÚXÚÊš[Z]]™\Ë™Ù]Ú[]
+
+K™Ù]Y
+
+JNÂˆšY[Ë˜YšY]Êš[Z]]™\ÊNÂ‚ˆY]^ÚYHšY[
+ŒÌ‹•ÚYÈÝ]\ˆX[Y]\ˆ
+[JHŠNÂˆY]^\HšY[
+ŒÌ‹‘\ÈÝ]\ˆX[Y]\ˆ
+[JHŠNÂˆY]^ZYÚHšY[
+ŒŒ‹’ZYÚ
+[JHŠNÂˆšY[Ë˜YšY]ÊÚY
+NÈšY[Ë˜YšY]Ê\
+NÈšY[Ë˜YšY]ÊZYÚ
+NÂˆ^šY]È›ÝHHX™[
+•\Ù\ÈH[™YÐÐÕÛÛYÙ\›™[ˆ›Ý[œ]È]\Ý™HÛ™HØ]\YÚÛÛYÈH™\Ý[\È™]˜[Y]YØXÚY[™™]\›™YÈH›Ü›X[ÑÜÛXÚ[™È]ˆ˜]]™H[[YH™\]Z\™Yˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J‘^XÝÛÛYY]ŠKœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ\H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ[Ü\˜][ÛˆH
+[YÙ\ŠHÜ\˜][ÛœË™š[™šY]ÐžRY
+Ü\˜][ÛœË™Ù]ÚXÚÙY˜Y[Ð]Û’Y
+
+JK™Ù]YÊ
+NÂˆ[š[Z]]™R[™^H
+[YÙ\ŠHš[Z]]™\Ë™š[™šY]ÐžRY
+š[Z]]™\Ë™Ù]ÚXÚÙY˜Y[Ð]Û’Y
+
+JK™Ù]YÊ
+NÂˆ›Ø]ÈHÛ[\
+›Ø]œ\œÙQ›Ø]
+ÚY™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™Y
+
+JNÂˆ›Ø]HÛ[\
+›Ø]œ\œÙQ›Ø]
+\™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™YJ
+JNÂˆ›Ø]HÛ[\
+›Ø]œ\œÙQ›Ø]
+ZYÚ™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™YŠ
+JNÂˆÝ\˜]]™P›ÛÛX[ŠÜ\˜][Û‹]˜Z[X›VÜš[Z]]™R[™^KË
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë›ÛÛX[ˆY]ÛÝ[›ÝÝ\ˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJKœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÝ\˜]]™P›ÛÛX[Š[Ü\˜][Û‹[Ù[ÛÜšØ™[˜Ú”š[Z]]™Hš[Z]]™Kˆ›Ø]ÚY›Ø]\›Ø]ZYÚ
+HÂˆYˆ
+[Ù[OH[š[Z]]™HOH[
+H™]\›ŽÂˆš[˜[Y\Ú[Ù[ÛÝ\˜ÙHH[Ù[Âˆš[˜[Ýš[™ÈÛÝ\˜ÙS˜[YHH[Ù[™\Ü^S˜[YNÂˆ™\\™S[Ù[]]][ÛŠ›ÛÛX[ˆ0­Èˆ
+È˜]]™QÙ[ÛY]žK›X™[
+Ü\˜][ÛŠJNÂˆš[˜[Û™ÈYH[Ù[[™ÒYËš[˜Ü™[Y[[™Ù]
+
+NÂˆXÝ]™S[Ù[[™ÒYHYÈ[Ù[[™ÈHYNÂˆÝ]\ËœÙ]^
+“[Ù[0­Èˆ
+È˜]]™QÙ[ÛY]žK›X™[
+Ü\˜][ÛŠKÓÝÙ\Ø\ÙJØØ[K•TÊH
+È¸ )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™S[Ù[[™ÈH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžHÂˆYˆ
+™XY˜Ý\œ™[™XY
+
+Kš\Ò[\œ\Y
+
+JH›ÝÈ™]È˜]˜K][˜ÛÛ˜Ý\œ™[Ø[˜Ù[][Û‘^Ù\[ÛŠ“[Ù[[™ÈØ[˜Ù[YŠNÂˆ[Ù[ÝÜ™K“X]\šX[^™Yš\œÝH[Ù[ÝÜ™K›X]\šX[^™QÙ[™\˜]Y
+Ù]š[\Ñ\Š
+Kˆ[Ù[ÛÜšØ™[˜ÚÐš[˜\žTÝ
+ÛÝ\˜ÙKŒÌ
+JNÂˆY\Ú[Ù[ÛÛY\ÚH[Ù[ÛÜšØ™[˜Ú˜Ü™X]Jš[Z]]™K›ÛÛX[ˆÛÛ‹ÚY\ZYÚ
+NÂˆ[Ù[ÝÜ™K“X]\šX[^™YÙXÛÛ™H[Ù[ÝÜ™K›X]\šX[^™QÙ[™\˜]Y
+Ù]š[\Ñ\Š
+Kˆ[Ù[ÛÜšØ™[˜ÚÐš[˜\žTÝ
+ÛÛY\Ú
+JNÂˆ[Ù[ÝÜ™K“X]\šX[^™Y™\Ý[š[HH˜]]™QÙ[ÛY]žK˜\JÙ]š[\Ñ\Š
+Kš\œÝ™š[KÙXÛÛ™™š[KÜ\˜][ÛŠNÂˆY\Ú[Ù[™\Ý[ÂˆžH
+[œ]Ý™X[H[œ]H™]È˜]˜Kš[Ë‘š[R[œ]Ý™X[J™\Ý[š[K™š[JJHÂˆ™\Ý[HY\Ú[Ù[œ™XY
+[Ù[ÝÜ™Kœ\œÙ\“˜[YJ›ÛÛX[ˆ™\Ý[‹™\Ý[š[K™^[œÚ[ÛŠK[œ]
+NÂˆBˆš[˜[Y\Ú[Ù[™\Ý[[Ù[H™\Ý[Âˆš[˜[Ýš[™È™\Ý[˜[YHHÛÝ\˜ÙS˜[YH
+Èˆ0­Èˆ
+È˜]]™QÙ[ÛY]žK›X™[
+Ü\˜][ÛŠKÓÝÙ\Ø\ÙJØØ[K•TÊNÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+YOHXÝ]™S[Ù[[™ÒY\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ[Ù[[™ÈH˜[ÙNÈXÝ]™S[Ù[[™ÈH[ÂˆžHÂˆ\œ˜^S\Ý\šOˆ\š\ÈH™]È\œ˜^S\ÝŠ
+NÈ\š\Ë˜Y
+™\Ý[š[K\šJNÂˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÈ˜[Y\Ë˜Y
+™\Ý[˜[YJNÂˆ™\]Z\™PXÝ]™PZ[›Û[YJ™\Ý[[Ù[
+NÂˆ\SØYY[Ù[
+™\Ý[[Ù[™\Ý[[Ù[™\Ý[˜[YK\š\Ë˜[Y\ËˆY‹‹‹‹˜[ÙK˜[ÙKTÕÔ–WÓUUUSÓŠNÂˆš[š\Ú[Ù[]]][ÛŠ›ÛÛX[ˆ0­Èˆ
+È˜]]™QÙ[ÛY]žK›X™[
+Ü\˜][ÛŠJNÂˆÝ]\ËœÙ]^
+”™\\™H0­Èˆ
+È™\Ý[˜[YJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆÝ]\ËœÙ]^
+”™\\™H0­Èˆ
+ÈÛÝ\˜ÙS˜[YJNÂˆØ\Ý›XZÙU^
+\Ë›ÛÛX[ˆ™\Ý[ÛÝ[›Ý™HÜ[™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆBˆJNÂˆHØ]Ú
+˜]˜K][˜ÛÛ˜Ý\œ™[Ø[˜Ù[][Û‘^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈØ[˜Ù[][Ûˆ\È^XÝYÈÝ[HÛÛ\][Ûˆ\ÈÝ\™\ÜÙYžHHÜ\˜][ÛˆY‚ˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+YOHXÝ]™S[Ù[[™ÒY\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ[Ù[[™ÈH˜[ÙNÈXÝ]™S[Ù[[™ÈH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë›ÛÛX[ˆY]˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]HÞ[˜Ú›Ûš^™Y›ÚYØ[˜Ù[˜]]™P›ÛÛX[Š
+HÂˆXÝ]™S[Ù[[™ÒYH[Ù[[™ÒYËš[˜Ü™[Y[[™Ù]
+
+NÂˆYˆ
+XÝ]™S[Ù[[™ÈOH[
+HÈXÝ]™S[Ù[[™Ë˜Ø[˜Ù[
+YJNÈXÝ]™S[Ù[[™ÈH[ÈBˆYˆ
+[[Ù[[™ÊH™]\›ŽÂˆ[Ù[[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÔÚÙ]Ú^\Ú[ÛŠ
+HÂˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÈšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^ÚÙ]ÚH^šY[
+‹LŒLMWŒŒLMWŒŒMW‹LŒMH‹“Û™HHÚ[\ˆ[™HŠNÂˆÚÙ]ÚœÙ]Z[“[™\Ê
+NÈÚÙ]ÚœÙ]Ü˜]š]J[™›ÚYšY]Ë‘Ü˜]š]K•Ô[™›ÚYšY]Ë‘Ü˜]š]K”ÕT•
+NÂˆY]^ZYÚHšY[
+ŒH‹‘^\Ú[ÛˆZYÚ
+[JHŠNÂˆÚXÚÐ›ÞYÐ\ÜÙ[X›HH™]ÈÚXÚÐ›Þ
+\ÊNÂˆYÐ\ÜÙ[X›KœÙ]^
+YÈÝ\œ™[\ÜÙ[X›HŠNÈYÐ\ÜÙ[X›KœÙ]^ÛÛÜŠV
+NÂˆYÐ\ÜÙ[X›KœÙ]ÚXÚÙY
+[Ù[OH[
+NÈYÐ\ÜÙ[X›KœÙ][˜X›Y
+[Ù[OH[
+NÂˆšY[Ë˜YšY]ÊÚÙ]Ú
+NÈšY[Ë˜YšY]ÊZYÚ
+NÈšY[Ë˜YšY]ÊYÐ\ÜÙ[X›JNÂˆ^šY]È›ÝHHX™[
+ÛÛ™^ÛÛœÚ\Ý[HÛÝ[™ÚÙ]Ú\ÈÛ›H0­Èø $ÌMˆÚ[È0­ÈZ[[Y]™\ËˆH™\Ý[\ÈØ]\YÚ[™\Ù\ÈHØ[YH™\Z\‹ØXÚK›Ú™XÝ[™ÛXÚ[™ÈØ]\È\È[\ÜYÙ[ÛY]žKˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J‘^YHÚÙ]ÚŠKœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠÜ™X]H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ›Ø]×V×HÚ[ÈH\œÙTÚÙ]ÚÚ[ÊÚÙ]Ú™Ù]^
+
+KÔÝš[™Ê
+JNÂˆ›Ø]HÛ[\
+›Ø]œ\œÙQ›Ø]
+ZYÚ™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™YŠ
+JNÂˆY\Ú[Ù[Ù[™\˜]YH[Ù[ÛÜšØ™[˜Ú˜Ü™X]Q^YYÛYÛÛŠ”ÚÙ]Ú^\Ú[Ûˆ‹Ú[Ë
+NÂˆY\Ú[Ù[™\Ý[HÙ[™\˜]YÈÝš[™È˜[YHH”ÚÙ]Ú^\Ú[Ûˆ0­Èˆ
+ÈÚ[Ë›[™Ý
+ÈˆÚ[ÈŽÂˆYˆ
+YÐ\ÜÙ[X›Kš\ÐÚXÚÙY
+
+H	‰ˆ[Ù[OH[
+HÂˆ\œ˜^S\ÝY\Ú[Ù[ˆÛÝ\˜Ù\ÈH™]È\œ˜^S\ÝŠ
+NÈÛÝ\˜Ù\Ë˜Y
+[Ù[
+NÈÛÝ\˜Ù\Ë˜Y
+Ù[™\˜]Y
+NÂˆ™\Ý[HY\Ú[Ù[˜ÛÛXš[™J\ÜÙ[X›H‹ÛÝ\˜Ù\Ë[XÝ]™P™Y
+
+JNÈ˜[YHH\ÜÙ[X›H0­Èˆ
+È[Ù[™\Ü^S˜[YNÂˆBˆ™\]Z\™PXÝ]™PZ[›Û[YJ™\Ý[
+NÂˆ[œÝ[Ù[™\˜]Y[Ù[
+™\Ý[˜[YJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”ÚÙ]ÚÛÝ[›Ý™HÜ™X]Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJKœÚÝÊ
+NÂˆB‚ˆš]˜]HÝ]XÈ›Ø]×V×H\œÙTÚÙ]ÚÚ[ÊÝš[™È^
+H›ÝÜÈSÑ^Ù\[ÛˆÂˆYˆ
+^OH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ”ÚÙ]Ú\È[\HŠNÂˆÝš[™Ö×H›ÝÜÈH^š[J
+KœÜ]
+ŠÎ—×ŸÊJÈŠNÂˆ\œ˜^S\Ý›Ø]×OˆÚ[ÈH™]È\œ˜^S\ÝŠ
+NÂˆ›Üˆ
+Ýš[™È›ÝÈˆ›ÝÜÊHÂˆÝš[™Ö×HZ\ˆH›ÝËš[J
+KœÜ]
+–Ë×JÈ‹ÊNÂˆYˆ
+Z\‹›[™ÝOHŠH›ÝÈ™]ÈSÑ^Ù\[ÛŠ‘XXÚÚÙ]Ú›ÝÈ]\Ý™HHŠNÂˆžHÈÚ[Ë˜Y
+™]È›Ø]×^Ñ›Ø]œ\œÙQ›Ø]
+Z\–ÌJK›Ø]œ\œÙQ›Ø]
+Z\–ÌWJ_JNÈBˆØ]Ú
+[X™\‘›Ü›X]^Ù\[Ûˆ\œ›ÜŠHÈ›ÝÈ™]ÈSÑ^Ù\[ÛŠ”ÚÙ]ÚÛÛÜ™[˜]\È]\Ý™H[X™\œÈ‹\œ›ÜŠNÈBˆBˆ™]\›ˆÚ[ËÐ\œ˜^J™]È›Ø]ÌV×JNÂˆB‚ˆš]˜]H›ÚYÚÝÔš[Z]]™Q[Y[œÚ[ÛœÊ[Ù[ÛÜšØ™[˜Ú”š[Z]]™Hš[Z]]™JHÂˆYˆ
+š[Z]]™HOH[
+H™]\›ŽÂˆ›Ø]Y˜][ÚYHš[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™KÖSS‘Tˆš[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K”ÔT‘HÈÌˆˆŽÂˆ›Ø]Y˜][\Hš[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K”ÔT‘HÈÌˆˆŽÂˆ›Ø]Y˜][ZYÚHš[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K”ÔT‘HÈÌˆˆYŽÂˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^ÚYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹Y˜][ÚY
+K•ÚYÈÝ]\ˆX[Y]\ˆ
+[JHŠNÂˆY]^\HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹Y˜][\
+K‘\ÈÝ]\ˆX[Y]\ˆ
+[JHŠNÂˆY]^ZYÚHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹Y˜][ZYÚ
+K’ZYÚ
+[JHŠNÂˆšY[Ë˜YšY]ÊÚY
+NÈšY[Ë˜YšY]Ê\
+NÈšY[Ë˜YšY]ÊZYÚ
+NÂˆY]^™]™[H[ÂˆY]^Ø[H[ÂˆY]^›ÝÛHH[ÂˆYˆ
+š[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™KÒSQ‘T‘QÐ“Ö
+HÂˆ™]™[HšY[
+Ž‹ÛÜ›™\ˆÚ[Y™\ˆ
+[NÈX^	HÙˆÛX[\ˆÚYJHŠNÂˆšY[Ë˜YšY]Ê™]™[
+NÂˆH[ÙHYˆ
+š[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K’ÓÕ×Ð“Ö
+HÂˆØ[HšY[
+Œ‹Œ‹•Ø[XÚÛ™\ÜÈ
+[NÈZ[ˆJHŠNÂˆ›ÝÛHHšY[
+Œ‹Œ‹‘›ÛÜˆXÚÛ™\ÜÈ
+[NÈZ[ˆJHŠNÂˆšY[Ë˜YšY]ÊØ[
+NÈšY[Ë˜YšY]Ê›ÝÛJNÂˆBˆš[˜[Y]^™]™[šY[H™]™[Âˆš[˜[Y]^Ø[šY[HØ[Âˆš[˜[Y]^›ÝÛQšY[H›ÝÛNÂˆÚXÚÐ›ÞYÐ\ÜÙ[X›HH™]ÈÚXÚÐ›Þ
+\ÊNÂˆYÐ\ÜÙ[X›KœÙ]^
+YÈÝ\œ™[\ÜÙ[X›HŠNÂˆYÐ\ÜÙ[X›KœÙ]^ÛÛÜŠV
+NÂˆYÐ\ÜÙ[X›KœÙ]ÚXÚÙY
+[Ù[OH[
+NÂˆYÐ\ÜÙ[X›KœÙ][˜X›Y
+[Ù[OH[
+NÂˆšY[Ë˜YšY]ÊYÐ\ÜÙ[X›JNÂˆ^šY]È›ÝHHX™[
+š[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K•P‘BˆÈ•X™H\Ù\ÈHMIH[›™\‹\˜Y]\ÈÜ[š[™Ëˆ›ÛÛX[ˆÝ]Ëš[]È[™œ™YY›Ü›HØÝ[[™È™[XZ[ˆ]\™HÛÜšØ™[˜ÚØ]\Ëˆ‚ˆˆš[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™KÒSQ‘T‘QÐ“ÖˆÈH]\›Z[š\ÝXÈZYÚ\ÚYY[˜ÛÜÝ\™H›Ùš[HÚ]H›Ý[™Yš[X›HÛÜ›™\ˆÚ[Y™\‹ˆ\ÙH˜]]™H›ÛÛX[ˆY][™È›ÜˆÜ[š[™ÜÈ[™Ý][Ý]Ëˆ‚ˆˆš[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K’ÓÕ×Ð“ÖˆÈHØ]\YÚÜ[‹]Ü[˜ÛÜÝ\™HÚ]Hš[X›H›ÛÜ‹[\š[ÜˆØ]š]H[™^XÚ]Ø[XÚÛ™\ÜËˆ‚ˆˆ[[Y[œÚ[ÛœÈ\™HZ[[Y]™\ËˆH™\Ý[\È˜[Y]YØXÚY\ÈÕ[™Ø[ˆ™HÛXÙYZÙH[ˆ[\ÜY[Ù[ˆ‹ˆL‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]JÜ™X]Hˆ
+Èš[Z]]™K›X™[ÓÝÙ\Ø\ÙJØØ[K•TÊJBˆœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠÜ™X]H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ›Ø]ÈHÛ[\
+›Ø]œ\œÙQ›Ø]
+ÚY™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™Y
+
+JNÂˆ›Ø]HÛ[\
+›Ø]œ\œÙQ›Ø]
+\™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™YJ
+JNÂˆ›Ø]HÛ[\
+›Ø]œ\œÙQ›Ø]
+ZYÚ™Ù]^
+
+KÔÝš[™Ê
+JKY‹XÝ]™P™YŠ
+JNÂˆY\Ú[Ù[Ù[™\˜]YÂˆYˆ
+š[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™KÒSQ‘T‘QÐ“Ö
+HÂˆ›Ø]X^™]™[HX]›Z[ŠË
+H
+ˆŒŽÂˆ›Ø]ˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+™]™[šY[™Ù]^
+
+KÔÝš[™Ê
+JKY‹X^™]™[
+NÂˆÙ[™\˜]YH[Ù[ÛÜšØ™[˜Ú˜Ü™X]PÚ[Y™\™Y›Þ
+š[Z]]™K›X™[ËŠNÂˆH[ÙHYˆ
+š[Z]]™HOH[Ù[ÛÜšØ™[˜Ú”š[Z]]™K’ÓÕ×Ð“Ö
+HÂˆ›Ø]Ø[XÚÛ™\ÜÈH›Ø]œ\œÙQ›Ø]
+Ø[šY[™Ù]^
+
+KÔÝš[™Ê
+JNÂˆ›Ø]›ÛÜ•XÚÛ™\ÜÈH›Ø]œ\œÙQ›Ø]
+›ÝÛQšY[™Ù]^
+
+KÔÝš[™Ê
+JNÂˆÙ[™\˜]YH[Ù[ÛÜšØ™[˜Ú˜Ü™X]RÛÝÐ›Þ
+š[Z]]™K›X™[ËˆØ[XÚÛ™\ÜË›ÛÜ•XÚÛ™\ÜÊNÂˆH[ÙHÂˆÙ[™\˜]YH[Ù[ÛÜšØ™[˜Ú˜Ü™X]Jš[Z]]™Kš[Z]]™K›X™[Ë
+NÂˆBˆY\Ú[Ù[™\Ý[HÙ[™\˜]YÂˆÝš[™È˜[YHHš[Z]]™K›X™[
+Èˆ0­Èˆ
+ÈÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ0åÈ	KŒˆ0åÈ	KŒˆ[H‹Ë
+NÂˆYˆ
+YÐ\ÜÙ[X›Kš\ÐÚXÚÙY
+
+H	‰ˆ[Ù[OH[
+HÂˆ\œ˜^S\ÝY\Ú[Ù[ˆÛÝ\˜Ù\ÈH™]È\œ˜^S\ÝŠ
+NÂˆÛÝ\˜Ù\Ë˜Y
+[Ù[
+NÈÛÝ\˜Ù\Ë˜Y
+Ù[™\˜]Y
+NÂˆ™\Ý[HY\Ú[Ù[˜ÛÛXš[™J\ÜÙ[X›H‹ÛÝ\˜Ù\Ë[XÝ]™P™Y
+
+JNÂˆ˜[YHH\ÜÙ[X›H0­Èˆ
+È[Ù[™\Ü^S˜[YNÂˆBˆ™\]Z\™PXÝ]™PZ[›Û[YJ™\Ý[
+NÂˆ[œÝ[Ù[™\˜]Y[Ù[
+™\Ý[˜[YJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”š[Z]]™HÛÝ[›Ý™HÜ™X]Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJBˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚY[œÝ[Ù[™\˜]Y[Ù[
+Y\Ú[Ù[Ù[™\˜]YÝš[™È˜[YJH›ÝÜÈ^Ù\[ÛˆÂˆ›ÛÛX[ˆ]]][ÛˆH[Ù[OH[ÂˆYˆ
+]]][ÛŠH™\\™S[Ù[]]][ÛŠÜ™X]H0­Èˆ
+È˜[YJNÂˆž]V×HÝH[Ù[ÛÜšØ™[˜ÚÐš[˜\žTÝ
+Ù[™\˜]Y
+NÂˆ[Ù[ÝÜ™K“X]\šX[^™YX]\šX[^™YH[Ù[ÝÜ™K›X]\šX[^™QÙ[™\˜]Y
+Ù]š[\Ñ\Š
+KÝ
+NÂˆžH
+[œ]Ý™X[H[œ]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[’[œ]Ý™X[JX]\šX[^™Y\šJJHÂˆYˆ
+[œ]OH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ‘Ù[™\˜]Y[Ù[ØXÚHÛÝ[›Ý™HÜ[™YŠNÂˆY\Ú[Ù[\œÙYHY\Ú[Ù[œ™XY
+[Ù[ÝÜ™Kœ\œÙ\“˜[YJ˜[YKX]\šX[^™Y™^[œÚ[ÛŠK[œ]
+NÂˆ\œ˜^S\Ý\šOˆ\š\ÈH™]È\œ˜^S\ÝŠ
+NÈ\š\Ë˜Y
+X]\šX[^™Y\šJNÂˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÈ˜[Y\Ë˜Y
+˜[YJNÂˆ\SØYY[Ù[
+\œÙY\œÙY˜[YK\š\Ë˜[Y\ËY‹‹‹‹˜[ÙK˜[ÙKˆ]]][ÛˆÈTÕÔ–WÓUUUSÓˆˆTÕÔ–WÔ‘TÑU
+NÂˆYˆ
+]]][ÛŠHš[š\Ú[Ù[]]][ÛŠÜ™X]H0­Èˆ
+È˜[YJNÂˆBˆB‚ˆÊŠˆ]H\Ù\ˆ™]šY]ÈH›Ý[™Yš[š\Ú[™[š\›Û›Y[ØØ[HÚ]Ý]Z\Ü™\™\Ù[[™È]\ÈÙ[™\˜]]™HRKˆ
+‹Âˆš]˜]H›ÚYÚÝÓÛ‘]šXÙT™]šY]Êž]V×H[X›˜Z[
+HÂˆÝY[Ô™]šY]Ô™[™\™\‹‘š[š\Ú×Hš[š\Ú\ÈHÝY[Ô™]šY]Ô™[™\™\‹‘š[š\Ú˜[Y\Ê
+NÂˆÝš[™Ö×HX™[ÈH™]ÈÝš[™ÖÙš[š\Ú\Ë›[™ÝNÂˆ›Üˆ
+[[™^HÈ[™^š[š\Ú\Ë›[™ÝÈ[™^
+ÊÊHX™[ÖÚ[™^HHš[š\Ú\ÖÚ[™^K›X™[Âˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J“ØØ[š[š\Ú™]šY]ÈŠBˆœÙ]Y\ÜØYÙJÚÛÜÙHH™\Ù[][Ûˆš[š\Úˆ\ÈÝ^\ÈÛˆHÛ™H[™Ù\È›ÝÚ[™ÙHš[X›HÙ[ÛY]žHÜˆX]\šX[Ù][™ÜËˆŠBˆœÙ]][\ÊX™[Ë
+X[ÙËÚXÚ
+HOˆÚÝÓØØ[[š\›Û›Y[™]šY]Ê[X›˜Z[š[š\Ú\ÖÝÚXÚJJBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÓØØ[[š\›Û›Y[™]šY]Êž]V×H[X›˜Z[ÝY[Ô™]šY]Ô™[™\™\‹‘š[š\Úš[š\Ú
+HÂˆÝY[Ô™]šY]Ô™[™\™\‹‘[š\›Û›Y[×H[š\›Û›Y[ÈHÝY[Ô™]šY]Ô™[™\™\‹‘[š\›Û›Y[˜[Y\Ê
+NÂˆÝš[™Ö×HX™[ÈH™]ÈÝš[™ÖÙ[š\›Û›Y[Ë›[™ÝNÂˆ›Üˆ
+[[™^HÈ[™^[š\›Û›Y[Ë›[™ÝÈ[™^
+ÊÊHX™[ÖÚ[™^HH[š\›Û›Y[ÖÚ[™^K›X™[Âˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J“ØØ[[š\›Û›Y[ŠBˆœÙ]Y\ÜØYÙJÚÛÜÙHHØÙ[™Hœ˜[Z[™È›ÜˆHÛÛ˜Ù\™]šY]ËˆŠBˆœÙ]][\ÊX™[Ë
+X[ÙËÚXÚ
+HOˆÚÝÔÝ[YØØ[™]šY]Ê[X›˜Z[š[š\Ú[š\›Û›Y[ÖÝÚXÚJJBˆœÙ]™YØ]]™P]ÛŠ˜XÚÈ‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÔÝ[YØØ[™]šY]Êž]V×H[X›˜Z[ÝY[Ô™]šY]Ô™[™\™\‹‘š[š\Úš[š\ÚˆÝY[Ô™]šY]Ô™[™\™\‹‘[š\›Û›Y[[š\›Û›Y[
+HÂˆžHÂˆš\ÝX[^˜][Û”›ÝšY\‹”™\Ý[™\Ý[H™]ÈÛ‘]šXÙUš\ÝX[^˜][Û”›ÝšY\ŠÙ]š[\Ñ\Š
+JK™Ù[™\˜]Jˆ™]Èš\ÝX[^˜][Û”›ÝšY\‹”™\]Y\Ý
+[X›˜Z[š[š\Ú›X™[
+Èˆ[ˆHˆ
+È[š\›Û›Y[›X™[
+ÈˆØÙ[™HŠJNÂˆš]X\š]X\Hš]X\˜XÝÜžK™XÛÙPž]P\œ˜^J™\Ý[š[XYÙT™Ë™\Ý[š[XYÙT™Ë›[™Ý
+NÂˆYˆ
+š]X\OH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ“Û‹Y]šXÙH™]šY]È™]\›™Y[ˆ[œÝ\ÜY[XYÙHŠNÂˆ[XYÙUšY]È[XYÙHH™]È[XYÙUšY]Ê\ÊNÂˆ[XYÙKœÙ]Y\ÝšY]Ð›Ý[™ÊYJNÈ[XYÙKœÙ]Y[™ÊL‹L‹L‹LŠNÈ[XYÙKœÙ][XYÙPš]X\
+š]X\
+NÂˆ[™[™Õš\ÝX[^˜][Û”™ÈH™\Ý[š[XYÙT™Ë˜ÛÛ™J
+NÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J“Û‹Y]šXÙHÝY[È™]šY]ÈŠBˆœÙ]Y\ÜØYÙJ™\Ý[œ›ÝšY\“X™[
+Èˆ0­Èˆ
+Èš[š\Ú›X™[
+Èˆ0­Èˆ
+È[š\›Û›Y[›X™[ˆ
+È—‘Ù[ÛY]žK™XÚ\H[™š[\ˆÛÛ[X[™È™[XZ[ˆ[˜Ú[™ÙYˆ\È\È›ÝHÙ[™\˜]]™HRH™\Ý[ˆŠBˆœÙ]šY]Ê[XYÙJKœÙ]™YØ]]™P]ÛŠ‘Û™H‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ”Ø]™H‘È‹
+X[ÙËÚXÚ
+HOˆÜ[•š\ÝX[^˜][Û‘^Ü
+
+JKœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë•HØØ[™]šY]ÈÛÝ[›Ý™H™[™\™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÚÝÕš\ÝX[^˜][ÛŠ
+HÂˆYˆ
+[Ù[OH[šY]ÜÜOH[
+HÂˆØ\Ý›XZÙU^
+\ËÜ™X]HÜˆ[\ÜH[Ù[™Y›Ü™Hš\ÝX[^š[™È]‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™Èš\ÝX[^š[™È[Ù[[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆ™Y›Ü™Hš\ÝX[^š[™È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆš[˜[ž]V×H[X›˜Z[HšY]ÜÜ[X›˜Z[™ÊÍŽ
+NÂˆYˆ
+[X›˜Z[OH[
+HÂˆØ\Ý›XZÙU^
+\Ë•HÑÛÜšÜÜXÙH\È›Ý™XYH›ÜˆH™Y™\™[˜ÙH[XYÙH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™KÜ™Y[X[ÈÝ\œ™[H[ÂˆžHÈÝ\œ™[Hš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™K›ØY
+
+NÈHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈBˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÈšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^[™Ú[H^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[™[™Ú[’È[XYÙKYY][™Ú[ŠNÂˆY]^[Ù[˜[YHH^šY[
+Ý\œ™[OH[ÈˆˆˆÝ\œ™[›[Ù[ÛÝY[Ù[˜[YHŠNÂˆY]^\RÙ^HH^šY[
+ˆ‹–SÒÈTHÙ^H
+›[šÈÙY\ÈØ]™YÙ^JHŠNÂˆ\RÙ^KœÙ][œ]\J[™›ÚY^’[œ]\K•TWÐÓTÔ×ÕV[™›ÚY^’[œ]\K•TWÕVÕT’PUSÓ—ÔTÔÕÓÔ‘
+NÂˆÝš[™È[Y[œÚ[ÛœÈHÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ0åÈ	KŒYˆ0åÈ	KŒYˆ[H‹[Ù[›X^H[Ù[›Z[–[Ù[›X^HH[Ù[›Z[–K[Ù[›X^ˆH[Ù[›Z[–ŠNÂˆY]^›Û\H^šY[
+”ÚÝÈ\ÈÑ\š[Y[Ù[Z[Y[ˆH™[Z][HÛÜšÜÚÜ[š\›Û›Y[È™\Ù\™H]ÈÚ\H[™›ÜÜ[ÛœËˆ‹•š\ÝX[^˜][Ûˆ›Û\ŠNÂˆšY[Ë˜YšY]Ê[™Ú[
+NÈšY[Ë˜YšY]Ê[Ù[˜[YJNÈšY[Ë˜YšY]Ê\RÙ^JNÈšY[Ë˜YšY]Ê›Û\
+NÂˆ^šY]È›ÝHHX™[
+“Û‹Y]šXÙHš\ÝX[^˜][ÛŽˆˆ
+È™]ÈÛ‘]šXÙUš\ÝX[^˜][Û”›ÝšY\ŠÙ]š[\Ñ\Š
+JK˜]˜Z[Xš[]SX™[
+
+Bˆ
+È—–SÒÈÙ[™ÈÛ›H\È›Ý[™Y™[™\™Y[X›˜Z[[™[Ý\ˆ›Û\È[Ý\ˆÈ[™Ú[È]Ù\È›Ý\ØYHÕ›Ú™XÝš[\ˆÜ™Y[X[ÈÜˆ[™[ÜžKˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊM
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J•š\ÝX[^™H[Ù[ŠBˆœÙ]Y\ÜØYÙJ“[Ù[Ú^™Nˆˆ
+È[Y[œÚ[ÛœÈ
+È—•\ÙH™\Ù]ÈÝXÚ\ÈZ[Y\ÜÙ[X›YÛÜšÜÚÜ[œÝ[YÜˆ›ÙXÝ\ÝËˆŠBˆœÙ]šY]ÊšY[ÊBˆœÙ]™]]˜[]ÛŠ“Û‹Y]šXÙH™]šY]È‹
+X[ÙËÚXÚ
+HOˆÚÝÓÛ‘]šXÙT™]šY]Ê[X›˜Z[
+JBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ•š\ÝX[^™HÚ]–SÒÈ‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™KÜ™Y[X[ÈØ]™YHš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™K›ØY
+
+NÂˆÝš[™ÈÙ^HH\RÙ^K™Ù]^
+
+KÔÝš[™Ê
+Kš[J
+NÂˆYˆ
+Ù^K›[™Ý
+
+HOH	‰ˆØ]™YOH[
+HÙ^HHØ]™Y˜\RÙ^NÂˆš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[ÈH™]Èš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™KÜ™Y[X[Êˆ[™Ú[™Ù]^
+
+KÔÝš[™Ê
+K[Ù[˜[YK™Ù]^
+
+KÔÝš[™Ê
+KÙ^JNÂˆš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™KœØ]™JÜ™Y[X[ÊNÂˆÝ\ž[ÚÕš\ÝX[^˜][ÛŠÜ™Y[X[Ë™]Èš\ÝX[^˜][Û”›ÝšY\‹”™\]Y\Ý
+[X›˜Z[›Û\™Ù]^
+
+KÔÝš[™Ê
+JJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë–SÒÈš\ÝX[^˜][ÛˆÛÝ[›ÝÝ\ˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJKœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÝ\ž[ÚÕš\ÝX[^˜][ÛŠš\ÝX[^˜][ÛÜ™Y[X[ÝÜ™KÜ™Y[X[ÈÜ™Y[X[Ëˆš\ÝX[^˜][Û”›ÝšY\‹”™\]Y\Ý™\]Y\Ý
+HÂˆš[˜[Û™ÈYHš\ÝX[^˜][Û’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆXÝ]™Uš\ÝX[^˜][Û’YHYÈš\ÝX[^š[™ÈHYNÂˆÝ]\ËœÙ]^
+•š\ÝX[^™H0­ÈÙ[™[™È›Ý[™Y™Y™\™[˜Ùx )ˆŠNÈ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™Uš\ÝX[^˜][ÛˆH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžHÂˆš\ÝX[^˜][Û”›ÝšY\‹”™\Ý[™\Ý[H™]Èž[ÚÕš\ÝX[^˜][Û”›ÝšY\ŠÜ™Y[X[ÊK™Ù[™\˜]J™\]Y\Ý
+NÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+YOHXÝ]™Uš\ÝX[^˜][Û’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆš\ÝX[^š[™ÈH˜[ÙNÈXÝ]™Uš\ÝX[^˜][ÛˆH[ÂˆÝ]\ËœÙ]^
+•š\ÝX[^™H0­È™\Ý[™XYHŠNÈ™Yœ™\ÚXÝ[ÛœÊ
+NÈÚÝÕš\ÝX[^˜][Û”™\Ý[
+™\Ý[
+NÂˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+YOHXÝ]™Uš\ÝX[^˜][Û’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆš\ÝX[^š[™ÈH˜[ÙNÈXÝ]™Uš\ÝX[^˜][ÛˆH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÈØ\Ý›XZÙU^
+\Ë•š\ÝX[^˜][Ûˆ˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]H›ÚYÚÝÕš\ÝX[^˜][Û”™\Ý[
+š\ÝX[^˜][Û”›ÝšY\‹”™\Ý[™\Ý[
+HÂˆYˆ
+™\Ý[OH[
+H™]\›ŽÂˆš]X\š]X\Hš]X\˜XÝÜžK™XÛÙPž]P\œ˜^J™\Ý[š[XYÙT™Ë™\Ý[š[XYÙT™Ë›[™Ý
+NÂˆYˆ
+š]X\OH[
+HÂˆØ\Ý›XZÙU^
+\Ë•š\ÝX[^˜][Ûˆ™]\›™Y[ˆ[œÝ\ÜY[XYÙH‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[XYÙUšY]È[XYÙHH™]È[XYÙUšY]Ê\ÊNÂˆ[XYÙKœÙ]Y\ÝšY]Ð›Ý[™ÊYJNÈ[XYÙKœÙ]Y[™ÊL‹L‹L‹LŠNÈ[XYÙKœÙ][XYÙPš]X\
+š]X\
+NÂˆØÜ›ÛšY]ÈØÜ›ÛH™]ÈØÜ›ÛšY]Ê\ÊNÈØÜ›Û˜YšY]Ê[XYÙJNÂˆ[™[™Õš\ÝX[^˜][Û”™ÈH™\Ý[š[XYÙT™Ë˜ÛÛ™J
+NÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J•š\ÝX[^˜][Ûˆ™XYHŠBˆœÙ]Y\ÜØYÙJ™\Ý[œ›ÝšY\“X™[
+Èˆ0­È™Y™\™[˜ÙHÙ[ÛY]žH™[XZ[œÈ[˜Ú[™ÙYŠBˆœÙ]šY]ÊØÜ›Û
+KœÙ]™YØ]]™P]ÛŠ‘Û™H‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ”Ø]™H‘È‹
+X[ÙËÚXÚ
+HOˆÜ[•š\ÝX[^˜][Û‘^Ü
+
+JKœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÜ[•š\ÝX[^˜][Û‘^Ü
+
+HÂˆYˆ
+[™[™Õš\ÝX[^˜][Û”™ÈOH[Uš\ÝX[^˜][Û”›ÝšY\‹š\Ð›Ý[™Y™Ê[™[™Õš\ÝX[^˜][Û”™ÊJHÂˆØ\Ý›XZÙU^
+\Ë•š\ÝX[^˜][Ûˆ[XYÙH\È›ÈÛ™Ù\ˆ]˜Z[X›H‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[[[[H™]È[[
+[[PÕSÓ—ÐÔ‘PUWÑÐÕSQS•
+NÂˆ[[˜YØ]YÛÜžJ[[ÐUQÓÔ–WÓÔSP“JNÂˆ[[œÙ]\Jš[XYÙKÜ™ÈŠNÂˆ[[œ]^˜J[[‘VWÕUK˜[ÞK]š\ÝX[^˜][Û‹œ™ÈŠNÂˆÝ\XÝ]š]Q›Ü”™\Ý[
+[[‘TUQTÕÕ’TÕPSVUSÓ—ÑVÔ•
+NÂˆB‚ˆš]˜]H›ÚYÜš]Uš\ÝX[^˜][Û‘^Ü
+\šH\šJHÂˆž]V×H™ÈH[™[™Õš\ÝX[^˜][Û”™ÎÂˆ[™[™Õš\ÝX[^˜][Û”™ÈH[ÂˆYˆ
+™ÈOH[Uš\ÝX[^˜][Û”›ÝšY\‹š\Ð›Ý[™Y™Ê™ÊJHÂˆØ\Ý›XZÙU^
+\Ë•š\ÝX[^˜][Ûˆ[XYÙH\È›ÈÛ™Ù\ˆ]˜Z[X›H‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžH
+˜]˜Kš[Ë“Ý]]Ý™X[HÝ]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[“Ý]]Ý™X[J\šJJHÂˆYˆ
+Ý]OH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ“Ý]]\Ý[˜][ÛˆÛÝ[›Ý™HÜ[™YŠNÂˆÝ]Üš]J™ÊNÂˆÝ]™›\Ú
+
+NÂˆØ\Ý›XZÙU^
+\Ë”Ø]™Yš\ÝX[^˜][Ûˆ‘È‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë•š\ÝX[^˜][Ûˆ^Ü˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHš[˜[HÂˆ˜]˜K][\œ˜^\Ë™š[
+™Ë
+ž]JH
+NÂˆBˆB‚ˆš]˜]HÞ[˜Ú›Ûš^™Y›ÚYØ[˜Ù[š\ÝX[^˜][ÛŠ
+HÂˆXÝ]™Uš\ÝX[^˜][Û’YHš\ÝX[^˜][Û’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆYˆ
+XÝ]™Uš\ÝX[^˜][ÛˆOH[
+HÈXÝ]™Uš\ÝX[^˜][Û‹˜Ø[˜Ù[
+YJNÈXÝ]™Uš\ÝX[^˜][ÛˆH[ÈBˆYˆ
+]š\ÝX[^š[™ÊH™]\›ŽÂˆš\ÝX[^š[™ÈH˜[ÙNÂˆYˆ
+Ý]\ÈOH[
+HÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆYˆ
+XÝ[ÛœÈOH[
+H™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚYØY\ÜÙ][Ù[
+Ýš[™È\ÜÙ]]Ýš[™È˜[YJHÂˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆ[Ù[ÝÜ™K“X]\šX[^™YX]\šX[^™YH[Ù[ÝÜ™K›X]\šX[^™P\ÜÙ]
+Ù]š[\Ñ\Š
+KÙ]\ÜÙ]Ê
+K\ÜÙ]]
+NÂˆ\œ˜^S\Ý\šOˆ\š\ÈH™]È\œ˜^S\ÝŠ
+NÂˆ\š\Ë˜Y
+X]\šX[^™Y\šJNÂˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÂˆ˜[Y\Ë˜Y
+˜[YJNÂˆËÈ›Ý]H[™YÛÝ\˜Ù\È›ÝYÚHØ[YHÛÜšÙ\‹X˜XÚÙY[\ÜˆËÈ]\ÈÛ™K\Ù[XÝYš[\Ëˆ\È\È[\Ü[›ÜˆHš]˜]BˆËÈÕT\ÜÙ[X›NˆÐÐÕ\ÜÙ[][Ûˆ]\Ý™]™\ˆ›ØÚÈHRH™XY‚ˆØY\š\Ê\š\Ë˜[Y\Ë˜[ÙK\ÜÙ]]
+NÂˆHØ]Ú
+^Ù\[ÛˆJHÂˆØ\Ý›XZÙU^
+\Ë‘^[\H˜Z[Yˆˆ
+ÈK™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆÊŠˆÜ[Û˜[ÝÛ™\‹[Û›HÝ\\\ÚYÛ‹XœÙ[œ›ÛHÜ™[˜\žKÜX›XÈTÜËˆ
+‹Âˆš]˜]H[Ù[Ø][ÙË‘[žHš]˜]SÝÛ™\”Ý\\[Ù[
+
+HÂˆžHÂˆ[Ù[Ø][ÙË‘[žHÚ\ÜÚ\ÈH[Âˆ›Üˆ
+[Ù[Ø][ÙË‘[žH[žHˆ[Ù[Ø][ÙË›ØY
+Ù]\ÜÙ]Ê
+JJHÂˆËÈHÜÚ][Û™YÕT\ÜÙ[X›H\ÈH[ÜÝ\ÙY[š\œÝ\[‚ˆËÈÝYH™XØ]\ÙH]™\Ù\™\ÈHÝÛ™\‰ÜÈY]X›H][K\\ˆËÈ^[Ý]ˆÙY\HÚ[™ÛHÕ\ÈH˜[˜XÚÈ›ÜˆZ[È]ˆËÈ[X™\˜][HÛZ]H˜]]™HÐÐÕ[\Ü\‹‚ˆYˆ
+Z[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÑSP“Qˆ	‰ˆ[žK˜\ÜÙ]]™[™ÕÚ]
+œ™YXYÚXËZÙ^X›Ø\™XØ\ÙKX\ÜÙ[X›K]ŒX[™ÛYœÝ\ŠJBˆ™]\›ˆ[žNÂˆYˆ
+[žK˜\ÜÙ]]™[™ÕÚ]
+œ™YXYÚXËZÙ^X›Ø\™[XZ[‹XÚ\ÜÚ\Ë]ŒœÝŠJHÚ\ÜÚ\ÈH[žNÂˆBˆ™]\›ˆÚ\ÜÚ\ÎÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈHZ\ÜÚ[™Èš]˜]HÝ™\›^H]\Ý›Ý™]™[H›Ü›X[ÚÝØØ\ÙK‚ˆBˆ™]\›ˆ[ÂˆB‚ˆÊŠˆ\ÜÙ]™\Ù[˜ÙH\ÈHÝX›HÝÛ™\‹\™]šY]ÈÝÚ]Ú\š[™Èš\œÝ][˜Úˆ
+‹Âˆš]˜]H›ÛÛX[ˆ\Ð[™YLT™Y™\™[˜ÙJ
+HÂˆžH
+[œ]Ý™X[H[œ]HÙ]\ÜÙ]Ê
+K›Ü[Šš\ÝX[ËØLK[Z[šK\™Y™\™[˜ÙK›Y\ÚŠJHÂˆ™]\›ˆ[œ]œ™XY
+
+HHÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆ™]\›ˆ˜[ÙNÂˆBˆB‚ˆš]˜]H›ÚYØYÚÝØØ\ÙS[Ù[
+
+HÂˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆY\Ú[Ù[ÚÝØØ\ÙHH[Ù[ÛÜšØ™[˜Ú˜Ü™X]TÚÝØØ\ÙP›Þ\ÜÙ[X›J
+NÂˆž]V×HÝH[Ù[ÛÜšØ™[˜ÚÐš[˜\žTÝ
+ÚÝØØ\ÙJNÂˆ[Ù[ÝÜ™K“X]\šX[^™YX]\šX[^™YH[Ù[ÝÜ™K›X]\šX[^™QÙ[™\˜]Y
+Ù]š[\Ñ\Š
+KÝ
+NÂˆ\œ˜^S\Ý\šOˆ\š\ÈH™]È\œ˜^S\ÝŠ
+NÈ\š\Ë˜Y
+X]\šX[^™Y\šJNÂˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÈ˜[Y\Ë˜Y
+[ÞHÚÝØØ\ÙH›ÞŠNÂˆËÈÙY\H]]Ü™Y\˜[Y\È›ÜˆHš\œÝ\[ˆÝYHšY]ËˆBˆËÈÙ[™\˜]YÕ\ÈÝ[X]\šX[^™Y›ÜˆÙ™›[™H\œÚ\Ý[˜ÙH[™ˆËÈ^ÜÈ™[Ü[š[™ÈHØ]™Y›Ú™XÝ™[XZ[œÈ\œÙ\‹X˜XÚÙY‚ˆ\SØYY[Ù[
+ÚÝØØ\ÙKÚÝØØ\ÙK[ÞHÚÝØØ\ÙH›Þ‹\š\Ë˜[Y\ËˆY‹‹‹‹˜[ÙK˜[ÙJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”ÚÝØØ\ÙH˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆÊŠˆÚÝÈHØØ[™XÛÝ™\žH[Ù[Ú]Ý]Ý™\Üš][™ÈH\Ù\‰ÜÈØ]™Y]Kˆ
+‹Âˆš]˜]H›ÚYØYÚÝØØ\ÙUÚ]Ý]™\XÚ[™ÔØ]™Y›Ú™XÝ
+
+HÂˆ›Ú™XÝÝÜ™K”Ø]™Y›Ú™XÝØ]™Y›Ú™XÝH›Ú™XÝÝÜ™KœØ]™Y›Ú™XÝ
+
+NÂˆ]TÝÜ™K”]HØ]™Y]HH]TÝÜ™K˜XÝ]™T]J
+NÂˆ[Ø]™YXÝ]™T]HH]TÝÜ™K˜XÝ]™R[™^
+
+NÂˆ\œ˜^S\Ý[Ù[\ÝÜžTÝÜ™K•[Y[[™OˆØ]™Y\ÝÜžHH[Ù[\ÝÜžTÝÜ™HOH[ˆÈ™]È\œ˜^S\ÝŠ
+Hˆ[Ù[\ÝÜžTÝÜ™K™^Ü[Y[[™\Ê
+NÂˆØYÚÝØØ\ÙS[Ù[
+
+NÂˆžHÂˆYˆ
+Ø]™Y›Ú™XÝOH[
+H›Ú™XÝÝÜ™K˜ÛX\“[Ù[
+
+NÂˆ[ÙH›Ú™XÝÝÜ™KœØ]™S[Ù[ÊØ]™Y›Ú™XÝ\š\ËØ]™Y›Ú™XÝ›˜[Y\ÊNÂˆ›Ú™XÝÝÜ™KœØ]™U˜[œÙ›Ü›JØ]™Y]KœØØ[KØ]™Y]Kœ›Ý][Û‘YÜ™Y\ËˆØ]™Y]K[YÜ™Y\ËØ]™Y]K[QYÜ™Y\ÊNÂˆ›Ú™XÝÝÜ™KœØ]™TÙ[XÝY\
+Ø]™Y]KœÙ[XÝY\
+NÂˆ›Ú™XÝÝÜ™KœØ]™T\˜[œÙ›Ü›\ÊØ]™Y]Kœ\˜[œÙ›Ü›\ÊNÂˆ›Ú™XÝÝÜ™KœØ]™QÙ[ÛY]žT™\Z\ŠØ]™Y]K™Ù[ÛY]žT™\Z\‘[˜X›Y
+NÂˆ]TÝÜ™KœØ]™JØ]™Y]JNÂˆ]TÝÜ™KœÙ]XÝ]™R[™^
+Ø]™YXÝ]™T]JNÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+H[Ù[\ÝÜžTÝÜ™Kš[\Ü[Y[[™\ÊØ]™Y\ÝÜžJNÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈHØØ[ÚÝØØ\ÙH™[XZ[œÈH˜[Y™XÛÝ™\žHÝ\™˜XÙH]™[ˆYˆ[‚ˆËÈÛ\ˆÚXÚÜÚ[\ÈÛÈ[XYÙYÈ™\ÝÜ™H]™\žHÚYXØ\‹‚ˆBˆB‚ˆš]˜]H›ÚY\SØYY[Ù[
+Y\Ú[Ù[ØYYY\Ú[Ù[š\Ý[™KÝš[™È˜[YK\œ˜^S\Ý\šOˆ\š\Ëˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\Ë›Ø]ØØ[K›Ø]›Ý][Û‘YÜ™Y\Ëˆ›Ø][YÜ™Y\Ë›Ø][QYÜ™Y\Ë›ÛÛX[ˆ™\ÝÜ™U˜[œÙ›Ü›Kˆ›ÛÛX[ˆ™\Z\‘[˜X›Y
+H›ÝÜÈ^Ù\[ÛˆÂˆ\SØYY[Ù[
+ØYYš\Ý[™K˜[YK\š\Ë˜[Y\ËØØ[K›Ý][Û‘YÜ™Y\Ëˆ[YÜ™Y\Ë[QYÜ™Y\Ë™\ÝÜ™U˜[œÙ›Ü›K™\Z\‘[˜X›Yˆ™\ÝÜ™U˜[œÙ›Ü›HÈTÕÔ–WÔ‘TÕÔ‘HˆTÕÔ–WÔ‘TÑU
+NÂˆB‚ˆš]˜]H›ÚY\SØYY[Ù[
+Y\Ú[Ù[ØYYY\Ú[Ù[š\Ý[™KÝš[™È˜[YK\œ˜^S\Ý\šOˆ\š\Ëˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\Ë›Ø]ØØ[K›Ø]›Ý][Û‘YÜ™Y\Ëˆ›Ø][YÜ™Y\Ë›Ø][QYÜ™Y\Ë›ÛÛX[ˆ™\ÝÜ™U˜[œÙ›Ü›Kˆ›ÛÛX[ˆ™\Z\‘[˜X›Y[\ÝÜžS[ÙJH›ÝÜÈ^Ù\[ÛˆÂˆ\ÝY[Ýš^\™P\ÜÙ]]H[ÂˆËÈH›Ü™YÜ›Ý[™ÛXÙHÝÛœÈ[ˆ[[]]X›H™\]Y\ÝÛ˜\ÚÝˆØY[™ÈBˆËÈØ[YH›Ú™XÝYØZ[ˆ\š[™ÈXÝ]š]H™XÜ™X][Ûˆ]\Ý›ÝØ[˜Ù[]ÂˆËÈHÙ[Z[™[H™]È[Ù[\È›ØÚÙYžHHÛXÚ[™ÈRH[[H›Øˆ\ÂˆËÈ^XÚ]HØ[˜Ù[YÜˆÛÛ\]Y‚ˆYˆ
+XÝ]™TÛXÙR›Ø’YOH[
+HÂˆÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆÛXÚ[™ÈH˜[ÙNÂˆBˆÛÝ\˜ÙS[Ù[HØYYÂˆ[›[ÙYšYYÛÝ\˜ÙS[Ù[Hš\Ý[™HOH[ÈØYYˆš\Ý[™NÂˆÙ[ÛY]žT™\Z\‘[˜X›YH™\Z\‘[˜X›YÂˆ[Ù[ØØ[HHš[š]JØØ[JHÈÛ[\
+ØØ[KY\Ú[Ù[“RS—ÓSÑSÔÐÐSKY\Ú[Ù[“PVÓSÑSÔÐÐSJHˆYŽÂˆ[Ù[›Ý][Û‘YÜ™Y\ÈHš[š]J›Ý][Û‘YÜ™Y\ÊHÈÛ[\
+›Ý][Û‘YÜ™Y\ËLÍŒ‹ÍŒŠHˆŽÂˆ[Ù[[YÜ™Y\ÈHš[š]J[YÜ™Y\ÊHÈÛ[\
+[YÜ™Y\ËLÍŒ‹ÍŒŠHˆŽÂˆ[Ù[[QYÜ™Y\ÈHš[š]J[QYÜ™Y\ÊHÈÛ[\
+[QYÜ™Y\ËLÍŒ‹ÍŒŠHˆŽÂˆ\˜[œÙ›Ü›\Ë˜ÛX\Š
+NÂˆ[Ù[˜[Y\Ë˜ÛX\Š
+NÂˆYˆ
+˜[Y\ÈOH[
+H[Ù[˜[Y\Ë˜Y[
+˜[Y\ÊNÂˆYˆ
+™\ÝÜ™U˜[œÙ›Ü›JH\˜[œÙ›Ü›\Ë˜Y[
+›Ú™XÝÝÜ™KœØ]™Y\˜[œÙ›Ü›\ÊØYYœ\Ë›[™Ý
+JNÂˆ[ÙH›Ú™XÝÝÜ™KœØ]™T\˜[œÙ›Ü›\Ê\˜[œÙ›Ü›\ÊNÂˆ[Ù[H™XZ[[Ù[
+˜[YJNÂˆ[Ù[\š\Ë˜ÛX\Š
+NÂˆYˆ
+\š\ÈOH[
+H[Ù[\š\Ë˜Y[
+\š\ÊNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[ÂˆYˆ
+\™\ÝÜ™U˜[œÙ›Ü›JH\Ý˜]ÚH[ÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]Ù[XÝY\
+™\ÝÜ™U˜[œÙ›Ü›HÈ›Ú™XÝÝÜ™KœØ]™YÙ[XÝY\
+
+HˆLJNÂˆYˆ
+[[Ù[\š\Ëš\Ñ[\J
+JHÂˆ›Ú™XÝÝÜ™KœØ]™S[Ù[Ê[Ù[\š\Ë˜[Y\ÊNÂˆ›Ú™XÝÝÜ™KœØ]™U˜[œÙ›Ü›J[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÊNÂˆYˆ
+\™\ÝÜ™U˜[œÙ›Ü›JH›Ú™XÝÝÜ™KœØ]™TÙ[XÝY\
+LJNÂˆBˆ]R[\Ü[‘›YÚH˜[ÙNÂˆØ]™PÝ\œ™[]J
+NÂˆ[™S[Ù[ØXÚJ
+NÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+HÂˆYˆ
+\ÝÜžS[ÙHOHTÕÔ–WÔ‘TÑU
+HÂˆ[Ù[\ÝÜžTÝÜ™Kœ™\Ù]ØÝ[Y[
+XÝ]™T]R[™^Ý\œ™[]TÛ˜\ÚÝ
+
+K“Ü[™Y0­Èˆ
+È˜[YJNÂˆH[ÙHYˆ
+\ÝÜžS[ÙHOHTÕÔ–WÔ‘TÕÔ‘JHÂˆ[Ù[\ÝÜžTÝÜ™K™[œÝ\™PÝ\œ™[
+XÝ]™T]R[™^Ý\œ™[]TÛ˜\ÚÝ
+
+K”™XÛÝ™\™Y]HŠNÂˆBˆ[™S[Ù[ØXÚJ
+NÂˆBˆ›ÛÛX[ˆ™\ÝÜ™Y˜]ÚH™\ÝÜ™P˜]Ú™\Ý[›ÜXÝ]™T]J™\ÝÜ™U˜[œÙ›Ü›JNÂˆ›ÛÛX[ˆ™\ÝÜ™Y›Ü™YÜ›Ý[™H\™\ÝÜ™Y˜]Ú	‰ˆ™\ÝÜ™Q›Ü™YÜ›Ý[™ÛXÙRY“X]Ú[™Ê
+NÂˆ[Ù[Y]KœÙ]^
+šY]ÜÜ\Ü^S˜[YJ˜[YJH
+È—ˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+™\ÝÜ™Y˜]Ú™\ÝÜ™Y›Ü™YÜ›Ý[™È’[œÜXÝ0­Èˆ
+ÈÛXÙK›^Y\œËœÚ^™J
+H
+Èˆ^Y\œÈˆˆ”™\\™H0­Èˆ
+È˜[YJNÂˆ]Z[ËœÙ]^
+™\ÝÜ™Y˜]Ú™\ÝÜ™Y›Ü™YÜ›Ý[™ˆÈÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ[Hš[[Y[0­È	\È0­È	YØ\›š[™ÊÊH‹ÛXÙK™š[[Y[[KˆÛXÙKœš[[YTÙXÛÛ™ÈˆÈ[YH[™[™Èˆˆ›Ü›X]\˜][ÛŠÛXÙKœš[[YTÙXÛÛ™ÊKÛXÙKØ\›š[™ÜÊBˆˆ[Ù[]Z[Ê[Ù[
+JNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆ™Yœ™\Ú˜]ÚÛXÙUZJ
+NÂˆB‚ˆš]˜]H›ÛÛX[ˆ™\ÝÜ™P˜]Ú™\Ý[›ÜXÝ]™T]J›ÛÛX[ˆ™\ÝÜ™U˜[œÙ›Ü›JHÂˆYˆ
+\™\ÝÜ™U˜[œÙ›Ü›H\Ý˜]ÚOH[
+H™]\›ˆ˜[ÙNÂˆ›Üˆ
+˜]ÚÛXÙR›ØÛÛ›Û\‹”]T™\Ý[]Hˆ\Ý˜]Úœ]\ÊHÂˆYˆ
+]Kœ]Kš[™^OHXÝ]™T]R[™^
+HÛÛ[YNÂˆ[Ù[H]K›[Ù[ÂˆÛXÙHH]KœÛXÙNÂˆÝYÙY\Y˜XÝH]K˜\Y˜XÝÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]™\Ý[
+ÛXÙJNÂˆ™]\›ˆYNÂˆBˆ™]\›ˆ˜[ÙNÂˆB‚ˆš]˜]HY\Ú[Ù[™XZ[[Ù[
+Ýš[™È˜[YJH›ÝÜÈ^Ù\[ÛˆÂˆYˆ
+ÛÝ\˜ÙS[Ù[OH[
+H›ÝÈ™]È[YØ[Ý]Q^Ù\[ÛŠ“›ÈÛÝ\˜ÙH[Ù[\ÈÙ[XÝYŠNÂˆY\Ú[Ù[™XZ[HÛÝ\˜ÙS[Ù[˜[œÙ›Ü›YY
+˜[YK[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÊNÂˆ[ÛÝ[HX]›Z[Š\˜[œÙ›Ü›\ËœÚ^™J
+K™XZ[œ\Ë›[™Ý
+NÂˆ›Üˆ
+[[™^HÈ[™^ÛÝ[È[™^
+ÊÊHÂˆY\Ú[Ù[”\˜[œÙ›Ü›H˜[œÙ›Ü›HH\˜[œÙ›Ü›\Ë™Ù]
+[™^
+NÂˆYˆ
+˜[œÙ›Ü›HOH[
+HÛÛ[YNÂˆYˆ
+˜[œÙ›Ü›KœØØ[HOHYˆ	‰ˆ˜[œÙ›Ü›Kœ›Ý][Û‘YÜ™Y\ÈOH‚ˆ	‰ˆ˜[œÙ›Ü›K[YÜ™Y\ÈOHˆ	‰ˆ˜[œÙ›Ü›K[QYÜ™Y\ÈOH‚ˆ	‰ˆ˜[œÙ›Ü›K›Ù™œÙ]OHˆ	‰ˆ˜[œÙ›Ü›K›Ù™œÙ]HOHŠHÛÛ[YNÂˆ™XZ[H™XZ[˜[œÙ›Ü›YY\
+˜[YK[™^˜[œÙ›Ü›KœØØ[K˜[œÙ›Ü›Kœ›Ý][Û‘YÜ™Y\Ëˆ˜[œÙ›Ü›K[YÜ™Y\Ë˜[œÙ›Ü›K[QYÜ™Y\Ë˜[œÙ›Ü›K›Ù™œÙ]˜[œÙ›Ü›K›Ù™œÙ]JNÂˆBˆ™]\›ˆ™XZ[›]™[YÛ™Y
+˜[YJNÂˆB‚ˆÊŠ‚ˆ
+ˆXÚÈÙÚXØ[\È[ÈH›Ý[™YÛ™K\ÚYH^[Ý]ˆH[›™\ˆX^Bˆ
+ˆ›Ý]HXXÚ\žHLYÜ™Y\È[ˆK]™]™\ˆÚ[[HÚ[™Ù\È]Âˆ
+ˆ‹]\Ý[ÜšY[][Ûˆ™XØ]\ÙH]Ø[ˆ[\ˆÝ\ÜÈ[™š\œÝ[^Y\‚ˆ
+ˆ™Z]š[Ü‹ˆ^\Ý[™ÈØØ[K[[™ÛØ˜[˜[œÙ›Ü›\È™[XZ[ˆ[XÝ‚ˆ
+‹Âˆš]˜]H›ÚY]]Ð\œ˜[™ÙT\Ê
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+ÛÝ\˜ÙS[Ù[OH[[Ù[OH[[Ù[œ\ÈOH[[Ù[œ\Ë›[™ÝŠHÂˆØ\Ý›XZÙU^
+\Ë\œ˜[™ÙH\È]˜Z[X›H›Üˆ\ÜÙ[X›Y\ÈÚ]][\H\È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ™\\™S[Ù[]]][ÛŠ\œ˜[™ÙH\ÈŠNÂˆžHÂˆš[˜[›Ø]X\™Ú[ˆHX]›X^
+™‹ÛÛ™šYË››Þž›H
+ˆ™ŠNÂˆY\Ú[Ù[˜\ÙHHÛÝ\˜ÙS[Ù[˜[œÙ›Ü›YY
+[Ù[™\Ü^S˜[YK[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ëˆ[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÊNÂˆ\œ˜^S\Ý]P\œ˜[™Ù[Y[[›™\‹”\ˆÜXÜÈH™]È\œ˜^S\ÝŠ
+NÂˆ›Üˆ
+[[™^HÈ[™^˜\ÙKœ\Ë›[™ÝÈ[™^
+ÊÊHÂˆY\Ú[Ù[”\˜[œÙ›Ü›HÝ\œ™[H\˜[œÙ›Ü›P]
+[™^
+NÂˆY\Ú[Ù[™]šY]ÈH˜\ÙK˜[œÙ›Ü›YY\
+[Ù[™\Ü^S˜[YK[™^Ý\œ™[œØØ[KˆÝ\œ™[œ›Ý][Û‘YÜ™Y\ËÝ\œ™[[YÜ™Y\ËÝ\œ™[[QYÜ™Y\Ë‹ŠNÂˆY\Ú[Ù[”\›Ý[™È›Ý[™ÈH™]šY]Ëœ\›Ý[™Ê[™^
+NÂˆÜXÜË˜Y
+™]È]P\œ˜[™Ù[Y[[›™\‹”\
+[™^›Ý[™ËÚY
+
+K›Ý[™Ë™\
+
+JJNÂˆBˆ\œ˜^S\Ý]P\œ˜[™Ù[Y[[›™\‹”XÙ[Y[ˆXÙ[Y[ÈH]P\œ˜[™Ù[Y[[›™\‹œ[ŠˆÜXÜËÛÛ™šYË˜™YHX\™Ú[ˆ
+ˆ™‹ÛÛ™šYË˜™YHHX\™Ú[ˆ
+ˆ™‹X\™Ú[ŠNÂˆY\Ú[Ù[\œ˜[™ÙYH˜\ÙNÂˆ\œ˜^S\ÝY\Ú[Ù[”\˜[œÙ›Ü›Oˆ™^H™]È\œ˜^S\ÝŠ
+NÂˆ›Üˆ
+[[™^HÈ[™^\œ˜[™ÙYœ\Ë›[™ÝÈ[™^
+ÊÊBˆ™^˜Y
+Y\Ú[Ù[”\˜[œÙ›Ü›KšY[]J
+JNÂˆ›Üˆ
+]P\œ˜[™Ù[Y[[›™\‹”XÙ[Y[XÙ[Y[ˆXÙ[Y[ÊHÂˆ[[™^HXÙ[Y[œÛÝ\˜ÙR[™^ÂˆY\Ú[Ù[”\˜[œÙ›Ü›HÝ\œ™[H\˜[œÙ›Ü›P]
+[™^
+NÂˆ›Ø]›Ý][ÛˆHÝ\œ™[œ›Ý][Û‘YÜ™Y\È
+ÈXÙ[Y[œ›Ý][Û‘YÜ™Y\ÎÂˆY\Ú[Ù[ÜšY[YH\œ˜[™ÙY˜[œÙ›Ü›YY\
+[Ù[™\Ü^S˜[YK[™^Ý\œ™[œØØ[Kˆ›Ý][Û‹Ý\œ™[[YÜ™Y\ËÝ\œ™[[QYÜ™Y\Ë‹ŠNÂˆY\Ú[Ù[”\›Ý[™È›Ý[™ÈHÜšY[Yœ\›Ý[™Ê[™^
+NÂˆ›Ø]\™Ù]Ù[\–HX\™Ú[ˆ
+ÈXÙ[Y[ž
+ÈXÙ[Y[ÚYÈ™ŽÂˆ›Ø]\™Ù]Ù[\–HHX\™Ú[ˆ
+ÈXÙ[Y[žH
+ÈXÙ[Y[™\È™ŽÂˆ›Ø]Ý\œ™[Ù[\–H
+›Ý[™Ë›Z[–
+È›Ý[™Ë›X^
+HÈ™ŽÂˆ›Ø]Ý\œ™[Ù[\–HH
+›Ý[™Ë›Z[–H
+È›Ý[™Ë›X^JHÈ™ŽÂˆ›Ø]Ù™œÙ]H\™Ù]Ù[\–HÝ\œ™[Ù[\–Âˆ›Ø]Ù™œÙ]HH\™Ù]Ù[\–HHÝ\œ™[Ù[\–NÂˆ\œ˜[™ÙYH\œ˜[™ÙY˜[œÙ›Ü›YY\
+[Ù[™\Ü^S˜[YK[™^Ý\œ™[œØØ[Kˆ›Ý][Û‹Ý\œ™[[YÜ™Y\ËÝ\œ™[[QYÜ™Y\ËÙ™œÙ]Ù™œÙ]JNÂˆ™^œÙ]
+[™^™]ÈY\Ú[Ù[”\˜[œÙ›Ü›JÝ\œ™[œØØ[K›Ý][Û‹ˆÝ\œ™[[YÜ™Y\ËÝ\œ™[[QYÜ™Y\ËÙ™œÙ]Ù™œÙ]JJNÂˆBˆ[Ù[XÝY\HšY]ÜÜ™Ù]Ù[XÝY\
+
+NÂˆ\˜[œÙ›Ü›\Ë˜ÛX\Š
+NÂˆ\˜[œÙ›Ü›\Ë˜Y[
+™^
+NÂˆ[Ù[H\œ˜[™ÙY›]™[YÛ™Y
+[Ù[™\Ü^S˜[YJNÂˆ›Ú™XÝÝÜ™KœØ]™T\˜[œÙ›Ü›\Ê\˜[œÙ›Ü›\ÊNÂˆØ]™PÝ\œ™[]J
+NÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆšY]ÜÜœÙ]Ù[XÝY\
+Ù[XÝY\
+NÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆËÈXÚÚ[™ÈÛ›HÚÛÜÙ\ÈH™]™\œÚX›H0¬ÎL0¬H›Ý][Û‹ˆ]]\ÝˆËÈ›Ý™H™\Ù[Y\È[ˆÜšY[][Ûˆ™XÛÛ[Y[™][ÛŽˆ[[™ˆËÈš\œÝXÛÛXÝXÚ\Ú[ÛœÈØ[ˆÚ[™ÙHÝ\ÜËÝ™[™Ý[™ˆËÈÝ\™˜XÙH]X[]H[™™[XZ[ˆš\ÚX›H\Ù\ˆÚÚXÙ\Ë‚ˆÝ]\ËœÙ]^
+”™\\™H0­È\ÈXÚÙYÛˆ]HŠNÂˆ]Z[ËœÙ]^
+[Ù[]Z[Ê[Ù[
+JNÂˆš[š\Ú[Ù[]]][ÛŠ]]Ë\XÚÈ\ÈŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”\ÈÛÝ[›Ý™H\œ˜[™ÙYˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÚÝÔ™\\™J
+HÂˆYˆ
+š[\\ÞH˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HXÝ]™Hš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[Ù[OH[ÛÝ\˜ÙS[Ù[OH[
+HÂˆØ\Ý›XZÙU^
+\Ë’[\ÜH[Ù[™Y›Ü™H™\\š[™È]‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^ØØ[HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹[Ù[ØØ[H
+ˆLŠK”ØØ[H
+	JHŠNÂˆY]^›Ý][ÛˆHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹[Ù[›Ý][Û‘YÜ™Y\ÊK”›Ý]H\›Ý[™ˆ
+YÜ™Y\ÊH‹YJNÂˆY]^[HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹[Ù[[YÜ™Y\ÊK•[\›Ý[™
+YÜ™Y\ÊH‹YJNÂˆY]^[HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹[Ù[[QYÜ™Y\ÊK•[\›Ý[™H
+YÜ™Y\ÊH‹YJNÂˆšY[Ë˜YšY]ÊØØ[JNÂˆšY[Ë˜YšY]Ê›Ý][ÛŠNÂˆšY[Ë˜YšY]Ê[
+NÂˆšY[Ë˜YšY]Ê[JNÂˆ]ÛˆØØ[R[\ˆHX[ÙÐ]ÛŠ”ØØ[HÈÛ›ÝÛˆ[Y[œÚ[Ûˆ‹[
+NÂˆØØ[R[\‹œÙ]ÛÛ[\ØÜš\[ÛŠ”ØØ[H[Ù[ÈHÛ›ÝÛˆ[Y[œÚ[ÛˆŠNÂˆØØ[R[\‹œÙ]ÛÛXÚÓ\Ý[™\ŠˆOˆÚÝÔØØ[UÒÛ›ÝÛ‘[Y[œÚ[ÛŠ
+JNÂˆšY[Ë˜YšY]ÊØØ[R[\ŠNÂˆ^šY]È›ÝHHX™[
+•HÝÙ\ÝÚ[\ÈXÙYÛˆH™YˆÖH[[™ˆ›Ý][Ûˆ\H™Y›Ü™HÛXÚ[™ÎÈ[ÞHÙY\ÈHÝ\œ™[[Ù[[œÚYHHÙ[XÝYZ[]›Û[YHØ]Kˆ‹LËUUQ
+NÂˆ›ÝKœÙ]Y[™ÊN
+NÂˆšY[Ë˜YšY]Ê›ÝJNÂˆ[\X[ÙËZ[\ˆZ[\ˆH™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”™\\™H[Ù[ŠBˆœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ\H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ›Ø]™^ØØ[HHÛ[\
+›Ø]œ\œÙQ›Ø]
+ØØ[K™Ù]^
+
+KÔÝš[™Ê
+JHÈL‹ˆY\Ú[Ù[“RS—ÓSÑSÔÐÐSKY\Ú[Ù[“PVÓSÑSÔÐÐSJNÂˆ›Ø]™^›Ý][ÛˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+›Ý][Û‹™Ù]^
+
+KÔÝš[™Ê
+JKLÍŒ‹ÍŒŠNÂˆ›Ø]™^[HÛ[\
+›Ø]œ\œÙQ›Ø]
+[™Ù]^
+
+KÔÝš[™Ê
+JKLÍŒ‹ÍŒŠNÂˆ›Ø]™^[HHÛ[\
+›Ø]œ\œÙQ›Ø]
+[K™Ù]^
+
+KÔÝš[™Ê
+JKLÍŒ‹ÍŒŠNÂˆ™\\™S[Ù[]]][ÛŠ”™\\™H[Ù[ŠNÂˆ[Ù[ØØ[HH™^ØØ[NÂˆ[Ù[›Ý][Û‘YÜ™Y\ÈH™^›Ý][ÛŽÂˆ[Ù[[YÜ™Y\ÈH™^[Âˆ[Ù[[QYÜ™Y\ÈH™^[NÂˆ[Ù[H™XZ[[Ù[
+[Ù[™\Ü^S˜[YJNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆYˆ
+[[Ù[\š\Ëš\Ñ[\J
+JH›Ú™XÝÝÜ™KœØ]™U˜[œÙ›Ü›J[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÊNÂˆØ]™PÝ\œ™[]J
+NÂˆ[Ù[Y]KœÙ]^
+šY]ÜÜ\Ü^S˜[YJ[Ù[™\Ü^S˜[YJH
+È—ˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+”™\\™H0­È[Ù[\]YŠNÂˆ]Z[ËœÙ]^
+[Ù[]Z[Ê[Ù[
+JNÂˆš[š\Ú[Ù[]]][ÛŠ”™\\™H[Ù[ŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”™\\˜][Ûˆ˜[Y\ÈÙ\™H›Ý˜[Y‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆBˆJNÂˆYˆ
+[Ù[œ\ÈOH[	‰ˆ[Ù[œ\Ë›[™ÝˆJBˆZ[\‹œÙ]™]]˜[]ÛŠ]]ËX\œ˜[™ÙH‹
+X[ÙËÚXÚ
+HOˆ]]Ð\œ˜[™ÙT\Ê
+JNÂˆZ[\‹œÚÝÊ
+NÂˆB‚ˆÊŠ‚ˆ
+ˆ[š]\ÜÈÕÓÐ’ˆš[\È\™HÛÛ[[Ûˆ[ˆÛÛ[][š]HXœ˜\šY\Ëˆ]H\Ù\‚ˆ
+ˆ[˜ÚÜˆÛ™H\ÚXØ[[Y[œÚ[ÛˆÚ]Ý]XZÚ[™È[ˆ[œØY™H]]ÛX]XÈÝY\ÜÎÂˆ
+ˆH›Ü›X[Z[]›Û[YH™Y›YÚÝ[XÚY\ÈÚ]\ˆH™\Ý[š]Ë‚ˆ
+‹Âˆš]˜]H›ÚYÚÝÔØØ[UÒÛ›ÝÛ‘[Y[œÚ[ÛŠ
+HÂˆYˆ
+[Ù[OH[ÛÝ\˜ÙS[Ù[OH[
+H™]\›ŽÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆ™Y›Ü™HØØ[[™ÈH[Ù[‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆš[˜[Ýš[™Ö×H^\ÈHÈ•ÚY
+
+H‹‘\
+JH‹’ZYÚ
+ŠHŸNÂˆš[˜[˜Y[ÑÜ›Ý\^\ÈH™]È˜Y[ÑÜ›Ý\
+\ÊNÂˆ^\ËœÙ]ÜšY[][ÛŠ˜Y[ÑÜ›Ý\•‘T•PÐS
+NÂˆ›Üˆ
+Ýš[™ÈX™[ˆ^\ÊHÂˆ˜Y[Ð]Ûˆ]ÛˆH™]È˜Y[Ð]ÛŠ\ÊNÂˆ]Û‹œÙ]^
+X™[
+NÂˆ]Û‹œÙ]^ÛÛÜŠV
+NÂˆ^\Ë˜YšY]Ê]Û‹™]È˜Y[ÑÜ›Ý\“^[Ý]\˜[\ÊLK
+
+JJNÂˆBˆ
+
+˜Y[Ð]ÛŠH^\Ë™Ù]Ú[]
+
+JKœÙ]ÚXÚÙY
+YJNÂˆY]^\™Ù]HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹[Ù[›X^H[Ù[›Z[–
+Kˆ•\™Ù][Y[œÚ[Ûˆ
+[JHŠNÂˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆšY[Ë˜YšY]Ê^\ÊNÂˆšY[Ë˜YšY]Ê\™Ù]
+NÂˆÝš[™ÈÝ\œ™[HÝš[™Ë™›Ü›X]
+ØØ[K•TËÝ\œ™[Ú^™Nˆ	KŒYˆ0åÈ	KŒYˆ0åÈ	KŒYˆ[H‹ˆ[Ù[›X^H[Ù[›Z[–[Ù[›X^HH[Ù[›Z[–K[Ù[›X^ˆH[Ù[›Z[–ŠNÂˆ^šY]È›ÝHHX™[
+Ý\œ™[
+È—•[šY›Ü›HØØ[HÛ›NÈ^\Ý[™È\XÙ[Y[Ù™œÙ]È™[XZ[ˆ[˜Ú[™ÙY—[ÝÙYØØ[NˆL	x $ÌL	Kˆ‹L‹UUQ
+NÂˆ›ÝKœÙ]Y[™ÊL‹
+NÂˆšY[Ë˜YšY]Ê›ÝJNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”ØØ[HÈÛ›ÝÛˆ[Y[œÚ[ÛˆŠBˆœÙ]Y\ÜØYÙJ•\ÙH\È›Üˆ[š]\ÜÈÕÓÐ’ˆš[\ÈÚ[ˆ[ÝHÛ›ÝÈÛ™H™X[]ÛÜ›YX\Ý\™[Y[ˆŠBˆœÙ]šY]ÊšY[ÊBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ\H‹
+X[ÙËÚXÚ
+HOˆÂˆžHÂˆ›Ø]\™Ù][HH›Ø]œ\œÙQ›Ø]
+\™Ù]™Ù]^
+
+KÔÝš[™Ê
+JNÂˆYˆ
+Yš[š]J\™Ù][JH\™Ù][HHˆ\™Ù][HˆLÌŠBˆ›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ•\™Ù][Y[œÚ[Ûˆ\È[˜[YŠNÂˆ[Ù[XÝYH^\Ëš[™^ÙÚ[
+^\Ë™š[™šY]ÐžRY
+^\Ë™Ù]ÚXÚÙY˜Y[Ð]Û’Y
+
+JJNÂˆ›Ø]Ý\œ™[[HHÙ[XÝYOHHÈ[Ù[›X^HH[Ù[›Z[–BˆˆÙ[XÝYOHˆÈ[Ù[›X^ˆH[Ù[›Z[–ˆˆ[Ù[›X^H[Ù[›Z[–ÂˆYˆ
+Yš[š]JÝ\œ™[[JHÝ\œ™[[HHŠBˆ›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠÝ\œ™[[Y[œÚ[Ûˆ\È[˜[YŠNÂˆ›Ø]™^ØØ[HH[Ù[ØØ[H
+ˆ\™Ù][HÈÝ\œ™[[NÂˆYˆ
+Yš[š]J™^ØØ[JH™^ØØ[HY\Ú[Ù[“RS—ÓSÑSÔÐÐSBˆ™^ØØ[HˆY\Ú[Ù[“PVÓSÑSÔÐÐSJBˆ›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ•H™\Ý[[™ÈØØ[H]\Ý™H™]ÙY[ˆL	H[™L	HŠNÂˆ™\\™S[Ù[]]][ÛŠ”ØØ[HÈÛ›ÝÛˆ[Y[œÚ[ÛˆŠNÂˆ[Ù[ØØ[HH™^ØØ[NÂˆ[Ù[H™XZ[[Ù[
+[Ù[™\Ü^S˜[YJNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆšY]ÜÜœÙ][Ù[
+[Ù[
+NÂˆYˆ
+[[Ù[\š\Ëš\Ñ[\J
+JBˆ›Ú™XÝÝÜ™KœØ]™U˜[œÙ›Ü›J[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ÊNÂˆØ]™PÝ\œ™[]J
+NÂˆ[Ù[Y]KœÙ]^
+šY]ÜÜ\Ü^S˜[YJ[Ù[™\Ü^S˜[YJH
+È—ˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+”™\\™H0­È[Ù[ØØ[YÈÛ›ÝÛˆ[Y[œÚ[ÛˆŠNÂˆ]Z[ËœÙ]^
+[Ù[]Z[Ê[Ù[
+JNÂˆš[š\Ú[Ù[]]][ÛŠ”ØØ[HÈÛ›ÝÛˆ[Y[œÚ[ÛˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”ØØ[HÛÝ[›Ý™H\YYˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJBˆœÚÝÊ
+NÂˆB‚ˆš]˜]HÝš[™È\Ü^S˜[YJ\šH\šJHÂˆ[™›ÚY™]X˜\ÙKÝ\œÛÜˆÝ\œÛÜˆH[ÂˆžHÂˆÝ\œÛÜˆHÙ]ÛÛ[™\ÛÛ™\Š
+Kœ]Y\žJ\šK™]ÈÝš[™Ö×^ÓÜ[˜X›PÛÛ[[œË‘TÔVWÓSQ_K[[[
+NÂˆYˆ
+Ý\œÛÜˆOH[	‰ˆÝ\œÛÜ‹›[Ý™UÑš\œÝ
+
+JHÂˆÝš[™È˜[YHHÝ\œÛÜ‹™Ù]Ýš[™Ê
+NÂˆYˆ
+˜[YHOH[	‰ˆ˜[YKš[J
+K›[™Ý
+
+Hˆ
+H™]\›ˆ˜[YNÂˆBˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈÛÝYÙØÝ[Y[›ÝšY\œÈ\™H[ÝÙYÈÛZ]Y]Y]NÈ\ÙHHT’H™[ÝË‚ˆHš[˜[HÂˆYˆ
+Ý\œÛÜˆOH[
+HÝ\œÛÜ‹˜ÛÜÙJ
+NÂˆBˆÝš[™È]H\šK™Ù]\Ý]ÙYÛY[
+
+NÈ™]\›ˆ]OH[È›[Ù[œÝˆˆ]ÂˆB‚ˆš]˜]H›ÚYÝ\ÛXÙJ
+HÂˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[Ù[OH[
+H™]\›ŽÂˆ™\\˜][Û•˜[Y]Ü‹”™\Ü™Y›YÚH™\\˜][Û•˜[Y]Ü‹˜[Y]J[Ù[ÛÛ™šYË›Ùš[JNÂˆYˆ
+\™Y›YÚš\Ô™XYJ
+JHÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]JØ[››ÝÛXÙHY]ŠBˆœÙ]Y\ÜØYÙJ™Y›YÚ›Y\ÜØYÙJ
+JBˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+BˆœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+\™Y›YÚØ\›š[™ÜËš\Ñ[\J
+JHÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”™]šY]È™Y›Ü™HÛXÚ[™ÈŠBˆœÙ]Y\ÜØYÙJ™Y›YÚ›Y\ÜØYÙJ
+JBˆœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ”ÛXÙH[ž]Ø^H‹
+X[ÙËÚXÚ
+HOˆ™\]Y\Ý›ÝYšXØ][Û”\›Z\ÜÚ[Û’Y“™YYY
+\ÎŽ˜™YÚ[”ÛXÙJJBˆœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ™\]Y\Ý›ÝYšXØ][Û”\›Z\ÜÚ[Û’Y“™YYY
+\ÎŽ˜™YÚ[”ÛXÙJNÂˆB‚ˆš]˜]H›ÚY™YÚ[”ÛXÙJ
+HÂˆYˆ
+[Ù[OH[
+H™]\›ŽÂˆ\Ý˜]ÚH[ÂˆYˆ
+˜]ÚÛXÙR›Ø”ÝÜ™HOH[
+H˜]ÚÛXÙR›Ø”ÝÜ™K˜ÛX\Š
+NÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[ÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[ÂˆYˆ
+ÛXÙR›Ø”ÝÜ™HOH[
+H™]\›ŽÂˆÝš[™È›Ø’YHÛXÙT™\]Y\ÝÝÜ™K›™]Ò›Ø’Y
+
+NÂˆžHÂˆÝš[™È[Ù[\ÚHÛXÙT™\]Y\ÝÝÜ™KÜš]JÙ]š[\Ñ\Š
+K›Ø’Y[Ù[ÛÛ™šYË\Y˜XÝ\Ü^S˜[YJ
+JNÂˆÛXÙR›Ø”ÝÜ™K˜ÛX\Š
+NÂˆÛXÙR›Ø”ÝÜ™K˜™YÚ[Š›Ø’Y\Y˜XÝ\Ü^S˜[YJ
+K[Ù[\Ú
+NÂˆXÝ]™TÛXÙR›Ø’YH›Ø’YÂˆÛXÚ[™ÈHYNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆÝ]\ËœÙ]^
+”ÛXÙH0­È™\\š[™È›Ü™YÜ›Ý[™›Ø¸ )ˆŠNÂˆÚÝÔÛXÙT›ÙÜ™\ÜÓØY\Š”™\\š[™ÈHÛXÙHŠNÂˆÛXÙR›Ø”Ù\šXÙKœÝ\
+\Ë›Ø’Y
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXÝ]™TÛXÙR›Ø’YH[ÂˆÛXÚ[™ÈH˜[ÙNÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆÛXÙR›Ø”ÝÜ™K™˜Z[
+›Ø’YÛÝ[›ÝÝ\ÛXÙNˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+JNÂˆÝ]\ËœÙ]^
+”™\\™H0­ÈÛXÙHÛÝ[›ÝÝ\ŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHÛÝ[›ÝÝ\ˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYØ[˜Ù[ÛXÙJ
+HÂˆYˆ
+\ÛXÚ[™È	‰ˆXÝ]™TÛXÙR›Ø’YOH[
+H™]\›ŽÂˆÝš[™È›Ø’YHXÝ]™TÛXÙR›Ø’YÂˆYˆ
+›Ø’YOH[
+H™]\›ŽÂˆžHÂˆÛXÙR›Ø”Ù\šXÙK˜Ø[˜Ù[
+\Ë›Ø’Y
+NÂˆÝ]\ËœÙ]^
+”ÛXÙH0­ÈØ[˜Ù[[™ø )ˆŠNÂˆËÈ™\Ù\™HHXYÜÚ][ÛˆÚ[HØ[˜Ù[][Ûˆ\ÈXÚÛ›ÝÛYÙY‚ˆËÈÛ˜\[™È]˜XÚÈÈ™\›ÈÛÝ[˜[Ù[HÝYÙÙ\ÝH\˜X›H›Ø‚ˆËÈ™\Ý\Y]™[ˆÝYÚÛXÙR›Ø”ÝÜ™H™]Z[œÈ]È\Ý›ÙÜ™\ÜË‚ˆÛXÙR›Ø”ÝÜ™K’›ØˆÝ\œ™[HÛXÙR›Ø”ÝÜ™HOH[È[ˆÛXÙR›Ø”ÝÜ™K›ØY
+
+NÂˆ[š\ÚX›T›ÙÜ™\ÜÈHÝ\œ™[OH[ÈˆÝ\œ™[œ›ÙÜ™\ÜÎÂˆÚÝÔÛXÙT›ÙÜ™\ÜÓØY\Šš\ÚX›T›ÙÜ™\ÜËØ[˜Ù[[™ÈÛXÙHŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHØ[˜Ù[][Ûˆ˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÚ[™ÙS^Y\Š[[JHÂˆYˆ
+ÛXÙHOH[ÛXÙK›^Y\œËš\Ñ[\J
+JH™]\›ŽÂˆ[Ý\œ™[HšY]ÜÜ™Ù]Ù[XÝY^Y\Š
+HÈÛXÙK›^Y\œËœÚ^™J
+HHHˆšY]ÜÜ™Ù]Ù[XÝY^Y\Š
+NÂˆ[™^HX]›X^
+X]›Z[ŠÛXÙK›^Y\œËœÚ^™J
+HHKÝ\œ™[
+È[JJNÂˆšY]ÜÜœÙ]Ù[XÝY^Y\Š™^
+NÂˆÛXÙ\‹“^Y\ˆ^Y\ˆHÛXÙK›^Y\œË™Ù]
+™^
+NÂˆÝ]\ËœÙ]^
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË’[œÜXÝ0­È^Y\ˆ	YÈ	Y0­Èˆ	KŒ™ˆ[H0­È	YÙYÛY[È‹ˆ™^
+ÈKÛXÙK›^Y\œËœÚ^™J
+K^Y\‹ž‹^Y\‹œÙYÛY[ËœÚ^™J
+JJNÂˆB‚ˆš]˜]H›ÚYÚÝÒ[œÜXÝ[ÛŠ
+HÂˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+ÛXÙHOH[ÛXÙK›^Y\œÈOH[ÛXÙK›^Y\œËš\Ñ[\J
+JHÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHH[Ù[™Y›Ü™H[œÜXÝ[™ÈHÛÛ]‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[Ù[XÝYHšY]ÜÜ™Ù]Ù[XÝY^Y\Š
+HÈÛXÙK›^Y\œËœÚ^™J
+HHHˆšY]ÜÜ™Ù]Ù[XÝY^Y\Š
+NÂˆÛXÙ\‹“^Y\ˆ^Y\ˆHÛXÙK›^Y\œË™Ù]
+X]›X^
+X]›Z[ŠÛXÙK›^Y\œËœÚ^™J
+HHKÙ[XÝY
+JJNÂˆÝš[™È[YHHÛXÙKœš[[YTÙXÛÛ™ÈˆÈ“›Ý™\ÜYžH[™Ú[™Hˆˆ›Ü›X]\˜][ÛŠÛXÙKœš[[YTÙXÛÛ™ÊNÂˆÝš[™È[™Ú[™HHÛXÙK™[™Ú[™RYOH[È•[šÛ›ÝÛˆˆˆÛXÙK™[™Ú[™RYÂˆYˆ
+\ÛXÙK™[™Ú[™U™\šYšYY
+H[™Ú[™H
+ÏHˆ0­È[™\šYšYYŽÂˆÝš[™ÈY\ÜØYÙHHÝš[™Ë™›Ü›X]
+ØØ[K•TËˆ”Ù[XÝY^Y\—‰YÈ	Y0­Èˆ	KŒ™ˆ[H0­È	YÙYÛY[×—‘š[[Y[\Ý[X]W‰KŒYˆ[W—\›Þˆ[™Ú[™H[YH
+[™\šYšYY
+W‰\×—•˜]™[‰\×—•Ø\›š[™Ü×‰Y—‘[™Ú[™W‰\È‹ˆ^Y\‹š[™^
+ÈKÛXÙK›^Y\œËœÚ^™J
+K^Y\‹ž‹^Y\‹œÙYÛY[ËœÚ^™J
+KÛXÙK™š[[Y[[K[YKˆÛXÙK˜]™[[HˆÈ“›Ý™\ÜYˆˆÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ[H‹ÛXÙK˜]™[[JKÛXÙKØ\›š[™ÜË[™Ú[™JNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J•ÛÛ][œÜXÝ[ÛˆŠBˆœÙ]Y\ÜØYÙJY\ÜØYÙJBˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+BˆœÚÝÊ
+NÂˆB‚ˆÊŠ‚ˆ
+ˆH™Y›YÚÝ[[X\žH[X™\˜][H\Ý[™ÝZ\Ú\ÈH[Ù[ÛÛ]œ›ÛBˆ
+ˆÛÛœÝ[XX›\ÈHÛ™K\ÚYH[™Ú[™HØ[››ÝYX\Ý\™Kˆ[ˆ\XÝ[\‹Bˆ
+ˆÚ[™ÛK[X]\šX[ÛXÙH]\Ý™]™\ˆÛZ[HH\™ÙKš[YKÜˆÙ\\˜][Bˆ
+ˆÙZYÚYÝ\ÜÝ[]\È›Ý™Y[ˆ[Z]YžHH[™Ú[™K‚ˆ
+‹Âˆš]˜]H›ÚYÚÝÔš[[Š
+HÂˆYˆ
+ÛXÙHOH[ÛXÙK›^Y\œÈOH[ÛXÙK›^Y\œËš\Ñ[\J
+JHÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHH[Ù[™Y›Ü™HÜ[š[™È]Èš[[ˆ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆš[[‘\Ý[X]H\Ý[X]HHš[[‘\Ý[X]K™œ›ÛJÛXÙKÛÛ™šYÊNÂˆÝš[™ÈÜšY[][ÛˆHÝš[™Ë™›Ü›X]
+ØØ[K•TË–ˆ›Ý][Ûˆ	KŒ°¬0­È[	KŒ°¬0­ÈH[	KŒ°¬0­ÈØØ[H	KŒ‰IH‹ˆ[Ù[›Ý][Û‘YÜ™Y\Ë[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\Ë[Ù[ØØ[H
+ˆLŠNÂˆÝš[™ÈY\ÜØYÙHHÝš[™Ë™›Ü›X]
+ØØ[K•TËˆ‰\×‰KŒˆ[H0­ÈX›Ý]	KŒYˆÈÙˆ	\×—”ÕTÔ•PUT’PS‰\×—”’SQHÈT‘ÑHÈÓPS’S‘×‰\×—T“ÖˆS‘ÒS‘HSQH
+S•‘T’Q’QQ
+W‰\×—ÕT”‘S•‘PÒTW“›Þž›H	KŒ°¬È
+š\œÝ^Y\ˆ	KŒ°¬ÊH0­È]H	KŒ°¬È
+š\œÝ^Y\ˆ	KŒ°¬ÊW‰KŒ™ˆ[H^Y\œÈ0­È	KŒ‰IH[™š[0­È	YØ[×—“Ô’QS•USÓ—‰\×•\ÙH[Ù[8¡¤ˆ^H›]Üˆ]]ÈÜšY[[ˆ™]šY]ÈHš\œÝ^Y\ˆ[™Ý\ÜÈ™Y›Ü™HÛXÚ[™ÈYØZ[‹——”’S•TˆÕUT×”[›š[™È›Ùš[HÛ›H0­È›È]™Hš[\ˆ[\\˜]\™HÜˆYKÜ[›š[™È[[Y]žH\È™Y[ˆ™\šYšYYˆ‹ˆ\Ý[X]K™š[[Y[ØÛÜK\Ý[X]Kœ™\ÜYš[[Y[[K\Ý[X]K˜\›Þ[X]T™\ÜYš[[Y[Ü˜[\ËÛÛ™šYË™š[[Y[ˆ\Ý[X]KœÝ\ÜX]\šX[\Ý[X]Kœš[YT\™ÙPÛX[š[™Ë\Ý[X]K[YKˆÛÛ™šYË››Þž›U[\\˜]\™KÛÛ™šYË™š\œÝ^Y\“›Þž›U[\\˜]\™KˆÛÛ™šYË˜™Y[\\˜]\™KÛÛ™šYË™š\œÝ^Y\™Y[\\˜]\™KˆÛÛ™šYË›^Y\’ZYÚÛÛ™šYËš[™š[
+ˆL‹ÛÛ™šYËœ\š[Y]\œËÜšY[][ÛŠNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”š[[ˆŠBˆœÙ]Y\ÜØYÙJY\ÜØYÙJBˆœÙ]™YØ]]™P]ÛŠ’[œÜXÝÛÛ]‹
+X[ÙËÚXÚ
+HOˆÚÝÒ[œÜXÝ[ÛŠ
+JBˆœÙ]™]]˜[]ÛŠ“ÜšY[][Ûˆ‹
+X[ÙËÚXÚ
+HOˆÚÝÓ[Ù[ÛÜšØ™[˜Ú
+
+JBˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]HÝ]XÈÝš[™È›Ü›X]\˜][ÛŠ›Ø]ÙXÛÛ™ÊHÂˆ[Ý[HX]›X^
+X]œ›Ý[™
+ÙXÛÛ™ÊJNÂˆ[Ý\œÈHÝ[ÈÍŒÂˆ[Z[]\ÈH
+Ý[	HÍŒ
+HÈŒÂˆ[™[XZ[™\ˆHÝ[	HŒÂˆ™]\›ˆÝ\œÈˆÈÝš[™Ë™›Ü›X]
+ØØ[K•TË‰Y	L™H‹Ý\œËZ[]\ÊBˆˆÝš[™Ë™›Ü›X]
+ØØ[K•TË‰YH	L™È‹Z[]\Ë™[XZ[™\ŠNÂˆB‚ˆš]˜]HÝš[™È\Y˜XÝ\Ü^S˜[YJ
+HÂˆ™]\›ˆ
+[Ù[OH[È˜[ÞKZ›Øˆˆˆ[Ù[™\Ü^S˜[YJH
+È‹\]KHˆ
+È
+XÝ]™T]R[™^
+ÈJNÂˆB‚ˆš]˜]H›ÚY^ÜXÚØYÙJ
+HÂˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[[[[H™]È[[
+[[PÕSÓ—ÐÔ‘PUWÑÐÕSQS•
+NÈ[[˜YØ]YÛÜžJ[[ÐUQÓÔ–WÓÔSP“JNÈ[[œÙ]\J˜\XØ][Û‹ÛØÝ]\Ý™X[HŠNÂˆ[[œ]^˜J[[‘VWÕUKØY™S˜[YJ\Y˜XÝ\Ü^S˜[YJ
+JH
+È‹™ØÛÙKŒÛYˆŠNÈÝ\XÝ]š]Q›Ü”™\Ý[
+[[‘TUQTÕÑVÔ•
+NÂˆB‚ˆÊŠˆÚ\™HÛ›HH]X[YšYYš[XÚØYÙNÈ^Ü[™È[ˆ[™\šYšYYš[H™[XZ[œÈHÙ\\˜]H]ˆ
+‹Âˆš]˜]H›ÚYÚ\™TXÚØYÙJ
+HÂˆÚ\™TXÚØYÙJ˜[ÙJNÂˆB‚ˆÊŠ‚ˆ
+ˆ][\˜[XH[™HÛ›HÚ[ˆ]Y™\\Ù\ÈHÝZ]X›H[™›ÚYÚ\™Bˆ
+ˆ\™Ù]ˆ[ˆ]˜Z[X›HXÝ]š]H\È›Ý™X]Y\ÈXÚØYÙKÚ[\Ü›ÛÙ‹‚ˆ
+‹Âˆš]˜]H›ÚYÚ\™UÐ˜[XR[™J
+HÂˆÚ\™TXÚØYÙJYJNÂˆB‚ˆš]˜]H›ÚYÚ\™TXÚØYÙJ›ÛÛX[ˆ™Y™\˜[XR[™JHÂˆYˆ
+[\Ü[™È[Ù[OH[ÛXÙHOH[
+HÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHH[Ù[™Y›Ü™HÚ\š[™ÈHXÚØYÙH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ\Y˜XÝ˜[Y]Ü‹”™\Ü™\ÜH\Y˜XÝ˜[Y]Ü‹˜[Y]J[Ù[ÛXÙKÛÛ™šYÊNÂˆYˆ
+\™\Üš\Õ˜[Y
+
+JHÂˆØ\Ý›XZÙU^
+\Ë”Ú\š[™È›ØÚÙYˆˆ
+È™\ÜœÝ[[X\žJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆÝš[™È[™Ù™›ØÚÈH˜[XR[™R[™Ù™‹˜[Y][Û›ØÚÔ™X\ÛÛŠˆ™\Üš\Õ˜[Y
+
+KÛXÙK™[™Ú[™U™\šYšYY›Ùš[HOH[	‰ˆ›Ùš[K™\šYšYYˆÝ\Ü[™Ú[™TÝ]\Ëœ\ÚXØ[š[™XYJÛÛ™šYËÛXÙJJNÂˆYˆ
+[™Ù™›ØÚÈOH[
+HÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J™Y™\˜[XR[™HÈ“›Ý™XYH›Üˆ˜[XH[™Hˆˆ”XÚØYÙH›Ý™XYHÈÚ\™HŠBˆœÙ]Y\ÜØYÙJ[™Ù™›ØÚÈ
+È——[ÞHÚ[›ÝÚ\™H[ˆ[œ]X[YšYYš[›ØˆÈ[›Ý\ˆ\ˆ[ÝHØ[ˆÝ[^Ü]›Üˆ[œÜXÝ[ÛŽÈ^ÜY›ØœÈ™[XZ[ˆX\šÙY[™\šYšYY[™]\Ý›Ý™Hš[YˆŠBˆœÙ]ÜÚ]]™P]ÛŠ•[™\œÝÛÙ‹[
+BˆœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆYˆ
+ÝYÙY\Y˜XÝOH[ÝYÙY\Y˜XÝœÛÝ\˜ÙQš[HOH[ˆÝYÙY\Y˜XÝœÛÝ\˜ÙQš[K›[™Ý
+
+HOHÝYÙY\Y˜XÝœÚ^™Pž]\ÂˆP\Y˜XÝÝÜ™KœÚLMŠÝYÙY\Y˜XÝœÛÝ\˜ÙQš[JK™\]X[ÒYÛ›Ü™PØ\ÙJÝYÙY\Y˜XÝœÚLMŠJHÂˆÝYÙY\Y˜XÝH\Y˜XÝÝÜ™KœÝYÙJÙ]š[\Ñ\Š
+K[Ù[ÛXÙKÛÛ™šYËˆ\Y˜XÝ\Ü^S˜[YJ
+KšY]ÜÜ[X›˜Z[™ÊLLŠJNÂˆBˆØÛÙTXÚØYÙU˜[Y]Ü‹˜[Y]Q›Ü”\ÚXØ[š[
+ÝYÙY\Y˜XÝœÛÝ\˜ÙQš[KÛÛ™šYÊNÂˆ\šH\šHH\Y˜XÝÚ\™T›ÝšY\‹\šQ›ÜŠÙ]XÚØYÙS˜[YJ
+KÝYÙY\Y˜XÝ™\Ü^S˜[YJNÂˆYˆ
+™Y™\˜[XR[™JHÂˆ[[\™Ù]YH˜[XR[™R[™Ù™‹\™Ù]YÚ\™J\šJNÂˆYˆ
+˜[XR[™R[™Ù™‹˜Ø[’[™JÙ]XÚØYÙSX[˜YÙ\Š
+K\™Ù]Y
+JHÂˆžHÂˆÝ\XÝ]š]J\™Ù]Y
+NÂˆØ\Ý›XZÙU^
+\Ëˆ˜[XH[™HÜ[™YˆÛÛ™š\›H]È[\Ü™\Ý[È™XÚ\Y[ÛÛ\]Xš[]H\È›ÝY]™\šYšYYˆ‹ˆØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHØ]Ú
+XÝ]š]S›Ý›Ý[™^Ù\[Ûˆ\Ø\X\™Y
+HÂˆËÈXÚØYÙH™\ÛÛ][Ûˆ[™][˜Ú\™H›Ý]ÛZXÎˆ[™BˆËÈX^H™H™[[Ý™YÜˆ\]Y™]ÙY[ˆÜÙHÜ\˜][ÛœË‚ˆØ\Ý›XZÙU^
+\Ëˆ˜[XH[™H\È›ÈÛ™Ù\ˆ]˜Z[X›KˆÚÛÜÙH[›Ý\ˆ™XÚ\Y[ˆ‹ˆØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÝ\XÝ]š]J˜[XR[™R[™Ù™‹˜ÚÛÜÙ\”Ú\™J\šJJNÂˆBˆH[ÙHÂˆØ\Ý›XZÙU^
+\Ëˆ˜[XH[™H\È[˜]˜Z[X›H›Üˆ\ÈXÚØYÙH\KˆÚÛÜÙHH™XÚ\Y[X[X[Kˆ‹ˆØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆÝ\XÝ]š]J˜[XR[™R[™Ù™‹˜ÚÛÜÙ\”Ú\™J\šJJNÂˆBˆH[ÙHÂˆÝ\XÝ]š]J˜[XR[™R[™Ù™‹˜ÚÛÜÙ\”Ú\™J\šJJNÂˆBˆHØ]Ú
+SÑ^Ù\[Ûˆ›Ýš[\”™XYJHÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”XÚØYÙH˜Z[Yš[\™XY[™\ÜÈÚXÚÜÈŠBˆœÙ]Y\ÜØYÙJ›Ýš[\”™XYK™Ù]Y\ÜØYÙJ
+H
+È——•Hš[HØ\È›ÝÚ\™Yˆ[ÝHØ[ˆ^Ü]›Üˆ[œÜXÝ[Û‹]È›Ýš[[ˆ[™\šYšYY›Ø‹ˆŠBˆœÙ]ÜÚ]]™P]ÛŠ•[™\œÝÛÙ‹[
+BˆœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”XÚØYÙHÚ\š[™È˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÜ[•šY]Ñ^Ü
+
+HÂˆYˆ
+šY]ÜÜOH[
+HÂˆØ\Ý›XZÙU^
+\Ë•HÑšY]È\È›Ý™XYH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[[[[H™]È[[
+[[PÕSÓ—ÐÔ‘PUWÑÐÕSQS•
+NÂˆ[[˜YØ]YÛÜžJ[[ÐUQÓÔ–WÓÔSP“JNÂˆ[[œÙ]\Jš[XYÙKÜ™ÈŠNÂˆ[[œ]^˜J[[‘VWÕUKšY]ÜÜš\ÓXXÚ[™TÝYJ
+BˆÈ˜[ÞKXLK[Z[šK\ÝYKœ™Èˆˆ˜[ÞKLÙ]šY]Ëœ™ÈŠNÂˆÝ\XÝ]š]Q›Ü”™\Ý[
+[[‘TUQTÕÕ’QU×ÑVÔ•
+NÂˆB‚ˆš]˜]H›ÚYÜš]UšY]Ñ^Ü
+\šH\šJHÂˆYˆ
+šY]ÜÜOH[
+HÂˆØ\Ý›XZÙU^
+\Ë•HÑšY]È\È›Ý™XYH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆËÈØ\\™HH]™HÓTÈÝ\™˜XÙHÛÈLHÝYH^ÜÈÛÛZ[ˆBˆËÈÝ\YYXXÚ[™HY\Ú™X[X]\šX[\ÜÈ[™™XÙY[™È]\Ë‚ˆËÈ[X›˜Z[™È™[XZ[œÈ[[[Û˜[H™\Ù\™Y›Üˆ›Ý[™Y\˜Ú]™H[™ˆËÈ–SÒÈ™Y™\™[˜Ù\ËÚ\™H]\›Z[š\ÝXÈÔH™[™\š[™È\È™Y™\˜X›K‚ˆšY]ÜÜ˜Ø\\™T™ÊWÌ™ÈOˆÂˆYˆ
+™ÈOH[™Ë›[™ÝOH
+HÂˆØ\Ý›XZÙU^
+\ËŒÑšY]ÈØ\\™H˜Z[Y‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžH
+˜]˜Kš[Ë“Ý]]Ý™X[HÝ]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[“Ý]]Ý™X[J\šJJHÂˆYˆ
+Ý]OH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ“Ý]]\Ý[˜][ÛˆÛÝ[›Ý™HÜ[™YŠNÂˆÝ]Üš]J™ÊNÂˆÝ]™›\Ú
+
+NÂˆØ\Ý›XZÙU^
+\Ë”Ø]™YÑšY]È‘È‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\ËŒÑšY]È^Ü˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJNÂˆB‚ˆš]˜]H›ÚYÜš]Q^Ü
+\šH\šJHÂˆ\Y˜XÝ˜[Y]Ü‹”™\Ü™\ÜH\Y˜XÝ˜[Y]Ü‹˜[Y]J[Ù[ÛXÙKÛÛ™šYÊNÂˆYˆ
+\™\Üš\Õ˜[Y
+
+JHÂˆØ\Ý›XZÙU^
+\Ë‘^Ü›ØÚÙYˆˆ
+È™\ÜœÝ[[X\žJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆYˆ
+ÝYÙY\Y˜XÝOH[ÝYÙY\Y˜XÝœÛÝ\˜ÙQš[HOH[ˆÝYÙY\Y˜XÝœÛÝ\˜ÙQš[K›[™Ý
+
+HOHÝYÙY\Y˜XÝœÚ^™Pž]\ÂˆP\Y˜XÝÝÜ™KœÚLMŠÝYÙY\Y˜XÝœÛÝ\˜ÙQš[JK™\]X[ÒYÛ›Ü™PØ\ÙJÝYÙY\Y˜XÝœÚLMŠBˆP\Y˜XÝÝÜ™Kš\Õ[X›˜Z[
+ÝYÙY\Y˜XÝœÛÝ\˜ÙQš[JJHÂˆÝYÙY\Y˜XÝH\Y˜XÝÝÜ™KœÝYÙJÙ]š[\Ñ\Š
+K[Ù[ÛXÙKÛÛ™šYË\Y˜XÝ\Ü^S˜[YJ
+KšY]ÜÜ[X›˜Z[™ÊLLŠJNÂˆBˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë‘^ÜÝYÚ[™È˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžH
+˜]˜Kš[Ë“Ý]]Ý™X[HÝ]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[“Ý]]Ý™X[J\šJNÂˆ˜]˜Kš[Ë’[œ]Ý™X[H[œ]H™]È˜]˜Kš[Ë‘š[R[œ]Ý™X[JÝYÙY\Y˜XÝœÛÝ\˜ÙQš[JJHÂˆYˆ
+Ý]OH[
+H›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ“Ý]]\Ý[˜][ÛˆÛÝ[›Ý™HÜ[™YŠNÂˆž]V×HY™™\ˆH™]Èž]VÌÌˆ
+ˆLNÂˆ[™XYÂˆÛ™ÈÜš][ˆHÂˆÚ[H
+
+™XYH[œ]œ™XY
+Y™™\ŠJHOHLJHÂˆYˆ
+™XYOH
+HÛÛ[YNÂˆÜš][ˆ
+ÏH™XYÂˆYˆ
+Üš][ˆˆÝYÙY\Y˜XÝœÚ^™Pž]\ÊH›ÝÈ™]ÈSÑ^Ù\[ÛŠ‘^ÜÛÝ\˜ÙHÚ[™ÙYÚ[HÛÜZ[™ÈŠNÂˆÝ]Üš]JY™™\‹™XY
+NÂˆBˆYˆ
+Üš][ˆOHÝYÙY\Y˜XÝœÚ^™Pž]\ÊH›ÝÈ™]ÈSÑ^Ù\[ÛŠ‘^Ü\Ý[˜][Ûˆ™XÙZ]™Y[ˆ[˜ÛÛ\]H\Y˜XÝŠNÂˆÝ]™›\Ú
+
+NÂˆØ\Ý›XZÙU^
+\Ë‘^ÜY™ØÛÙKŒÛYˆ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[ÛˆJHÈØ\Ý›XZÙU^
+\Ë‘^Ü˜Z[Yˆˆ
+ÈK™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÈBˆB‚ˆš]˜]H›ÚYÚÝÔ™XÚ\J
+HÂˆYˆ
+š[\\ÞH˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HXÝ]™Hš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[\Ü[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HÝ\œ™[[Ù[[\Üš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+ÛXÚ[™È˜]ÚÛXÚ[™ÊHÂˆØ\Ý›XZÙU^
+\ËØ[˜Ù[HÝ\œ™[ÛXÙH™Y›Ü™HÚ[™Ú[™ÈH™XÚ\H‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[™X\“^[Ý]šY[ÈH™]È[™X\“^[Ý]
+\ÊNÂˆšY[ËœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆšY[ËœÙ]Y[™ÊŽŽ
+NÂˆY]^^Y\ˆHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ‹ÛÛ™šYË›^Y\’ZYÚ
+K“^Y\ˆZYÚ
+[JHŠNÂˆY]^š\œÝ^Y\ˆHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ‹ÛÛ™šYË™š\œÝ^Y\’ZYÚ
+K‘š\œÝ^Y\ˆZYÚ
+[JHŠNÂˆY]^[™š[HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYËš[™š[
+ˆL
+K’[™š[
+	JHŠNÂˆY]^\š[Y]\œÈHšY[
+[YÙ\‹ÔÝš[™ÊÛÛ™šYËœ\š[Y]\œÊK”\š[Y]\œÈŠNÂˆY]^Ü^Y\œÈHšY[
+[YÙ\‹ÔÝš[™ÊÛÛ™šYËÜ^Y\œÊK•ÜÛÛY^Y\œÈŠNÂˆY]^›ÝÛS^Y\œÈHšY[
+[YÙ\‹ÔÝš[™ÊÛÛ™šYË˜›ÝÛS^Y\œÊK›ÝÛHÛÛY^Y\œÈŠNÂˆY]^›Þž›U[\\˜]\™HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYË››Þž›U[\\˜]\™JK“›Þž›H[\\˜]\™H
+0¬ÊHŠNÂˆY]^š\œÝ^Y\“›Þž›U[\\˜]\™HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYË™š\œÝ^Y\“›Þž›U[\\˜]\™JK‘š\œÝ^Y\ˆ›Þž›H[\\˜]\™H
+0¬ÊHŠNÂˆÝš[™ÈÝ\œ™[Z[]HH˜]]™TÙ][™ÊÛÛ™šYË˜Ý\œ—Ø™YÝ\H‹’Ý]HŠNÂˆ›Ø]\Ü^YY™Y[\\˜]\™HHÙ[XÝY]U[\\˜]\™JÛÛ™šYËÝ\œ™[Z[]K˜[ÙKÛÛ™šYË˜™Y[\\˜]\™JNÂˆ›Ø]\Ü^YYš\œÝ^Y\™Y[\\˜]\™HHÙ[XÝY]U[\\˜]\™JÛÛ™šYËÝ\œ™[Z[]KYKÛÛ™šYË™š\œÝ^Y\™Y[\\˜]\™JNÂˆY]^™Y[\\˜]\™HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹\Ü^YY™Y[\\˜]\™JK”Ù[XÝY]H[\\˜]\™H
+0¬ÊHŠNÂˆY]^š\œÝ^Y\™Y[\\˜]\™HHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹\Ü^YYš\œÝ^Y\™Y[\\˜]\™JK”Ù[XÝY]Hš\œÝ[^Y\ˆ[\\˜]\™H
+0¬ÊHŠNÂˆY]^^\Ú[Û“][\Y\ˆHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ‹ÛÛ™šYË™^\Ú[Û“][\Y\ŠK‘›ÝÈÈ^\Ú[Ûˆ][\Y\ˆŠNÂˆY]^X^›Û[Y]šXÔÜYYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒYˆ‹ÛÛ™šYË›X^›Û[Y]šXÔÜYY
+K“X^›Û[Y]šXÈÜYY
+[p¬ËÜÊHŠNÂˆY]^˜]™[ÜYYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYË˜]™[ÜYY
+K•˜]™[ÜYY
+[KÜÊHŠNÂˆY]^Ý]\•Ø[ÜYYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYË›Ý]\•Ø[ÜYY
+K“Ý]\ˆØ[ÜYY
+[KÜÊHŠNÂˆY]^[›™\•Ø[ÜYYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYËš[›™\•Ø[ÜYY
+K’[›™\ˆØ[ÜYY
+[KÜÊHŠNÂˆY]^[™š[ÜYYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYËš[™š[ÜYY
+K’[™š[ÜYY
+[KÜÊHŠNÂˆY]^[š]X[^Y\”ÜYYHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYËš[š]X[^Y\”ÜYY
+K’[š]X[^Y\ˆÜYY
+[KÜÊHŠNÂˆY]^˜[“Z[ˆHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYË™˜[“Z[”\˜Ù[
+K“Z[š[][H˜[ˆ
+	JHŠNÂˆY]^˜[“X^HšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYË™˜[“X^\˜Ù[
+K“X^[][H˜[ˆ
+	JHŠNÂˆY]^™\ÚÛHšY[
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ‹ÛÛ™šYËœÝ\Ü™\ÚÛYÜ™Y\ÊK”Ý\ÜÝ™\š[™È™\ÚÛ
+YÜ™Y\ÊHŠNÂˆ˜Y[ÑÜ›Ý\Z[]U\\ÈHÚÚXÙQÜ›Ý\
+™]ÈÝš[™Ö×V×^ÂˆÈÛÛÛ]H‹ÛÛÛ]HŸKˆÈ‘[™Ú[™Y\š[™È]H‹‘[™Ú[™Y\š[™È]HŸKˆÈ•^\™YRH]H‹•^\™YRH]HŸKˆÈ”Ý\\•XÚÈ]H‹”Ý\\•XÚÈ]HŸKˆÈ’Ý]H‹’Ý]HŸBˆKÝ\œ™[Z[]JNÂˆ˜Y[ÑÜ›Ý\ÜÝ\™˜XÙT]\›œÈHÚÚXÙQÜ›Ý\
+™]ÈÝš[™Ö×V×^ÂˆÈ“[Û›ÝÛšXÈ‹›[Û›ÝÛšXÛ[™\ÈŸKÈ”™XÝ[[™X\ˆ‹œ™XÝ[[™X\ˆŸKÈÛÛ˜Ù[šXÈ‹˜ÛÛ˜Ù[šXÈŸBˆK˜]]™TÙ][™ÊÛÛ™šYËÜÙš[Ü]\›ˆ‹›[Û›ÝÛšXÛ[™\ÈŠJNÂˆ˜Y[ÑÜ›Ý\›ÝÛTÝ\™˜XÙT]\›œÈHÚÚXÙQÜ›Ý\
+™]ÈÝš[™Ö×V×^ÂˆÈ“[Û›ÝÛšXÈ‹›[Û›ÝÛšXÈŸKÈ”™XÝ[[™X\ˆ‹œ™XÝ[[™X\ˆŸKÈÛÛ˜Ù[šXÈ‹˜ÛÛ˜Ù[šXÈŸBˆK˜]]™TÙ][™ÊÛÛ™šYË˜›ÝÛWÙš[Ü]\›ˆ‹›[Û›ÝÛšXÈŠJNÂˆ˜Y[ÑÜ›Ý\ÙX[TÜÚ][ÛœÈHÚÚXÙQÜ›Ý\
+™]ÈÝš[™Ö×V×^ÂˆÈ[YÛ™Y‹˜[YÛ™YŸKÈ“™X\™\Ý‹›™X\™\ÝŸKÈ”™X\ˆ‹œ™X\ˆŸKÈ”˜[™ÛH‹œ˜[™ÛHŸBˆK˜]]™TÙ][™ÊÛÛ™šYËœÙX[WÜÜÚ][Ûˆ‹˜[YÛ™YŠJNÂˆÚXÚÐ›Þ\›Ûš[™ÈH™]ÈÚXÚÐ›Þ
+\ÊNÂˆ\›Ûš[™ËœÙ]^
+’\›ÛˆÜÝ\™˜XÙ\ÈŠNÂˆ\›Ûš[™ËœÙ]^ÛÛÜŠV
+NÂˆ\›Ûš[™ËœÙ]ÚXÚÙY
+˜]]™P›ÛÛX[ŠÛÛ™šYËš\›Ûš[™È‹˜[ÙJJNÂˆY]^\›Ûš[™Ñ›ÝÈHšY[
+˜]]™TÙ][™ÊÛÛ™šYËš\›Ûš[™×Ù›ÝÜ˜]H‹ŒLŠK’\›Ûš[™È›ÝÈ
+	JHŠNÂˆY]^œšYÙTÜYYHšY[
+˜]]™TÙ][™ÊÛÛ™šYË˜œšYÙWÜÜYY‹ŒÌŠKœšYÙHÜYY
+[KÜÊHŠNÂˆY]^Y˜][XØÙ[\˜][ÛˆHšY[
+˜]]™TÙ][™ÊÛÛ™šYË™Y˜][ØXØÙ[\˜][Ûˆ‹LŠK‘Y˜][XØÙ[\˜][Ûˆ
+[KÜð¬ŠHŠNÂˆÚXÚÐ›ÞÝ\ÜÈH™]ÈÚXÚÐ›Þ
+\ÊNÂˆÝ\ÜËœÙ]^
+‘Ù[™\˜]H]]ÛX]XÈÝ\ÜÈŠNÂˆÝ\ÜËœÙ]^ÛÛÜŠV
+NÂˆÝ\ÜËœÙ]ÚXÚÙY
+ÛÛ™šYËœÝ\ÜÊNÂ‚ˆËÈÙY\HÛÛ[[Ûˆ™YK\Ý\ÜÛÛ›ÛÈ[ˆH™XÚ\HÝ\™˜XÙH[œÝXYˆËÈÙˆ›Ü˜Ú[™ÈÛ™H\Ù\œÈÈY]H›Ú™XÝš[Kˆ\ÙH˜[Y\È˜]™[ˆËÈ›ÝYÚHØ[YH[ÝÛ\ÝY˜]]™K\Ù][™ÜÈ›Ý[™\žH\ÈBˆËÈXÚØYÙY›Ùš[KÛÈY]È™[XZ[ˆÜX›H[™]Y]X›K‚ˆÝš[™ÈÝ\ÜÝ[U˜[YHH˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[ÜÝ[H‹›Ü™Ø[šXÈŠNÂˆ˜Y[ÑÜ›Ý\Ý\ÜÝ[\ÈH™]È˜Y[ÑÜ›Ý\
+\ÊNÂˆËÈHÜ™[˜\žHÛ‹Y]šXÙH˜[˜XÚÈ[Z]ÈÛ›HÛÛœÙ\˜]]™HÜšYˆËÈÝ\ÜËˆÈ›Ý^ÜÙH˜]]™H™YHX™[È\™NˆÙ[XÝ[™ÈÛ™BˆËÈÛÝ[Ü™X]HH\Ù\ˆ^XÝ][ÛˆH˜[˜XÚÈØ[››ÝYY]ˆBˆËÈ˜]]™HZ[ÙY\ÈHÛÝ\˜ÙKX˜XÚÙYÚÚXÙ\Èš\ÚX›KÚ[H]ÂˆËÈ˜[XH™YTÝ\ÜÑ\š]H™[XZ[œÈÙ\\˜][HØ]Y‚ˆÝš[™Ö×V×HÝ\ÜÝ[SÜ[ÛœÈHZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÑSP“QˆÈ™]ÈÝš[™Ö×V×^ÞÈ“Ü™Ø[šXÈ™YH‹›Ü™Ø[šXÈŸKÈ”Û[H™YH‹™YHŸKÈ‘ÜšY‹™ÜšYŸ_Bˆˆ™]ÈÝš[™Ö×V×^ÞÈ‘ÜšY
+Ù™›[™H˜[˜XÚÊH‹™ÜšYŸ_NÂˆ[Ù[XÝYÝ\ÜÝ[HHÂˆ›Üˆ
+[[™^HÈ[™^Ý\ÜÝ[SÜ[ÛœË›[™ÝÈ[™^
+ÊÊHÂˆ˜Y[Ð]ÛˆÜ[ÛˆH™]È˜Y[Ð]ÛŠ\ÊNÂˆÜ[Û‹œÙ]Y
+šY]Ë™Ù[™\˜]UšY]ÒY
+
+JNÂˆÜ[Û‹œÙ]^
+Ý\ÜÝ[SÜ[ÛœÖÚ[™^VÌJNÂˆÜ[Û‹œÙ]^ÛÛÜŠV
+NÂˆÜ[Û‹œÙ]YÊÝ\ÜÝ[SÜ[ÛœÖÚ[™^VÌWJNÂˆÝ\ÜÝ[\Ë˜YšY]ÊÜ[ÛŠNÂˆYˆ
+Ý\ÜÝ[SÜ[ÛœÖÚ[™^VÌWK™\]X[ÒYÛ›Ü™PØ\ÙJÝ\ÜÝ[U˜[YJJHÙ[XÝYÝ\ÜÝ[HH[™^ÂˆBˆÝ\ÜÝ[\Ë˜ÚXÚÊÝ\ÜÝ[\Ë™Ù]Ú[]
+Ù[XÝYÝ\ÜÝ[JK™Ù]Y
+
+JNÂˆY]^Ý\ÜÜ^Y\œÈHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[Ú[\™˜XÙWÛ^Y\œÈ‹ŒˆŠK•Ü[\™˜XÙH^Y\œÈ
+8 $ÌŒ
+HŠNÂˆY]^Ý\Ü›ÝÛS^Y\œÈHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[Ø›ÝÛWÚ[\™˜XÙWÛ^Y\œÈ‹ŒˆŠK›ÝÛH[\™˜XÙH^Y\œÈ
+8 $ÌŒ
+HŠNÂˆY]^Ý\ÜQ\Ý[˜ÙHHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[ÞWÜÜXÚ[™È‹ŒŒÍHŠK”Ý\ÜH\Ý[˜ÙH
+[JHŠNÂˆY]^Ý\ÜÛÛXÝ\Ý[˜ÙHHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[ØÛÛXÝÙ\Ý[˜ÙH‹ŒŒˆŠK•ÜÛÛXÝØ\
+[JHŠNÂˆY]^Ý\Ü›ÝÛPÛÛXÝ\Ý[˜ÙHHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[Ø›ÝÛWØÛÛXÝÙ\Ý[˜ÙH‹ŒŒˆŠK›ÝÛHÛÛXÝØ\
+[JHŠNÂˆY]^Ý\ÜÜXÚ[™ÈHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[ÜÜXÚ[™È‹Œ‹HŠK”Ý\ÜÜXÚ[™È
+[JHŠNÂˆY]^Ý\ÜÜYYHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[ÜÜYY‹ŒMLŠK”Ý\ÜÜYY
+[KÜÊHŠNÂˆY]^Ý\Ü[\™˜XÙTÜYYHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÛX]\šX[Ú[\™˜XÙWÜÜYY‹ŽŠK’[\™˜XÙHÜYY
+[KÜÊHŠNÂˆY]^™YP[™ÛHHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÝ™YWØ[™ÛH‹HŠK•™YHœ˜[˜Ú[™ÛH
+YÜ™Y\ÊHŠNÂˆ›ÛÛX[ˆÜ™Ø[šXÕ™YTÝ[HH›Ü™Ø[šXÈ‹™\]X[ÒYÛ›Ü™PØ\ÙJÝ\ÜÝ[U˜[YJNÂˆÝš[™È™YQ\Ý[˜ÙRÙ^HHÜ™Ø[šXÕ™YTÝ[BˆÈœÝ\ÜÝ™YWØœ˜[˜ÚÙ\Ý[˜ÙWÛÜ™Ø[šXÈˆˆœÝ\ÜÝ™YWØœ˜[˜ÚÙ\Ý[˜ÙHŽÂˆÝš[™È™YQX[Y]\’Ù^HHÜ™Ø[šXÕ™YTÝ[BˆÈœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—ÛÜ™Ø[šXÈˆˆœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\ˆŽÂˆY]^™YQ\Ý[˜ÙHHšY[
+˜]]™TÙ][™ÊÛÛ™šYË™YQ\Ý[˜ÙRÙ^KˆÜ™Ø[šXÕ™YTÝ[HÈŒHˆˆHŠK•™YHœ˜[˜Ú\Ý[˜ÙH
+[JHŠNÂˆY]^™YQX[Y]\ˆHšY[
+˜]]™TÙ][™ÊÛÛ™šYË™YQX[Y]\’Ù^KˆÜ™Ø[šXÕ™YTÝ[HÈŒˆˆˆHŠK•™YHœ˜[˜ÚX[Y]\ˆ
+[JHŠNÂˆX\Ýš[™ËÝš[™Ïˆ™YQÙ[ÛY]žU˜[Y\ÈH™]È\ÚX\Š
+NÂˆÝš[™Ö×H\Ü^YY™YTÝ[HHÜÝ\ÜÝ[U˜[Y_NÂˆ™YQÙ[ÛY]žU˜[Y\Ëœ]
+Ý\ÜÝ[U˜[YH
+ÈŽ™\Ý[˜ÙH‹™YQ\Ý[˜ÙK™Ù]^
+
+KÔÝš[™Ê
+JNÂˆ™YQÙ[ÛY]žU˜[Y\Ëœ]
+Ý\ÜÝ[U˜[YH
+ÈŽ™X[Y]\ˆ‹™YQX[Y]\‹™Ù]^
+
+KÔÝš[™Ê
+JNÂˆÝ\ÜÝ[\ËœÙ]ÛÚXÚÙYÚ[™ÙS\Ý[™\Š
+Ü›Ý\ÚXÚÙYY
+HOˆÂˆ˜Y[Ð]ÛˆÙ[XÝYHÜ›Ý\™š[™šY]ÐžRY
+ÚXÚÙYY
+NÂˆYˆ
+Ù[XÝYOH[
+H™]\›ŽÂˆÝš[™È™^Ý[HHÝš[™Ë˜[YSÙŠÙ[XÝY™Ù]YÊ
+JNÂˆÝš[™È™]š[Ý\ÔÝ[HH\Ü^YY™YTÝ[VÌNÂˆYˆ
+™^Ý[K™\]X[Ê™]š[Ý\ÔÝ[JJH™]\›ŽÂˆ™YQÙ[ÛY]žU˜[Y\Ëœ]
+™]š[Ý\ÔÝ[H
+ÈŽ™\Ý[˜ÙH‹™YQ\Ý[˜ÙK™Ù]^
+
+KÔÝš[™Ê
+JNÂˆ™YQÙ[ÛY]žU˜[Y\Ëœ]
+™]š[Ý\ÔÝ[H
+ÈŽ™X[Y]\ˆ‹™YQX[Y]\‹™Ù]^
+
+KÔÝš[™Ê
+JNÂˆ›ÛÛX[ˆ™^Ü™Ø[šXÈH›Ü™Ø[šXÈ‹™\]X[ÒYÛ›Ü™PØ\ÙJ™^Ý[JNÂˆÝš[™È™^\Ý[˜ÙRÙ^HH™^Ü™Ø[šXÂˆÈœÝ\ÜÝ™YWØœ˜[˜ÚÙ\Ý[˜ÙWÛÜ™Ø[šXÈˆˆœÝ\ÜÝ™YWØœ˜[˜ÚÙ\Ý[˜ÙHŽÂˆÝš[™È™^X[Y]\’Ù^HH™^Ü™Ø[šXÂˆÈœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—ÛÜ™Ø[šXÈˆˆœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\ˆŽÂˆ™YQ\Ý[˜ÙKœÙ]^
+™YQÙ[ÛY]žU˜[Y\Ë™Ù]Ü‘Y˜][
+™^Ý[H
+ÈŽ™\Ý[˜ÙH‹ˆ˜]]™TÙ][™ÊÛÛ™šYË™^\Ý[˜ÙRÙ^K™^Ü™Ø[šXÈÈŒHˆˆHŠJJNÂˆ™YQX[Y]\‹œÙ]^
+™YQÙ[ÛY]žU˜[Y\Ë™Ù]Ü‘Y˜][
+™^Ý[H
+ÈŽ™X[Y]\ˆ‹ˆ˜]]™TÙ][™ÊÛÛ™šYË™^X[Y]\’Ù^K™^Ü™Ø[šXÈÈŒˆˆˆHŠJJNÂˆ\Ü^YY™YTÝ[VÌHH™^Ý[NÂˆJNÂˆY]^™YQX[Y]\[™ÛHHšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—Ø[™ÛH‹HŠKœ˜[˜ÚXÚÙ[š[™È[™ÛH
+YÜ™Y\ÊHŠNÂˆY]^™YUØ[ÛÝ[HšY[
+˜]]™TÙ][™ÊÛÛ™šYËœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—ÙÝX›WÝØ[‹ŒŠK•™YHØ[[ÙH
+8 $Í
+HŠNÂˆšY[Ë˜YšY]ÊÙXÝ[Û“X™[
+”UPSUHŠJNÂˆšY[Ë˜YšY]Ê^Y\ŠNÈšY[Ë˜YšY]Êš\œÝ^Y\ŠNÈšY[Ë˜YšY]Ê[™š[
+NÂˆšY[Ë˜YšY]Ê\š[Y]\œÊNÈšY[Ë˜YšY]ÊÜ^Y\œÊNÈšY[Ë˜YšY]Ê›ÝÛS^Y\œÊNÂˆšY[Ë˜YšY]ÊÙXÝ[Û“X™[
+“PUT’PSŠJNÂˆ]ÛˆX]\šX[ØÛÜHHX[ÙÐ]ÛŠ”™]šY]ÈX]\šX[™YY›Ý]H	ˆÜÛÛš]‹ˆOˆÚÝÓX]\šX[ØÛÜT™]šY]Ê
+JNÂˆX]\šX[ØÛÜKœÙ]ÛÛ[\ØÜš\[ÛŠ”™]šY]ÈX]\šX[ÛÛ\]Xš[]K™YY›Ý]H[™ÜÛÛš]›ÜˆHXÝ]™H[›š[™Èš[\ˆŠNÂˆšY[Ë˜YšY]ÊX]\šX[ØÛÜK™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ŠJJNÂˆ^šY]ÈX]\šX[ØÛÜS›ÝHHX™[
+•HXÝ]™H™XÚ\HÝ^\È›Ùš[K[ØÚÙYˆ\È™]šY]È^Z[œÈÛÛ\]X›HX]\šX[[™ÜÛÛ›Ü›\ÎÈ]™]™\ˆÚ[™Ù\È[\\˜]\™\ÈÜˆ]X[YšY\ÈHš[\ˆÙ[™ˆ‹L‹UUQ
+NÂˆX]\šX[ØÛÜS›ÝKœÙ]Y[™Ê
+
+K
+
+JNÂˆX]\šX[ØÛÜS›ÝKœÙ][™TÜXÚ[™Ê
+ŠKYŠNÂˆšY[Ë˜YšY]ÊX]\šX[ØÛÜS›ÝJNÂˆšY[Ë˜YšY]Ê›Þž›U[\\˜]\™JNÈšY[Ë˜YšY]Êš\œÝ^Y\“›Þž›U[\\˜]\™JNÂˆšY[Ë˜YšY]ÊX™[
+•RSUH‹LÓÓ
+JNÈšY[Ë˜YšY]ÊZ[]U\\ÊNÂˆšY[Ë˜YšY]ÊX™[
+•HÙ[XÝYÝ\™˜XÙH[™]È[\\˜]\™\È\™H\ÙY›Üˆ\È›Ø‹ˆÛÛ™š\›HH\ÚXØ[]H™Y›Ü™HÙ[™[™Ëˆ‹L‹UUQ
+JNÂˆšY[Ë˜YšY]Ê™Y[\\˜]\™JNÈšY[Ë˜YšY]Êš\œÝ^Y\™Y[\\˜]\™JNÂˆšY[Ë˜YšY]Ê^\Ú[Û“][\Y\ŠNÈšY[Ë˜YšY]ÊX^›Û[Y]šXÔÜYY
+NÂˆšY[Ë˜YšY]ÊÙXÝ[Û“X™[
+“SÕSÓˆ	ˆÓÓÓS‘ÈŠJNÂˆšY[Ë˜YšY]Ê˜]™[ÜYY
+NÈšY[Ë˜YšY]ÊÝ]\•Ø[ÜYY
+NÈšY[Ë˜YšY]Ê[›™\•Ø[ÜYY
+NÂˆšY[Ë˜YšY]Ê[™š[ÜYY
+NÈšY[Ë˜YšY]Ê[š]X[^Y\”ÜYY
+NÈšY[Ë˜YšY]Ê˜[“Z[ŠNÈšY[Ë˜YšY]Ê˜[“X^
+NÂˆšY[Ë˜YšY]ÊÙXÝ[Û“X™[
+”ÕT‘PÑTÈ	ˆUŠJNÂˆšY[Ë˜YšY]ÊX™[
+•ÔÕT‘PÑH‹LÓÓ
+JNÈšY[Ë˜YšY]ÊÜÝ\™˜XÙT]\›œÊNÂˆšY[Ë˜YšY]ÊX™[
+“ÕÓHÕT‘PÑH‹LÓÓ
+JNÈšY[Ë˜YšY]Ê›ÝÛTÝ\™˜XÙT]\›œÊNÂˆšY[Ë˜YšY]ÊX™[
+”ÑPSH‹LÓÓ
+JNÈšY[Ë˜YšY]ÊÙX[TÜÚ][ÛœÊNÂˆšY[Ë˜YšY]Ê\›Ûš[™ÊNÈšY[Ë˜YšY]Ê\›Ûš[™Ñ›ÝÊNÈšY[Ë˜YšY]ÊœšYÙTÜYY
+NÈšY[Ë˜YšY]ÊY˜][XØÙ[\˜][ÛŠNÂˆšY[Ë˜YšY]ÊÙXÝ[Û“X™[
+”ÕTÔ•ÈŠJNÂˆšY[Ë˜YšY]ÊÝ\ÜÊNÈšY[Ë˜YšY]Ê™\ÚÛ
+NÂˆšY[Ë˜YšY]ÊX™[
+”ÕSH‹LÓÓ
+JNÂˆšY[Ë˜YšY]ÊÝ\ÜÝ[\ÊNÂˆšY[Ë˜YšY]ÊÝ\ÜÜ^Y\œÊNÈšY[Ë˜YšY]ÊÝ\Ü›ÝÛS^Y\œÊNÂˆšY[Ë˜YšY]ÊÝ\ÜQ\Ý[˜ÙJNÈšY[Ë˜YšY]ÊÝ\ÜÛÛXÝ\Ý[˜ÙJNÈšY[Ë˜YšY]ÊÝ\Ü›ÝÛPÛÛXÝ\Ý[˜ÙJNÂˆšY[Ë˜YšY]ÊÝ\ÜÜXÚ[™ÊNÈšY[Ë˜YšY]ÊÝ\ÜÜYY
+NÈšY[Ë˜YšY]ÊÝ\Ü[\™˜XÙTÜYY
+NÂˆšY[Ë˜YšY]ÊX™[
+•‘QHÑSÓQU–H‹LÓÓ
+JNÂˆšY[Ë˜YšY]Ê™YP[™ÛJNÈšY[Ë˜YšY]Ê™YQ\Ý[˜ÙJNÈšY[Ë˜YšY]Ê™YQX[Y]\ŠNÂˆšY[Ë˜YšY]Ê™YQX[Y]\[™ÛJNÈšY[Ë˜YšY]Ê™YUØ[ÛÝ[
+NÂˆÝš[™È›Ùš[S›ÝHH
+›Ùš[HOH[ÈLHZ[šH0­È[H›Þž›H0­ÈHˆˆ›Ùš[K›˜[YJBˆ
+È—•\Y˜[Y\È\™HØYYœ›ÛHH[›™Y›Ùš[HÛ˜\ÚÝˆ˜]]™H[™Ú[™H\š]H\ÈÝ[HØÝ[Y[YØ]KˆŽÂˆYˆ
+Ý\ÜËš\ÐÚXÚÙY
+
+JHÂˆ›Ùš[S›ÝH
+ÏHZ[ÛÛ™šYË“UU‘WÑS‘ÒS‘WÑSP“QˆÈ—“˜]]™HÝ\ÜÝ]]\Ù\ÈH[YÜ˜]YÜ˜ØH™YTÝ\ÜÑ]È˜[XH™YJ]]ÊH\š]H\ÈÝ[›Ý]˜Z[X›H›Üˆ›ÙXÝ[Ûˆš[[™Ëˆ‚ˆˆ—“Ù™›[™H˜[˜XÚÈ\Ù\ÈÛÛœÙ\˜]]™HÜšYÝ\ÜÈ›ÜˆÚ[\HÝ™\š[™ÜÎÈ˜]]™H[™Ú[™HÝ\Ü™[XZ[œÈ™\]Z\™Y›Üˆ›ÙXÝ[Ûˆš[[™ËˆŽÂˆBˆYˆ
+›Ùš[HOH[\›Ùš[K™\šYšYY
+H›Ùš[S›ÝH
+ÏH—•\È›Ùš[H\È›Ý\›Ý™Y›Üˆ\ÚXØ[š[[™ËˆŽÂˆ^šY]È›ÝHHX™[
+›Ùš[S›ÝKLËUUQ
+NÈ›ÝKœÙ]Y[™ÊN
+NÈšY[Ë˜YšY]Ê›ÝJNÂˆØÜ›ÛšY]ÈØÜ›ÛH™]ÈØÜ›ÛšY]Ê\ÊNÂˆØÜ›ÛœÙ]š[šY]ÜÜ
+YJNÂˆØÜ›Û˜YšY]ÊšY[ÊNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J”š[™XÚ\HŠKœÙ]šY]ÊØÜ›Û
+KœÙ]™YØ]]™P]ÛŠØ[˜Ù[‹[
+KœÙ]ÜÚ]]™P]ÛŠ\H‹
+ÊHOˆÂˆžHÂˆ›Ø]™^^Y\ˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+^Y\‹™Ù]^
+
+KÔÝš[™Ê
+JKŒ‹ŠNÂˆ›Ø]™^š\œÝ^Y\ˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+š\œÝ^Y\‹™Ù]^
+
+KÔÝš[™Ê
+JKŒ‹ŠNÂˆ›Ø]™^[™š[HÛ[\
+›Ø]œ\œÙQ›Ø]
+[™š[™Ù]^
+
+KÔÝš[™Ê
+JHÈL‹‹YŠNÂˆ[™^\š[Y]\œÈHX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+\š[Y]\œË™Ù]^
+
+KÔÝš[™Ê
+JKY‹ŒŠJNÂˆ[™^Ü^Y\œÈHX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+Ü^Y\œË™Ù]^
+
+KÔÝš[™Ê
+JK‹LŠJNÂˆ[™^›ÝÛS^Y\œÈHX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+›ÝÛS^Y\œË™Ù]^
+
+KÔÝš[™Ê
+JK‹LŠJNÂˆ›Ø]™^›Þž›U[\\˜]\™HHÛ[\
+›Ø]œ\œÙQ›Ø]
+›Þž›U[\\˜]\™K™Ù]^
+
+KÔÝš[™Ê
+JK‹ŠNÂˆ›Ø]™^š\œÝ^Y\“›Þž›U[\\˜]\™HHÛ[\
+›Ø]œ\œÙQ›Ø]
+š\œÝ^Y\“›Þž›U[\\˜]\™K™Ù]^
+
+KÔÝš[™Ê
+JK‹ŠNÂˆ›Ø]™^™Y[\\˜]\™HHÛ[\
+›Ø]œ\œÙQ›Ø]
+™Y[\\˜]\™K™Ù]^
+
+KÔÝš[™Ê
+JK‹MLŠNÂˆ›Ø]™^š\œÝ^Y\™Y[\\˜]\™HHÛ[\
+›Ø]œ\œÙQ›Ø]
+š\œÝ^Y\™Y[\\˜]\™K™Ù]^
+
+KÔÝš[™Ê
+JK‹MLŠNÂˆÝš[™È™^Z[]HHÙ[XÝYÚÚXÙJZ[]U\\Ë’Ý]HŠNÂˆ›Ø]™^^\Ú[Û“][\Y\ˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+^\Ú[Û“][\Y\‹™Ù]^
+
+KÔÝš[™Ê
+JKY‹™ŠNÂˆ›Ø]™^X^›Û[Y]šXÔÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+X^›Û[Y]šXÔÜYY™Ù]^
+
+KÔÝš[™Ê
+JKŒY‹ŒŠNÂˆ›Ø]™^˜]™[ÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+˜]™[ÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹—ÌŠNÂˆ›Ø]™^Ý]\•Ø[ÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý]\•Ø[ÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^[›™\•Ø[ÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+[›™\•Ø[ÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^[™š[ÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+[™š[ÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^[š]X[^Y\”ÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+[š]X[^Y\”ÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^˜[“Z[ˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+˜[“Z[‹™Ù]^
+
+KÔÝš[™Ê
+JK‹LŠNÂˆ›Ø]™^˜[“X^HX]›X^
+™^˜[“Z[‹Û[\
+›Ø]œ\œÙQ›Ø]
+˜[“X^™Ù]^
+
+KÔÝš[™Ê
+JK‹LŠJNÂˆ›Ø]™^™\ÚÛHÛ[\
+›Ø]œ\œÙQ›Ø]
+™\ÚÛ™Ù]^
+
+KÔÝš[™Ê
+JK‹LŠNÂˆ›Ø]™^\›Ûš[™Ñ›ÝÈHÛ[\
+›Ø]œ\œÙQ›Ø]
+\›Ûš[™Ñ›ÝË™Ù]^
+
+KÔÝš[™Ê
+Kœ™\XÙJ‰H‹ˆŠKš[J
+JK‹LŠNÂˆ›Ø]™^œšYÙTÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+œšYÙTÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^Y˜][XØÙ[\˜][ÛˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+Y˜][XØÙ[\˜][Û‹™Ù]^
+
+KÔÝš[™Ê
+JKY‹LÌŠNÂˆ[™^Ý\ÜÜ^Y\œÈHX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+Ý\ÜÜ^Y\œË™Ù]^
+
+KÔÝš[™Ê
+JK‹ŒŠJNÂˆ[™^Ý\Ü›ÝÛS^Y\œÈHX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+Ý\Ü›ÝÛS^Y\œË™Ù]^
+
+KÔÝš[™Ê
+JK‹ŒŠJNÂˆ›Ø]™^Ý\ÜQ\Ý[˜ÙHHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý\ÜQ\Ý[˜ÙK™Ù]^
+
+KÔÝš[™Ê
+JKŒY‹YŠNÂˆ›Ø]™^Ý\ÜÛÛXÝ\Ý[˜ÙHHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý\ÜÛÛXÝ\Ý[˜ÙK™Ù]^
+
+KÔÝš[™Ê
+JK‹™ŠNÂˆ›Ø]™^Ý\Ü›ÝÛPÛÛXÝ\Ý[˜ÙHHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý\Ü›ÝÛPÛÛXÝ\Ý[˜ÙK™Ù]^
+
+KÔÝš[™Ê
+JK‹™ŠNÂˆ›Ø]™^Ý\ÜÜXÚ[™ÈHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý\ÜÜXÚ[™Ë™Ù]^
+
+KÔÝš[™Ê
+JKY‹LŠNÂˆ›Ø]™^Ý\ÜÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý\ÜÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^Ý\Ü[\™˜XÙTÜYYHÛ[\
+›Ø]œ\œÙQ›Ø]
+Ý\Ü[\™˜XÙTÜYY™Ù]^
+
+KÔÝš[™Ê
+JKY‹WÌŠNÂˆ›Ø]™^™YP[™ÛHHÛ[\
+›Ø]œ\œÙQ›Ø]
+™YP[™ÛK™Ù]^
+
+KÔÝš[™Ê
+JK‹YŠNÂˆ›Ø]™^™YQ\Ý[˜ÙHHÛ[\
+›Ø]œ\œÙQ›Ø]
+™YQ\Ý[˜ÙK™Ù]^
+
+KÔÝš[™Ê
+JKŒY‹LŠNÂˆ›Ø]™^™YQX[Y]\ˆHÛ[\
+›Ø]œ\œÙQ›Ø]
+™YQX[Y]\‹™Ù]^
+
+KÔÝš[™Ê
+JKY‹LŠNÂˆ›Ø]™^™YQX[Y]\[™ÛHHÛ[\
+›Ø]œ\œÙQ›Ø]
+™YQX[Y]\[™ÛK™Ù]^
+
+KÔÝš[™Ê
+JK‹YŠNÂˆ[™^™YUØ[ÛÝ[HX]œ›Ý[™
+Û[\
+›Ø]œ\œÙQ›Ø]
+™YUØ[ÛÝ[™Ù]^
+
+KÔÝš[™Ê
+JK‹ŠJNÂˆÛÛ™šYË›^Y\’ZYÚH™^^Y\ŽÂˆÛÛ™šYË™š\œÝ^Y\’ZYÚH™^š\œÝ^Y\ŽÂˆÛÛ™šYËš[™š[H™^[™š[ÂˆÛÛ™šYËœ\š[Y]\œÈH™^\š[Y]\œÎÂˆÛÛ™šYËÜ^Y\œÈH™^Ü^Y\œÎÂˆÛÛ™šYË˜›ÝÛS^Y\œÈH™^›ÝÛS^Y\œÎÂˆÛÛ™šYË››Þž›U[\\˜]\™HH™^›Þž›U[\\˜]\™NÂˆÛÛ™šYË™š\œÝ^Y\“›Þž›U[\\˜]\™HH™^š\œÝ^Y\“›Þž›U[\\˜]\™NÂˆÛÛ™šYË˜™Y[\\˜]\™HH™^™Y[\\˜]\™NÂˆÛÛ™šYË™š\œÝ^Y\™Y[\\˜]\™HH™^š\œÝ^Y\™Y[\\˜]\™NÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+˜Ý\œ—Ø™YÝ\H‹™^Z[]JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+]U[\\˜]\™RÙ^J™^Z[]K˜[ÙJK[X™\Š™^™Y[\\˜]\™JJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+]U[\\˜]\™RÙ^J™^Z[]KYJK[X™\Š™^š\œÝ^Y\™Y[\\˜]\™JJNÂˆÛÛ™šYË™^\Ú[Û“][\Y\ˆH™^^\Ú[Û“][\Y\ŽÂˆÛÛ™šYË›X^›Û[Y]šXÔÜYYH™^X^›Û[Y]šXÔÜYYÂˆÛÛ™šYË˜]™[ÜYYH™^˜]™[ÜYYÂˆÛÛ™šYË›Ý]\•Ø[ÜYYH™^Ý]\•Ø[ÜYYÂˆÛÛ™šYËš[›™\•Ø[ÜYYH™^[›™\•Ø[ÜYYÂˆÛÛ™šYËš[™š[ÜYYH™^[™š[ÜYYÂˆÛÛ™šYËš[š]X[^Y\”ÜYYH™^[š]X[^Y\”ÜYYÂˆÛÛ™šYË™˜[“Z[”\˜Ù[H™^˜[“Z[ŽÂˆÛÛ™šYË™˜[“X^\˜Ù[H™^˜[“X^ÂˆÛÛ™šYËœÝ\ÜÈHÝ\ÜËš\ÐÚXÚÙY
+
+NÂˆÛÛ™šYËœÝ\Ü™\ÚÛYÜ™Y\ÈH™^™\ÚÛÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+ÜÙš[Ü]\›ˆ‹Ù[XÝYÚÚXÙJÜÝ\™˜XÙT]\›œË›[Û›ÝÛšXÛ[™\ÈŠJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+˜›ÝÛWÙš[Ü]\›ˆ‹Ù[XÝYÚÚXÙJ›ÝÛTÝ\™˜XÙT]\›œË›[Û›ÝÛšXÈŠJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÙX[WÜÜÚ][Ûˆ‹Ù[XÝYÚÚXÙJÙX[TÜÚ][ÛœË˜[YÛ™YŠJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+š\›Ûš[™È‹\›Ûš[™Ëš\ÐÚXÚÙY
+
+HÈŒHˆˆŒŠNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+š\›Ûš[™×Ù›ÝÜ˜]H‹[X™\Š™^\›Ûš[™Ñ›ÝÊH
+È‰HŠNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+˜œšYÙWÜÜYY‹[X™\Š™^œšYÙTÜYY
+JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+™Y˜][ØXØÙ[\˜][Ûˆ‹[X™\Š™^Y˜][XØÙ[\˜][ÛŠJNÂˆÝš[™ÈÙ[XÝY™YTÝ[HHÝš[™Ë˜[YSÙŠˆÝ\ÜÝ[\Ë™š[™šY]ÐžRY
+Ý\ÜÝ[\Ë™Ù]ÚXÚÙY˜Y[Ð]Û’Y
+
+JK™Ù]YÊ
+JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[ÜÝ[H‹Ù[XÝY™YTÝ[JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[Ú[\™˜XÙWÛ^Y\œÈ‹[YÙ\‹ÔÝš[™Ê™^Ý\ÜÜ^Y\œÊJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[Ø›ÝÛWÚ[\™˜XÙWÛ^Y\œÈ‹[YÙ\‹ÔÝš[™Ê™^Ý\Ü›ÝÛS^Y\œÊJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[ÞWÜÜXÚ[™È‹[X™\Š™^Ý\ÜQ\Ý[˜ÙJJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[ØÛÛXÝÙ\Ý[˜ÙH‹[X™\Š™^Ý\ÜÛÛXÝ\Ý[˜ÙJJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[Ø›ÝÛWØÛÛXÝÙ\Ý[˜ÙH‹[X™\Š™^Ý\Ü›ÝÛPÛÛXÝ\Ý[˜ÙJJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[ÜÜXÚ[™È‹[X™\Š™^Ý\ÜÜXÚ[™ÊJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[ÜÜYY‹[X™\Š™^Ý\ÜÜYY
+JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÛX]\šX[Ú[\™˜XÙWÜÜYY‹[X™\Š™^Ý\Ü[\™˜XÙTÜYY
+JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÝ™YWØ[™ÛH‹[X™\Š™^™YP[™ÛJJNÂˆ›ÛÛX[ˆÙ[XÝYÜ™Ø[šXÕ™YHH›Ü™Ø[šXÈ‹™\]X[ÒYÛ›Ü™PØ\ÙJÙ[XÝY™YTÝ[JNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+Ù[XÝYÜ™Ø[šXÕ™YBˆÈœÝ\ÜÝ™YWØœ˜[˜ÚÙ\Ý[˜ÙWÛÜ™Ø[šXÈˆˆœÝ\ÜÝ™YWØœ˜[˜ÚÙ\Ý[˜ÙH‹ˆ[X™\Š™^™YQ\Ý[˜ÙJJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+Ù[XÝYÜ™Ø[šXÕ™YBˆÈœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—ÛÜ™Ø[šXÈˆˆœÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\ˆ‹ˆ[X™\Š™^™YQX[Y]\ŠJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—Ø[™ÛH‹[X™\Š™^™YQX[Y]\[™ÛJJNÂˆÛÛ™šYË›˜]]™TÙ][™ÜËœ]
+œÝ\ÜÝ™YWØœ˜[˜ÚÙX[Y]\—ÙÝX›WÝØ[‹[YÙ\‹ÔÝš[™Ê™^™YUØ[ÛÝ[
+JNÂˆ›Ú™XÝÝÜ™KœØ]™T™XÚ\JÛÛ™šYÊNÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆšY]ÜÜœÙ]™\Ý[
+[
+NÂˆ\]T™XÚ\SX\šÙ\œÊ
+NÂˆ]Z[ËœÙ]^
+”™XÚ\H\YY0­Èˆ
+È›Ùš[Tš[\“X™[
+
+H
+Èˆ0­Èˆ
+ÈÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ[H^Y\ˆ0­È	KŒ‰IH[™š[0­È	YØ[È0­ÈÝ\ÜÈ	\È‹ÛÛ™šYË›^Y\’ZYÚÛÛ™šYËš[™š[
+ˆLÛÛ™šYËœ\š[Y]\œËÛÛ™šYËœÝ\ÜÈÈ›Ûˆˆˆ›Ù™ˆŠJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[ÛˆJHÈØ\Ý›XZÙU^
+\Ë”™XÚ\H˜[Y\ÈÙ\™H›Ý˜[Y‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÈBˆJKœÚÝÊ
+NÂˆB‚ˆÊŠ‚ˆ
+ˆÙY\˜[XK\X›\ÚYX]\šX[ÜÜÛÛØ\Xš[]H™\ÚYHHXÝX[™XÚ\Bˆ
+ˆXÚ\Ú[Û‹ˆ\È[X™\˜][H\È›ÝHX]\šX[Ù[XÝÜŽˆÚÛÜÚ[™ÈUÂˆ
+ˆÚ[H™]Z[š[™ÈHH›Ùš[HÛÝ[™H[ˆ[œØY™KZ\ÛXY[™ÈÚÜÝ]‚ˆ
+‹Âˆš]˜]H›ÚYÚÝÓX]\šX[ØÛÜT™]šY]Ê
+HÂˆYˆ
+›Ùš[HOH[
+HÂˆØ\Ý›XZÙU^
+\Ë“ØYH[›š[™È›Ùš[H™Y›Ü™H™]šY]Ú[™ÈX]\šX[È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆš[\Ø\Xš[]PØ][ÙÈØ][ÙÈHš[\Ø\Xš[]PØ][ÙË›ØY
+Ù]\ÜÙ]Ê
+JNÂˆš[\Ø\Xš[]PØ][ÙË”š[\ˆš[\ˆHØ][ÙË™›Ü”›Ùš[J›Ùš[JNÂˆYˆ
+š[\ˆOH[
+HÂˆØ\Ý›XZÙU^
+\Ë“›È›Ý[™YX]\šX[Ø][ÙÈ\È]˜Z[X›H›Üˆ\È›Ùš[H‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[™X\“^[Ý]YÙHH™]È[™X\“^[Ý]
+\ÊNÂˆYÙKœÙ]ÜšY[][ÛŠ[™X\“^[Ý]•‘T•PÐS
+NÂˆYÙKœÙ]Y[™Ê
+ŒŠK
+
+K
+ŒŠK
+
+JNÂˆ^šY]ÈXÝ]™HHX™[
+PÕU‘H“Ñ’SWˆˆ
+È›Ùš[K›˜[YH
+È—ˆˆ
+È›Ùš[K™š[[Y[˜[YBˆ
+Èˆ0­Èˆ
+È›Ùš[K›X]\šX[
+Èˆ0­Èˆ
+ÈÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒ™ˆ[H‹›Ùš[K™š[[Y[X[Y]\ŠKMV
+NÂˆXÝ]™KœÙ][™TÜXÚ[™Ê
+ŠKYŠNÂˆYÙK˜YšY]ÊXÝ]™JNÂˆ^šY]È›Ý[™\žHHX™[
+ÛÛ\]Xš[]H\È›ÝH™XÚ\KˆÈÚ[™ÙHš[[Y[Ù[XÝÜˆ[\ÜHÛÝ\˜ÙKX˜XÚÙYX]\šX[›Ùš[K[ˆ™K\ÛXÙH[™™]šY]Ëˆ\™XÝÙ[™™[XZ[œÈˆ
+Èš[\‹™\™XÝÙ[™Ý]H
+È‹ˆ‹L‹‘Q
+NÂˆ›Ý[™\žKœÙ]Y[™Ê
+L
+K
+ŠJNÈ›Ý[™\žKœÙ][™TÜXÚ[™Ê
+ŠKYŠNÂˆYÙK˜YšY]Ê›Ý[™\žJNÂˆ]Ûˆ™XÚ\P]ÛˆHX[ÙÐ]ÛŠÚÛÜÙHX]\šX[™XÚ\H‹ˆOˆÚÝÓX]\šX[™XÚ\TXÚÙ\Š
+JNÂˆ[™X\“^[Ý]“^[Ý]\˜[\È™XÚ\SH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+
+JNÂˆ™XÚ\SÜX\™Ú[ˆH
+ŠNÈYÙK˜YšY]Ê™XÚ\P]Û‹™XÚ\S
+NÂˆ]Ûˆ[\Ü]ÛˆHX[ÙÐ]ÛŠ’[\ÜH™]šY]ÙY˜[XH™\Ù]‹ˆOˆÜ[˜[XT›Ùš[J
+JNÂˆ[™X\“^[Ý]“^[Ý]\˜[\È[\ÜH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+
+JNÂˆ[\ÜÜX\™Ú[ˆH
+ŠNÈYÙK˜YšY]Ê[\Ü]Û‹[\Ü
+NÂˆ^šY]ÈX]\šX[ÈHX™[
+“PUT’PSÐÓÔH‹LÓÓ
+NÈX]\šX[ËœÙ]]\”ÜXÚ[™ÊŒŠNÂˆX]\šX[ËœÙ]Y[™Ê
+
+K
+NÈYÙK˜YšY]ÊX]\šX[ÊNÂˆ›Üˆ
+š[\Ø\Xš[]PØ][ÙË“X]\šX[X]\šX[ˆš[\‹›X]\šX[ÊHÂˆ^šY]È›ÝÈHX™[
+X]\šX[›˜[YH
+È—˜[XHš[\Žˆˆ
+ÈX]\šX[˜˜[XTÝ]\Âˆ
+È
+X]\šX[˜[\Ó]TÝ]\Ëš\Ñ[\J
+HÈˆˆˆˆ0­ÈSTÈ]Nˆˆ
+ÈX]\šX[˜[\Ó]TÝ]\ÊBˆ
+Èˆ0­È[ÞHÙ[™ˆˆ
+ÈX]\šX[™\™XÝÙ[™Ý]H
+È—ˆˆ
+ÈX]\šX[››ÝKL‹V
+NÂˆ›ÝËœÙ]Y[™Ê
+ÊK
+NÈ›ÝËœÙ][™TÜXÚ[™Ê
+ŠKYŠNÈYÙK˜YšY]Ê›ÝÊNÂˆBˆÝš[™È[\Ó]TÛÝ\˜ÙU\›Hš[\‹›X]\šX[Ëš\Ñ[\J
+HÈˆˆˆš[\‹›X]\šX[Ë™Ù]
+
+K˜[\Ó]TÛÝ\˜ÙU\›ÂˆYˆ
+X[\Ó]TÛÝ\˜ÙU\›š\Ñ[\J
+JHÂˆš[˜[Ýš[™ÈÛÝ\˜ÙU\›H[\Ó]TÛÝ\˜ÙU\›Âˆ]ÛˆÛÝ\˜ÙP]ÛˆHX[ÙÐ]ÛŠ“Ü[ˆÙ™šXÚX[STÈ]HX]\šX[\Ý‹ˆOˆÜ[Ø\Xš[]TÛÝ\˜ÙJÛÝ\˜ÙU\›
+JNÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈÛÝ\˜ÙSH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+ŠJNÈÛÝ\˜ÙSÜX\™Ú[ˆH
+ŠNÈYÙK˜YšY]ÊÛÝ\˜ÙP]Û‹ÛÝ\˜ÙS
+NÂˆBˆ^šY]È›Ý]\ÈHX™[
+‘‘QQ“ÕUTÈ‹LÓÓ
+NÈ›Ý]\ËœÙ]]\”ÜXÚ[™ÊŒŠNÂˆ›Ý]\ËœÙ]Y[™Ê
+LŠK
+NÈYÙK˜YšY]Ê›Ý]\ÊNÂˆ›Üˆ
+š[\Ø\Xš[]PØ][ÙË‘™YY›Ý]H›Ý]Hˆš[\‹™™YY›Ý]\ÊHÂˆ^šY]È›ÝÈHX™[
+›Ý]K]H
+Èˆ0­Èˆ
+È›Ý]KœÝ]H
+È—ˆˆ
+È›Ý]K››ÝKL‹V
+NÂˆ›ÝËœÙ]Y[™Ê
+ÊK
+NÈ›ÝËœÙ][™TÜXÚ[™Ê
+ŠKYŠNÈYÙK˜YšY]Ê›ÝÊNÂˆBˆ^šY]È›Ü›\ÈHX™[
+”ÔÓÓ“Ô“H	ˆ’U‹LÓÓ
+NÈ›Ü›\ËœÙ]]\”ÜXÚ[™ÊŒŠNÂˆ›Ü›\ËœÙ]Y[™Ê
+LŠK
+NÈYÙK˜YšY]Ê›Ü›\ÊNÂˆ›Üˆ
+š[\Ø\Xš[]PØ][ÙË”ÜÛÛ›Ü›H›Ü›Hˆš[\‹œÜÛÛ›Ü›\ÊHÂˆ^šY]È›ÝÈHX™[
+›Ü›K]H
+Èˆ0­Èˆ
+È›Ü›KœÝ]H
+È—ˆ‚ˆ
+È‘›Ü›Nˆˆ
+È›Ü›K™›Ü›H
+È—”›Ý]\Îˆˆ
+È›Ü›K˜ÛÛ\]X›T›Ý]\Âˆ
+È—‘š]ˆˆ
+È›Ü›K™Ù[ÛY]žH
+È—ˆˆ
+È›Ü›K››ÝKL‹V
+NÂˆ›ÝËœÙ]Y[™Ê
+ÊK
+NÈ›ÝËœÙ][™TÜXÚ[™Ê
+ŠKYŠNÈYÙK˜YšY]Ê›ÝÊNÂˆBˆ^šY]ÈÛÝ\˜ÙHHX™[
+”ÛÝ\˜ÙKÜØÛÜH0­Èˆ
+Èš[\‹œÛÝ\˜ÙH
+Èˆ0­È™]šY]ÙYˆ
+Èš[\‹œ™]šY]ÙYLUUQ
+NÂˆÛÝ\˜ÙKœÙ]Y[™Ê
+LŠK
+NÈÛÝ\˜ÙKœÙ][™TÜXÚ[™Ê
+ŠKYŠNÈYÙK˜YšY]ÊÛÝ\˜ÙJNÂˆ]ÛˆÜ[”ÛÝ\˜ÙHHX[ÙÐ]ÛŠ“Ü[ˆÙ™šXÚX[˜[XHÛÝ\˜ÙH‹ˆOˆÜ[Ø\Xš[]TÛÝ\˜ÙJš[\‹œÛÝ\˜ÙU\›
+JNÂˆ[™X\“^[Ý]“^[Ý]\˜[\ÈÛÝ\˜ÙSH™]È[™X\“^[Ý]“^[Ý]\˜[\ÊLK
+
+JNÈÛÝ\˜ÙSÜX\™Ú[ˆH
+
+NÈYÙK˜YšY]ÊÜ[”ÛÝ\˜ÙKÛÝ\˜ÙS
+NÂˆØÜ›ÛšY]ÈØÜ›ÛH™]ÈØÜ›ÛšY]Ê\ÊNÈØÜ›ÛœÙ]š[šY]ÜÜ
+YJNÈØÜ›Û˜YšY]ÊYÙJNÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J“X]\šX[	ˆÜÛÛ™]šY]ÈŠBˆœÙ]šY]ÊØÜ›Û
+BˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+BˆœÚÝÊ
+NÂˆHØ]Ú
+SÑ^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë“X]\šX[Ø][ÙÈ\È[˜]˜Z[X›Nˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÜ[Ø\Xš[]TÛÝ\˜ÙJÝš[™ÈÛÝ\˜ÙU\›
+HÂˆžHÂˆ\šH\šHH\šKœ\œÙJÛÝ\˜ÙU\›
+NÂˆYˆ
+HšÈ‹™\]X[ÒYÛ›Ü™PØ\ÙJ\šK™Ù]ØÚ[YJ
+JH\šK™Ù]ÜÝ
+
+HOH[ˆJ\šK™Ù]ÜÝ
+
+K™\]X[ÒYÛ›Ü™PØ\ÙJ˜˜[X[X‹˜ÛÛHŠBˆ\šK™Ù]ÜÝ
+
+KÓÝÙ\Ø\ÙJØØ[K•TÊK™[™ÕÚ]
+‹˜˜[X[X‹˜ÛÛHŠJJBˆ›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ•HØ\Xš[]HÛÝ\˜ÙH\È›Ý[ˆÙ™šXÚX[ÈT“ŠNÂˆÝ\XÝ]š]J™]È[[
+[[PÕSÓ—Õ’QUË\šJJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\ËÛÝ[›ÝÜ[ˆHÙ™šXÚX[ÛÝ\˜ÙNˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÚÝÔ]\Ê
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[[\ÜÛXÙKÜˆš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆØ]™PÝ\œ™[]J
+NÂˆ\œ˜^S\Ý]TÝÜ™K”]Oˆ[šY\ÈH]TÝÜ™Kœ]\Ê
+NÂˆYˆ
+[šY\Ëš\Ñ[\J
+JHÂˆØ]™PÝ\œ™[]J
+NÂˆ[šY\ÈH]TÝÜ™Kœ]\Ê
+NÂˆBˆÝš[™Ö×HX™[ÈH™]ÈÝš[™ÖÙ[šY\ËœÚ^™J
+WNÂˆ[ÚXÚÙYHLNÂˆ›Üˆ
+[[™^HÈ[™^[šY\ËœÚ^™J
+NÈ[™^
+ÊÊHÂˆ]TÝÜ™K”]H]HH[šY\Ë™Ù]
+[™^
+NÂˆX™[ÖÚ[™^HH]KœÝ[[X\žJ
+NÂˆYˆ
+]Kš[™^OHXÝ]™T]R[™^
+HÚXÚÙYH[™^ÂˆBˆš[˜[\œ˜^S\Ý]TÝÜ™K”]OˆÚÚXÙ\ÈH[šY\ÎÂˆš[˜[›ÛÛX[ˆ˜]Ú™XYHH\Ý˜]ÚOH[	‰ˆ[\Ý˜]Úœ]\Ëš\Ñ[\J
+NÂˆš[˜[[Ü[]Y]\ÈHÜ[]Y]PÛÝ[
+[šY\ÊNÂˆÝš[™È˜]ÚXÝ[ÛˆH˜]Ú™XYHÈ‘^Ü˜]Úˆˆ”ÛXÙH[ŽÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”š[]\ÈŠBˆœÙ]Y\ÜØYÙJ’ÙY\Ù\\˜]H[Ù[Ù]È›Üˆ›Þ\ËYË\Ë[™]\™H\ÜÙ[X›Y\Ëˆ[ÞHÝÜ™\È\Èˆ
+È]TÝÜ™K“PVÔUTÂˆ
+ÈˆØØ[]HÛ˜\ÚÝËˆˆ
+ÈÜ[]Y]\È
+Èˆ]Hˆ
+È
+Ü[]Y]\ÈOHHÈˆ\ÈˆˆœÈ\™HŠBˆ
+ÈˆÜ[]YˆŠBˆœÙ]Ú[™ÛPÚÚXÙR][\ÊX™[ËÚXÚÙY
+X[ÙËÚXÚ
+HOˆÂˆX[ÙË™\ÛZ\ÜÊ
+NÂˆÝÚ]Ú]JÚÚXÙ\Ë™Ù]
+ÚXÚ
+Kš[™^
+NÂˆJBˆœÙ]ÜÚ]]™P]ÛŠ˜]ÚXÝ[Û‹
+X[ÙËÚXÚ
+HOˆÂˆYˆ
+˜]Ú™XYJH^Ü˜]Ú\˜Ú]™J
+NÂˆ[ÙH™YÚ[˜]ÚÛXÙJ
+NÂˆJBˆœÙ]™]]˜[]ÛŠ“™]È]H‹
+X[ÙËÚXÚ
+HOˆÜ™X]T]J
+JBˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]HÝ]XÈ[Ü[]Y]PÛÝ[
+\œ˜^S\Ý]TÝÜ™K”]Oˆ]\ÊHÂˆ[ÛÝ[HÂˆYˆ
+]\ÈOH[
+H™]\›ˆÛÝ[Âˆ›Üˆ
+]TÝÜ™K”]H]Hˆ]\ÊHÂˆYˆ
+]HOH[	‰ˆ]K\š\ÈOH[	‰ˆ\]K\š\Ëš\Ñ[\J
+JHÛÝ[
+ÊÎÂˆBˆ™]\›ˆÛÝ[ÂˆB‚ˆš]˜]H›ÚY™YÚ[˜]ÚÛXÙJ
+HÂˆ™\]Y\Ý›ÝYšXØ][Û”\›Z\ÜÚ[Û’Y“™YYY
+\ÎŽ˜™YÚ[˜]ÚÛXÙPY\”\›Z\ÜÚ[ÛŠNÂˆB‚ˆš]˜]H›ÚY™YÚ[˜]ÚÛXÙPY\”\›Z\ÜÚ[ÛŠ
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆØ]™PÝ\œ™[]J
+NÂˆš[˜[\œ˜^S\Ý]TÝÜ™K”]Oˆ]\ÈH]TÝÜ™Kœ]\Ê
+NÂˆYˆ
+Ü[]Y]PÛÝ[
+]\ÊHOH
+HÂˆØ\Ý›XZÙU^
+\ËYH[Ù[È]X\ÝÛ™H]Hš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ\Ý˜]ÚH[Âˆš[˜[Ýš[™È›Ø’YH˜]ÚÛXÙT™\]Y\ÝÝÜ™K›™]Ò›Ø’Y
+
+NÂˆš[˜[ÛXÙ\‹ÛÛ™šYÈ™XÚ\HHÛÛ™šYË˜ÛÜJ
+NÂˆš[˜[Ýš[™È\Ü^S˜[YHHÝ\œ™[]SX™[
+
+NÂˆš[˜[[Ü[]YHÜ[]Y]PÛÝ[
+]\ÊNÂˆ˜]ÚÛXÚ[™ÈHYNÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH›Ø’YÂˆÝ]\ËœÙ]^
+˜]Ú0­ÈØ]š[™È[ˆÙ™›[™H™\]Y\Ý8 )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžHÂˆ˜]ÚÛXÙT™\]Y\ÝÝÜ™KÜš]JÙ]š[\Ñ\Š
+KÙ]ÛÛ[™\ÛÛ™\Š
+K›Ø’Y]\Ë™XÚ\K\Ü^S˜[YJNÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K˜ÛX\Š
+NÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K˜™YÚ[Š›Ø’Y\Ü^S˜[YKÜ[]Y
+NÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+Z›Ø’Y™\]X[ÊXÝ]™P˜]ÚÛXÙR›Ø’Y
+H\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[ÂˆžHÂˆ˜]ÚÛXÙR›Ø”Ù\šXÙKœÝ\
+\Ë›Ø’Y
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆ˜]ÚÛXÙR›Ø”ÝÜ™K™˜Z[
+›Ø’YÛÝ[›ÝÝ\˜]ÚÛXÙNˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+JNÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È˜]ÚÛXÙHÛÝ[›ÝÝ\ŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë˜]ÚÛXÙHÛÝ[›ÝÝ\ˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+Z›Ø’Y™\]X[ÊXÝ]™P˜]ÚÛXÙR›Ø’Y
+H\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[ÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­È˜]Ú™\]Y\ÝÛÝ[›Ý™HØ]™YŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë˜]Ú™\]Y\ÝÛÝ[›Ý™HØ]™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]H›ÚYØ[˜Ù[˜]ÚÛXÙJ
+HÂˆYˆ
+X˜]ÚÛXÚ[™ÊH™]\›ŽÂˆÝš[™È›Ø’YHXÝ]™P˜]ÚÛXÙR›Ø’YÂˆYˆ
+›Ø’YOH[	‰ˆ˜]ÚÛXÙR›Ø”Ù\šXÙK›ÝÛœÒ›ØŠ›Ø’Y
+JHÂˆžHÂˆ˜]ÚÛXÙR›Ø”Ù\šXÙK˜Ø[˜Ù[
+\Ë›Ø’Y
+NÂˆÝ]\ËœÙ]^
+˜]Ú0­ÈØ[˜Ù[[™ø )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë˜]ÚØ[˜Ù[][Ûˆ˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆ™]\›ŽÂˆBˆYˆ
+XÝ]™P˜]ÚÛ˜\ÚÝOH[
+HXÝ]™P˜]ÚÛ˜\ÚÝ˜Ø[˜Ù[
+YJNÂˆYˆ
+›Ø’YOH[	‰ˆ˜]ÚÛXÙR›Ø”ÝÜ™HOH[
+H˜]ÚÛXÙR›Ø”ÝÜ™K˜Ø[˜Ù[
+›Ø’Y˜]ÚÛXÙHØ[˜Ù[YŠNÂˆXÝ]™P˜]ÚÛ˜\ÚÝH[ÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆ\Ý˜]ÚH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÐ˜]ÚÝ[[X\žJ˜]ÚÛXÙR›ØÛÛ›Û\‹˜]Ú™\Ý[™\Ý[
+HÂˆYˆ
+™\Ý[OH[™\Ý[œ]\Ëš\Ñ[\J
+JH™]\›ŽÂˆÝš[™ÐZ[\ˆY\ÜØYÙHH™]ÈÝš[™ÐZ[\Š‘XXÚ]H\È[ˆ[™\[™[˜[Y]Y\Y˜XÝˆÚÛÜÙHÛ™H]H[ˆš[]\È™Y›Ü™HÙ[™[™È]ÈHš[\‹——ˆŠNÂˆ›Üˆ
+˜]ÚÛXÙR›ØÛÛ›Û\‹”]T™\Ý[]Hˆ™\Ý[œ]\ÊHÂˆÛXÙ\‹”™\Ý[ÛXÙHH]KœÛXÙNÂˆY\ÜØYÙK˜\[™
+”]HŠK˜\[™
+]Kœ]Kš[™^
+ÈJK˜\[™
+ˆ0­ÈŠK˜\[™
+]Kœ]K›˜[YJBˆ˜\[™
+—ˆŠK˜\[™
+ÛXÙK›^Y\œËœÚ^™J
+JK˜\[™
+ˆ^Y\œÈ0­ÈŠBˆ˜\[™
+Ýš[™Ë™›Ü›X]
+ØØ[K•TË‰KŒˆ[H‹ÛXÙK™š[[Y[[JJNÂˆYˆ
+ÛXÙKœš[[YTÙXÛÛ™ÈHŠHY\ÜØYÙK˜\[™
+ˆ0­ÈŠK˜\[™
+›Ü›X]\˜][ÛŠÛXÙKœš[[YTÙXÛÛ™ÊJNÂˆY\ÜØYÙK˜\[™
+—ˆŠNÂˆBˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J[]\ÈÛXÙYŠBˆœÙ]Y\ÜØYÙJY\ÜØYÙKÔÝš[™Ê
+Kš[J
+JBˆœÙ]™YØ]]™P]ÛŠ‘Û™H‹[
+BˆœÙ]ÜÚ]]™P]ÛŠ‘^Ü˜]Ú‹
+X[ÙËÚXÚ
+HOˆ^Ü˜]Ú\˜Ú]™J
+JBˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚY^Ü˜]Ú\˜Ú]™J
+HÂˆYˆ
+\Ý˜]ÚOH[\Ý˜]Úœ]\Ëš\Ñ[\J
+JHÂˆØ\Ý›XZÙU^
+\Ë”ÛXÙHHÜ[]Y]\Èš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[[[[H™]È[[
+[[PÕSÓ—ÐÔ‘PUWÑÐÕSQS•
+NÂˆ[[˜YØ]YÛÜžJ[[ÐUQÓÔ–WÓÔSP“JNÂˆ[[œÙ]\J˜]Ú\Y˜XÝ\˜Ú]™K“RSQWÕTJNÂˆ[[œ]^˜J[[‘VWÕUKØY™S˜[YJÝ\œ™[]SX™[
+
+JH
+È‹\]\Ë˜[ÞKX˜]Úžš\ŠNÂˆÝ\XÝ]š]Q›Ü”™\Ý[
+[[‘TUQTÕÐUÒÑVÔ•
+NÂˆB‚ˆš]˜]H›ÚYÜš]P˜]Ú\˜Ú]™J\šH\Ý[˜][ÛŠHÂˆYˆ
+\Ý[˜][ÛˆOH[˜]Ú˜[œÙ™\œš[™È\Ý˜]ÚOH[
+H™]\›ŽÂˆš[˜[˜]ÚÛXÙR›ØÛÛ›Û\‹˜]Ú™\Ý[˜]ÚH\Ý˜]ÚÂˆš[˜[Û™È˜[œÙ™\’YH˜]Ú˜[œÙ™\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆXÝ]™P˜]Ú˜[œÙ™\’YH˜[œÙ™\’YÂˆ˜]Ú˜[œÙ™\œš[™ÈHYNÂˆÝ]\ËœÙ]^
+˜]Ú0­È˜[Y][™ÈÜX›H\˜Ú]™x )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™P˜]Ú˜[œÙ™\ˆH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆ˜]˜Kš[Ë‘š[H[\Ü˜\žHH™]È˜]˜Kš[Ë‘š[JÙ]ØXÚQ\Š
+K‹˜[ÞKX˜]ÚHˆ
+È˜[œÙ™\’Y
+È‹œ\ŠNÂˆžHÂˆžH
+˜]˜Kš[Ë“Ý]]Ý™X[HÝ]]H™]È˜]˜Kš[Ë‘š[SÝ]]Ý™X[J[\Ü˜\žJJHÂˆ˜]Ú\Y˜XÝ\˜Ú]™KÜš]JÝ]]˜]Ú
+NÂˆÝ]]™›\Ú
+
+NÂˆBˆ˜]Ú\Y˜XÝ\˜Ú]™K˜[Y]J[\Ü˜\žJNÂˆžH
+˜]˜Kš[Ë“Ý]]Ý™X[HÝ]]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[“Ý]]Ý™X[J\Ý[˜][ÛŠNÂˆ˜]˜Kš[Ë’[œ]Ý™X[H[œ]H™]È˜]˜Kš[Ë‘š[R[œ]Ý™X[J[\Ü˜\žJJHÂˆYˆ
+Ý]]OH[
+H›ÝÈ™]ÈSÑ^Ù\[ÛŠ•H˜]Ú\Ý[˜][ÛˆÛÝ[›Ý™HÜ[™YŠNÂˆž]V×HY™™\ˆH™]Èž]VÌÌˆ
+ˆLNÂˆ[™XYÂˆÚ[H
+
+™XYH[œ]œ™XY
+Y™™\ŠJHOHLJHYˆ
+™XYˆ
+HÝ]]Üš]JY™™\‹™XY
+NÂˆÝ]]™›\Ú
+
+NÂˆBˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+˜[œÙ™\’YOHXÝ]™P˜]Ú˜[œÙ™\’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ˜]Ú˜[œÙ™\œš[™ÈH˜[ÙNÂˆXÝ]™P˜]Ú˜[œÙ™\ˆH[ÂˆÝ]\ËœÙ]^
+˜]Ú0­ÈÜX›H\˜Ú]™HØ]™YŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë‘^ÜY[]H\Y˜XÝÈ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+˜[œÙ™\’YOHXÝ]™P˜]Ú˜[œÙ™\’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ˜]Ú˜[œÙ™\œš[™ÈH˜[ÙNÂˆXÝ]™P˜]Ú˜[œÙ™\ˆH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë˜]Ú^Ü˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆHš[˜[HÂˆYˆ
+[\Ü˜\žK™^\ÝÊ
+H	‰ˆ][\Ü˜\žK™[]J
+JH[\Ü˜\žK™[]SÛ‘^]
+
+NÂˆBˆJNÂˆB‚ˆš]˜]H›ÚYÜ™X]T]J
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[[\ÜÛXÙKÜˆš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆžHÂˆØ]™PÝ\œ™[]J
+NÂˆ]TÝÜ™K”]HÜ™X]YH]TÝÜ™K˜Ü™X]S™^
+
+NÂˆÝÚ]Ú]JÜ™X]Yš[™^
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë“™]È]HÛÝ[›Ý™HÜ™X]Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYÝÚ]Ú]J[[™^
+HÂˆYˆ
+[™^[™^H]TÝÜ™K“PVÔUTÈš[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊH™]\›ŽÂˆYˆ
+[™^OHXÝ]™T]R[™^	‰ˆ[Ù[OH[
+H™]\›ŽÂˆØ]™PÝ\œ™[]J
+NÂˆ]TÝÜ™K”]H\™Ù]H]TÝÜ™Kœ]P]
+[™^
+NÂˆXÝ]™T]R[™^H[™^Âˆ]TÝÜ™KœÙ]XÝ]™R[™^
+[™^
+NÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[ÂˆYˆ
+šY]ÜÜOH[
+HšY]ÜÜœÙ]™\Ý[
+[
+NÂˆ\]T]SX\šÙ\Š
+NÂˆYˆ
+\™Ù]\š\Ëš\Ñ[\J
+JHÂˆ]R[\Ü[‘›YÚH˜[ÙNÂˆÛX\“ØYY[Ù[›Ü”]J
+NÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+HÂˆ[Ù[\ÝÜžTÝÜ™K™[œÝ\™PÝ\œ™[
+XÝ]™T]R[™^Ý\œ™[]TÛ˜\ÚÝ
+
+K“™]È]HŠNÂˆ[™S[Ù[ØXÚJ
+NÂˆBˆH[ÙHÂˆ]R[\Ü[‘›YÚHYNÂˆ™\ÝÜ™T]PÚXÚÜÚ[
+\™Ù]
+NÂˆØY\š\Ê\™Ù]\š\Ë\™Ù]›˜[Y\ËYJNÂˆBˆB‚ˆš]˜]H›ÚY™\ÝÜ™T]PÚXÚÜÚ[
+]TÝÜ™K”]H]JHÂˆYˆ
+]HOH[]K\š\Ëš\Ñ[\J
+JHÂˆ›Ú™XÝÝÜ™K˜ÛX\“[Ù[
+
+NÂˆ™]\›ŽÂˆBˆ›Ú™XÝÝÜ™KœØ]™S[Ù[Ê]K\š\Ë]K›˜[Y\ÊNÂˆ›Ú™XÝÝÜ™KœØ]™U˜[œÙ›Ü›J]KœØØ[K]Kœ›Ý][Û‘YÜ™Y\Ë]K[YÜ™Y\Ë]K[QYÜ™Y\ÊNÂˆ›Ú™XÝÝÜ™KœØ]™TÙ[XÝY\
+]KœÙ[XÝY\
+NÂˆ›Ú™XÝÝÜ™KœØ]™T\˜[œÙ›Ü›\Ê™]È\œ˜^S\ÝŠ]Kœ\˜[œÙ›Ü›\ÊJNÂˆ›Ú™XÝÝÜ™KœØ]™QÙ[ÛY]žT™\Z\Š]K™Ù[ÛY]žT™\Z\‘[˜X›Y
+NÂˆB‚ˆš]˜]H›ÚYØ]™PÝ\œ™[]J
+HÂˆYˆ
+]TÝÜ™HOH[]R[\Ü[‘›YÚ
+H™]\›ŽÂˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÂˆ›Üˆ
+[[™^HÈ[™^[Ù[\š\ËœÚ^™J
+NÈ[™^
+ÊÊHÂˆ˜[Y\Ë˜Y
+[™^[Ù[˜[Y\ËœÚ^™J
+HÈ[Ù[˜[Y\Ë™Ù]
+[™^
+Hˆ›[Ù[œÝŠNÂˆBˆ[Ù[XÝY\HšY]ÜÜOH[ÈLHˆšY]ÜÜ™Ù]Ù[XÝY\
+
+NÂˆ]TÝÜ™KœØ]™J™]È]TÝÜ™K”]JXÝ]™T]R[™^Ý\œ™[]S˜[YJ
+Kˆ™]È\œ˜^S\ÝŠ[Ù[\š\ÊK˜[Y\Ë[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ëˆ[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ËÙ[XÝY\™]È\œ˜^S\ÝŠ\˜[œÙ›Ü›\ÊKˆÙ[ÛY]žT™\Z\‘[˜X›Y
+JNÂˆ]TÝÜ™KœÙ]XÝ]™R[™^
+XÝ]™T]R[™^
+NÂˆB‚ˆš]˜]H]TÝÜ™K”]HÝ\œ™[]TÛ˜\ÚÝ
+
+HÂˆ\œ˜^S\ÝÝš[™Ïˆ˜[Y\ÈH™]È\œ˜^S\ÝŠ
+NÂˆ›Üˆ
+[[™^HÈ[™^[Ù[\š\ËœÚ^™J
+NÈ[™^
+ÊÊHÂˆ˜[Y\Ë˜Y
+[™^[Ù[˜[Y\ËœÚ^™J
+HÈ[Ù[˜[Y\Ë™Ù]
+[™^
+Hˆ›[Ù[œÝŠNÂˆBˆ[Ù[XÝY\HšY]ÜÜOH[ÈLHˆšY]ÜÜ™Ù]Ù[XÝY\
+
+NÂˆ™]\›ˆ™]È]TÝÜ™K”]JXÝ]™T]R[™^Ý\œ™[]S˜[YJ
+Kˆ™]È\œ˜^S\ÝŠ[Ù[\š\ÊK˜[Y\Ë[Ù[ØØ[K[Ù[›Ý][Û‘YÜ™Y\Ëˆ[Ù[[YÜ™Y\Ë[Ù[[QYÜ™Y\ËÙ[XÝY\ˆ™]È\œ˜^S\ÝŠ\˜[œÙ›Ü›\ÊKÙ[ÛY]žT™\Z\‘[˜X›Y
+NÂˆB‚ˆš]˜]H›ÚY[™S[Ù[ØXÚJ
+HÂˆYˆ
+]TÝÜ™HOH[
+H™]\›ŽÂˆ\œ˜^S\Ý]TÝÜ™K”]Oˆ\ÝÜžHH[Ù[\ÝÜžTÝÜ™HOH[ˆÈ[ˆ[Ù[\ÝÜžTÝÜ™Kœ™Y™\™[˜ÙY]\Ê
+NÂˆ\œ˜^S\Ý\šOˆ™XÙ[H™]È\œ˜^S\ÝŠ
+NÂˆYˆ
+[\ÜY[Ù[ÝÜ™HOH[
+HÂˆ›Üˆ
+[\ÜY[Ù[ÝÜ™K‘[žH[žHˆ[\ÜY[Ù[ÝÜ™K™[šY\ÊÙ]š[\Ñ\Š
+JJHÂˆYˆ
+[žHOH[	‰ˆ[žK\šHOH[
+H™XÙ[˜Y
+[žK\šJNÂˆBˆBˆ[Ù[ÝÜ™Kœ[™JÙ]š[\Ñ\Š
+K]TÝÜ™Kœ]\Ê
+K\ÝÜžK™XÙ[
+NÂˆB‚ˆš]˜]H›ÚY™\\™S[Ù[]]][ÛŠÝš[™ÈX™[
+HÂˆ\ÝY[Ýš^\™P\ÜÙ]]H[ÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[]TÝÜ™HOH[]R[\Ü[‘›YÚ
+H™]\›ŽÂˆžHÂˆ[Ù[\ÝÜžTÝÜ™K™[œÝ\™PÝ\œ™[
+XÝ]™T]R[™^Ý\œ™[]TÛ˜\ÚÝ
+
+KÝ\œ™[[Ù[ŠNÂˆ[™S[Ù[ØXÚJ
+NÂˆHØ]Ú
+[[YQ^Ù\[Ûˆ\œ›ÜŠHÂˆËÈHY]™[XZ[œÈØØ[[™š\ÚX›K]H˜Z[\™H\È^XÚ]ÂˆËÈ™]™\ˆ™][™[ˆY]\È[™ØX›HÚ[ˆ]ÈÛ˜\ÚÝY›ÝØ]™K‚ˆØ\Ý›XZÙU^
+\Ë‘Y]\ÝÜžH[˜]˜Z[X›Nˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚYš[š\Ú[Ù[]]][ÛŠÝš[™ÈX™[
+HÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[]TÝÜ™HOH[]R[\Ü[‘›YÚ
+H™]\›ŽÂˆžHÂˆØ]™PÝ\œ™[]J
+NÂˆ[Ù[\ÝÜžTÝÜ™K˜\[™
+XÝ]™T]R[™^Ý\œ™[]TÛ˜\ÚÝ
+
+KX™[
+NÂˆ[™S[Ù[ØXÚJ
+NÂˆ\]R\ÝÜžPXÝ[ÛœÊ
+NÂˆHØ]Ú
+[[YQ^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë‘Y]ÛÛ\]Y]\ÝÜžHÛÝ[›Ý™HØ]™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚY™\Ù][Ù[\ÝÜžJÝš[™ÈX™[
+HÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[]TÝÜ™HOH[]R[\Ü[‘›YÚ
+H™]\›ŽÂˆžHÂˆ[Ù[\ÝÜžTÝÜ™Kœ™\Ù]ØÝ[Y[
+XÝ]™T]R[™^Ý\œ™[]TÛ˜\ÚÝ
+
+KX™[
+NÂˆ[™S[Ù[ØXÚJ
+NÂˆHØ]Ú
+[[YQ^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë“[Ù[\ÝÜžHÛÝ[›Ý™H[š]X[^™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆBˆB‚ˆš]˜]H›ÚY\]R\ÝÜžPXÝ[ÛœÊ
+HÂˆYˆ
+XÝ[ÛœÈOH[
+H™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚY[™Ó[Ù[
+
+HÂˆYˆ
+XØ[“]]]S[Ù[
+
+JH™]\›ŽÂˆ]TÝÜ™K”]H\™Ù]ÂˆžHÈ\™Ù]H[Ù[\ÝÜžTÝÜ™K[™ÊXÝ]™T]R[™^
+NÈBˆØ]Ú
+[[YQ^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë•[™È\ÝÜžH\È[˜[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+\™Ù]OH[
+HÂˆØ\Ý›XZÙU^
+\Ë“›Ý[™ÈÈ[™È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ™\ÝÜ™R\ÝÜžTÛ˜\ÚÝ
+\™Ù]•[™ÈŠNÂˆB‚ˆš]˜]H›ÚY™YÓ[Ù[
+
+HÂˆYˆ
+XØ[“]]]S[Ù[
+
+JH™]\›ŽÂˆ]TÝÜ™K”]H\™Ù]ÂˆžHÈ\™Ù]H[Ù[\ÝÜžTÝÜ™Kœ™YÊXÝ]™T]R[™^
+NÈBˆØ]Ú
+[[YQ^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”™YÈ\ÝÜžH\È[˜[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+\™Ù]OH[
+HÂˆØ\Ý›XZÙU^
+\Ë“›Ý[™ÈÈ™YÈ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ™\ÝÜ™R\ÝÜžTÛ˜\ÚÝ
+\™Ù]”™YÈŠNÂˆB‚ˆš]˜]H›ÛÛX[ˆØ[“]]]S[Ù[
+
+HÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[[Ù[OH[š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™Âˆ›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™Èš\ÝX[^š[™È[Ù[[™È™\Z\š[™ÑÙ[ÛY]žJHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆ™Y›Ü™HÚ[™Ú[™È[Ù[\ÝÜžH‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ˆ˜[ÙNÂˆBˆ™]\›ˆYNÂˆB‚ˆš]˜]H›ÚY™\ÝÜ™R\ÝÜžTÛ˜\ÚÝ
+]TÝÜ™K”]H\™Ù]Ýš[™ÈXÝ[ÛŠHÂˆYˆ
+\™Ù]OH[\™Ù]š[™^OHXÝ]™T]R[™^
+H™]\›ŽÂˆØ]™PÝ\œ™[]J
+NÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆYˆ
+šY]ÜÜOH[
+HšY]ÜÜœÙ]™\Ý[
+[
+NÂˆ]TÝÜ™KœØ]™J\™Ù]
+NÂˆ™\ÝÜ™T]PÚXÚÜÚ[
+\™Ù]
+NÂˆYˆ
+\™Ù]\š\Ëš\Ñ[\J
+JHÂˆÛX\“ØYY[Ù[›Ü”]J
+NÂˆ]TÝÜ™KœØ]™J\™Ù]
+NÂˆ[Ù[\ÝÜžTÝÜ™K™[œÝ\™PÝ\œ™[
+XÝ]™T]R[™^\™Ù]XÝ[Ûˆ
+ÈˆÝ]HŠNÂˆÝ]\ËœÙ]^
+Ý\œ™[]SX™[
+
+H
+Èˆ0­Èˆ
+ÈXÝ[Û‹ÓÝÙ\Ø\ÙJØØ[K•TÊH
+ÈˆÛÛ\]HŠNÂˆ[™S[Ù[ØXÚJ
+NÂˆ™]\›ŽÂˆBˆ]R[\Ü[‘›YÚHYNÂˆÝ]\ËœÙ]^
+XÝ[Ûˆ
+Èˆ0­È™\ÝÜš[™È[Ù[8 )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØY\š\Ê\™Ù]\š\Ë\™Ù]›˜[Y\ËYJNÂˆB‚ˆš]˜]H›ÚYÚÝÓ[Ù[\ÝÜžJ
+HÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+H™]\›ŽÂˆ\œ˜^S\ÝÝš[™ÏˆX™[ÈH[Ù[\ÝÜžTÝÜ™K›X™[ÊXÝ]™T]R[™^
+NÂˆYˆ
+X™[Ëš\Ñ[\J
+JHÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J“[Ù[Y]\ÝÜžHŠBˆœÙ]Y\ÜØYÙJ‘Y]ÈÈ\È]HÚ[\X\ˆ\™Kˆ[™È[™™YÈ™]Z[ˆ›Ý[™Y[Ù[Û˜\ÚÝÈØØ[HÛˆ\ÈÛ™KˆŠBˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆÚ\”Ù\]Y[˜ÙV×H[šY\ÈHX™[ËÐ\œ˜^J™]ÈÚ\”Ù\]Y[˜ÙVÌJNÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J“[Ù[Y]\ÝÜžHŠBˆœÙ]Y\ÜØYÙJÝ\œ™[]SX™[
+
+H
+Èˆ0­Èˆ
+È[Ù[\ÝÜžTÝÜ™KœÝ[[X\žJXÝ]™T]R[™^
+JBˆœÙ]][\Ê[šY\Ë[
+BˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÛX\“ØYY[Ù[›Ü”]J
+HÂˆØ[˜Ù[[\Ü
+
+NÂˆØ[˜Ù[Ù[ÛY]žT™\Z\Š
+NÂˆYˆ
+ÛXÙR›ØœÈOH[
+HÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆYˆ
+˜]ÚÛXÙR›ØœÈOH[
+H˜]ÚÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÛXÚ[™ÈH˜[ÙNÂˆ[Ù[H[ÂˆÛÝ\˜ÙS[Ù[H[Âˆ[›[ÙYšYYÛÝ\˜ÙS[Ù[H[ÂˆÙ[ÛY]žT™\Z\‘[˜X›YH˜[ÙNÂˆ\˜[œÙ›Ü›\Ë˜ÛX\Š
+NÂˆ[Ù[\š\Ë˜ÛX\Š
+NÂˆ[Ù[˜[Y\Ë˜ÛX\Š
+NÂˆ[Ù[ØØ[HHYŽÂˆ[Ù[›Ý][Û‘YÜ™Y\ÈHŽÂˆ[Ù[[YÜ™Y\ÈHŽÂˆ[Ù[[QYÜ™Y\ÈHŽÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆYˆ
+˜]ÚÛXÙR›Ø”ÝÜ™HOH[
+H˜]ÚÛXÙR›Ø”ÝÜ™K˜ÛX\Š
+NÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ]R[\Ü[‘›YÚH˜[ÙNÂˆ›Ú™XÝÝÜ™K˜ÛX\“[Ù[
+
+NÂˆ]TÝÜ™KœØ]™J]TÝÜ™K”]K™[\JXÝ]™T]R[™^
+JNÂˆ[™S[Ù[ØXÚJ
+NÂˆYˆ
+šY]ÜÜOH[
+HÂˆšY]ÜÜœÙ][Ù[
+[
+NÂˆšY]ÜÜœÙ]™\Ý[
+[
+NÂˆBˆ[Ù[Y]KœÙ]^
+“‘UÈUWˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+Ý\œ™[]SX™[
+
+H
+Èˆ0­È[\ÜH[Ù[È™YÚ[ˆŠNÂˆ]Z[ËœÙ]^
+”ÕÐ’‹ÓQˆ[™ÕT0­Èˆ
+È›Ùš[PZ[›Û[YSX™[
+
+H
+ÈˆZ[›Û[YHŠNÂˆ\]T]SX\šÙ\Š
+NÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]H›ÚYØ]™T›Ú™XÝ\˜Ú]™J
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆØ]™PÝ\œ™[]J
+NÂˆ[[[[H™]È[[
+[[PÕSÓ—ÐÔ‘PUWÑÐÕSQS•
+NÂˆ[[˜YØ]YÛÜžJ[[ÐUQÓÔ–WÓÔSP“JNÂˆ[[œÙ]\J›Ú™XÝ\˜Ú]™K“RSQWÕTJNÂˆ[[œ]^˜J[[‘VWÕUKØY™S˜[YJÝ\œ™[]SX™[
+
+JH
+È‹˜[ÞKžš\ŠNÂˆÝ\XÝ]š]Q›Ü”™\Ý[
+[[‘TUQTÕÔ“Ò‘PÕÑVÔ•
+NÂˆB‚ˆš]˜]H›ÚYÜ[”›Ú™XÝ\˜Ú]™J
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ[[[[H™]È[[
+[[PÕSÓ—ÓÔS—ÑÐÕSQS•
+NÂˆ[[˜YØ]YÛÜžJ[[ÐUQÓÔ–WÓÔSP“JNÂˆ[[œÙ]\J›Ú™XÝ\˜Ú]™K“RSQWÕTJNÂˆ[[œ]^˜J[[‘VWÓRSQWÕTTË™]ÈÝš[™Ö×^Ô›Ú™XÝ\˜Ú]™K“RSQWÕTK˜\XØ][Û‹ÛØÝ]\Ý™X[HŸJNÂˆ[[˜Y›YÜÊ[[‘“Q×ÑÔS•Ô‘PQÕT’WÔT“RTÔÒSÓŠNÂˆÝ\XÝ]š]Q›Ü”™\Ý[
+[[‘TUQTÕÔ“Ò‘PÕÓÔSŠNÂˆB‚ˆš]˜]H›ÚYÜš]T›Ú™XÝ\˜Ú]™J\šH\Ý[˜][ÛŠHÂˆYˆ
+\Ý[˜][ÛˆOH[›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊH™]\›ŽÂˆØ]™PÝ\œ™[]J
+NÂˆš[˜[\œ˜^S\Ý]TÝÜ™K”]Oˆ]\ÈH]TÝÜ™Kœ]\Ê
+NÂˆš[˜[ÛXÙ\‹ÛÛ™šYÈ™XÚ\HHÛÛ™šYË˜ÛÜJ
+NÂˆš[˜[[XÝ]™HHXÝ]™T]R[™^Âˆš[˜[Ýš[™È\ÝÜžS˜[YHH[Ù[OH[ÈÝ\œ™[]SX™[
+
+Hˆ[Ù[™\Ü^S˜[YNÂˆš[˜[[\ÝÜžS[Ù[ÛÝ[H›Ú™XÝ[Ù[ÛÝ[
+]\ÊNÂˆš[˜[[\ÝÜžT]PÛÝ[H]\ËœÚ^™J
+NÂˆš[˜[ž]V×H[X›˜Z[HšY]ÜÜOH[È[ˆšY]ÜÜ[X›˜Z[™ÊLLŠNÂˆš[˜[\œ˜^S\Ý[Ù[\ÝÜžTÝÜ™K•[Y[[™Oˆ[Ù[\ÝÜžHH[Ù[\ÝÜžTÝÜ™HOH[ˆÈ™]È\œ˜^S\ÝŠ
+Hˆ[Ù[\ÝÜžTÝÜ™K™^Ü[Y[[™\Ê
+NÂˆš[˜[Û™È˜[œÙ™\’YH›Ú™XÝ˜[œÙ™\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆXÝ]™T›Ú™XÝ˜[œÙ™\’YH˜[œÙ™\’YÂˆ›Ú™XÝ˜[œÙ™\œš[™ÈHYNÂˆÝ]\ËœÙ]^
+”›Ú™XÝ0­ÈØ]š[™ÈÜX›H\˜Ú]™x )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™T›Ú™XÝ˜[œÙ™\ˆH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžH
+˜]˜Kš[Ë“Ý]]Ý™X[HÝ]]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[“Ý]]Ý™X[J\Ý[˜][ÛŠJHÂˆYˆ
+Ý]]OH[
+H›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ•H›Ú™XÝ\Ý[˜][ÛˆÛÝ[›Ý™HÜ[™YŠNÂˆ›Ú™XÝ\˜Ú]™KÜš]JÝ]]XÝ]™K]\Ë™XÚ\Kˆ\šHOˆÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[’[œ]Ý™X[J\šJK[™[ÜžTÝÜ™KœÛ˜\ÚÝ
+
+K[X›˜Z[ˆ[Ù[\ÝÜžJNÂˆÝ]]™›\Ú
+
+NÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+˜[œÙ™\’YOHXÝ]™T›Ú™XÝ˜[œÙ™\’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ›Ú™XÝ˜[œÙ™\œš[™ÈH˜[ÙNÂˆXÝ]™T›Ú™XÝ˜[œÙ™\ˆH[ÂˆžHÂˆ›Ú™XÝ\ÝÜžTÝÜ™Kœ™XÛÜ™
+\ÝÜžS˜[YK\Ý[˜][Û‹\ÝÜžS[Ù[ÛÝ[\ÝÜžT]PÛÝ[
+NÂˆHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÂˆËÈ\ÝÜžH\È[ˆ[š[˜Ù[Y[ÈHÝXØÙ\ÜÙ[HÜš][ˆ\˜Ú]™H™[XZ[œÈ\ØX›K‚ˆBˆÝ]\ËœÙ]^
+”›Ú™XÝ0­ÈÜX›H\˜Ú]™HØ]™YŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë”Ø]™Y˜[ÞKžš\›Ú™XÝ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+˜[œÙ™\’YOHXÝ]™T›Ú™XÝ˜[œÙ™\’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ›Ú™XÝ˜[œÙ™\œš[™ÈH˜[ÙNÂˆXÝ]™T›Ú™XÝ˜[œÙ™\ˆH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë”›Ú™XÝØ]™H˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]H›ÚY™XY›Ú™XÝ\˜Ú]™J\šHÛÝ\˜ÙJHÂˆYˆ
+ÛÝ\˜ÙHOH[š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊBˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆš[˜[Ýš[™È\ÝÜžS˜[YHH\Ü^S˜[YJÛÝ\˜ÙJNÂˆš[˜[Û™È˜[œÙ™\’YH›Ú™XÝ˜[œÙ™\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆXÝ]™T›Ú™XÝ˜[œÙ™\’YH˜[œÙ™\’YÂˆ›Ú™XÝ˜[œÙ™\œš[™ÈHYNÂˆÝ]\ËœÙ]^
+”›Ú™XÝ0­ÈÜ[š[™ÈÜX›H\˜Ú]™x )ˆŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆXÝ]™T›Ú™XÝ˜[œÙ™\ˆH[\Ü^XÝ]Ü‹œÝX›Z]
+
+
+HOˆÂˆžH
+[œ]Ý™X[H[œ]HÙ]ÛÛ[™\ÛÛ™\Š
+K›Ü[’[œ]Ý™X[JÛÝ\˜ÙJJHÂˆYˆ
+[œ]OH[
+H›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ•H›Ú™XÝ\˜Ú]™HÛÝ[›Ý™HÜ[™YŠNÂˆ›Ú™XÝ\˜Ú]™K’[\ÜY›Ú™XÝ[\ÜYH›Ú™XÝ\˜Ú]™Kœ™XY
+[œ]™]È˜]˜Kš[Ë‘š[JÙ]š[\Ñ\Š
+Kœ›Ú™XÝÈŠJNÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+˜[œÙ™\’YOHXÝ]™T›Ú™XÝ˜[œÙ™\’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ›Ú™XÝ˜[œÙ™\œš[™ÈH˜[ÙNÂˆXÝ]™T›Ú™XÝ˜[œÙ™\ˆH[ÂˆžHÂˆ\R[\ÜY›Ú™XÝ
+[\ÜY
+NÂˆ›Ú™XÝ\˜Ú]™Kœ[™TÝÜ™Y›Ú™XÝÊ™]È˜]˜Kš[Ë‘š[JÙ]š[\Ñ\Š
+Kœ›Ú™XÝÈŠK[\ÜYœ]\ÊNÂˆ›Ú™XÝ\ÝÜžTÝÜ™Kœ™XÛÜ™
+\ÝÜžS˜[YKÛÝ\˜ÙK›Ú™XÝ[Ù[ÛÝ[
+[\ÜYœ]\ÊK[\ÜYœ]\ËœÚ^™J
+JNÂˆØ\Ý›XZÙU^
+\Ë“Ü[™YÜX›H[ÞH›Ú™XÝ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆØ\Ý›XZÙU^
+\Ë”›Ú™XÝÛÝ[›Ý™HÜ[™Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆBˆJNÂˆHØ]Ú
+^Ù\[Ûˆ\œ›ÜŠHÂˆXZ[’[™\‹œÜÝ
+
+
+HOˆÂˆYˆ
+˜[œÙ™\’YOHXÝ]™T›Ú™XÝ˜[œÙ™\’Y\Ñš[š\Ú[™Ê
+JH™]\›ŽÂˆ›Ú™XÝ˜[œÙ™\œš[™ÈH˜[ÙNÂˆXÝ]™T›Ú™XÝ˜[œÙ™\ˆH[ÂˆÝ]\ËœÙ]^
+[Ù[OH[È’[\ÜH[Ù[È™YÚ[ˆˆˆ”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆØ\Ý›XZÙU^
+\Ë”›Ú™XÝÜ[ˆ˜Z[Yˆˆ
+È\œ›Ü‹™Ù]Y\ÜØYÙJ
+KØ\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆJNÂˆBˆJNÂˆB‚ˆš]˜]H›ÚY\R[\ÜY›Ú™XÝ
+›Ú™XÝ\˜Ú]™K’[\ÜY›Ú™XÝ[\ÜY
+H›ÝÜÈ^Ù\[ÛˆÂˆYˆ
+[\ÜYOH[[\ÜYœ]\ÈOH[[\ÜYœ]\Ëš\Ñ[\J
+JBˆ›ÝÈ™]È[YØ[\™Ý[Y[^Ù\[ÛŠ•H›Ú™XÝÛÛZ[œÈ›È]\ÈŠNÂˆYˆ
+[\ÜYš[™[ÜžTÛ˜\ÚÝOH[
+H[™[ÜžTÝÜ™Kœ™\ÝÜ™TÛ˜\ÚÝ
+[\ÜYš[™[ÜžTÛ˜\ÚÝ
+NÂˆØ[˜Ù[[\Ü
+
+NÂˆØ[˜Ù[Ù[ÛY]žT™\Z\Š
+NÂˆØ[˜Ù[˜]]™P›ÛÛX[Š
+NÂˆÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆ˜]ÚÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆÛXÚ[™ÈH˜[ÙNÂˆ[Ù[H[ÂˆÛÝ\˜ÙS[Ù[H[Âˆ[›[ÙYšYYÛÝ\˜ÙS[Ù[H[ÂˆÙ[ÛY]žT™\Z\‘[˜X›YH˜[ÙNÂˆ\˜[œÙ›Ü›\Ë˜ÛX\Š
+NÂˆ[Ù[\š\Ë˜ÛX\Š
+NÂˆ[Ù[˜[Y\Ë˜ÛX\Š
+NÂˆ[Ù[ØØ[HHYŽÂˆ[Ù[›Ý][Û‘YÜ™Y\ÈHŽÂˆ[Ù[[YÜ™Y\ÈHŽÂˆ[Ù[[QYÜ™Y\ÈHŽÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆYˆ
+˜]ÚÛXÙR›Ø”ÝÜ™HOH[
+H˜]ÚÛXÙR›Ø”ÝÜ™K˜ÛX\Š
+NÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[Âˆ]R[\Ü[‘›YÚH˜[ÙNÂˆ›Ú™XÝÝÜ™K˜ÛX\“[Ù[
+
+NÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+H[Ù[\ÝÜžTÝÜ™K˜ÛX\[
+
+NÂˆ]TÝÜ™K˜ÛX\Š
+NÂˆ›Üˆ
+]TÝÜ™K”]H]Hˆ[\ÜYœ]\ÊH]TÝÜ™KœØ]™J]JNÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[	‰ˆ[\ÜYš\ÝÜžHOH[	‰ˆZ[\ÜYš\ÝÜžKš\Ñ[\J
+JBˆ[Ù[\ÝÜžTÝÜ™Kš[\Ü[Y[[™\Ê[\ÜYš\ÝÜžJNÂˆXÝ]™T]R[™^H[\ÜY˜XÝ]™T]R[™^Âˆ]TÝÜ™KœÙ]XÝ]™R[™^
+XÝ]™T]R[™^
+NÂˆÛÜPÛÛ™šYÊ[\ÜY˜ÛÛ™šYËÛÛ™šYÊNÂˆ›Ú™XÝÝÜ™KœØ]™T™XÚ\JÛÛ™šYÊNÂˆ\]R[™[ÜžTÝ[[X\žJ
+NÂˆšY]ÜÜœÙ][Ù[
+[
+NÂˆšY]ÜÜœÙ]™\Ý[
+[
+NÂˆ\]T™XÚ\SX\šÙ\œÊ
+NÂˆ\]T]SX\šÙ\Š
+NÂˆ]TÝÜ™K”]H\™Ù]H]TÝÜ™K˜XÝ]™T]J
+NÂˆYˆ
+\™Ù]\š\Ëš\Ñ[\J
+JHÂˆ[Ù[Y]KœÙ]^
+“‘UÈUWˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+Ý\œ™[]SX™[
+
+H
+Èˆ0­È[\ÜH[Ù[È™YÚ[ˆŠNÂˆ]Z[ËœÙ]^
+”ÕÐ’‹ÓQˆ[™ÕT0­Èˆ
+È›Ùš[PZ[›Û[YSX™[
+
+H
+ÈˆZ[›Û[YHŠNÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆH[ÙHÂˆ]R[\Ü[‘›YÚHYNÂˆ™\ÝÜ™T]PÚXÚÜÚ[
+\™Ù]
+NÂˆØY\š\Ê\™Ù]\š\Ë\™Ù]›˜[Y\ËYJNÂˆBˆB‚ˆš]˜]HÝ]XÈ[›Ú™XÝ[Ù[ÛÝ[
+\œ˜^S\Ý]TÝÜ™K”]Oˆ]\ÊHÂˆ[ÛÝ[HÂˆYˆ
+]\ÈOH[
+H™]\›ˆÛÝ[Âˆ›Üˆ
+]TÝÜ™K”]H]Hˆ]\ÊHYˆ
+]HOH[	‰ˆ]K\š\ÈOH[
+HÛÝ[
+ÏH]K\š\ËœÚ^™J
+NÂˆ™]\›ˆÛÝ[ÂˆB‚ˆš]˜]HÝ]XÈ›ÚYÛÜPÛÛ™šYÊÛXÙ\‹ÛÛ™šYÈÛÝ\˜ÙKÛXÙ\‹ÛÛ™šYÈ\™Ù]
+HÂˆYˆ
+ÛÝ\˜ÙHOH[\™Ù]OH[
+H™]\›ŽÂˆ\™Ù]›^Y\’ZYÚHÛÝ\˜ÙK›^Y\’ZYÚÂˆ\™Ù]™š\œÝ^Y\’ZYÚHÛÝ\˜ÙK™š\œÝ^Y\’ZYÚÂˆ\™Ù]››Þž›HHÛÝ\˜ÙK››Þž›NÂˆ\™Ù]™š[[Y[X[Y]\ˆHÛÝ\˜ÙK™š[[Y[X[Y]\ŽÂˆ\™Ù]š[™š[HÛÝ\˜ÙKš[™š[Âˆ\™Ù]˜™YHÛÝ\˜ÙK˜™YÂˆ\™Ù]˜™YHHÛÝ\˜ÙK˜™YNÂˆ\™Ù]˜™YˆHÛÝ\˜ÙK˜™YŽÂˆ\™Ù]œš[\ˆHÛÝ\˜ÙKœš[\ŽÂˆ\™Ù]™š[[Y[HÛÝ\˜ÙK™š[[Y[Âˆ\™Ù]››Þž›U[\\˜]\™HHÛÝ\˜ÙK››Þž›U[\\˜]\™NÂˆ\™Ù]™š\œÝ^Y\“›Þž›U[\\˜]\™HHÛÝ\˜ÙK™š\œÝ^Y\“›Þž›U[\\˜]\™NÂˆ\™Ù]˜™Y[\\˜]\™HHÛÝ\˜ÙK˜™Y[\\˜]\™NÂˆ\™Ù]™š\œÝ^Y\™Y[\\˜]\™HHÛÝ\˜ÙK™š\œÝ^Y\™Y[\\˜]\™NÂˆ\™Ù]™^\Ú[Û“][\Y\ˆHÛÝ\˜ÙK™^\Ú[Û“][\Y\ŽÂˆ\™Ù]›X^›Û[Y]šXÔÜYYHÛÝ\˜ÙK›X^›Û[Y]šXÔÜYYÂˆ\™Ù]˜]™[ÜYYHÛÝ\˜ÙK˜]™[ÜYYÂˆ\™Ù]›Ý]\•Ø[ÜYYHÛÝ\˜ÙK›Ý]\•Ø[ÜYYÂˆ\™Ù]š[›™\•Ø[ÜYYHÛÝ\˜ÙKš[›™\•Ø[ÜYYÂˆ\™Ù]š[™š[ÜYYHÛÝ\˜ÙKš[™š[ÜYYÂˆ\™Ù]š[š]X[^Y\”ÜYYHÛÝ\˜ÙKš[š]X[^Y\”ÜYYÂˆ\™Ù]™˜[“Z[”\˜Ù[HÛÝ\˜ÙK™˜[“Z[”\˜Ù[Âˆ\™Ù]™˜[“X^\˜Ù[HÛÝ\˜ÙK™˜[“X^\˜Ù[Âˆ\™Ù]œÝ\ÜÈHÛÝ\˜ÙKœÝ\ÜÎÂˆ\™Ù]œÝ\Ü™\ÚÛYÜ™Y\ÈHÛÝ\˜ÙKœÝ\Ü™\ÚÛYÜ™Y\ÎÂˆ\™Ù]œ\š[Y]\œÈHÛÝ\˜ÙKœ\š[Y]\œÎÂˆ\™Ù]Ü^Y\œÈHÛÝ\˜ÙKÜ^Y\œÎÂˆ\™Ù]˜›ÝÛS^Y\œÈHÛÝ\˜ÙK˜›ÝÛS^Y\œÎÂˆ\™Ù]›˜]]™TÙ][™ÜË˜ÛX\Š
+NÂˆ\™Ù]›˜]]™TÙ][™ÜËœ][
+ÛÝ\˜ÙK›˜]]™TÙ][™ÜÊNÂˆB‚ˆš]˜]H›ÚYÚÝÔ›Ú™XÝY[J
+HÂˆ™]È[\X[ÙËZ[\Š\ÊBˆœÙ]]J”›Ú™XÝŠBˆœÙ]][\Ê™]ÈÝš[™Ö×^È“™]È›Ú™XÝ‹”š[]\È‹“Ü[ˆ[Ù[]\È‹LHZ[šHÑÝYH‹”Ø]™HÝ\œ™[ÑšY]È
+‘ÊH‹”™]šY]ÈXÝ]™H›Ùš[H‹’[\Ü˜[XH›Ùš[JÊH‹‘^ÜXÝ]™H›Ùš[H‹”™\Ù][\ÜY›Ùš[H‹”Ø]™H›Ú™XÝ\˜Ú]™H‹“Ü[ˆ›Ú™XÝ\˜Ú]™H‹”›Ú™XÝ\ÝÜžH‹‘›Ü™Ù]Ø]™Y[Ù[ŸK
+X[ÙËÚXÚ
+HOˆÂˆYˆ
+ÚXÚOH
+H™\Ù]›Ú™XÝ
+
+NÂˆYˆ
+ÚXÚOHJHÚÝÔ]\Ê
+NÂˆYˆ
+ÚXÚOHŠHÚÝÓ[Ù[Xœ˜\žJ
+NÂˆYˆ
+ÚXÚOHÊHÚÝÔš[\”ÝYJ
+NÂˆYˆ
+ÚXÚOH
+HÜ[•šY]Ñ^Ü
+
+NÂˆYˆ
+ÚXÚOHJHÚÝÔ›Ùš[T™]šY]Ê
+NÂˆYˆ
+ÚXÚOHŠHÜ[˜[XT›Ùš[J
+NÂˆYˆ
+ÚXÚOHÊHÜ[”›Ùš[Q^Ü
+
+NÂˆYˆ
+ÚXÚOH
+H™\Ù][\ÜY›Ùš[J
+NÂˆYˆ
+ÚXÚOHJHØ]™T›Ú™XÝ\˜Ú]™J
+NÂˆYˆ
+ÚXÚOHL
+HÜ[”›Ú™XÝ\˜Ú]™J
+NÂˆYˆ
+ÚXÚOHLJHÚÝÔ›Ú™XÝ\ÝÜžJ
+NÂˆYˆ
+ÚXÚOHLŠHÂˆYˆ
+š[\\ÞHÛXÚ[™È˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HXÝ]™Hš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+H[Ù[\ÝÜžTÝÜ™K˜ÛX\‘ØÝ[Y[
+XÝ]™T]R[™^
+NÂˆÛX\“ØYY[Ù[›Ü”]J
+NÂˆØ\Ý›XZÙU^
+\Ë”Ø]™Y[Ù[›Ü™ÛÝ[ˆ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆBˆJBˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+BˆœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚYÚÝÔ›Ú™XÝ\ÝÜžJ
+HÂˆYˆ
+š[\\ÞH[\Ü[™ÈÛXÚ[™È˜]ÚÛXÚ[™È›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚHÝ\œ™[Ü\˜][Ûˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ\œ˜^S\Ý›Ú™XÝ\ÝÜžTÝÜ™K”™XÛÜ™ˆ™XÛÜ™ÈH›Ú™XÝ\ÝÜžTÝÜ™Kœ™XÛÜ™Ê
+NÂˆYˆ
+™XÛÜ™Ëš\Ñ[\J
+JHÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J”›Ú™XÝ\ÝÜžHŠBˆœÙ]Y\ÜØYÙJ”Ø]™Y[™Ü[™YÜX›H›Ú™XÝÈÚ[\X\ˆ\™KˆŠBˆœÙ]ÜÚ]]™P]ÛŠ‘Û™H‹[
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆÝš[™Ö×HX™[ÈH™]ÈÝš[™ÖÜ™XÛÜ™ËœÚ^™J
+WNÂˆ›Üˆ
+[[™^HÈ[™^™XÛÜ™ËœÚ^™J
+NÈ[™^
+ÊÊHX™[ÖÚ[™^HH™XÛÜ™Ë™Ù]
+[™^
+KœÝ[[X\žJ
+NÂˆ™]È[\X[ÙËZ[\Š\ÊKœÙ]]J”›Ú™XÝ\ÝÜžHŠBˆœÙ]Y\ÜØYÙJ”™XÙ[ÜX›H›Ú™XÝÈ0­ÈÝÜ™YØØ[HÛˆ\ÈÛ™HŠBˆœÙ]][\ÊX™[Ë
+X[ÙËÚXÚ
+HOˆÂˆ›Ú™XÝ\ÝÜžTÝÜ™K”™XÛÜ™™XÛÜ™H™XÛÜ™Ë™Ù]
+ÚXÚ
+NÂˆYˆ
+™XÛÜ™˜\˜Ú]™U\šK›[™Ý
+
+HOH
+HÂˆØ\Ý›XZÙU^
+\Ë•\È\ÝÜžH™XÛÜ™\È›ÈÜX›H\˜Ú]™HÈ™[Ü[ˆ‹Ø\Ý“S‘ÕÓÓ‘ÊKœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆ\šH\˜Ú]™HH\šKœ\œÙJ™XÛÜ™˜\˜Ú]™U\šJNÂˆ™[Y[X™\•\šT\›Z\ÜÚ[ÛŠ\˜Ú]™K[[‘“Q×ÑÔS•Ô‘PQÕT’WÔT“RTÔÒSÓŠNÂˆ™XY›Ú™XÝ\˜Ú]™J\˜Ú]™JNÂˆJBˆœÙ]™]]˜[]ÛŠÛX\ˆ‹
+X[ÙËÚXÚ
+HOˆÂˆ›Ú™XÝ\ÝÜžTÝÜ™K˜ÛX\Š
+NÂˆØ\Ý›XZÙU^
+\Ë”›Ú™XÝ\ÝÜžHÛX\™Y‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆJBˆœÙ]™YØ]]™P]ÛŠÛÜÙH‹[
+KœÚÝÊ
+NÂˆB‚ˆš]˜]H›ÚY™\Ù]›Ú™XÝ
+
+HÂˆYˆ
+š[\\ÞHÛXÚ[™È˜]ÚÛXÚ[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HXÝ]™Hš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆØ[˜Ù[[\Ü
+
+NÂˆØ[˜Ù[Ù[ÛY]žT™\Z\Š
+NÂˆØ[˜Ù[˜]]™P›ÛÛX[Š
+NÂˆÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆ˜]ÚÛXÙR›ØœË˜Ø[˜Ù[
+
+NÂˆ˜]ÚÛXÚ[™ÈH˜[ÙNÂˆ[Ù[H[ÂˆÛÝ\˜ÙS[Ù[H[Âˆ[›[ÙYšYYÛÝ\˜ÙS[Ù[H[ÂˆÙ[ÛY]žT™\Z\‘[˜X›YH˜[ÙNÂˆ\˜[œÙ›Ü›\Ë˜ÛX\Š
+NÂˆ[Ù[\š\Ë˜ÛX\Š
+NÂˆ[Ù[˜[Y\Ë˜ÛX\Š
+NÂˆ[Ù[ØØ[HHYŽÂˆ[Ù[›Ý][Û‘YÜ™Y\ÈHŽÂˆ[Ù[[YÜ™Y\ÈHŽÂˆ[Ù[[QYÜ™Y\ÈHŽÂˆÛXÙHH[ÂˆÝYÙY\Y˜XÝH[Âˆ\Ý˜]ÚH[ÂˆYˆ
+˜]ÚÛXÙR›Ø”ÝÜ™HOH[
+H˜]ÚÛXÙR›Ø”ÝÜ™K˜ÛX\Š
+NÂˆXÝ]™P˜]ÚÛXÙR›Ø’YH[ÂˆÛXÚ[™ÈH˜[ÙNÂˆ]R[\Ü[‘›YÚH˜[ÙNÂˆYˆ
+[Ù[\ÝÜžTÝÜ™HOH[
+H[Ù[\ÝÜžTÝÜ™K˜ÛX\[
+
+NÂˆ›Ú™XÝÝÜ™K˜ÛX\“[Ù[
+
+NÂˆ]TÝÜ™KœØ]™J]TÝÜ™K”]K™[\JXÝ]™T]R[™^
+JNÂˆ[™S[Ù[ØXÚJ
+NÂˆšY]ÜÜœÙ][Ù[
+[
+NÂˆšY]ÜÜœÙ]™\Ý[
+[
+NÂˆ[Ù[Y]KœÙ]^
+“‘UÈ“Ò‘PÕˆˆ
+È›Ùš[TÚÜX™[
+
+JNÂˆÝ]\ËœÙ]^
+Ý\œ™[]SX™[
+
+H
+Èˆ0­È[\ÜH[Ù[È™YÚ[ˆŠNÂˆ]Z[ËœÙ]^
+”ÕÐ’‹ÓQˆ[™ÕT0­Èˆ
+È›Ùš[PZ[›Û[YSX™[
+
+H
+ÈˆZ[›Û[YHŠNÂˆ\]T]SX\šÙ\Š
+NÂˆ™Yœ™\ÚXÝ[ÛœÊ
+NÂˆB‚ˆš]˜]HY]^^šY[
+Ýš[™È˜[YKÝš[™È[
+HÂˆY]^šY[H™]ÈY]^
+\ÊNÂˆšY[œÙ]^
+˜[YJNÂˆšY[œÙ][
+[
+NÂˆšY[œÙ]^ÛÛÜŠV
+NÂˆšY[œÙ][^ÛÛÜŠUUQ
+NÂˆšY[œÙ][œ]\J[™›ÚY^’[œ]\K•TWÐÓTÔ×ÕV
+NÂˆ™]\›ˆšY[ÂˆB‚ˆš]˜]H^šY]ÈÙXÝ[Û“X™[
+Ýš[™È^
+HÂˆ^šY]ÈšY]ÈHX™[
+^LÓÓ
+NÂˆšY]ËœÙ]\Y˜XÙJ[[™›ÚY™Ü˜\XÜË•\Y˜XÙK“Ó
+NÂˆšY]ËœÙ]]\”ÜXÚ[™ÊŒL™ŠNÂˆšY]ËœÙ]Y[™ÊNŠNÂˆ™]\›ˆšY]ÎÂˆB‚ˆš]˜]HY]^šY[
+Ýš[™È˜[YKÝš[™È[
+HÈ™]\›ˆšY[
+˜[YK[˜[ÙJNÈBˆš]˜]HY]^šY[
+Ýš[™È˜[YKÝš[™È[›ÛÛX[ˆÚYÛ™Y
+HÈY]^šY[H™]ÈY]^
+\ÊNÈšY[œÙ]^
+˜[YJNÈšY[œÙ][
+[
+NÈšY[œÙ]^ÛÛÜŠV
+NÈšY[œÙ][^ÛÛÜŠUUQ
+NÈšY[œÙ][œ]\J[™›ÚY^’[œ]\K•TWÐÓTÔ×Ó•SP‘Tˆ[™›ÚY^’[œ]\K•TWÓ•SP‘T—Ñ“Q×ÑPÒSPS
+ÚYÛ™YÈ[™›ÚY^’[œ]\K•TWÓ•SP‘T—Ñ“Q×ÔÒQÓ‘Qˆ
+JNÈ™]\›ˆšY[ÈBˆš]˜]HÝ]XÈÝš[™È˜]]™TÙ][™ÊÛXÙ\‹ÛÛ™šYÈÛÛ™šYËÝš[™ÈÙ^KÝš[™È˜[˜XÚÊHÂˆYˆ
+ÛÛ™šYÈOH[Ù^HOH[
+H™]\›ˆ˜[˜XÚÎÂˆÝš[™È˜[YHHÛÛ™šYË›˜]]™TÙ][™ÜË™Ù]
+Ù^JNÂˆ™]\›ˆ˜[YHOH[˜[YKš[J
+K›[™Ý
+
+HOHÈ˜[˜XÚÈˆ˜[YNÂˆBˆš]˜]HÝ]XÈÝš[™È]U[\\˜]\™RÙ^JÝš[™È]K›ÛÛX[ˆ[š]X[^Y\ŠHÂˆÝš[™È˜[YHH]HOH[Èˆˆˆ]KÓÝÙ\Ø\ÙJØØ[K•TÊNÂˆÝš[™ÈÝY™š^H[š]X[^Y\ˆÈ—Ú[š]X[Û^Y\ˆˆˆˆŽÂˆYˆ
+˜[YK˜ÛÛZ[œÊ˜ÛÛÛŠJH™]\›ˆ˜ÛÛÛÜ]WÝ[\ˆ
+ÈÝY™š^ÂˆYˆ
+˜[YK˜ÛÛZ[œÊ™[™Ú[™Y\š[™ÈŠH˜[YKœÝ\ÕÚ]
+™[™ÈŠJH™]\›ˆ™[™×Ü]WÝ[\ˆ
+ÈÝY™š^ÂˆYˆ
+˜[YK˜ÛÛZ[œÊœÝ\\XÚÈŠH˜[YK˜ÛÛZ[œÊœÝ\\ˆXÚÈŠJH™]\›ˆœÝ\\XÚ×Ü]WÝ[\ˆ
+ÈÝY™š^ÂˆYˆ
+˜[YK˜ÛÛZ[œÊ^\™YŠJH™]\›ˆ^\™YÜ]WÝ[\ˆ
+ÈÝY™š^Âˆ™]\›ˆšÝÜ]WÝ[\ˆ
+ÈÝY™š^ÂˆBˆš]˜]HÝ]XÈ›Ø]Ù[XÝY]U[\\˜]\™JÛXÙ\‹ÛÛ™šYÈÛÛ™šYËÝš[™È]K›ÛÛX[ˆ[š]X[^Y\‹›Ø]˜[˜XÚÊHÂˆÝš[™È˜]ÈH˜]]™TÙ][™ÊÛÛ™šYË]U[\\˜]\™RÙ^J]K[š]X[^Y\ŠKˆŠKš[J
+NÂˆYˆ
+˜]Ë›[™Ý
+
+HOH
+H™]\›ˆ˜[˜XÚÎÂˆ[ÛÛ[XHH˜]Ëš[™^ÙŠ	Ë	ÊNÂˆYˆ
+ÛÛ[XHH
+H˜]ÈH˜]ËœÝXœÝš[™ÊÛÛ[XJKš[J
+NÂˆžHÂˆ›Ø]˜[YHH›Ø]œ\œÙQ›Ø]
+˜]ÊNÂˆ™]\›ˆš[š]J˜[YJH	‰ˆ˜[YHHˆ	‰ˆ˜[YHHMLˆÈ˜[YHˆ˜[˜XÚÎÂˆHØ]Ú
+[X™\‘›Ü›X]^Ù\[ÛˆYÛ›Ü™Y
+HÂˆ™]\›ˆ˜[˜XÚÎÂˆBˆBˆš]˜]H˜Y[ÑÜ›Ý\ÚÚXÙQÜ›Ý\
+Ýš[™Ö×V×HÜ[ÛœËÝš[™ÈÙ[XÝY
+HÂˆ˜Y[ÑÜ›Ý\Ü›Ý\H™]È˜Y[ÑÜ›Ý\
+\ÊNÂˆ[Ù[XÝY[™^HÂˆ›Üˆ
+[[™^HÈ[™^Ü[ÛœË›[™ÝÈ[™^
+ÊÊHÂˆ˜Y[Ð]ÛˆÜ[ÛˆH™]È˜Y[Ð]ÛŠ\ÊNÂˆÜ[Û‹œÙ]Y
+šY]Ë™Ù[™\˜]UšY]ÒY
+
+JNÂˆÜ[Û‹œÙ]^
+Ü[ÛœÖÚ[™^VÌJNÂˆÜ[Û‹œÙ]^ÛÛÜŠV
+NÂˆÜ[Û‹œÙ]YÊÜ[ÛœÖÚ[™^VÌWJNÂˆÜ›Ý\˜YšY]ÊÜ[ÛŠNÂˆYˆ
+Ü[ÛœÖÚ[™^VÌWK™\]X[ÒYÛ›Ü™PØ\ÙJÙ[XÝY
+JHÙ[XÝY[™^H[™^ÂˆBˆYˆ
+Ü›Ý\™Ù]Ú[ÛÝ[
+
+Hˆ
+HÜ›Ý\˜ÚXÚÊÜ›Ý\™Ù]Ú[]
+Ù[XÝY[™^
+K™Ù]Y
+
+JNÂˆ™]\›ˆÜ›Ý\ÂˆBˆš]˜]HÝ]XÈÝš[™ÈÙ[XÝYÚÚXÙJ˜Y[ÑÜ›Ý\Ü›Ý\Ýš[™È˜[˜XÚÊHÂˆYˆ
+Ü›Ý\OH[
+H™]\›ˆ˜[˜XÚÎÂˆšY]ÈÙ[XÝYHÜ›Ý\™š[™šY]ÐžRY
+Ü›Ý\™Ù]ÚXÚÙY˜Y[Ð]Û’Y
+
+JNÂˆØš™XÝYÈHÙ[XÝYOH[È[ˆÙ[XÝY™Ù]YÊ
+NÂˆ™]\›ˆYÈOH[È˜[˜XÚÈˆÝš[™Ë˜[YSÙŠYÊNÂˆBˆš]˜]HÝ]XÈ›ÛÛX[ˆ˜]]™P›ÛÛX[ŠÛXÙ\‹ÛÛ™šYÈÛÛ™šYËÝš[™ÈÙ^K›ÛÛX[ˆ˜[˜XÚÊHÂˆÝš[™È˜[YHH˜]]™TÙ][™ÊÛÛ™šYËÙ^K˜[˜XÚÈÈŒHˆˆŒŠKš[J
+NÂˆ™]\›ˆŒH‹™\]X[Ê˜[YJHYH‹™\]X[ÒYÛ›Ü™PØ\ÙJ˜[YJHžY\È‹™\]X[ÒYÛ›Ü™PØ\ÙJ˜[YJNÂˆBˆš]˜]HÝ]XÈÝš[™È[X™\Š›Ø]˜[YJHÈ™]\›ˆÝš[™Ë™›Ü›X]
+ØØ[K•TË‰KYˆ‹˜[YJNÈBˆš]˜]HÝ]XÈ›Ø]Û[\
+›Ø]˜[YK›Ø]Z[‹›Ø]X^
+HÈ™]\›ˆX]›X^
+Z[‹X]›Z[ŠX^˜[YJJNÈBˆš]˜]HÝ]XÈ›ÛÛX[ˆš[š]J›Ø]˜[YJHÈ™]\›ˆQ›Ø]š\Ó˜SŠ˜[YJH	‰ˆQ›Ø]š\Ò[™š[š]J˜[YJNÈBˆš]˜]HÝ]XÈÝš[™ÈØY™S˜[YJÝš[™È˜[YJHÂˆÝš[™È˜[YHH˜[YHOH[È˜[ÞKZ›Øˆˆˆ˜[YKœ™\XÙP[
+–×KV˜K^ŒNK—ËWH‹—ÈŠKœ™\XÙP[
+ŠÚJJŠÝÛYŸØÛÙJJJÉ‹ˆŠNÂˆYˆ
+˜[YK›[™Ý
+
+HOH
+H™]\›ˆ˜[ÞKZ›ØˆŽÂˆ™]\›ˆ˜[YK›[™Ý
+
+HˆMLÈ˜[YKœÝXœÝš[™ÊML
+Hˆ˜[YNÂˆB‚ˆÝ™\œšYHX›XÈ›ÚYÛ˜XÚÔ™\ÜÙY
+
+HÂˆYˆ
+[\Ü[™ÊHÂˆØ[˜Ù[[\Ü
+
+NÂˆ™]\›ŽÂˆBˆYˆ
+™\Z\š[™ÑÙ[ÛY]žJHÂˆØ[˜Ù[Ù[ÛY]žT™\Z\Š
+NÂˆ™]\›ŽÂˆBˆYˆ
+›Ú™XÝ˜[œÙ™\œš[™È˜]Ú˜[œÙ™\œš[™ÊHÂˆØ\Ý›XZÙU^
+\Ë›Ú™XÝ˜[œÙ™\œš[™ÈÈ”›Ú™XÝš[H˜[œÙ™\ˆ\ÈÝ[[›š[™Èˆˆ˜]Ú^Ü\ÈÝ[[›š[™È‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+˜]ÚÛXÚ[™ÊHÂˆØ[˜Ù[˜]ÚÛXÙJ
+NÂˆ™]\›ŽÂˆBˆYˆ
+ÛXÚ[™ÊHÂˆØ[˜Ù[ÛXÙJ
+NÂˆ™]\›ŽÂˆBˆYˆ
+š[\\ÞJHÂˆØ\Ý›XZÙU^
+\Ë‘š[š\ÚÜˆØ[˜Ù[HXÝ]™Hš[\ˆ›Øˆš\œÝ‹Ø\Ý“S‘ÕÔÒÔ•
+KœÚÝÊ
+NÂˆ™]\›ŽÂˆBˆYˆ
+ÛXÙHOH[
+HÈÛXÙHH[ÈšY]ÜÜœÙ]™\Ý[
+[
+NÈ™Yœ™\ÚXÝ[ÛœÊ
+NÈÝ]\ËœÙ]^
+”™\\™H0­Èˆ
+È[Ù[™\Ü^S˜[YJNÈ™]\›ŽÈBˆÝ\\‹›Û˜XÚÔ™\ÜÙY
+
+NÂˆB‚ˆÝ™\œšYH›ÝXÝY›ÚYÛ”]\ÙJ
+HÂˆØ]™PÝ\œ™[]J
+NÂˆYˆ
+šY]ÜÜOH[
+HšY]ÜÜ›Û’ÜÝ]\ÙJ
+NÂˆÝ\\‹›Û”]\ÙJ
+NÂˆB‚ˆÝ™\œšYH›ÝXÝY›ÚYÛ”™\Ý[YJ
+HÂˆÝ\\‹›Û”™\Ý[YJ
+NÂˆYˆ
+šY]ÜÜOH[
+HšY]ÜÜ›Û’ÜÝ™\Ý[YJ
+NÂˆ™Yœ™\Úš[\•ZJ
+NÂˆ™Yœ™\ÚÛXÙUZJ
+NÂˆ™Yœ™\Ú˜]ÚÛXÙUZJ
+NÂˆB‚ˆÝ™\œšYH›ÝXÝY›ÚYÛ‘\Ý›ÞJ
+HÂˆ\ÛZ\ÜÔÛXÙT›ÙÜ™\ÜÓØY\Š
+NÂˆYˆ
+š[\‘]™[™XÙZ]™\ˆOH[
+HÂˆžHÈ[œ™YÚ\Ý\”™XÙZ]™\Šš[\‘]™[™XÙZ]™\ŠNÈHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈBˆš[\‘]™[™XÙZ]™\ˆH[ÂˆBˆYˆ
+ÛXÙQ]™[™XÙZ]™\ˆOH[
+HÂˆžHÈ[œ™YÚ\Ý\”™XÙZ]™\ŠÛXÙQ]™[™XÙZ]™\ŠNÈHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈBˆÛXÙQ]™[™XÙZ]™\ˆH[ÂˆBˆYˆ
+˜]ÚÛXÙQ]™[™XÙZ]™\ˆOH[
+HÂˆžHÈ[œ™YÚ\Ý\”™XÙZ]™\Š˜]ÚÛXÙQ]™[™XÙZ]™\ŠNÈHØ]Ú
+^Ù\[ÛˆYÛ›Ü™Y
+HÈBˆ˜]ÚÛXÙQ]™[™XÙZ]™\ˆH[ÂˆBˆØ[˜Ù[[\Ü
+
+NÂˆØ[˜Ù[Ù[ÛY]žT™\Z\Š
+NÂˆØ[˜Ù[š\ÝX[^˜][ÛŠ
+NÂˆØ[˜Ù[˜]]™P›ÛÛX[Š
+NÂˆXÝ]™PÙ\YšXØ]R[œÜXÝ[Û’YHÙ\YšXØ]R[œÜXÝ[Û’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆYˆ
+XÝ]™PÙ\YšXØ]R[œÜXÝ[ÛˆOH[
+HXÝ]™PÙ\YšXØ]R[œÜXÝ[Û‹˜Ø[˜Ù[
+YJNÂˆXÝ]™T›Ú™XÝ˜[œÙ™\’YH›Ú™XÝ˜[œÙ™\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆYˆ
+XÝ]™T›Ú™XÝ˜[œÙ™\ˆOH[
+HXÝ]™T›Ú™XÝ˜[œÙ™\‹˜Ø[˜Ù[
+YJNÂˆXÝ]™P˜]Ú˜[œÙ™\’YH˜]Ú˜[œÙ™\’YËš[˜Ü™[Y[[™Ù]
+
+NÂˆYˆ
+XÝ]™P˜]Ú˜[œÙ™\ˆOH[
+HXÝ]™P˜]Ú˜[œÙ™\‹˜Ø[˜Ù[
+YJNÂˆYˆ
+XÝ]™Q\ØÛÝ™\žHOH[
+HÂˆXÝ]™Q\ØÛÝ™\žK˜ÛÜÙJ
+NÂˆXÝ]™Q\ØÛÝ™\žHH[ÂˆBˆYˆ
+XÝ]™P˜]ÚÛ˜\ÚÝOH[	‰ˆP˜]ÚÛXÙR›Ø”Ù\šXÙK›ÝÛœÐ[žR›ØŠ
+JHXÝ]™P˜]ÚÛ˜\ÚÝ˜Ø[˜Ù[
+YJNÂˆYˆ
+XÝ]™T›Ùš[R[\ÜOH[
+HXÝ]™T›Ùš[R[\Ü˜Ø[˜Ù[
+YJNÂˆ[\Ü^XÝ]Ü‹œÚ]ÝÛ“›ÝÊ
+NÂˆXZ[’[™\‹œ™[[Ý™PØ[˜XÚÜÐ[™Y\ÜØYÙ\Ê[
+NÂˆYˆ
+ÛXÙR›ØœÈOH[
+HÛXÙR›ØœË˜ÛÜÙJ
+NÂˆYˆ
+˜]ÚÛXÙR›ØœÈOH[
+H˜]ÚÛXÙR›ØœË˜ÛÜÙJ
+NÂˆYˆ
+š[\•˜[œÜÜOH[
+Hš[\•˜[œÜÜ˜ÛÜÙJ
+NÂˆÝ\\‹›Û‘\Ý›ÞJ
+NÂˆBŸB
