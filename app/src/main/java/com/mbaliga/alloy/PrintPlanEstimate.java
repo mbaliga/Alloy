@@ -40,8 +40,7 @@ public final class PrintPlanEstimate {
         String scope = config.supports
                 ? "ENGINE FILAMENT TOTAL"
                 : "MODEL TOOLPATH FILAMENT";
-        String time = slice.printTimeSeconds < 0f ? "Not reported by engine"
-                : duration(slice.printTimeSeconds) + "  ·  engine estimate, not printer-verified";
+        String time = formatTime(slice);
         return new PrintPlanEstimate(slice.filamentMm,
                 grams(slice.filamentMm, config.filamentDiameter, config.filament,
                         config.nativeSettings.get("filament_density")),
@@ -49,6 +48,17 @@ public final class PrintPlanEstimate {
                 support,
                 "Not included in this estimate. Printer startup priming, purge and cleaning waste are not currently modeled.",
                 time);
+    }
+
+    static String formatTime(Slicer.Result slice) {
+        if (slice == null || slice.printTimeSeconds < 0f) return "No time estimate reported";
+        String source;
+        if (Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED.equals(slice.printTimeSource))
+            source = "slicer estimate; actual time may vary";
+        else if (Slicer.Result.PRINT_TIME_SOURCE_MODEL.equals(slice.printTimeSource))
+            source = "model time from file; actual time may vary";
+        else source = "slicer-reported time; actual time may vary";
+        return duration(slice.printTimeSeconds) + "  ·  " + source;
     }
 
     static float grams(float lengthMm, float diameterMm, String material, String profileDensity) {

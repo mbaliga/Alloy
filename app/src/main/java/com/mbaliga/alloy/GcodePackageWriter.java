@@ -72,6 +72,7 @@ public final class GcodePackageWriter {
                     + number(config.nozzle) + ",\"version\":2,\"plate\":1,\"printer\":\"" + json(config.printer)
                     + "\",\"material\":\"" + json(config.filament) + "\",\"source\":\"" + json(source)
                     + "\",\"engine_verified\":" + result.engineVerified + ",\"template_policy\":\"" + json(templatePolicy) + "\""
+                    + ",\"print_time_source\":\"" + json(result.printTimeSource) + "\""
                     + ",\"support_engine\":\"" + json(supportEngine) + "\",\"support_parity_verified\":"
                     + SupportEngineStatus.physicalPrintReady(config, result)
                     + ",\"layer_height_mm\":" + number(config.layerHeight) + ",\"first_layer_height_mm\":" + number(config.firstLayerHeight)

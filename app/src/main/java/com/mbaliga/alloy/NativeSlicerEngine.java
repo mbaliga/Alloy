@@ -42,6 +42,7 @@ public final class NativeSlicerEngine implements SlicerEngine {
     private static final Pattern Z_COMMENT = Pattern.compile(";\\s*Z\\s*:\\s*([-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?)", Pattern.CASE_INSENSITIVE);
     private static final Pattern FILAMENT_COMMENT = Pattern.compile(";\\s*filament\\s+used\\s+\\[mm\\]\\s*=\\s*([-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?)", Pattern.CASE_INSENSITIVE);
     private static final Pattern TIME_COMMENT = Pattern.compile(";\\s*estimated printing time.*?=\\s*(?:(\\d+)h\\s*)?(?:(\\d+)m\\s*)?(?:(\\d+)s)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MODEL_TIME_COMMENT = Pattern.compile(";\\s*model printing time\\s*[:=]\\s*(?:(\\d+)h\\s*)?(?:(\\d+)m\\s*)?(?:(\\d+)s)", Pattern.CASE_INSENSITIVE);
     private static final int TOOLPATH_OTHER = 0;
     private static final int TOOLPATH_PERIMETER = 1;
     private static final int TOOLPATH_SUPPORT = 2;
@@ -105,7 +106,7 @@ public final class NativeSlicerEngine implements SlicerEngine {
             // and sent to a printer.
             Slicer.Result result = new Slicer.Result(parsed.gcode, parsed.layers, parsed.filamentMm,
                     parsed.warnings, parsed.engineId, engineVerified,
-                    parsed.printTimeSeconds, parsed.travelMm);
+                    parsed.printTimeSeconds, parsed.printTimeSource, parsed.travelMm);
             A1MiniTemplatePolicy.requireSafe(result.gcode);
             return result;
         } catch (IOException error) {
@@ -874,7 +875,8 @@ public final class NativeSlicerEngine implements SlicerEngine {
         int layerIndex = 0;
         float x = 0f, y = 0f, e = 0f, pendingZ = config.layerHeight;
         boolean absoluteXYZ = true, absoluteE = true, sawMotion = false, sawLayerMarker = false;
-        float computedFilament = 0f, reportedFilament = -1f, travelMm = 0f, reportedTimeSeconds = -1f;
+        float computedFilament = 0f, reportedFilament = -1f, travelMm = 0f;
+        float estimatedTimeSeconds = -1f, modelTimeSeconds = -1f;
         int warnings = 0;
         PreviewState preview = new PreviewState();
         int toolpathRole = TOOLPATH_OTHER;
@@ -906,7 +908,14 @@ public final class NativeSlicerEngine implements SlicerEngine {
                     float hours = finiteFloat(timeMatch.group(1), 0f);
                     float minutes = finiteFloat(timeMatch.group(2), 0f);
                     float seconds = finiteFloat(timeMatch.group(3), 0f);
-                    reportedTimeSeconds = hours * 3600f + minutes * 60f + seconds;
+                    estimatedTimeSeconds = hours * 3600f + minutes * 60f + seconds;
+                }
+                Matcher modelTimeMatch = MODEL_TIME_COMMENT.matcher(trimmed);
+                if (modelTimeMatch.find()) {
+                    float hours = finiteFloat(modelTimeMatch.group(1), 0f);
+                    float minutes = finiteFloat(modelTimeMatch.group(2), 0f);
+                    float seconds = finiteFloat(modelTimeMatch.group(3), 0f);
+                    modelTimeSeconds = hours * 3600f + minutes * 60f + seconds;
                 }
                 Matcher zMatch = Z_COMMENT.matcher(trimmed);
                 if (zMatch.find()) pendingZ = finiteFloat(zMatch.group(1), pendingZ);
@@ -1001,10 +1010,19 @@ public final class NativeSlicerEngine implements SlicerEngine {
         if (preview.truncated) warnings++;
         if (reportedFilament < 0f) reportedFilament = computedFilament;
         if (!finite(reportedFilament) || reportedFilament < 0f) reportedFilament = 0f;
-        if (!finite(reportedTimeSeconds) || reportedTimeSeconds < 0f) reportedTimeSeconds = -1f;
+        float reportedTimeSeconds = estimatedTimeSeconds;
+        String reportedTimeSource = Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED;
+        if (!finite(reportedTimeSeconds) || reportedTimeSeconds < 0f) {
+            reportedTimeSeconds = modelTimeSeconds;
+            reportedTimeSource = Slicer.Result.PRINT_TIME_SOURCE_MODEL;
+        }
+        if (!finite(reportedTimeSeconds) || reportedTimeSeconds < 0f) {
+            reportedTimeSeconds = -1f;
+            reportedTimeSource = Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED;
+        }
         return new Slicer.Result(gcode.toString(), layers, reportedFilament, warnings,
                 resultEngineId == null ? "unknown-engine" : resultEngineId, resultEngineVerified,
-                reportedTimeSeconds, travelMm);
+                reportedTimeSeconds, reportedTimeSource, travelMm);
     }
 
     static boolean isNativeEngineId(String engineId) {
