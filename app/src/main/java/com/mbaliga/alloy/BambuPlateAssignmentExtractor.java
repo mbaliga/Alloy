@@ -8,6 +8,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -19,7 +21,7 @@ public final class BambuPlateAssignmentExtractor {
     private BambuPlateAssignmentExtractor() { }
 
     /**
-     * Return true when Bambu metadata declares more than one plate. Alloy currently
+     * Return true when Bambu metadata declares more than one distinct plate ID. Alloy currently
      * imports geometry as a single plate, so callers must reject these projects
      * instead of silently merging their plate contents.
      */
@@ -63,14 +65,19 @@ public final class BambuPlateAssignmentExtractor {
         try {
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false);
             parser.setInput(new java.io.ByteArrayInputStream(xml), "UTF-8");
-            int count = 0;
+            Set<String> plateIds = new HashSet<>();
             int event;
             while ((event = parser.next()) != XmlPullParser.END_DOCUMENT) {
-                if (event == XmlPullParser.START_TAG && "plate".equals(parser.getName())) {
-                    if (++count > 1) return count;
+                if (event == XmlPullParser.START_TAG && "metadata".equals(parser.getName())
+                        && "plater_id".equals(parser.getAttributeValue(null, "key"))) {
+                    String id = parser.getAttributeValue(null, "value");
+                    if (id != null && !id.trim().isEmpty()) {
+                        plateIds.add(id.trim());
+                        if (plateIds.size() > 1) return 2;
+                    }
                 }
             }
-            return count;
+            return plateIds.size();
         } catch (Exception error) {
             throw new IOException("Could not read Bambu plate assignments from 3MF", error);
         }
