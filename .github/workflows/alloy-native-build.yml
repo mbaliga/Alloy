@@ -56,12 +56,14 @@ on:
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
       - 'ci/compare_g3_artifacts.py'
+      - 'ci/g3_evidence_manifest.py'
       - 'ci/neutralize_bambu_motion_hooks.py'
       - 'ci/compare_hook_neutralized_g3.py'
       - 'parity/test_hook_neutralized_profile.py'
       - 'parity/test_hook_neutralized_g3.py'
       - 'parity/test_hook_neutralized_workflow_contract.py'
       - 'parity/test_g3_artifact_parity.py'
+      - 'parity/test_g3_evidence_manifest.py'
       - 'parity/verify_g3_profile.py'
       - 'parity/test_g3_profile.py'
       - 'parity/compare_gcode.py'
@@ -130,12 +132,14 @@ on:
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
       - 'ci/compare_g3_artifacts.py'
+      - 'ci/g3_evidence_manifest.py'
       - 'ci/neutralize_bambu_motion_hooks.py'
       - 'ci/compare_hook_neutralized_g3.py'
       - 'parity/test_hook_neutralized_profile.py'
       - 'parity/test_hook_neutralized_g3.py'
       - 'parity/test_hook_neutralized_workflow_contract.py'
       - 'parity/test_g3_artifact_parity.py'
+      - 'parity/test_g3_evidence_manifest.py'
       - 'parity/verify_g3_profile.py'
       - 'parity/test_g3_profile.py'
       - 'parity/compare_gcode.py'
@@ -533,6 +537,22 @@ jobs:
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
             test -s path-b-g3-evidence/overhang_support.gcode
             test -s path-b-g3-evidence/overhang_support.config.ini
+      - name: Record native G3 run-context manifest
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        env:
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 ci/g3_evidence_manifest.py \
+            --evidence-dir path-b-g3-evidence \
+            --head-sha "$ALLOY_PR_HEAD_SHA" \
+            --base-sha "$ALLOY_PR_BASE_SHA" \
+            --merge-sha "$ALLOY_PR_MERGE_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
       - name: Upload unqualified Bambu template rendering probe
         if: always()
         uses: actions/upload-artifact@v4
