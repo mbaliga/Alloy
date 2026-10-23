@@ -356,7 +356,24 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          bash build_all_deps_android.sh
+          log_dir="${RUNNER_TEMP}/alloy-native-dependency-build"
+          mkdir -p "$log_dir"
+          log_file="$log_dir/build.log"
+          printf 'started_at=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$log_dir/status.txt"
+          set +e
+          bash build_all_deps_android.sh 2>&1 | tee "$log_file"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf 'exit_status=%s\nfinished_at=%s\n' "$status" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> "$log_dir/status.txt"
+          exit "$status"
+      - name: Upload native dependency build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-dependency-build-diagnostics
+          path: ${{ runner.temp }}/alloy-native-dependency-build/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Copy generated native inputs into Alloy
         shell: bash
         run: |
