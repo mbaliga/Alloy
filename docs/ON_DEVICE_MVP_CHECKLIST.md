@@ -4,28 +4,23 @@ This is a verification protocol, not a print-readiness claim. Passing software
 checks does not establish slicer parity, physical printer safety, Bambu Handy
 acceptance, or production signing.
 
-**Latest installable Android software-QA package:** tested app-source head
-[`bd6ab14`](https://github.com/mbaliga/Alloy/commit/bd6ab14afbe92a87d2c598adf5f8dc0987d7c41b). A later documentation-only checklist refresh does not change the tested app source.
-Android acceptance [run 39894310373](https://github.com/mbaliga/Alloy/actions/runs/39894310373)
+**Latest installable Android software-QA package:** exact PR head
+[`a32eb30`](https://github.com/mbaliga/Alloy/commit/a32eb3038f2844a896bb178050671d7a03acb65b). Android acceptance
+[run 39962333697](https://github.com/mbaliga/Alloy/actions/runs/39962333697)
 passed. Download the CI-signed QA APK archive [artifact
-12476638827](https://github.com/mbaliga/Alloy/actions/runs/39894310373/artifacts/12476638827);
+12507085635](https://github.com/mbaliga/Alloy/actions/runs/39962333697/artifacts/12507085635);
 GitHub reports archive SHA-256
-`b3f7d370eedb482a079789a4982b61096d84355c2fd1542b126f52d48827e8a1`.
+`43599957f1badb870a6169c59b9779a83342bd9d000013aec3cdc200f59f859b`.
 This is a software-QA build, not a production release.
 
-On the same tested app-source head, the optional native engine and native instrumentation APK
-compiled successfully. API-35 ARM-translated instrumentation passed; the
-independent pinned-template render and its diagnostic comparison also passed.
-The exact-source native G3 export completed in workflow
-[39894310320](https://github.com/mbaliga/Alloy/actions/runs/39894310320), but
-the unchanged strict G3 comparison failed. The comparison report is artifact
-[12477982049](https://github.com/mbaliga/Alloy/actions/runs/39894310320/artifacts/12477982049);
-raw native G3 evidence is artifact
-[12478165959](https://github.com/mbaliga/Alloy/actions/runs/39894310320/artifacts/12478165959).
-The isolated physical-pilot APK and five-fixture pilot were skipped. These
-artifacts are diagnostic only; do not print, directly send, or hand off a
-native-generated job to Bambu Handy. A green Android acceptance run does not
-qualify the slicer.
+On this exact head, the optional native engine built and API-35 ARM-translated
+instrumentation passed in [run 39962333540](https://github.com/mbaliga/Alloy/actions/runs/39962333540).
+However, the strict G3 comparison **failed** at the unchanged threshold; report
+artifact [12510976889](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12510976889)
+and raw native evidence [12511266224](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12511266224).
+The physical-pilot APK and five-fixture pilot were skipped. These packages are
+diagnostic only; do not print, directly send, or hand off a native-generated job
+to Bambu Handy. A green Android/native build does not qualify the slicer.
 
 **Do not send or print unqualified generated jobs.** Direct-send, external-share,
 physical-printer, and production-release gates remain fail-closed. A1 Mini
