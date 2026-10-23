@@ -3,8 +3,30 @@ package com.mbaliga.alloy;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /** Parser and wire-contract coverage for the read-only local printer scan. */
 public final class BambuPrinterDiscoveryTest {
+    @Test public void closingBeforeWorkerStartsSuppressesDelayedNetworkWork() throws Exception {
+        BambuPrinterDiscovery.Scan scan = new BambuPrinterDiscovery.Scan();
+        AtomicBoolean actionRan = new AtomicBoolean(false);
+
+        scan.close();
+        Assert.assertFalse(scan.runIfOpen(() -> actionRan.set(true)));
+        Assert.assertFalse("canceled work must not send its discovery request", actionRan.get());
+        scan.close(); // Repeated close remains harmless.
+    }
+
+    @Test public void openScanCanRunGuardedWork() throws IOException {
+        BambuPrinterDiscovery.Scan scan = new BambuPrinterDiscovery.Scan();
+        AtomicBoolean actionRan = new AtomicBoolean(false);
+
+        Assert.assertTrue(scan.runIfOpen(() -> actionRan.set(true)));
+        Assert.assertTrue(actionRan.get());
+        scan.close();
+    }
+
     @Test public void buildsBambuCompatibleReadOnlySearch() {
         String request = BambuPrinterDiscovery.buildSearchRequest();
         Assert.assertTrue(request.startsWith("M-SEARCH * HTTP/1.1\r\n"));
