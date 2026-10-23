@@ -16,12 +16,16 @@ This is a software-QA build, not a production release.
 On the same tested app-source head, the optional native engine and native instrumentation APK
 compiled successfully. API-35 ARM-translated instrumentation passed; the
 independent pinned-template render and its diagnostic comparison also passed.
-Native G3 export for this app-source head is currently running in workflow
-[39894310320](https://github.com/mbaliga/Alloy/actions/runs/39894310320);
-exact-head G3 semantic comparison, isolated pilot build, and pilot evidence have
-not completed. Until those gates pass, do not print, directly send, or hand off
-a native-generated job to Bambu Handy. Do not infer qualification from a green
-Android acceptance run.
+The exact-source native G3 export completed in workflow
+[39894310320](https://github.com/mbaliga/Alloy/actions/runs/39894310320), but
+the unchanged strict G3 comparison failed. The comparison report is artifact
+[12477982049](https://github.com/mbaliga/Alloy/actions/runs/39894310320/artifacts/12477982049);
+raw native G3 evidence is artifact
+[12478165959](https://github.com/mbaliga/Alloy/actions/runs/39894310320/artifacts/12478165959).
+The isolated physical-pilot APK and five-fixture pilot were skipped. These
+artifacts are diagnostic only; do not print, directly send, or hand off a
+native-generated job to Bambu Handy. A green Android acceptance run does not
+qualify the slicer.
 
 **Do not send or print unqualified generated jobs.** Direct-send, external-share,
 physical-printer, and production-release gates remain fail-closed. A1 Mini
