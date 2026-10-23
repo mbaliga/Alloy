@@ -9,7 +9,7 @@ from pathlib import Path
 
 SOURCE = "07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4"
 PROFILE = "Bambu Lab A1 mini 0.4 nozzle"
-G3_PROFILE_SHA256 = "d638086d0c669959f9406010c4b360f98df429ae5aa9d9ec13b493ca9cbaf32e"
+G3_PROFILE_SHA256 = "6ea072f761a3a50dd33caafe5a6c44b0da4011698c97d34e20011849b231fd18"
 FIXTURES = {
     "cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle"
 }
