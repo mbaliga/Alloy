@@ -66,6 +66,14 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn('--load-settings "$MACHINE;$PROCESS"', strict)
         self.assertIn("continue-on-error: true", diagnostic)
         self.assertIn("neutralize_bambu_motion_hooks.py", diagnostic)
+        self.assertIn("prepare_orca_cli_process_profile.py", strict)
+        self.assertNotIn("--neutralize-motion-hooks", strict)
+        self.assertIn("--neutralize-motion-hooks", diagnostic)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"', strict)
+        self.assertIn(
+            'PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"',
+            diagnostic,
+        )
         self.assertIn("--load-settings \"$MACHINE;$PROCESS\"", diagnostic)
         self.assertIn("runtime/orca-reference-hook-neutralized", diagnostic)
         upload = text.split("- name: Upload Orca reference slices", 1)[1]
@@ -76,7 +84,8 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertEqual(text.count('ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"'), 2)
         self.assertEqual(text.count('COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"'), 2)
-        self.assertEqual(text.count('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"'), 2)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"', text)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"', text)
 
 
 if __name__ == "__main__":
