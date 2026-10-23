@@ -170,8 +170,8 @@ jobs:
           MACHINE="$NEUTRAL_DIR/machine-hooks-neutralized.json"
           PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
           COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"
-          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
-          python3 ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"
+          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"
+          python3 ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS" --neutralize-motion-hooks
           FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference-hook-neutralized
           for stl in runtime/fixtures/*.stl; do
