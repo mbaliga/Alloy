@@ -57,21 +57,53 @@ public final class BambuPrinterDiscovery {
         private volatile MulticastSocket socket;
         private volatile WifiManager.MulticastLock multicastLock;
         private volatile boolean closed;
+        private final Object lifecycleLock = new Object();
 
-        private Scan() { }
+        Scan() { }
+
+        private boolean registerSocket(MulticastSocket value) {
+            synchronized (lifecycleLock) {
+                if (closed) return false;
+                socket = value;
+                return true;
+            }
+        }
+
+        private boolean registerMulticastLock(WifiManager.MulticastLock value) {
+            synchronized (lifecycleLock) {
+                if (closed) return false;
+                multicastLock = value;
+                return true;
+            }
+        }
+
+        boolean runIfOpen(IoAction action) throws IOException {
+            synchronized (lifecycleLock) {
+                if (closed) return false;
+                action.run();
+                return true;
+            }
+        }
+
+        interface IoAction { void run() throws IOException; }
 
         @Override public void close() {
-            closed = true;
-            MulticastSocket currentSocket = socket;
-            socket = null;
+            MulticastSocket currentSocket;
+            WifiManager.MulticastLock lock;
+            synchronized (lifecycleLock) {
+                if (closed) return;
+                closed = true;
+                currentSocket = socket;
+                socket = null;
+                lock = multicastLock;
+                multicastLock = null;
+            }
             if (currentSocket != null) {
                 try { currentSocket.leaveGroup(InetAddress.getByName(SSDP_GROUP)); }
                 catch (Exception ignored) { }
                 try { currentSocket.close(); }
                 catch (Exception ignored) { }
             }
-            WifiManager.MulticastLock lock = multicastLock;
-            multicastLock = null;
             if (lock != null && lock.isHeld()) lock.release();
         }
     }
@@ -96,12 +128,16 @@ public final class BambuPrinterDiscovery {
         MulticastSocket socket = null;
         WifiManager.MulticastLock lock = null;
         try {
+            if (scan.closed) return;
             WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
             if (wifi != null) {
                 lock = wifi.createMulticastLock("alloy-bambu-discovery");
                 lock.setReferenceCounted(false);
                 lock.acquire();
-                scan.multicastLock = lock;
+                if (!scan.registerMulticastLock(lock)) {
+                    if (lock.isHeld()) lock.release();
+                    return;
+                }
             }
 
             socket = new MulticastSocket(null);
@@ -109,10 +145,14 @@ public final class BambuPrinterDiscovery {
             socket.setBroadcast(true);
             socket.bind(new InetSocketAddress(LISTEN_PORT));
             socket.setSoTimeout(READ_TIMEOUT_MS);
-            scan.socket = socket;
+            if (!scan.registerSocket(socket)) {
+                socket.close();
+                return;
+            }
             InetAddress group = InetAddress.getByName(SSDP_GROUP);
             socket.joinGroup(group);
-            sendSearch(socket, group);
+            MulticastSocket activeSocket = socket;
+            if (!scan.runIfOpen(() -> sendSearch(activeSocket, group))) return;
 
             byte[] buffer = new byte[MAX_PACKET_BYTES];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
