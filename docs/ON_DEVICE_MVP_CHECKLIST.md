@@ -5,9 +5,7 @@ checks does not establish slicer parity, physical printer safety, Bambu Handy
 acceptance, or production signing.
 
 **Latest installable Android software-QA package:** tested app-source head
-[`bd6ab14`](https://github.com/mbaliga/Alloy/commit/bd6ab14afbe92a87d2c598adf5f8dc0987d7c41b). The current PR head
-[`9061129`](https://github.com/mbaliga/Alloy/commit/9061129bf21e1e6434748ca1aa294c6f840e0a93)
-adds only this checklist refresh; app source is unchanged.
+[`bd6ab14`](https://github.com/mbaliga/Alloy/commit/bd6ab14afbe92a87d2c598adf5f8dc0987d7c41b). A later documentation-only checklist refresh does not change the tested app source.
 Android acceptance [run 39894310373](https://github.com/mbaliga/Alloy/actions/runs/39894310373)
 passed. Download the CI-signed QA APK archive [artifact
 12476638827](https://github.com/mbaliga/Alloy/actions/runs/39894310373/artifacts/12476638827);
