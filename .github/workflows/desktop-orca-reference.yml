@@ -173,6 +173,7 @@ jobs:
             profile_dir="$GITHUB_WORKSPACE/runtime/multimodel-profiles/$printer"
             out_root="$GITHUB_WORKSPACE/runtime/orca-reference-multimodel/$printer"
             mkdir -p "$out_root"
+            verified_count=0
             for stl in runtime/fixtures/*.stl; do
               name="$(basename "$stl" .stl)"
               out="$out_root/$name"
@@ -193,8 +194,17 @@ jobs:
               fi
               if ! python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"; then
                 echo "3MF verification failed: $printer / $name" | tee -a runtime/evidence/multimodel-reference-errors.txt
+              else
+                verified_count=$((verified_count + 1))
               fi
             done
+            if [ "$verified_count" -eq 4 ]; then
+              echo "$printer: complete ($verified_count/4 verified fixtures)" | tee -a runtime/evidence/multimodel-reference-errors.txt
+            elif [ "$verified_count" -eq 0 ]; then
+              echo "$printer: unavailable (0/4 verified fixtures)" | tee -a runtime/evidence/multimodel-reference-errors.txt
+            else
+              echo "$printer: partial ($verified_count/4 verified fixtures)" | tee -a runtime/evidence/multimodel-reference-errors.txt
+            fi
           done
           {
             echo "Purpose: diagnostic reference slices only; not a parity gate or print qualification"
@@ -203,6 +213,10 @@ jobs:
             echo "P1S mapping: Bambu Lab P1S 0.4 nozzle / 0.20mm Standard @BBL X1C / Bambu PLA Basic @BBL X1C"
             echo "P1S process and filament leaves are the exact compatible leaves in this pinned snapshot"
             echo "These default profile slices are not compared with native output until settings are explicitly aligned"
+            echo "Resolved profile file hashes:"
+            sha256sum runtime/multimodel-profiles/*/*.json
+            echo "Per-printer status and errors:"
+            cat runtime/evidence/multimodel-reference-errors.txt
             find runtime/orca-reference-multimodel -type f -name '*.gcode.3mf' -print0 | xargs -0 -r sha256sum
           } > runtime/evidence/multimodel-reference-manifest.txt
 

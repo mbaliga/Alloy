@@ -89,6 +89,11 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn('"$profile_dir/machine.json;$profile_dir/process.json"', diagnostic)
         self.assertIn('"$profile_dir/filament.json"', diagnostic)
         self.assertIn("not a parity gate or print qualification", diagnostic)
+        self.assertIn('verified_count=0', diagnostic)
+        self.assertIn('complete ($verified_count/4 verified fixtures)', diagnostic)
+        self.assertIn('partial ($verified_count/4 verified fixtures)', diagnostic)
+        self.assertIn('unavailable (0/4 verified fixtures)', diagnostic)
+        self.assertIn('sha256sum runtime/multimodel-profiles/*/*.json', diagnostic)
         self.assertIn("runtime/orca-reference-multimodel", text)
         self.assertIn("runtime/multimodel-profiles", text)
 
