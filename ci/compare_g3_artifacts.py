@@ -26,8 +26,10 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 from zipfile import BadZipFile, ZipFile
 
 try:
+    from .g3_evidence_manifest import validate_manifest as validate_native_evidence_manifest
     from .validate_g3_reference_transform import validate_reference_3mf, validate_reference_geometry
 except ImportError:  # Script execution puts ci/ itself on sys.path.
+    from g3_evidence_manifest import validate_manifest as validate_native_evidence_manifest
     from validate_g3_reference_transform import validate_reference_3mf, validate_reference_geometry
 
 
@@ -206,6 +208,28 @@ def validate_reference_manifest(
         raise RuntimeError("desktop reference was built from a different PR tree: " + ", ".join(mismatches))
 
 
+def validate_native_manifest(
+    native_dir: Path,
+    head_sha: str,
+    base_sha: str,
+    merge_sha: str,
+) -> dict[str, Any]:
+    try:
+        manifest = validate_native_evidence_manifest(
+            native_dir,
+            head_sha=head_sha,
+            base_sha=base_sha,
+            merge_sha=merge_sha,
+        )
+    except ValueError as error:
+        raise RuntimeError(str(error)) from error
+    for fixture in FIXTURES:
+        for suffix in (".gcode", ".config.ini"):
+            if f"{fixture}{suffix}" not in manifest["files_sha256"]:
+                raise RuntimeError(f"native G3 manifest is missing the compared input {fixture}{suffix}")
+    return manifest
+
+
 def compare_fixtures(
     native_dir: Path,
     reference_dir: Path,
@@ -261,6 +285,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--head-sha", default=os.environ.get("ALLOY_PR_HEAD_SHA"))
     parser.add_argument("--base-sha", default=os.environ.get("ALLOY_PR_BASE_SHA"))
     parser.add_argument("--merge-sha", default=os.environ.get("ALLOY_PR_MERGE_SHA"))
+    parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID"))
+    parser.add_argument("--run-attempt", default=os.environ.get("GITHUB_RUN_ATTEMPT"))
     parser.add_argument("--token", default=os.environ.get("GITHUB_TOKEN"))
     parser.add_argument("--tolerance", type=float, default=0.02)
     return parser.parse_args()
@@ -286,11 +312,29 @@ def main() -> int:
             reference_dir = Path(temporary) / "reference"
             safe_extract(artifact_bytes, reference_dir)
             validate_reference_manifest(reference_dir, args.head_sha, args.base_sha, args.merge_sha)
+            native_manifest = validate_native_manifest(
+                args.native_dir, args.head_sha, args.base_sha, args.merge_sha
+            )
             reference_3mf = reference_dir / "orca-reference" / "travel_obstacle" / "travel_obstacle.gcode.3mf"
             validate_reference_3mf(reference_3mf)
             validate_reference_geometry(reference_3mf, REPO_ROOT / "app/src/main/assets/models/travel_obstacle.stl")
             print(f"Desktop reference run {run_id} ({args.head_sha}); artifact SHA-256 {digest}")
             summary = compare_fixtures(args.native_dir, reference_dir, args.report_dir, args.tolerance)
+            summary["provenance"] = {
+                "pr_head_sha": args.head_sha,
+                "pr_base_sha": args.base_sha,
+                "pr_merge_sha": args.merge_sha,
+                "native_workflow_run_id": args.run_id or native_manifest["workflow_run_id"],
+                "native_workflow_run_attempt": args.run_attempt or native_manifest["workflow_run_attempt"],
+                "native_evidence_manifest": native_manifest,
+                "desktop_reference_run_id": run_id,
+                "desktop_reference_artifact_id": artifact.get("id"),
+                "desktop_reference_artifact_name": artifact.get("name"),
+                "desktop_reference_artifact_sha256": digest,
+            }
+            (args.report_dir / "summary.json").write_text(
+                json.dumps(summary, indent=2) + "\n", encoding="utf-8"
+            )
         return 0 if summary["result"] == "pass" else 2
     except (RuntimeError, OSError, KeyError, ValueError, json.JSONDecodeError) as error:
         args.report_dir.mkdir(parents=True, exist_ok=True)

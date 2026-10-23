@@ -16,6 +16,7 @@ from ci.compare_g3_artifacts import (
     select_reference_artifact,
     select_reference_run,
     validate_reference_manifest,
+    validate_native_manifest,
     validate_artifact_digest,
     wait_for_reference_run,
 )
@@ -99,6 +100,38 @@ class G3ArtifactParityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             with self.assertRaisesRegex(RuntimeError, "no run-context manifest"):
                 validate_reference_manifest(Path(temporary), "head", "base", "merge")
+
+    def test_native_manifest_is_same_head_and_covers_every_compared_input(self):
+        from ci.g3_evidence_manifest import write_manifest
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fixtures = ("cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle")
+            for fixture in fixtures:
+                (root / f"{fixture}.gcode").write_text("G1 X1\n", encoding="utf-8")
+                (root / f"{fixture}.config.ini").write_text("layer_height = 0.2\n", encoding="utf-8")
+            write_manifest(
+                root,
+                head_sha="a" * 40,
+                base_sha="b" * 40,
+                merge_sha="c" * 40,
+                run_id="12",
+                run_attempt="1",
+            )
+            self.assertEqual("12", validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40)["workflow_run_id"])
+            with self.assertRaisesRegex(RuntimeError, "identity mismatch"):
+                validate_native_manifest(root, "d" * 40, "b" * 40, "c" * 40)
+            (root / "thin_wall_frame.config.ini").unlink()
+            write_manifest(
+                root,
+                head_sha="a" * 40,
+                base_sha="b" * 40,
+                merge_sha="c" * 40,
+                run_id="12",
+                run_attempt="1",
+            )
+            with self.assertRaisesRegex(RuntimeError, "missing the compared input"):
+                validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40)
 
     def test_github_token_is_not_forwarded_to_signed_artifact_host(self):
         response_headers = Message()
