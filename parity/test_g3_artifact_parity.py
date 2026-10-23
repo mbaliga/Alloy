@@ -118,9 +118,13 @@ class G3ArtifactParityTests(unittest.TestCase):
                 run_id="12",
                 run_attempt="1",
             )
-            self.assertEqual("12", validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40)["workflow_run_id"])
+            self.assertEqual("12", validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40, "12", "1")["workflow_run_id"])
             with self.assertRaisesRegex(RuntimeError, "identity mismatch"):
-                validate_native_manifest(root, "d" * 40, "b" * 40, "c" * 40)
+                validate_native_manifest(root, "d" * 40, "b" * 40, "c" * 40, "12", "1")
+            for run_id, attempt in (("13", "1"), ("12", "2")):
+                with self.subTest(run_id=run_id, attempt=attempt):
+                    with self.assertRaisesRegex(RuntimeError, "identity mismatch"):
+                        validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40, run_id, attempt)
             (root / "thin_wall_frame.config.ini").unlink()
             write_manifest(
                 root,
@@ -131,7 +135,7 @@ class G3ArtifactParityTests(unittest.TestCase):
                 run_attempt="1",
             )
             with self.assertRaisesRegex(RuntimeError, "missing the compared input"):
-                validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40)
+                validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40, "12", "1")
 
     def test_github_token_is_not_forwarded_to_signed_artifact_host(self):
         response_headers = Message()

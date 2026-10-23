@@ -213,6 +213,8 @@ def validate_native_manifest(
     head_sha: str,
     base_sha: str,
     merge_sha: str,
+    run_id: str,
+    run_attempt: str,
 ) -> dict[str, Any]:
     try:
         manifest = validate_native_evidence_manifest(
@@ -220,6 +222,8 @@ def validate_native_manifest(
             head_sha=head_sha,
             base_sha=base_sha,
             merge_sha=merge_sha,
+            run_id=run_id,
+            run_attempt=run_attempt,
         )
     except ValueError as error:
         raise RuntimeError(str(error)) from error
@@ -285,8 +289,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--head-sha", default=os.environ.get("ALLOY_PR_HEAD_SHA"))
     parser.add_argument("--base-sha", default=os.environ.get("ALLOY_PR_BASE_SHA"))
     parser.add_argument("--merge-sha", default=os.environ.get("ALLOY_PR_MERGE_SHA"))
-    parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID"))
-    parser.add_argument("--run-attempt", default=os.environ.get("GITHUB_RUN_ATTEMPT"))
+    parser.add_argument("--run-id", default=os.environ.get("ALLOY_RUN_ID", os.environ.get("GITHUB_RUN_ID")))
+    parser.add_argument("--run-attempt", default=os.environ.get("ALLOY_RUN_ATTEMPT", os.environ.get("GITHUB_RUN_ATTEMPT")))
     parser.add_argument("--token", default=os.environ.get("GITHUB_TOKEN"))
     parser.add_argument("--tolerance", type=float, default=0.02)
     return parser.parse_args()
@@ -294,8 +298,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if not all((args.repository, args.head_sha, args.base_sha, args.merge_sha, args.token)):
-        raise SystemExit("G3 parity requires repository, exact PR head/base/merge SHAs, and GitHub token")
+    if not all((args.repository, args.head_sha, args.base_sha, args.merge_sha, args.run_id, args.run_attempt, args.token)):
+        raise SystemExit("G3 parity requires repository, exact PR head/base/merge SHAs, run ID/attempt, and GitHub token")
     if not 0 < args.tolerance <= 0.02:
         raise SystemExit("G3 estimate tolerance must be greater than zero and no greater than 2%")
     try:
@@ -313,7 +317,8 @@ def main() -> int:
             safe_extract(artifact_bytes, reference_dir)
             validate_reference_manifest(reference_dir, args.head_sha, args.base_sha, args.merge_sha)
             native_manifest = validate_native_manifest(
-                args.native_dir, args.head_sha, args.base_sha, args.merge_sha
+                args.native_dir, args.head_sha, args.base_sha, args.merge_sha,
+                args.run_id, args.run_attempt,
             )
             reference_3mf = reference_dir / "orca-reference" / "travel_obstacle" / "travel_obstacle.gcode.3mf"
             validate_reference_3mf(reference_3mf)
@@ -324,8 +329,8 @@ def main() -> int:
                 "pr_head_sha": args.head_sha,
                 "pr_base_sha": args.base_sha,
                 "pr_merge_sha": args.merge_sha,
-                "native_workflow_run_id": args.run_id or native_manifest["workflow_run_id"],
-                "native_workflow_run_attempt": args.run_attempt or native_manifest["workflow_run_attempt"],
+                "native_workflow_run_id": args.run_id,
+                "native_workflow_run_attempt": args.run_attempt,
                 "native_evidence_manifest": native_manifest,
                 "desktop_reference_run_id": run_id,
                 "desktop_reference_artifact_id": artifact.get("id"),
