@@ -43,6 +43,9 @@ public final class SliceResultStore {
             value.put("filament_mm", result.filamentMm);
             value.put("warnings", result.warnings);
             value.put("print_time_seconds", result.printTimeSeconds);
+            value.put("print_time_source", safePrintTimeSource(result.printTimeSource,
+                    result.printTimeSeconds >= 0f ? Slicer.Result.PRINT_TIME_SOURCE_UNKNOWN
+                            : Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED));
             value.put("travel_mm", result.travelMm);
         } catch (Exception error) { throw new IOException("Slice result metadata could not be encoded", error); }
         File metaTemporary = new File(jobDir, "." + META + ".part");
@@ -74,10 +77,22 @@ public final class SliceResultStore {
         if (NativeSlicerEngine.isNativeEngineId(engineId)) A1MiniTemplatePolicy.requireSafe(parsed.gcode);
         float filament = finite(value.optDouble("filament_mm", parsed.filamentMm), parsed.filamentMm);
         float time = finite(value.optDouble("print_time_seconds", parsed.printTimeSeconds), parsed.printTimeSeconds);
+        String timeSource = safePrintTimeSource(value.optString("print_time_source", parsed.printTimeSource),
+                parsed.printTimeSource);
+        if (time < 0f) timeSource = Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED;
         float travel = finite(value.optDouble("travel_mm", parsed.travelMm), parsed.travelMm);
         int warnings = value.optInt("warnings", parsed.warnings);
         if (warnings < 0 || warnings > 1_000_000) throw new IOException("Slice warning count is invalid");
-        return new Slicer.Result(parsed.gcode, parsed.layers, filament, warnings, engineId, verified, time, travel);
+        return new Slicer.Result(parsed.gcode, parsed.layers, filament, warnings, engineId, verified,
+                time, timeSource, travel);
+    }
+
+    private static String safePrintTimeSource(String value, String fallback) {
+        if (Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED.equals(value)
+                || Slicer.Result.PRINT_TIME_SOURCE_UNKNOWN.equals(value)
+                || Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED.equals(value)
+                || Slicer.Result.PRINT_TIME_SOURCE_MODEL.equals(value)) return value;
+        return fallback;
     }
 
     private static float finite(double value, float fallback) {

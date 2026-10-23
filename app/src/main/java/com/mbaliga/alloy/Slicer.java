@@ -102,6 +102,10 @@ public final class Slicer {
     }
 
     public static final class Result {
+        public static final String PRINT_TIME_SOURCE_UNREPORTED = "unreported";
+        public static final String PRINT_TIME_SOURCE_UNKNOWN = "engine_reported_unspecified";
+        public static final String PRINT_TIME_SOURCE_ESTIMATED = "estimated_printing_time";
+        public static final String PRINT_TIME_SOURCE_MODEL = "model_printing_time";
         public final String gcode;
         public final ArrayList<Layer> layers;
         public final float filamentMm;
@@ -112,16 +116,34 @@ public final class Slicer {
         public final String engineId;
         public final boolean engineVerified;
         public final float printTimeSeconds;
+        /** Exact G-code header metric selected for {@link #printTimeSeconds}. */
+        public final String printTimeSource;
         public final float travelMm;
+        public static String normalizePrintTimeSource(String value, float seconds) {
+            if (seconds < 0f || Float.isNaN(seconds) || Float.isInfinite(seconds))
+                return PRINT_TIME_SOURCE_UNREPORTED;
+            if (PRINT_TIME_SOURCE_ESTIMATED.equals(value) || PRINT_TIME_SOURCE_MODEL.equals(value)
+                    || PRINT_TIME_SOURCE_UNKNOWN.equals(value)) return value;
+            return PRINT_TIME_SOURCE_UNKNOWN;
+        }
         public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
                       String engineId, boolean engineVerified) {
             this(gcode, layers, filamentMm, warnings, engineId, engineVerified, -1f, -1f);
         }
         public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
                       String engineId, boolean engineVerified, float printTimeSeconds, float travelMm) {
+            this(gcode, layers, filamentMm, warnings, engineId, engineVerified,
+                    printTimeSeconds, printTimeSeconds >= 0f ? PRINT_TIME_SOURCE_UNKNOWN : PRINT_TIME_SOURCE_UNREPORTED,
+                    travelMm);
+        }
+        public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
+                      String engineId, boolean engineVerified, float printTimeSeconds,
+                      String printTimeSource, float travelMm) {
             this.gcode = gcode; this.layers = layers; this.filamentMm = filamentMm; this.warnings = warnings;
             this.engineId = engineId; this.engineVerified = engineVerified;
-            this.printTimeSeconds = printTimeSeconds; this.travelMm = travelMm;
+            this.printTimeSeconds = printTimeSeconds;
+            this.printTimeSource = normalizePrintTimeSource(printTimeSource, printTimeSeconds);
+            this.travelMm = travelMm;
         }
     }
 
@@ -276,7 +298,8 @@ public final class Slicer {
         int warnings = layerCount == 1 || layers.get(0).segments.isEmpty() ? 1 : 0;
         if (config.supports) warnings++;
         return new Result(out.toString(), layers, filament, warnings,
-                "alloy-legacy-offline", false, timeSeconds, totalTravel);
+                "alloy-legacy-offline", false, timeSeconds,
+                Result.PRINT_TIME_SOURCE_ESTIMATED, totalTravel);
     }
 
     static void validate(MeshModel mesh, Config config) {

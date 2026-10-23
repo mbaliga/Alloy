@@ -303,6 +303,11 @@ public final class AndroidPipelineTest {
             Slicer.Result restored = SliceResultStore.read(jobDir, request.config);
             Assert.assertEquals(result.gcode, restored.gcode);
             Assert.assertEquals(result.engineId, restored.engineId);
+            Assert.assertEquals(result.printTimeSource, restored.printTimeSource);
+            Assert.assertEquals(result.printTimeSource,
+                    new org.json.JSONObject(new String(java.nio.file.Files.readAllBytes(
+                            new File(jobDir, "result.json").toPath()), StandardCharsets.UTF_8))
+                            .getString("print_time_source"));
             Assert.assertEquals(result.layers.size(), restored.layers.size());
             PrinterTransport.Artifact artifact = ArtifactStore.stage(root, request.model, restored, request.config, "foreground-slice-test");
             jobs.complete(jobId, artifact, "Slice complete");
@@ -390,6 +395,9 @@ public final class AndroidPipelineTest {
             BatchSliceJobController.BatchResult restored = BatchSliceResultStore.read(context.getFilesDir(), context.getContentResolver(), request, resultBatchDir);
             Assert.assertEquals(result.plates.size(), restored.plates.size());
             Assert.assertEquals(result.totalLayers(), restored.totalLayers());
+            for (int index = 0; index < result.plates.size(); index++)
+                Assert.assertEquals(result.plates.get(index).slice.printTimeSource,
+                        restored.plates.get(index).slice.printTimeSource);
             jobs.complete(jobId, "All plates ready");
             Assert.assertEquals(BatchSliceJobStore.State.COMPLETED, jobs.load().state);
         } finally {
@@ -1844,7 +1852,8 @@ public final class AndroidPipelineTest {
         layers.add(layer);
         Slicer.Result result = new Slicer.Result(
                 "G90\nM83\nG1 X10 Y10 E0.4\nM104 S0\n",
-                layers, 0.4f, 0, "test-engine", false, 1f, 0f);
+                layers, 0.4f, 0, "test-engine", false, 1f,
+                Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED, 0f);
         try (java.io.FileOutputStream output = new java.io.FileOutputStream(packageFile)) {
             GcodePackageWriter.write(mesh, result, config, output);
         }
@@ -1853,6 +1862,7 @@ public final class AndroidPipelineTest {
             String sliceInfo = readZipText(zip, "Metadata/slice_info.config");
             Assert.assertTrue(metadata.contains("\"support_engine\":\"disabled\""));
             Assert.assertTrue(metadata.contains("\"support_parity_verified\":true"));
+            Assert.assertTrue(metadata.contains("\"print_time_source\":\"estimated_printing_time\""));
             Assert.assertTrue(sliceInfo.contains("key=\"support_engine\" value=\"disabled\""));
             Assert.assertTrue(sliceInfo.contains("key=\"support_parity_verified\" value=\"true\""));
         }
@@ -1923,6 +1933,34 @@ public final class AndroidPipelineTest {
             Assert.assertEquals(1, result.layers.get(0).segments.size()
                     - result.layers.get(0).perimeterSegments.size()
                     - result.layers.get(0).supportSegments.size());
+        } finally {
+            Assert.assertTrue(!gcode.exists() || gcode.delete());
+        }
+    }
+
+    @Test
+    public void nativePreviewTracksTheSelectedTimeHeaderSource() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File gcode = new File(context.getCacheDir(), "native-preview-time-source-" + System.nanoTime() + ".gcode");
+        String source = "; model printing time: 1m 12s\n"
+                + "; estimated printing time (normal mode) = 2m 05s\n"
+                + "G90\nM83\n;LAYER:0\nG1 X10 Y10 E0.2\nM104 S0\n";
+        java.nio.file.Files.write(gcode.toPath(), source.getBytes(StandardCharsets.UTF_8));
+        try {
+            Slicer.Result result = NativeSlicerEngine.parseGcode(gcode, new Slicer.Config());
+            Assert.assertEquals(125f, result.printTimeSeconds, 0.01f);
+            Assert.assertEquals(Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED, result.printTimeSource);
+        } finally {
+            Assert.assertTrue(!gcode.exists() || gcode.delete());
+        }
+
+        java.nio.file.Files.write(gcode.toPath(), source.replace(
+                "; estimated printing time (normal mode) = 2m 05s\n", "")
+                .getBytes(StandardCharsets.UTF_8));
+        try {
+            Slicer.Result result = NativeSlicerEngine.parseGcode(gcode, new Slicer.Config());
+            Assert.assertEquals(72f, result.printTimeSeconds, 0.01f);
+            Assert.assertEquals(Slicer.Result.PRINT_TIME_SOURCE_MODEL, result.printTimeSource);
         } finally {
             Assert.assertTrue(!gcode.exists() || gcode.delete());
         }

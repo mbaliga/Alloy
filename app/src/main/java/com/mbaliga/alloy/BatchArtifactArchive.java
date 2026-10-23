@@ -77,6 +77,8 @@ public final class BatchArtifactArchive {
                             .put("layers", result.slice == null || result.slice.layers == null ? 0 : result.slice.layers.size())
                             .put("filament_mm", result.slice == null ? -1f : result.slice.filamentMm)
                             .put("print_time_seconds", result.slice == null ? -1f : result.slice.printTimeSeconds)
+                            .put("print_time_source", result.slice == null ? Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED
+                                    : result.slice.printTimeSource)
                             .put("engine", result.slice == null ? "unknown" : result.slice.engineId)
                             .put("engine_verified", result.slice != null && result.slice.engineVerified);
                 } catch (Exception error) {
