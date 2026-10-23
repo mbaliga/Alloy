@@ -1,6 +1,14 @@
 Warning: truncated output (original token count: 61902)
 Total output lines: 3624
 
+# Exact-head verification — 2026-10-23 — `a32eb30` — Android/native build PASS, strict G3 FAIL / NO-GO
+
+Exact PR head: [a32eb3038f2844a896bb178050671d7a03acb65b](https://github.com/mbaliga/Alloy/commit/a32eb3038f2844a896bb178050671d7a03acb65b). Android v1 acceptance [run 39962333697](https://github.com/mbaliga/Alloy/actions/runs/39962333697) passed, including the CI-signed software-QA APK (artifact [12507085635](https://github.com/mbaliga/Alloy/actions/runs/39962333697/artifacts/12507085635), archive SHA-256 `43599957f1badb870a6169c59b9779a83342bd9d000013aec3cdc200f59f859b`). Profile compatibility, parity tooling, pinned official Orca source verification, and desktop reference generation also passed.
+
+The optional native engine built and API-35 ARM-translated instrumentation passed in [run 39962333540](https://github.com/mbaliga/Alloy/actions/runs/39962333540). The exact-head strict G3 comparison **failed** at the unchanged threshold; report artifact [12510976889](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12510976889), raw native evidence [12511266224](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12511266224), and instrumentation report [12511321099](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12511321099). The isolated physical-pilot APK and five-fixture pilot were skipped. Per-fixture metrics were not independently recovered from the artifact in this session, so no numeric deltas are asserted here; the comparator's failed conclusion is authoritative.
+
+This candidate changes profile-export diagnostics/tests only; the Android runtime slicer and send behavior remain unchanged. A green Android/native build is not slicer qualification. **Do not print, directly send, or hand off its generated jobs to Bambu Handy.** A1 Mini physical acceptance, A1/P1S runtime qualification, Handy acceptance, production signing, and release approval remain open. The current on-device checklist uses the matching software-QA artifact for software checks only.
+
 # Exact-head verification — 2026-10-23 — `fe3c23b` — build/instrumentation PASS, G3 FAIL / NO-GO
 
 Exact PR head: [fe3c23b98b397ce7a242ce8e64a08c466fd7107f](https://github.com/mbaliga/Alloy/commit/fe3c23b98b397ce7a242ce8e64a08c466fd7107f). Android v1 run [39915349826](https://github.com/mbaliga/Alloy/actions/runs/39915349826) passed and retained the software-QA APK and acceptance diagnostics. Native run [39915349961](https://github.com/mbaliga/Alloy/actions/runs/39915349961) passed the pinned dependency build, optional native APK build, and API-35 native instrumentation. These are software checks only.
