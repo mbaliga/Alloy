@@ -25,6 +25,11 @@ public final class BambuPlateAssignmentExtractorTest {
                 + "<plate><metadata key=\"plater_id\" value=\"1\"/></plate></config>"));
     }
 
+    @Test public void ignoresOtherSlicerPlateElementsWithoutBambuPlateIds() throws Exception {
+        Assert.assertFalse(hasMultiplePlates("<config><plate><metadata key=\"name\" value=\"one\"/>"
+                + "</plate><plate><metadata key=\"name\" value=\"two\"/></plate></config>"));
+    }
+
     @Test public void allowsPlain3mfWithoutBambuPlateMetadata() throws Exception {
         Assert.assertFalse(hasMultiplePlates(null));
     }
