@@ -1,6 +1,18 @@
 Warning: truncated output (original token count: 61902)
 Total output lines: 3624
 
+# Exact-head verification — 2026-10-23 — `fe3c23b` — build/instrumentation PASS, G3 FAIL / NO-GO
+
+Exact PR head: [fe3c23b98b397ce7a242ce8e64a08c466fd7107f](https://github.com/mbaliga/Alloy/commit/fe3c23b98b397ce7a242ce8e64a08c466fd7107f). Android v1 run [39915349826](https://github.com/mbaliga/Alloy/actions/runs/39915349826) passed and retained the software-QA APK and acceptance diagnostics. Native run [39915349961](https://github.com/mbaliga/Alloy/actions/runs/39915349961) passed the pinned dependency build, optional native APK build, and API-35 native instrumentation. These are software checks only.
+
+The native G3 evidence manifest matched PR head/base/merge and workflow run `39915349961`, attempt `1`; raw native input files were hash-verified. The selected desktop reference was run `39915349906`, artifact `12484343369`. Strict G3 comparison artifact [12487157695](https://github.com/mbaliga/Alloy/actions/runs/39915349961/artifacts/12487157695) **failed at the unchanged 2% tolerance**. All 64 profile-identity fields pass. Print-time deltas for cube, supported overhang, thin wall, and travel obstacle are 14.37%, 17.77%, 13.23%, and 9.49%. Filament-length deltas are 2.10%, 2.67%, 2.65%, and within tolerance; mass deltas exceed 2% on the first three fixtures. The result is a slicer/parity failure, not a provenance failure.
+
+The retained cube report shows nearly identical deposited-feature path totals (e.g. inner/outer walls match; sparse infill differs by less than 0.01%), but 2,435 desktop versus 1,059 Alloy travel moves and 64,037 versus 41,519 mm linear XYZ path. Desktop G-code also contains `SKIPTYPE`-tagged timelapse/head-wrap conditional motion, whose actual firmware execution is not inferred. Treat these as diagnostic observations: do not copy macros, infer printer motion from conditional blocks, relax tolerance, or change production path planning until travel-order/feature evidence isolates the cause. The report’s print-time fields differ (`model_printing_time` versus `estimated_printing_time`), so retain the hard fail and explicitly keep metric-source comparability under review rather than claiming the numeric delta is an isolated planner measurement.
+
+The native evidence bundle is [artifact 12487351831](https://github.com/mbaliga/Alloy/actions/runs/39915349961/artifacts/12487351831); instrumentation report [12487476059](https://github.com/mbaliga/Alloy/actions/runs/39915349961/artifacts/12487476059). Neither artifact qualifies a print. Direct send, Bambu Handy handoff, physical A1 Mini acceptance, A1/P1S parity, full source/license review, production signing, and release approval remain open. Follow the [on-device checklist](ON_DEVICE_MVP_CHECKLIST.md) for UI/import/planning verification only; do not use it to upload or print an unqualified job.
+
+---
+
 # Latest exact-head status — 2026-10-22
 
 ## Corrected exact-head run — d763b1c — native instrumentation PASS, strict G3 FAIL / NO-GO
