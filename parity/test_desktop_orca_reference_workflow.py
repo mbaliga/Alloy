@@ -79,16 +79,19 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         upload = text.split("- name: Upload Orca reference slices", 1)[1]
         self.assertIn("runtime/orca-reference-hook-neutralized", upload)
 
-    def test_a1_p1s_references_are_separate_and_explicitly_non_gating(self):
+    def test_a1_p1s_references_are_required_but_parity_is_not_inferred(self):
         text = WORKFLOW.read_text(encoding="utf-8")
         diagnostic = text.split("- name: Slice A1 and P1S profile references (diagnostic only)", 1)[1]
         diagnostic = diagnostic.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[0]
-        self.assertIn("continue-on-error: true", diagnostic)
+        self.assertNotIn("continue-on-error: true", diagnostic)
         self.assertIn("--printer a1 --printer p1s", diagnostic)
         self.assertIn('for printer in a1 p1s; do', diagnostic)
         self.assertIn('"$profile_dir/machine.json;$profile_dir/process.json"', diagnostic)
         self.assertIn('"$profile_dir/filament.json"', diagnostic)
-        self.assertIn("not a parity gate or print qualification", diagnostic)
+        self.assertIn("reference_failure=0", diagnostic)
+        self.assertIn('if [ "$verified_count" -ne 4 ]; then', diagnostic)
+        self.assertIn('if [ "$reference_failure" -ne 0 ]; then', diagnostic)
+        self.assertIn("These default profile slices are not compared with native output until settings are explicitly aligned", diagnostic)
         self.assertIn('verified_count=0', diagnostic)
         self.assertIn('complete ($verified_count/4 verified fixtures)', diagnostic)
         self.assertIn('partial ($verified_count/4 verified fixtures)', diagnostic)
