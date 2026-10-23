@@ -19,6 +19,28 @@ DEFAULTS = {
     "filament": "Bambu PLA Basic @BBL A1M",
 }
 
+# Exact leaf names from the pinned Orca profile snapshot. The P1S uses the
+# X1C process and filament leaves in this snapshot; the machine profile remains
+# P1S-specific. Keep this matrix diagnostic and source-pinned rather than
+# silently guessing names from a printer label.
+PRINTER_PROFILES = {
+    "a1mini": {
+        "machine": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PLA Basic @BBL A1M",
+    },
+    "a1": {
+        "machine": "Bambu Lab A1 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1",
+        "filament": "Bambu PLA Basic @BBL A1",
+    },
+    "p1s": {
+        "machine": "Bambu Lab P1S 0.4 nozzle",
+        "process": "0.20mm Standard @BBL X1C",
+        "filament": "Bambu PLA Basic @BBL X1C",
+    },
+}
+
 
 def load_kind(root: Path, kind: str) -> tuple[dict[str, dict], dict[str, Path]]:
     folder = root / "resources/profiles/BBL" / ("machine" if kind == "machine" else kind)
@@ -61,28 +83,37 @@ def main() -> None:
     p.add_argument("--machine", default=DEFAULTS["machine"])
     p.add_argument("--process", default=DEFAULTS["process"])
     p.add_argument("--filament", default=DEFAULTS["filament"])
+    p.add_argument("--printer", choices=sorted(PRINTER_PROFILES), action="append",
+                   help="export one or more documented printer profile sets")
     args = p.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
-    selected = {
-        "machine": args.machine,
-        "process": args.process,
-        "filament": args.filament,
-    }
-    manifest = {"profiles": {}}
+    printer_ids = args.printer or [None]
+    manifest = {"profile_source": "pinned Orca checkout", "printers": {}}
+    loaded = {kind: load_kind(args.orca_checkout, kind) for kind in ("machine", "process", "filament")}
 
-    for kind, name in selected.items():
-        profiles, sources = load_kind(args.orca_checkout, kind)
-        resolved = resolve(name, profiles)
-        destination = args.out / f"{kind}.json"
-        destination.write_text(json.dumps(resolved, indent=2, ensure_ascii=False) + "\n")
-        manifest["profiles"][kind] = {
-            "name": name,
-            "leaf_source": str(sources[name].relative_to(args.orca_checkout)),
-            "output": destination.name,
-            "resolved_key_count": len(resolved),
-        }
-        print(f"{kind}: {name} -> {destination} ({len(resolved)} keys)")
+    for printer_id in printer_ids:
+        selected = (PRINTER_PROFILES[printer_id] if printer_id else {
+            "machine": args.machine,
+            "process": args.process,
+            "filament": args.filament,
+        })
+        output_dir = args.out / printer_id if printer_id else args.out
+        output_dir.mkdir(parents=True, exist_ok=True)
+        printer_manifest = {}
+        for kind, name in selected.items():
+            profiles, sources = loaded[kind]
+            resolved = resolve(name, profiles)
+            destination = output_dir / f"{kind}.json"
+            destination.write_text(json.dumps(resolved, indent=2, ensure_ascii=False) + "\n")
+            printer_manifest[kind] = {
+                "name": name,
+                "leaf_source": str(sources[name].relative_to(args.orca_checkout)),
+                "output": str(destination.relative_to(args.out)),
+                "resolved_key_count": len(resolved),
+            }
+            print(f"{printer_id or 'default'} {kind}: {name} -> {destination} ({len(resolved)} keys)")
+        manifest["printers"][printer_id or "default"] = printer_manifest
 
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
