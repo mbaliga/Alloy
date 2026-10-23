@@ -157,11 +157,11 @@ jobs:
             python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
           done
 
-      # A1/P1S source-profile references are intentionally diagnostic only.
-      # Their printer-native app recipes are not yet paired with equivalent
-      # desktop project settings, so no estimate-parity result is inferred.
+      # Require source-profile references for A1/P1S so all three supported
+      # printers retain reproducible desktop fixture evidence. These slices
+      # remain non-gating for parity until native settings are explicitly
+      # aligned with the desktop presets; generation success is not parity.
       - name: Slice A1 and P1S profile references (diagnostic only)
-        continue-on-error: true
         shell: bash
         run: |
           set -euxo pipefail
@@ -169,6 +169,7 @@ jobs:
           python3 parity/export_resolved_orca_profiles.py "$GITHUB_WORKSPACE/orca-profiles" runtime/multimodel-profiles --printer a1 --printer p1s
           mkdir -p runtime/orca-reference-multimodel
           : > runtime/evidence/multimodel-reference-errors.txt
+          reference_failure=0
           for printer in a1 p1s; do
             profile_dir="$GITHUB_WORKSPACE/runtime/multimodel-profiles/$printer"
             out_root="$GITHUB_WORKSPACE/runtime/orca-reference-multimodel/$printer"
@@ -205,6 +206,9 @@ jobs:
             else
               echo "$printer: partial ($verified_count/4 verified fixtures)" | tee -a runtime/evidence/multimodel-reference-errors.txt
             fi
+            if [ "$verified_count" -ne 4 ]; then
+              reference_failure=1
+            fi
           done
           {
             echo "Purpose: diagnostic reference slices only; not a parity gate or print qualification"
@@ -219,6 +223,11 @@ jobs:
             cat runtime/evidence/multimodel-reference-errors.txt
             find runtime/orca-reference-multimodel -type f -name '*.gcode.3mf' -print0 | xargs -0 -r sha256sum
           } > runtime/evidence/multimodel-reference-manifest.txt
+          cat runtime/evidence/multimodel-reference-manifest.txt
+          if [ "$reference_failure" -ne 0 ]; then
+            echo "A1 and P1S must each have all four verified desktop fixture references" >&2
+            exit 1
+          fi
 
       # This separately named lane is only a counterfactual for isolating the
       # effect of profile motion hooks. It does not replace or modify the
