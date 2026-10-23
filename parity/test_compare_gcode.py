@@ -622,8 +622,8 @@ G1 Z0.40
                 check for check in report["checks"]
                 if check["name"] == "print_time_metric_source"
             )
-            self.assertEqual(source_check["status"], "warn")
-            self.assertIn("the unchanged numeric tolerance still applies", source_check["detail"])
+            self.assertEqual(source_check["status"], "fail")
+            self.assertIn("not comparable for qualification", source_check["detail"])
             total_check = next(
                 check for check in report["checks"]
                 if check["name"] == "total_print_time_diagnostic"
@@ -645,8 +645,32 @@ G1 Z0.40
                 check for check in report["checks"]
                 if check["name"] == "print_time_metric_source"
             )
-            self.assertEqual(source_check["status"], "warn")
+            self.assertEqual(source_check["status"], "fail")
             self.assertIn("model_printing_time", source_check["detail"])
+
+    def test_different_time_sources_cannot_pass_even_when_numeric_values_match(self):
+        common = (
+            "; total layer number: 1\n"
+            "; filament used [mm] = 1000.0\n"
+            "; filament used [g] = 3.00\n"
+            "G90\nM82\nG92 E0\nG1 Z0.20 F600\n"
+            ";TYPE:Outer wall\nG1 X10 Y0 E1.0\nG1 X10 Y10 E2.0\n"
+            ";TYPE:Sparse infill\nG1 X0 Y0 E3.0\n"
+        )
+        desktop_text = "; model printing time: 1m 40s\n" + common
+        android_text = "; estimated printing time = 1m 40s\n" + common
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            desktop = parse_metrics(self.write(root, "desktop.gcode", desktop_text), None)
+            android = parse_metrics(self.write(root, "android.gcode", android_text), None)
+            report = compare(desktop, android, tolerance=0.02)
+            time_check = next(c for c in report["checks"]
+                              if c["name"] == "print_time_seconds")
+            source_check = next(c for c in report["checks"]
+                                if c["name"] == "print_time_metric_source")
+            self.assertEqual("pass", time_check["status"])
+            self.assertEqual("fail", source_check["status"])
+            self.assertEqual("fail", report["result"])
 
 
 if __name__ == "__main__":

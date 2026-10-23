@@ -1032,9 +1032,9 @@ def compare(desktop: Metrics, android: Metrics, tolerance: float,
     else:
         add(
             "print_time_metric_source",
-            "warn",
+            "fail",
             f"desktop={desktop.print_time_source}, Android={android.print_time_source}; "
-            "the unchanged numeric tolerance still applies",
+            "different time metrics are not comparable for qualification",
         )
 
     if (desktop.total_print_time_seconds is None
