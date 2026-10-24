@@ -17,18 +17,23 @@ public final class InitialMaterialInventoryTest {
         InventoryStore inventory = new InventoryStore(context.getSharedPreferences(
                 "initial-material-inventory-" + System.nanoTime(), Context.MODE_PRIVATE));
         PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(context.getAssets());
-        PrinterCapabilityCatalog.Printer mini = catalog.byId("a1-mini");
-        Assert.assertNotNull("A1 Mini capability record is required", mini);
         java.util.Set<String> inventoryIds = new java.util.HashSet<>();
         for (InventoryStore.Item item : inventory.items()) inventoryIds.add(item.id);
-        for (PrinterCapabilityCatalog.Material material : mini.materials) {
-            String inventoryId = material.id;
-            if ("pla".equals(material.id)) inventoryId = "pla-basic";
-            if ("petg".equals(material.id)) inventoryId = "petg-basic";
-            if ("bambu-pla-cf".equals(material.id)) inventoryId = "pla-cf";
-            Assert.assertTrue("A1 Mini material " + material.id + " must have an inventory row " + inventoryId,
-                    inventoryIds.contains(inventoryId));
+        for (String printerId : new String[] {"a1-mini", "a1", "p1s"}) {
+            PrinterCapabilityCatalog.Printer printer = catalog.byId(printerId);
+            Assert.assertNotNull(printerId + " capability record is required", printer);
+            for (PrinterCapabilityCatalog.Material material : printer.materials) {
+                String inventoryId = material.id;
+                if ("pla".equals(material.id)) inventoryId = "pla-basic";
+                if ("petg".equals(material.id)) inventoryId = "petg-basic";
+                if ("bambu-pla-cf".equals(material.id)) inventoryId = "pla-cf";
+                Assert.assertTrue(printerId + " material " + material.id
+                                + " must have an inventory row " + inventoryId,
+                        inventoryIds.contains(inventoryId));
+            }
         }
+        PrinterCapabilityCatalog.Printer mini = catalog.byId("a1-mini");
+        Assert.assertNotNull("A1 Mini capability record is required", mini);
         boolean pla = false, petg = false, tpu = false, pva = false, plaSupport = false, petgSupport = false;
         java.util.Set<String> restrictedFamilies = new java.util.HashSet<>(java.util.Arrays.asList(
                 "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"));
