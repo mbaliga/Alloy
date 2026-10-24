@@ -17,13 +17,15 @@ The exact-head acceptance diagnostics are in [artifact
 12544955647](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544955647).
 This is a software-QA build, not a production release.
 
-On this exact head, the optional native engine built and API-35 ARM-translated
-instrumentation passed in [run 39962333540](https://github.com/mbaliga/Alloy/actions/runs/39962333540).
-However, the strict G3 comparison **failed** at the unchanged threshold; report
+On the earlier source baseline `a32eb30`, the optional native engine built and
+API-35 ARM-translated instrumentation passed in [run
+39962333540](https://github.com/mbaliga/Alloy/actions/runs/39962333540).
+However, its strict G3 comparison **failed** at the unchanged threshold; report
 artifact [12510976889](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12510976889)
 and raw native evidence [12511266224](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12511266224).
-The physical-pilot APK and five-fixture pilot were skipped. These packages are
-diagnostic only; do not print, directly send, or hand off a native-generated job
+The physical-pilot APK and five-fixture pilot were skipped. This historical
+result is not G3 evidence for `4e6cc47`; its exact-head native run remains
+pending below. Do not print, directly send, or hand off a native-generated job
 to Bambu Handy. A green Android/native build does not qualify the slicer.
 
 **Current candidate (2026-10-24):** app source `4e6cc47`
@@ -53,12 +55,12 @@ extraction/install. Install `app-release.apk` for software checks only; record
 the APK SHA-256 and the phone/Android version with results. It is exact-head
 Android QA for `4e6cc47`, but is not a print-qualified or production release.
 
-The current candidate becomes installable for software QA only after its
-Android acceptance run completes successfully and the artifact is confirmed to
-belong to that run/head. Neither the ordinary CI-debug APK nor a restricted
-native pilot APK is a production release. Passing Android acceptance does not
-authorize printing; direct print and Bambu Handy handoff remain blocked unless
-their separate exact-scope gates pass.
+For a future candidate, wait until its Android acceptance run completes
+successfully and confirm the artifact belongs to that run/head before
+installing it. Neither the ordinary CI-debug APK nor a restricted native pilot
+APK is a production release. Passing Android acceptance does not authorize
+printing; direct print and Bambu Handy handoff remain blocked unless their
+separate exact-scope gates pass.
 
 ## 1a. Phone navigation and visual system
 
