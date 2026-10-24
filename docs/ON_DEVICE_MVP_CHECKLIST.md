@@ -5,12 +5,16 @@ checks does not establish slicer parity, physical printer safety, Bambu Handy
 acceptance, or production signing.
 
 **Latest installable Android software-QA package:** exact PR head
-[`a32eb30`](https://github.com/mbaliga/Alloy/commit/a32eb3038f2844a896bb178050671d7a03acb65b). Android acceptance
-[run 39962333697](https://github.com/mbaliga/Alloy/actions/runs/39962333697)
-passed. Download the CI-signed QA APK archive [artifact
-12507085635](https://github.com/mbaliga/Alloy/actions/runs/39962333697/artifacts/12507085635);
-GitHub reports archive SHA-256
-`43599957f1badb870a6169c59b9779a83342bd9d000013aec3cdc200f59f859b`.
+[`4e6cc47`](https://github.com/mbaliga/Alloy/commit/4e6cc473fd924afe7e0db379ab99f4f7fc785a3f).
+Android acceptance [run 40052398037](https://github.com/mbaliga/Alloy/actions/runs/40052398037)
+passed all 222 connected instrumentation tests. Download the CI-signed QA
+APK archive [artifact 12544183939](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544183939).
+Its archive SHA-256 is
+`36dd5fa26a86bd0d1598cfe520fa71a1307d0858e2084595909453e6c1c6cbef`; the
+contained `app-release.apk` SHA-256 is
+`3a68ac8804f22b4988b074567b4f348b48940c3b4f16e33cc1bcaf6d18dbe192`.
+The exact-head acceptance diagnostics are in [artifact
+12544955647](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544955647).
 This is a software-QA build, not a production release.
 
 On this exact head, the optional native engine built and API-35 ARM-translated
@@ -22,14 +26,16 @@ The physical-pilot APK and five-fixture pilot were skipped. These packages are
 diagnostic only; do not print, directly send, or hand off a native-generated job
 to Bambu Handy. A green Android/native build does not qualify the slicer.
 
-**Current candidate (2026-10-24):** app source `acb37a2` is under validation in
-[Android run 40047781437](https://github.com/mbaliga/Alloy/actions/runs/40047781437)
-and [native run 40047781445](https://github.com/mbaliga/Alloy/actions/runs/40047781445).
-At the last check, Android acceptance tests and native dependency compilation
-were still running; no matching APK or pilot artifact had been published. These
-runs may establish software evidence for `acb37a2`, but cannot be treated as
-finished until the jobs and their artifacts are inspected. A doc-only update to
-this checklist does not change that app source.
+**Current candidate (2026-10-24):** app source `4e6cc47`
+([PR #12](https://github.com/mbaliga/Alloy/pull/12)) passed Android acceptance
+in [run 40052398037](https://github.com/mbaliga/Alloy/actions/runs/40052398037),
+including all 222 connected instrumentation tests; its APK is the software-QA
+artifact linked above. Native validation is still running in
+[run 40052397964](https://github.com/mbaliga/Alloy/actions/runs/40052397964),
+currently building native dependencies. No matching G3 comparison or pilot
+artifact has been published, so this Android result does not change the
+NO-GO for print/share. A doc-only update to this checklist does not change
+that app source.
 
 **Do not send or print unqualified generated jobs.** Direct-send, external-share,
 physical-printer, and production-release gates remain fail-closed. A1 Mini
@@ -39,15 +45,13 @@ unverified.
 
 ## 1. Install the matching artifact
 
-The last completed Android software-QA build is for `a32eb30`, not the
-current candidate. If you need software-only exploration before the current
-Android run finishes, use [artifact 12507085635](https://github.com/mbaliga/Alloy/actions/runs/39962333697/artifacts/12507085635)
-from [run 39962333697](https://github.com/mbaliga/Alloy/actions/runs/39962333697).
-Verify its archive SHA-256 is
-`43599957f1badb870a6169c59b9779a83342bd9d000013aec3cdc200f59f859b` before
-extraction. Install `app-release.apk` for software checks only; record the
-APK SHA-256 and the phone/Android version with results. Do not use it as
-exact-head validation for `acb37a2`.
+The latest completed Android software-QA build is for `4e6cc47`. Download
+[artifact 12544183939](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544183939)
+from [run 40052398037](https://github.com/mbaliga/Alloy/actions/runs/40052398037).
+Verify the archive SHA-256 and contained APK SHA-256 listed above before
+extraction/install. Install `app-release.apk` for software checks only; record
+the APK SHA-256 and the phone/Android version with results. It is exact-head
+Android QA for `4e6cc47`, but is not a print-qualified or production release.
 
 The current candidate becomes installable for software QA only after its
 Android acceptance run completes successfully and the artifact is confirmed to
@@ -213,12 +217,19 @@ part of the first physical pilot.
   figure is labelled **MODEL TOOLPATH FILAMENT**; with supports on, it is
   labelled **ENGINE FILAMENT TOTAL** and must not be described as model-only.
 - Confirm separate support material is `0 g` only when supports are off.
-  When supports are on, the total may include support material, but the support
-  portion itself must say separately unreported rather than inventing a value.
-- Confirm prime/purge/cleaning explicitly says it is **not included in the
-  estimate**; never present Alloy's current total as complete printer-side
-  consumption. Live printer temperature/idle state must remain unavailable
-  unless supplied by a qualified printer connection.
+  When supports are on, the total may include support material. If exported
+  G-code has feature-type markers, the separate support amount must be derived
+  only from support-tagged positive-E moves and labelled approximate; if those
+  markers are absent, show that support is not reported separately rather than
+  inventing a value.
+- Confirm startup accounting reports only pre-layer positive-E measured in the
+  exported G-code, when a layer marker makes that boundary observable. It must
+  explicitly exclude printer-firmware flushing and cleaning outside the file;
+  never present it as complete printer-side waste or add a fixed assumed
+  purge amount. If the G-code has no layer marker, startup priming, purge and
+  cleaning must remain explicitly unmodeled. Live printer temperature/idle
+  state must remain unavailable unless supplied by a qualified printer
+  connection.
 - Export the `.gcode.3mf`; reopen it in a compatible desktop verifier if
   available and retain its SHA-256.
 - While the engine/profile/support gates are unverified, tap both **Share
