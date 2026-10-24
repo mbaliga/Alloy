@@ -3,8 +3,7 @@
 ## `learn/first-layer-hotend-v1.png`
 
 - **Asset ID:** `scene-first-layer-hotend-v1`
-- **Used by:** `start-inspect`, `first-layer`,
-  `symptom-first-layer-bunched`, `symptom-plate-residue`, and
+- **Used by:** `start-inspect`, `first-layer`, `symptom-plate-residue`, and
   `faq-slicing`
 - **Type:** existing bundled explanatory illustration, offline PNG
 - **SHA-256:** `3dcb86cdf1fc9479588622d25fae1d7c5744c74ebbe9cb381037f00fc041c646`
@@ -113,8 +112,7 @@ boundary, but it never proves a printer state, material condition, or print.
 ## `learn/first-layer-adhesion-v1.jpg`
 
 - **Asset ID:** `scene-first-layer-adhesion-v1`
-- **Used by:** `symptom-not-sticking`, `symptom-first-layer-gaps`, and
-  `symptom-warping`
+- **Used by:** `symptom-not-sticking`
 - **Type:** original generated explanatory illustration, offline JPEG
 - **Source/master:** built-in Image Generation output, generated 2026-10-13;
   original master remains in the Codex generated-image store
@@ -150,6 +148,45 @@ boundary, but it never proves a printer state, material condition, or print.
   material and recipe, and it never qualifies a profile or predicts success.
 - Do not depict touching a hot plate/nozzle or prescribe temperature changes.
 - Any replacement must be versioned, re-reviewed, and re-hashed.
+
+
+## `learn/first-layer-symptoms-v1.jpg`
+
+- **Asset ID:** `scene-first-layer-symptoms-v1`
+- **Used by:** `symptom-first-layer-gaps`, `symptom-first-layer-bunched`, and
+  `symptom-warping`
+- **Type:** original generated explanatory illustration, offline PNG
+- **Source/master:** built-in Image Generation output, generated 2026-10-18;
+  original retained in the Codex generated-image store
+- **SHA-256:** `3c3d520d953c697b15122744ce2a06ddf90b8727bb4d5b98d0812b84cd6a7e49`
+- **Size:** 768 × 512 px, RGB JPEG, 161,757 bytes
+- **Alt text:** “Four close-up first-layer outcomes on a dark build plate:
+  smooth attached lines, separated lines, material bunched at the nozzle, and
+  a patch curling up at one corner.”
+- **Review status:** visually inspected; technical/source review remains
+  pending a named human reviewer. It illustrates possible symptoms, not causes
+  Alloy can identify remotely.
+- **Light/dark treatment:** warm-white studio surround, dark plate, orange
+  filament; preserve native aspect ratio in both themes
+- **Reduced motion:** static
+- **Rights/provenance:** Alloy-owned generated artwork; no third-party brand,
+  logo, UI, or reference image was used
+
+### Generation brief
+
+> A premium photorealistic 3D-rendered 2×2 visual guide showing four distinct
+> FDM first-layer outcomes: smooth attached orange lines, gaps between lines,
+> filament bunching beneath a nozzle, and one patch corner curling from a dark
+> textured PEI plate. Warm-white background, charcoal plate, orange PLA and
+> restrained blue nozzle, no labels, text, arrows, logos, or watermark.
+
+### Acceptance constraints
+
+- The article copy identifies possible visual patterns but does not diagnose
+  the cause or prescribe hotend, plate, or temperature changes.
+- Never present this artwork as a slice, proof of profile compatibility, or
+  predictor of print success.
+- Any replacement must be versioned, reviewed, and re-hashed.
 
 
 ## `learn/support-styles-v1.jpg`

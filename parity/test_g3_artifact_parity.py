@@ -1,0 +1,160 @@
+"""Unit tests for matching, downloading, and validating same-commit G3 evidence."""
+
+from io import BytesIO
+from email.message import Message
+from urllib.error import HTTPError
+from pathlib import Path
+import tempfile
+import unittest
+from zipfile import ZipFile
+from unittest.mock import patch
+
+from ci.compare_g3_artifacts import (
+    REFERENCE_ARTIFACT,
+    download_artifact,
+    safe_extract,
+    select_reference_artifact,
+    select_reference_run,
+    validate_reference_manifest,
+    validate_native_manifest,
+    validate_artifact_digest,
+    wait_for_reference_run,
+)
+
+
+class G3ArtifactParityTests(unittest.TestCase):
+    def test_reference_run_requires_exact_successful_pr_head(self):
+        head = "a" * 40
+        runs = [
+            {"id": 1, "head_sha": "b" * 40, "event": "pull_request", "status": "completed", "conclusion": "success"},
+            {"id": 2, "head_sha": head, "event": "pull_request", "status": "completed", "conclusion": "failure"},
+            {"id": 3, "head_sha": head, "event": "pull_request", "status": "completed", "conclusion": "success", "created_at": "2026-10-14T01:00:00Z"},
+            {"id": 4, "head_sha": head, "event": "pull_request", "status": "completed", "conclusion": "success", "created_at": "2026-10-14T02:00:00Z"},
+            {"id": 5, "head_sha": head, "event": "push", "status": "completed", "conclusion": "success", "created_at": "2026-10-14T03:00:00Z"},
+        ]
+        self.assertEqual(4, select_reference_run(runs, head)["id"])
+
+    def test_reference_run_fails_when_head_has_no_successful_reference(self):
+        with self.assertRaisesRegex(RuntimeError, "exact PR head"):
+            select_reference_run([], "a" * 40)
+
+    def test_wait_retries_until_exact_head_reference_is_successful(self):
+        head = "c" * 40
+        responses = iter([
+            {"workflow_runs": []},
+            {"workflow_runs": [{"id": 9, "head_sha": head, "event": "pull_request", "status": "completed", "conclusion": "success"}]},
+        ])
+        sleeps = []
+
+        def fake_get(url, token):
+            self.assertIn(head, url)
+            self.assertEqual("token", token)
+            return next(responses)
+
+        result = wait_for_reference_run("mbaliga/Alloy", head, "token", attempts=2, sleep=sleeps.append, get_json=fake_get)
+        self.assertEqual(9, result["id"])
+        self.assertEqual([15], sleeps)
+
+    def test_reference_artifact_must_be_named_and_unexpired(self):
+        artifacts = [
+            {"name": REFERENCE_ARTIFACT, "expired": True, "archive_download_url": "expired"},
+            {"name": "other", "expired": False, "archive_download_url": "wrong"},
+            {"name": REFERENCE_ARTIFACT, "expired": False, "archive_download_url": "valid"},
+        ]
+        self.assertEqual("valid", select_reference_artifact(artifacts)["archive_download_url"])
+
+    def test_reference_artifact_digest_is_required_and_verified(self):
+        archive = b"reference zip bytes"
+        import hashlib
+        digest = hashlib.sha256(archive).hexdigest()
+        self.assertEqual(digest, validate_artifact_digest({"digest": f"sha256:{digest}"}, archive))
+        with self.assertRaisesRegex(RuntimeError, "no SHA-256"):
+            validate_artifact_digest({}, archive)
+        with self.assertRaisesRegex(RuntimeError, "invalid SHA-256"):
+            validate_artifact_digest({"digest": "sha256:1234"}, archive)
+        with self.assertRaisesRegex(RuntimeError, "does not match"):
+            validate_artifact_digest({"digest": f"sha256:{'0' * 64}"}, archive)
+
+    def test_artifact_extraction_rejects_path_traversal(self):
+        archive_buffer = BytesIO()
+        with ZipFile(archive_buffer, "w") as archive:
+            archive.writestr("../../outside.txt", "bad")
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(RuntimeError, "unsafe path"):
+                safe_extract(archive_buffer.getvalue(), Path(temporary) / "reference")
+            self.assertFalse((Path(temporary) / "outside.txt").exists())
+
+    def test_reference_manifest_requires_same_head_base_and_merge_tree(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest = Path(temporary) / "evidence" / "reference-manifest.txt"
+            manifest.parent.mkdir()
+            manifest.write_text(
+                "PR head SHA: head\nPR base SHA: base\nPR merge SHA: merge\n",
+                encoding="utf-8",
+            )
+            validate_reference_manifest(Path(temporary), "head", "base", "merge")
+            with self.assertRaisesRegex(RuntimeError, "different PR tree"):
+                validate_reference_manifest(Path(temporary), "head", "moved-base", "merge")
+
+    def test_reference_manifest_is_required(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(RuntimeError, "no run-context manifest"):
+                validate_reference_manifest(Path(temporary), "head", "base", "merge")
+
+    def test_native_manifest_is_same_head_and_covers_every_compared_input(self):
+        from ci.g3_evidence_manifest import write_manifest
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fixtures = ("cube_20mm", "overhang_support", "thin_wall_frame", "travel_obstacle")
+            for fixture in fixtures:
+                (root / f"{fixture}.gcode").write_text("G1 X1\n", encoding="utf-8")
+                (root / f"{fixture}.config.ini").write_text("layer_height = 0.2\n", encoding="utf-8")
+            write_manifest(
+                root,
+                head_sha="a" * 40,
+                base_sha="b" * 40,
+                merge_sha="c" * 40,
+                run_id="12",
+                run_attempt="1",
+            )
+            self.assertEqual("12", validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40, "12", "1")["workflow_run_id"])
+            with self.assertRaisesRegex(RuntimeError, "identity mismatch"):
+                validate_native_manifest(root, "d" * 40, "b" * 40, "c" * 40, "12", "1")
+            for run_id, attempt in (("13", "1"), ("12", "2")):
+                with self.subTest(run_id=run_id, attempt=attempt):
+                    with self.assertRaisesRegex(RuntimeError, "identity mismatch"):
+                        validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40, run_id, attempt)
+            (root / "thin_wall_frame.config.ini").unlink()
+            write_manifest(
+                root,
+                head_sha="a" * 40,
+                base_sha="b" * 40,
+                merge_sha="c" * 40,
+                run_id="12",
+                run_attempt="1",
+            )
+            with self.assertRaisesRegex(RuntimeError, "missing the compared input"):
+                validate_native_manifest(root, "a" * 40, "b" * 40, "c" * 40, "12", "1")
+
+    def test_github_token_is_not_forwarded_to_signed_artifact_host(self):
+        response_headers = Message()
+        response_headers["Location"] = "https://artifact-storage.example/signed.zip"
+
+        class RedirectingOpener:
+            def open(self, request, timeout):
+                self_request["authorization"] = request.get_header("Authorization")
+                raise HTTPError(request.full_url, 302, "Found", response_headers, None)
+
+        self_request = {}
+        with patch("ci.compare_g3_artifacts.build_opener", return_value=RedirectingOpener()):
+            with patch("ci.compare_g3_artifacts.urlopen", return_value=BytesIO(b"zip")) as signed_open:
+                self.assertEqual(b"zip", download_artifact("https://api.github.com/artifact", "secret-token"))
+
+        signed_request = signed_open.call_args.args[0]
+        self.assertEqual("Bearer secret-token", self_request["authorization"])
+        self.assertIsNone(signed_request.get_header("Authorization"))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -4,8 +4,9 @@ import unittest
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from verify_g3_profile import (FIELDS, merged_desktop_settings, read_desktop_settings,
-                                read_desktop_gcode_settings, read_native_settings, verify)
+from verify_g3_profile import (FIELDS, bed_temperature_commands, merged_desktop_settings,
+                                read_desktop_settings, read_desktop_gcode_settings,
+                                read_native_settings, verify)
 
 
 def desktop_settings():
@@ -35,6 +36,8 @@ def desktop_settings():
         "tree_support_branch_diameter": 2,
         "tree_support_branch_diameter_angle": 5,
         "tree_support_branch_distance": 5,
+        "tree_support_branch_diameter_organic": 2,
+        "tree_support_branch_distance_organic": 1,
         "tree_support_wall_count": 0,
         "support_object_first_layer_gap": 0.2,
         "support_interface_not_for_body": 1,
@@ -42,10 +45,12 @@ def desktop_settings():
         "brim_object_gap": 0.1,
         "brim_type": "auto_brim",
         "brim_width": 5,
+        "skirts": 0,
         "nozzle_temperature": ["220"],
         "nozzle_temperature_initial_layer": ["220"],
         "hot_plate_temp": ["60"],
         "hot_plate_temp_initial_layer": ["60"],
+        "first_layer_bed_temperature": ["35"],
         "filament_diameter": ["1.75"],
         "filament_flow_ratio": ["0.98"],
         "filament_max_volumetric_speed": ["21"],
@@ -113,15 +118,18 @@ def native_settings():
         "support_material_extrusion_width": "0.42",
         "support_material_speed": "150",
         "support_tree_angle": "45", "support_tree_branch_diameter": "2",
+        "tree_support_branch_diameter_organic": "2",
+        "tree_support_branch_distance_organic": "1",
         "tree_support_branch_diameter_angle": "5",
         "support_tree_branch_diameter_double_wall": "0",
-        "tree_support_branch_distance_organic": "5",
         "support_object_first_layer_gap": "0.2",
         "support_interface_not_for_body": "1",
         "support_remove_small_overhang": "1",
         "brim_object_gap": "0.1", "brim_type": "auto_brim", "brim_width": "5",
+        "skirt_loops": "0",
         "temperature": "220", "first_layer_temperature": "220",
-        "bed_temperature": "60", "first_layer_bed_temperature": "60",
+        "bed_temperature": "35", "first_layer_bed_temperature": "35",
+        "hot_plate_temp": "60",
         "filament_diameter": "1.75000", "extrusion_multiplier": "0.98000",
         "travel_acceleration": "10000", "default_acceleration": "6000",
         "slowdown_below_layer_time": "6", "min_print_speed": "20",
@@ -140,6 +148,61 @@ class G3ProfileTests(unittest.TestCase):
         self.assertEqual("pass", report["result"], report)
         self.assertEqual([], report["failed_fields"])
 
+    def test_cool_plate_effective_temperature_overrides_nominal_hot_plate(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        report = verify(desktop, native)
+        self.assertEqual("pass", report["result"], report)
+        checks = {check["field"]: check for check in report["checks"]}
+        self.assertEqual("hot_plate_temp", checks["bed_temperature"]["desktop_key"])
+        self.assertEqual("60", checks["bed_temperature"]["desktop"])
+        self.assertEqual("60", checks["bed_temperature"]["native"])
+
+        native["hot_plate_temp"] = "35"
+        drifted = verify(desktop, native)
+        self.assertEqual("fail", drifted["result"])
+        self.assertIn("bed_temperature", drifted["failed_fields"])
+
+    def test_profile_identity_checks_emitted_bed_targets_not_only_config_blocks(self):
+        desktop_gcode = "M140 S35\nM190 S35 ; wait for bed\nM140 S0\n"
+        native_gcode = "M140 S60\nM190 S60\nM140 S0\n"
+        report = verify(
+            desktop_settings(),
+            native_settings(),
+            desktop_gcode=desktop_gcode,
+            native_gcode=native_gcode,
+        )
+        self.assertEqual("fail", report["result"], report)
+        self.assertIn("bed_temperature_commands", report["failed_fields"])
+        command_check = next(check for check in report["checks"]
+                             if check["field"] == "bed_temperature_commands")
+        self.assertEqual(["M140 S35", "M190 S35", "M140 S0"], command_check["desktop"])
+        self.assertEqual(["M140 S60", "M190 S60", "M140 S0"], command_check["native"])
+
+    def test_bed_command_parser_ignores_comments_and_normalizes_numbers(self):
+        self.assertEqual(
+            ["M140 S35", "M190 S35", "M140 S0"],
+            bed_temperature_commands(
+                "; M140 S99\nM140 S35.0\nM190 S35;wait\nM140 S0\n"
+            ),
+        )
+
+    def test_resolved_skirt_count_is_a_hard_profile_identity_field(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        matching = verify(desktop, native)
+        self.assertEqual("pass", matching["result"], matching)
+        self.assertEqual(63, matching["checked_fields"])
+
+        native["skirt_loops"] = "1"
+        drifted = verify(desktop, native)
+        self.assertEqual("fail", drifted["result"])
+        self.assertEqual(["skirt_loops"], drifted["failed_fields"])
+        check = next(item for item in drifted["checks"]
+                     if item["field"] == "skirt_loops")
+        self.assertEqual("0", check["desktop"])
+        self.assertEqual("1", check["native"])
+
     def test_real_profile_drift_fails_closed(self):
         desktop = desktop_settings()
         desktop["sparse_infill_density"] = "20%"
@@ -156,6 +219,34 @@ class G3ProfileTests(unittest.TestCase):
         check = next(item for item in report["checks"]
                      if item["field"] == "retraction_minimum_travel")
         self.assertEqual("retract_before_travel", check["native_key"])
+
+    def test_bambu_automatic_tree_wall_sentinel_matches_native_zero_extra_walls(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        desktop["tree_support_wall_count"] = "0"
+        native["support_tree_branch_diameter_double_wall"] = "-1"
+        report = verify(desktop, native)
+        self.assertEqual("pass", report["result"], report)
+        check = next(item for item in report["checks"]
+                     if item["field"] == "support_tree_branch_diameter_double_wall")
+        self.assertEqual("0", check["desktop"])
+        self.assertEqual("0", check["native"])
+
+    def test_organic_tree_settings_override_legacy_tree_values(self):
+        desktop = desktop_settings()
+        native = native_settings()
+        native["support_tree_branch_distance"] = "5"
+        native["support_tree_branch_diameter"] = "5"
+        native["tree_support_branch_distance_organic"] = "1"
+        native["tree_support_branch_diameter_organic"] = "2"
+        report = verify(desktop, native)
+        self.assertEqual("pass", report["result"], report)
+        distance = next(item for item in report["checks"]
+                        if item["field"] == "support_tree_branch_distance")
+        diameter = next(item for item in report["checks"]
+                        if item["field"] == "support_tree_branch_diameter")
+        self.assertEqual("tree_support_branch_distance_organic", distance["desktop_key"])
+        self.assertEqual("tree_support_branch_diameter_organic", diameter["desktop_key"])
 
     def test_bambu_project_settings_archive_is_read(self):
         with tempfile.TemporaryDirectory() as root:

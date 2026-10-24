@@ -24,6 +24,20 @@ public final class ProfileCatalog {
     private static final String[] INITIAL_ASSETS = {
             DEFAULT_ASSET, "profiles/a1-0.4-pla-basic.json", "profiles/p1s-0.4-pla-basic.json"
     };
+    private static final String[] A1_MINI_MATERIAL_ASSETS = {
+            DEFAULT_ASSET,
+            "profiles/a1-mini-0.4-petg-basic.json",
+            "profiles/a1-mini-0.4-petg-hf.json",
+            "profiles/a1-mini-0.4-petg-translucent.json",
+            "profiles/a1-mini-0.4-tpu-95a-hf.json",
+            "profiles/a1-mini-0.4-pva.json"
+    };
+    private static final String[] A1_MATERIAL_ASSETS = {
+            INITIAL_ASSETS[1], "profiles/a1-0.4-petg-basic.json", "profiles/a1-0.4-tpu-95a.json"
+    };
+    private static final String[] P1S_MATERIAL_ASSETS = {
+            INITIAL_ASSETS[2], "profiles/p1s-0.4-petg-hf.json", "profiles/p1s-0.4-tpu-95a-hf.json"
+    };
     private static final int MAX_PROFILE_BYTES = 256 * 1024;
 
     private ProfileCatalog() { }
@@ -57,6 +71,70 @@ public final class ProfileCatalog {
         String requested = printerId == null ? "" : printerId.trim();
         for (Profile profile : loadInitial(assets)) if (profile.printerId.equals(requested)) return profile;
         return loadDefault(assets);
+    }
+
+    /** Load a persisted planning profile from the bundled, source-backed catalog. */
+    public static Profile loadPlanningById(AssetManager assets, String profileId) throws IOException {
+        String requested = profileId == null ? "" : profileId.trim();
+        if (requested.isEmpty()) return loadDefault(assets);
+        for (String asset : INITIAL_ASSETS) {
+            Profile profile = loadAsset(assets, asset);
+            if (requested.equals(profile.id)) return profile;
+        }
+        for (String[] group : new String[][]{A1_MINI_MATERIAL_ASSETS, A1_MATERIAL_ASSETS, P1S_MATERIAL_ASSETS}) {
+            for (String asset : group) {
+                Profile profile = loadAsset(assets, asset);
+                if (requested.equals(profile.id)) return profile;
+            }
+        }
+        return loadDefault(assets);
+    }
+
+    /** Retained compatibility entry point for A1 Mini 0.4 mm material recipes. */
+    public static List<Profile> loadA1MiniMaterialProfiles(AssetManager assets) throws IOException {
+        return loadMaterialProfiles(assets, "bambu.a1-mini");
+    }
+
+    /** Source-backed planning recipes for a selected printer; never send-qualified. */
+    public static List<Profile> loadMaterialProfiles(AssetManager assets, String printerId) throws IOException {
+        String[] selectedAssets;
+        int expectedCount;
+        if ("bambu.a1-mini".equals(printerId)) {
+            selectedAssets = A1_MINI_MATERIAL_ASSETS;
+            expectedCount = 6;
+        } else if ("bambu.a1".equals(printerId)) {
+            selectedAssets = A1_MATERIAL_ASSETS;
+            expectedCount = 3;
+        } else if ("bambu.p1s".equals(printerId)) {
+            selectedAssets = P1S_MATERIAL_ASSETS;
+            expectedCount = 3;
+        } else {
+            throw new IOException("No bundled material recipes for this printer");
+        }
+        ArrayList<Profile> profiles = new ArrayList<>();
+        for (String asset : selectedAssets) {
+            Profile profile = loadAsset(assets, asset);
+            if (!printerId.equals(profile.printerId) || profile.nozzle != 0.4f
+                    || profile.verified || profile.provenanceRevision.length() != 40)
+                throw new IOException("Bundled material recipes must remain source-backed, planning-only 0.4 mm profiles");
+            profiles.add(profile);
+        }
+        if (profiles.size() != expectedCount || !"PLA".equalsIgnoreCase(profiles.get(0).material)
+                || ("bambu.a1-mini".equals(printerId)
+                && (!"PETG".equalsIgnoreCase(profiles.get(1).material)
+                || !"PETG".equalsIgnoreCase(profiles.get(2).material)
+                || !"PETG".equalsIgnoreCase(profiles.get(3).material)
+                || !"TPU".equalsIgnoreCase(profiles.get(4).material)
+                || !"PVA".equalsIgnoreCase(profiles.get(5).material)))
+                || (("bambu.a1".equals(printerId) || "bambu.p1s".equals(printerId))
+                && (!"PETG".equalsIgnoreCase(profiles.get(1).material)
+                || !"TPU".equalsIgnoreCase(profiles.get(2).material))))
+            throw new IOException("Bundled printer material recipe coverage is incomplete");
+        return Collections.unmodifiableList(profiles);
+    }
+
+    private static Profile loadAsset(AssetManager assets, String asset) throws IOException {
+        try (InputStream input = assets.open(asset)) { return load(input); }
     }
 
     /** Load an Alloy-normalized profile from the app's private profile store. */
@@ -382,6 +460,12 @@ public final class ProfileCatalog {
             return key;
         }
         switch (key) {
+            case "enable_arc_fitting":
+                // Bambu exports this user choice as a boolean while the
+                // native adapter consumes the bounded Orca enum. Preserve an
+                // explicit project override instead of silently inheriting
+                // the bundled profile's default.
+                return "arc_fitting";
             case "support_type": {
                 // When the provider supplies both keys, support_style is the
                 // more specific value. Avoid making JSON member order change
@@ -421,6 +505,8 @@ public final class ProfileCatalog {
             case "tree_support_branch_angle": return "support_tree_angle";
             case "tree_support_branch_diameter": return "support_tree_branch_diameter";
             case "tree_support_branch_distance": return "support_tree_branch_distance";
+            case "tree_support_branch_diameter_organic": return "support_tree_branch_diameter_organic";
+            case "tree_support_branch_distance_organic": return "support_tree_branch_distance_organic";
             case "tree_support_branch_diameter_angle": return "support_tree_branch_diameter_angle";
             case "tree_support_wall_count": return "support_tree_branch_diameter_double_wall";
             case "support_remove_small_overhang": return "support_remove_small_overhang";
@@ -473,6 +559,11 @@ public final class ProfileCatalog {
     private static String importedNativeValue(String nativeKey, String sourceKey,
                                               Object raw, Map<String, Object> all) {
         String value = arrayText(raw);
+        if ("arc_fitting".equals(nativeKey) && "enable_arc_fitting".equals(sourceKey)) {
+            String normalized = value.trim().toLowerCase(Locale.US);
+            return "1".equals(normalized) || "true".equals(normalized)
+                    ? "emit_center" : "disabled";
+        }
         if ("fill_pattern".equals(nativeKey) || "top_fill_pattern".equals(nativeKey)
                 || "bottom_fill_pattern".equals(nativeKey)
                 || "internal_solid_infill_pattern".equals(nativeKey)) {

@@ -12,10 +12,28 @@ import org.junit.runner.RunWith;
 /** Initial stock is a transparent ledger, not a claim that a material is installed. */
 @RunWith(AndroidJUnit4.class)
 public final class InitialMaterialInventoryTest {
-    @Test public void a1MiniMaterialFamiliesHaveSeparateZeroStockLedgerRows() {
+    @Test public void a1MiniMaterialFamiliesHaveSeparateZeroStockLedgerRows() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         InventoryStore inventory = new InventoryStore(context.getSharedPreferences(
                 "initial-material-inventory-" + System.nanoTime(), Context.MODE_PRIVATE));
+        PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(context.getAssets());
+        java.util.Set<String> inventoryIds = new java.util.HashSet<>();
+        for (InventoryStore.Item item : inventory.items()) inventoryIds.add(item.id);
+        for (String printerId : new String[] {"a1-mini", "a1", "p1s"}) {
+            PrinterCapabilityCatalog.Printer printer = catalog.byId(printerId);
+            Assert.assertNotNull(printerId + " capability record is required", printer);
+            for (PrinterCapabilityCatalog.Material material : printer.materials) {
+                String inventoryId = material.id;
+                if ("pla".equals(material.id)) inventoryId = "pla-basic";
+                if ("petg".equals(material.id)) inventoryId = "petg-basic";
+                if ("bambu-pla-cf".equals(material.id)) inventoryId = "pla-cf";
+                Assert.assertTrue(printerId + " material " + material.id
+                                + " must have an inventory row " + inventoryId,
+                        inventoryIds.contains(inventoryId));
+            }
+        }
+        PrinterCapabilityCatalog.Printer mini = catalog.byId("a1-mini");
+        Assert.assertNotNull("A1 Mini capability record is required", mini);
         boolean pla = false, petg = false, tpu = false, pva = false, plaSupport = false, petgSupport = false;
         java.util.Set<String> restrictedFamilies = new java.util.HashSet<>(java.util.Arrays.asList(
                 "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled"));
@@ -23,7 +41,11 @@ public final class InitialMaterialInventoryTest {
             if ("pla-basic".equals(item.id)) pla |= unknownStock(item);
             if ("petg-basic".equals(item.id)) petg |= unknownStock(item);
             if ("tpu".equals(item.id)) tpu |= unknownStock(item);
-            if ("pva".equals(item.id)) pva |= unknownStock(item);
+            if ("pva".equals(item.id)) {
+                pva |= unknownStock(item);
+                Assert.assertTrue(item.care.contains("dry PVA only may use AMS Lite"));
+                Assert.assertTrue(item.care.contains("wet/absorbent PVA stays external/direct"));
+            }
             if ("support-pla".equals(item.id)) plaSupport |= unknownStock(item);
             if ("support-petg".equals(item.id)) petgSupport |= unknownStock(item);
             if (restrictedFamilies.remove(item.id)) {

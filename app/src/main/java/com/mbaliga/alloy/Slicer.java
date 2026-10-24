@@ -102,6 +102,10 @@ public final class Slicer {
     }
 
     public static final class Result {
+        public static final String PRINT_TIME_SOURCE_UNREPORTED = "unreported";
+        public static final String PRINT_TIME_SOURCE_UNKNOWN = "engine_reported_unspecified";
+        public static final String PRINT_TIME_SOURCE_ESTIMATED = "estimated_printing_time";
+        public static final String PRINT_TIME_SOURCE_MODEL = "model_printing_time";
         public final String gcode;
         public final ArrayList<Layer> layers;
         public final float filamentMm;
@@ -112,16 +116,50 @@ public final class Slicer {
         public final String engineId;
         public final boolean engineVerified;
         public final float printTimeSeconds;
+        /** Exact G-code header metric selected for {@link #printTimeSeconds}. */
+        public final String printTimeSource;
         public final float travelMm;
+        /** Positive E length tagged as support in the exported G-code, or -1 when unavailable. */
+        public final float supportFilamentMm;
+        /** Positive E length before the first model-layer marker, or -1 when unavailable. */
+        public final float startupFilamentMm;
+        public static String normalizePrintTimeSource(String value, float seconds) {
+            if (seconds < 0f || Float.isNaN(seconds) || Float.isInfinite(seconds))
+                return PRINT_TIME_SOURCE_UNREPORTED;
+            if (PRINT_TIME_SOURCE_ESTIMATED.equals(value) || PRINT_TIME_SOURCE_MODEL.equals(value)
+                    || PRINT_TIME_SOURCE_UNKNOWN.equals(value)) return value;
+            return PRINT_TIME_SOURCE_UNKNOWN;
+        }
         public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
                       String engineId, boolean engineVerified) {
             this(gcode, layers, filamentMm, warnings, engineId, engineVerified, -1f, -1f);
         }
         public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
                       String engineId, boolean engineVerified, float printTimeSeconds, float travelMm) {
+            this(gcode, layers, filamentMm, warnings, engineId, engineVerified,
+                    printTimeSeconds, printTimeSeconds >= 0f ? PRINT_TIME_SOURCE_UNKNOWN : PRINT_TIME_SOURCE_UNREPORTED,
+                    travelMm);
+        }
+        public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
+                      String engineId, boolean engineVerified, float printTimeSeconds,
+                      String printTimeSource, float travelMm) {
+            this(gcode, layers, filamentMm, warnings, engineId, engineVerified, printTimeSeconds,
+                    printTimeSource, travelMm, -1f, -1f);
+        }
+        public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
+                      String engineId, boolean engineVerified, float printTimeSeconds,
+                      String printTimeSource, float travelMm, float supportFilamentMm,
+                      float startupFilamentMm) {
             this.gcode = gcode; this.layers = layers; this.filamentMm = filamentMm; this.warnings = warnings;
             this.engineId = engineId; this.engineVerified = engineVerified;
-            this.printTimeSeconds = printTimeSeconds; this.travelMm = travelMm;
+            this.printTimeSeconds = printTimeSeconds;
+            this.printTimeSource = normalizePrintTimeSource(printTimeSource, printTimeSeconds);
+            this.travelMm = travelMm;
+            this.supportFilamentMm = validOptionalLength(supportFilamentMm);
+            this.startupFilamentMm = validOptionalLength(startupFilamentMm);
+        }
+        private static float validOptionalLength(float value) {
+            return Float.isFinite(value) && value >= 0f ? value : -1f;
         }
     }
 
@@ -276,7 +314,8 @@ public final class Slicer {
         int warnings = layerCount == 1 || layers.get(0).segments.isEmpty() ? 1 : 0;
         if (config.supports) warnings++;
         return new Result(out.toString(), layers, filament, warnings,
-                "alloy-legacy-offline", false, timeSeconds, totalTravel);
+                "alloy-legacy-offline", false, timeSeconds,
+                Result.PRINT_TIME_SOURCE_ESTIMATED, totalTravel);
     }
 
     static void validate(MeshModel mesh, Config config) {

@@ -440,6 +440,11 @@ private:
     double diameter_angle_scale_factor = tan(5.0*M_PI/180.0);
     // minimum roof area (1 mm^2), area smaller than this value will not have interface
     const double minimum_roof_area{SQ(scaled<double>(1.))};
+    // Adapted from Bambu Studio v02.08.02.61, commit
+    // 926a7192574bcb9b3a732e1ec59a46d79cb45466 (AGPL-3.0-or-later).
+    // Keep the pinned source thresholds explicit; they are not print-qualification tolerances.
+    const double MIN_CARRIED_RATIO = 0.3;
+    const double MIN_CARRIED_RATIO_INTERFACE = 0.02;
     float        top_z_distance = 0.0;
 
     bool  is_strong = false;
@@ -459,6 +464,9 @@ private:
      * \param contact_nodes The nodes to draw as support.
      */
     void draw_circles();
+
+    // Remove final non-organic support regions that are not carried by a lower support region or model slice.
+    void prune_floating_supports();
 
     /*!
      * \brief Drops down the nodes of the tree support towards the build plate.

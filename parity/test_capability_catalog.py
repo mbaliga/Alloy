@@ -40,6 +40,31 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value["printers"][0]["alloy_direct_send"] = "Qualified"
         self.assert_rejected(value, "must stay not qualified")
 
+    def test_rejects_p1s_ams2pro_route_without_firmware_and_capacity_caveats(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][2]["feed_routes"] if route["id"] == "ams-2-pro")
+        route["note"] = "Bambu supports this on P1 Series."
+        self.assert_rejected(value, "must retain firmware, capacity and Alloy qualification caveats")
+
+    def test_rejects_a1_ams_route_without_hub_requirement(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][1]["feed_routes"] if route["id"] == "ams-2-pro")
+        route["state"] = "Supported"
+        self.assert_rejected(value, "must have a sourced hub requirement")
+
+    def test_rejects_a1_mini_ams_route_without_hub_and_official_source(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][0]["feed_routes"] if route["id"] == "regular-ams")
+        route["state"] = "Supported"
+        route.pop("source_url")
+        self.assert_rejected(value, "must have a sourced hub requirement")
+
+    def test_rejects_a1_mini_ams_route_without_separation_caveats(self):
+        value = self.current_catalog()
+        route = next(route for route in value["printers"][0]["feed_routes"] if route["id"] == "ams-ht")
+        route["note"] = "Supported."
+        self.assert_rejected(value, "must distinguish beta introduction from stable firmware and retain route/qualification caveats")
+
     def test_rejects_missing_a1_mini_spool_form(self):
         value = self.current_catalog()
         value["printers"][0]["spool_forms"] = value["printers"][0]["spool_forms"][:-1]
@@ -65,6 +90,20 @@ class CapabilityCatalogValidationTests(unittest.TestCase):
         value = self.current_catalog()
         value["printers"][0]["materials"][0]["alloy_direct_send"] = "Qualified"
         self.assert_rejected(value, "material must stay unavailable for Alloy direct send")
+
+    def test_rejects_broad_a1_mini_pva_ams_lite_compatibility(self):
+        value = self.current_catalog()
+        pva = next(material for material in value["printers"][0]["materials"]
+                   if material["id"] == "pva")
+        pva["ams_lite_status"] = "Dry PVA only is listed for AMS Lite."
+        self.assert_rejected(value, "must explicitly exclude wet/damp material from AMS Lite")
+
+    def test_rejects_generic_ams_lite_source_for_dry_pva_exception(self):
+        value = self.current_catalog()
+        pva = next(material for material in value["printers"][0]["materials"]
+                   if material["id"] == "pva")
+        pva["ams_lite_source_url"] = "https://ca.store.bambulab.com/products/ams-lite"
+        self.assert_rejected(value, "must cite Bambu's PVA product guidance")
 
 
 if __name__ == "__main__":

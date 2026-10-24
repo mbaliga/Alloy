@@ -31,6 +31,83 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         self.assertIn("name: a1mini-orca-2.4.2-reference-slices", text)
         self.assertIn("runtime/orca-reference", text)
 
+    def test_current_pull_request_and_fixture_changes_trigger_reference_slices(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        pull_request = text.split("  pull_request:", 1)[1].split("  workflow_dispatch:", 1)[0]
+        self.assertIn("codex/fix-native-test-status", pull_request)
+        self.assertIn("parity/test_generate_fixtures.py", pull_request)
+        self.assertIn("parity/compare_gcode.py", pull_request)
+        self.assertIn("parity/test_compare_gcode.py", pull_request)
+        self.assertIn("ci/compare_g3_artifacts.py", pull_request)
+        self.assertIn("ci/validate_g3_reference_transform.py", pull_request)
+        self.assertIn("app/src/main/assets/models/**", pull_request)
+
+    def test_export_3mf_uses_filename_relative_to_output_directory(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn('--outputdir "$out"', text)
+        self.assertIn('--export-3mf "$name.gcode.3mf"', text)
+        self.assertNotIn('--export-3mf "$out/$name.gcode.3mf"', text)
+
+    def test_reference_manifest_captures_exact_pr_tree_identity(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        for key in ("PR head SHA", "PR base SHA", "PR merge SHA"):
+            self.assertIn(f'echo "{key}:', text)
+        self.assertIn("ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", text)
+        self.assertIn("ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}", text)
+        self.assertIn("ALLOY_PR_MERGE_SHA: ${{ github.sha }}", text)
+
+    def test_hook_neutralized_reference_is_separate_and_non_gating(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        strict = text.split("- name: Slice all three fixtures with pinned A1 Mini profiles", 1)[1]
+        strict = strict.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[0]
+        diagnostic = text.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[1]
+        diagnostic = diagnostic.split("- name: Record authoritative baseline manifest", 1)[0]
+        self.assertIn('MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"', strict)
+        self.assertIn('--load-settings "$MACHINE;$PROCESS"', strict)
+        self.assertIn("continue-on-error: true", diagnostic)
+        self.assertIn("neutralize_bambu_motion_hooks.py", diagnostic)
+        self.assertIn("prepare_orca_cli_process_profile.py", strict)
+        self.assertNotIn("--neutralize-motion-hooks", strict)
+        self.assertIn("--neutralize-motion-hooks", diagnostic)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"', strict)
+        self.assertIn(
+            'PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"',
+            diagnostic,
+        )
+        self.assertIn("--load-settings \"$MACHINE;$PROCESS\"", diagnostic)
+        self.assertIn("runtime/orca-reference-hook-neutralized", diagnostic)
+        upload = text.split("- name: Upload Orca reference slices", 1)[1]
+        self.assertIn("runtime/orca-reference-hook-neutralized", upload)
+
+    def test_a1_p1s_references_are_required_but_parity_is_not_inferred(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        diagnostic = text.split("- name: Slice A1 and P1S profile references (diagnostic only)", 1)[1]
+        diagnostic = diagnostic.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[0]
+        self.assertNotIn("continue-on-error: true", diagnostic)
+        self.assertIn("--printer a1 --printer p1s", diagnostic)
+        self.assertIn('for printer in a1 p1s; do', diagnostic)
+        self.assertIn('"$profile_dir/machine.json;$profile_dir/process.json"', diagnostic)
+        self.assertIn('"$profile_dir/filament.json"', diagnostic)
+        self.assertIn("reference_failure=0", diagnostic)
+        self.assertIn('if [ "$verified_count" -ne 4 ]; then', diagnostic)
+        self.assertIn('if [ "$reference_failure" -ne 0 ]; then', diagnostic)
+        self.assertIn("These default profile slices are not compared with native output until settings are explicitly aligned", diagnostic)
+        self.assertIn('verified_count=0', diagnostic)
+        self.assertIn('complete ($verified_count/4 verified fixtures)', diagnostic)
+        self.assertIn('partial ($verified_count/4 verified fixtures)', diagnostic)
+        self.assertIn('unavailable (0/4 verified fixtures)', diagnostic)
+        self.assertIn('sha256sum runtime/multimodel-profiles/*/*.json', diagnostic)
+        self.assertIn("runtime/orca-reference-multimodel", text)
+        self.assertIn("runtime/multimodel-profiles", text)
+
+
+    def test_both_orca_slices_use_project_settings_compatibility_wrapper(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertEqual(text.count('ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"'), 2)
+        self.assertEqual(text.count('COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"'), 2)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"', text)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"', text)
+
 
 if __name__ == "__main__":
     unittest.main()

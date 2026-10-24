@@ -2,7 +2,7 @@ name: Alloy optional native engine build
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
     paths:
       - 'app/build.gradle'
       - 'app/CMakeLists.txt'
@@ -33,9 +33,19 @@ on:
       - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
+      - 'ci/run_android_acceptance_with_diagnostics.sh'
+      - 'ci/machine_template_probe_attempt.py'
+      - 'ci/verify_machine_template_probe.py'
+      - 'ci/validate_machine_template_probe_output.py'
+      - 'ci/run_machine_template_probe.sh'
+      - 'ci/compare_machine_template_probe.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
+      - 'ci/validate_learning_assets.py'
+      - 'docs/LEARNING_ASSET_MANIFEST.md'
       - 'ci/verify_profile_snapshot.py'
+      - 'ci/export_a1mini_material_profiles.py'
+      - 'ci/export_a1_p1s_material_profiles.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/export_official_orca_sources.py'
@@ -45,8 +55,28 @@ on:
       - 'ci/normalize_occt_headers.py'
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
+      - 'ci/compare_g3_artifacts.py'
+      - 'ci/g3_evidence_manifest.py'
+      - 'ci/neutralize_bambu_motion_hooks.py'
+      - 'ci/compare_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_profile.py'
+      - 'parity/test_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_workflow_contract.py'
+      - 'parity/test_g3_artifact_parity.py'
+      - 'parity/test_g3_evidence_manifest.py'
+      - 'parity/verify_g3_profile.py'
+      - 'parity/test_g3_profile.py'
+      - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
+      - 'parity/test_machine_template_probe_output.py'
+      - 'parity/test_machine_template_probe_script.py'
+      - 'parity/test_machine_template_probe_diagnostic.py'
+      - 'parity/test_android_acceptance_diagnostics.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
+      - 'ci/native_build_provenance.py'
+      - 'parity/test_native_build_provenance.py'
+      - 'docs/GATE_STATUS.md'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
       - 'docs/NATIVE_DEPENDENCIES.md'
       - '.github/workflows/alloy-native-build.yml'
@@ -79,9 +109,19 @@ on:
       - 'ci/test_patch_orca_mobile_bootstrap.py'
       - 'ci/patch_slicebeam_stage1_no_step.py'
       - 'ci/validate_android_workflows.py'
+      - 'ci/run_android_acceptance_with_diagnostics.sh'
+      - 'ci/machine_template_probe_attempt.py'
+      - 'ci/verify_machine_template_probe.py'
+      - 'ci/validate_machine_template_probe_output.py'
+      - 'ci/run_machine_template_probe.sh'
+      - 'ci/compare_machine_template_probe.py'
       - 'ci/validate_profile_assets.py'
       - 'ci/validate_capability_catalog.py'
+      - 'ci/validate_learning_assets.py'
+      - 'docs/LEARNING_ASSET_MANIFEST.md'
       - 'ci/verify_profile_snapshot.py'
+      - 'ci/export_a1mini_material_profiles.py'
+      - 'ci/export_a1_p1s_material_profiles.py'
       - 'ci/validate_native_wiring.py'
       - 'ci/validate_official_orca_snapshot.py'
       - 'ci/export_official_orca_sources.py'
@@ -91,22 +131,42 @@ on:
       - 'ci/normalize_occt_headers.py'
       - 'ci/validate_native_prebuilts.py'
       - 'ci/validate_g3_evidence.py'
+      - 'ci/compare_g3_artifacts.py'
+      - 'ci/g3_evidence_manifest.py'
+      - 'ci/neutralize_bambu_motion_hooks.py'
+      - 'ci/compare_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_profile.py'
+      - 'parity/test_hook_neutralized_g3.py'
+      - 'parity/test_hook_neutralized_workflow_contract.py'
+      - 'parity/test_g3_artifact_parity.py'
+      - 'parity/test_g3_evidence_manifest.py'
+      - 'parity/verify_g3_profile.py'
+      - 'parity/test_g3_profile.py'
+      - 'parity/compare_gcode.py'
+      - 'parity/test_compare_gcode.py'
+      - 'parity/test_machine_template_probe_output.py'
+      - 'parity/test_machine_template_probe_script.py'
+      - 'parity/test_machine_template_probe_diagnostic.py'
+      - 'parity/test_android_acceptance_diagnostics.py'
       - 'ci/run_native_release_instrumentation.sh'
       - 'ci/build_gmp_mpfr_android.sh'
+      - 'ci/native_build_provenance.py'
+      - 'parity/test_native_build_provenance.py'
+      - 'docs/GATE_STATUS.md'
       - 'docs/NATIVE_ENGINE_INTEGRATION.md'
       - 'docs/NATIVE_DEPENDENCIES.md'
       - '.github/workflows/alloy-native-build.yml'
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
-  group: alloy-native-${{ github.ref }}
-  # A source-built Android native stack is deliberately expensive. Keep its
-  # evidence-producing run alive when a follow-up fix arrives; GitHub queues
-  # the newest run for this branch instead of discarding the only diagnostic
-  # result we have paid to produce.
+  group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}
+  # Keep evidence-producing runs alive, but isolate each source revision so
+  # a stalled emulator on an older commit cannot block validation of the
+  # current candidate indefinitely.
   cancel-in-progress: false
 
 env:
@@ -118,6 +178,7 @@ env:
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
   BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
+  BAMBU_MATERIAL_PROFILE_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
   OPENCV_VERSION: 4.6.0
@@ -147,15 +208,24 @@ jobs:
           python3 -m unittest -v ci.test_export_official_orca_sources ci.test_patch_boost_android_locale ci.test_patch_orca_mobile_bootstrap
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
+      - name: Test Bambu template probe evidence and failure collection
+        run: PYTHONPATH=ci:parity python3 -B -m unittest -v parity/test_machine_template_probe_output.py parity/test_machine_template_probe_script.py parity/test_machine_template_probe_diagnostic.py parity/test_android_acceptance_diagnostics.py parity/test_native_build_provenance.py
       - name: Verify pinned Orca profile snapshot
         shell: bash
         run: |
           set -euxo pipefail
           git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
-          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/export_a1mini_material_profiles.py orca-profile-source --check
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-translucent.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-tpu-95a-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pva.json
+          python3 ci/verify_machine_template_probe.py orca-profile-source
       - name: Verify pinned Bambu planning profiles
         shell: bash
         run: |
@@ -166,6 +236,15 @@ jobs:
           test "$(git -C bambu-profile-source rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json
+          git clone --filter=blob:none --sparse --no-checkout "$BAMBU_PROFILE_REPO" bambu-material-profile-source
+          git -C bambu-material-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
+          git -C bambu-material-profile-source checkout --detach "$BAMBU_MATERIAL_PROFILE_SHA"
+          test "$(git -C bambu-material-profile-source rev-parse HEAD)" = "$BAMBU_MATERIAL_PROFILE_SHA"
+          python3 ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json
       - name: Validate native engine wiring
         run: |
           python3 ci/validate_native_wiring.py
@@ -173,6 +252,7 @@ jobs:
           python3 ci/validate_native_prebuilts.py arm64-v8a
           python3 ci/validate_profile_assets.py
           python3 ci/validate_capability_catalog.py
+          python3 ci/validate_learning_assets.py
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -276,7 +356,24 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          bash build_all_deps_android.sh
+          log_dir="${RUNNER_TEMP}/alloy-native-dependency-build"
+          mkdir -p "$log_dir"
+          log_file="$log_dir/build.log"
+          printf 'started_at=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$log_dir/status.txt"
+          set +e
+          bash build_all_deps_android.sh 2>&1 | tee "$log_file"
+          status=${PIPESTATUS[0]}
+          set -e
+          printf 'exit_status=%s\nfinished_at=%s\n' "$status" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> "$log_dir/status.txt"
+          exit "$status"
+      - name: Upload native dependency build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-dependency-build-diagnostics
+          path: ${{ runner.temp }}/alloy-native-dependency-build/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Copy generated native inputs into Alloy
         shell: bash
         run: |
@@ -371,6 +468,7 @@ jobs:
       # arm64-v8a JNI library. Do not add an x86 native ABI just to make CI
       # green: physical qualification remains arm64-v8a only.
       - name: Run native release instrumentation through API-35 ARM translation
+        id: native_instrumentation
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -385,7 +483,52 @@ jobs:
           disable-animations: false
           disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
           script: bash ci/run_native_release_instrumentation.sh
+      # Keep an explicit attempt record even if the emulator action fails
+      # before it can invoke its instrumentation script.
+      - name: Initialize standalone Bambu template probe evidence
+        if: always() && !cancelled()
+        run: python3 ci/machine_template_probe_attempt.py path-b-template-probe initialized
+      # Run the narrow probe independently so a failure in the broad suite
+      # cannot prevent collection of template-rendering evidence.
+      # Its artifact includes rendered/counterfactual-bbl/ separately from the
+      # default-false and end-only renders.
+      - name: Render pinned Bambu templates independently
+        if: always() && !cancelled()
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-boot-timeout: "1800"
+          disable-animations: false
+          disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}
+          script: bash ci/run_machine_template_probe.sh
+      # Compare default-false and test-only BBL-mode renders with the exact-PR-
+      # head reference as a separate diagnostic. The BBL-mode output is
+      # counterfactual/unqualified and never gates G3 or production behavior.
+      - name: Compare Bambu template modes with exact-head reference (diagnostic only)
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+        run: |
+          python3 ci/compare_machine_template_probe.py \
+            --probe-dir path-b-template-probe/rendered \
+            --report-dir path-b-template-probe-parity
+      - name: Upload non-gating Bambu template comparison diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-bambu-template-probe-diagnostic
+          path: path-b-template-probe-parity
+          if-no-files-found: warn
+          retention-days: 14
       - name: Export native G3 evidence through API-35 ARM translation
+        if: always() && !cancelled()
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -412,11 +555,85 @@ jobs:
             python3 ci/validate_g3_evidence.py path-b-g3-evidence
             test -s path-b-g3-evidence/overhang_support.gcode
             test -s path-b-g3-evidence/overhang_support.config.ini
+      - name: Record native G3 run-context manifest
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        env:
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+          ALLOY_RUN_ID: ${{ github.run_id }}
+          ALLOY_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 ci/g3_evidence_manifest.py \
+            --evidence-dir path-b-g3-evidence \
+            --head-sha "$ALLOY_PR_HEAD_SHA" \
+            --base-sha "$ALLOY_PR_BASE_SHA" \
+            --merge-sha "$ALLOY_PR_MERGE_SHA" \
+            --run-id "$ALLOY_RUN_ID" \
+            --run-attempt "$ALLOY_RUN_ATTEMPT"
+      - name: Upload unqualified Bambu template rendering probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-bambu-template-rendering-probe
+          path: path-b-template-probe
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/upload-artifact@v4
+        if: always() && !cancelled()
         with:
           name: alloy-native-g3-evidence
           path: path-b-g3-evidence
           if-no-files-found: error
+      - name: Compare native G3 output with exact-PR-head Orca reference
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+          ALLOY_RUN_ID: ${{ github.run_id }}
+          ALLOY_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 ci/compare_g3_artifacts.py \
+            --native-dir path-b-g3-evidence \
+            --report-dir path-b-g3-parity
+      - name: Upload native G3 semantic comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-desktop-g3-parity
+          path: path-b-g3-parity
+          if-no-files-found: warn
+          retention-days: 14
+      # This counterfactual uses a separately sliced desktop reference with
+      # profile motion hooks cleared and the normal hook-neutral native output.
+      # It is deliberately non-gating and cannot replace strict G3.
+      - name: Compare hook-neutralized G3 counterfactual (diagnostic only)
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+        run: |
+          python3 ci/compare_hook_neutralized_g3.py \
+            --native-dir path-b-g3-evidence \
+            --report-dir path-b-hook-neutralized-g3-diagnostic \
+            --repository "$GITHUB_REPOSITORY" \
+            --head-sha "$ALLOY_PR_HEAD_SHA" \
+            --base-sha "$ALLOY_PR_BASE_SHA" \
+            --merge-sha "$ALLOY_PR_MERGE_SHA" \
+            --token "$GITHUB_TOKEN"
+      - name: Upload hook-neutralized G3 counterfactual diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-hook-neutralized-g3-counterfactual
+          path: path-b-hook-neutralized-g3-diagnostic
+          if-no-files-found: warn
+          retention-days: 14
       # A native test failure is the moment its JUnit XML is most valuable.
       # Keep it even when later success-only evidence artifacts are skipped.
       - name: Upload native instrumentation report
@@ -430,11 +647,36 @@ jobs:
             native-instrumentation-diagnostics
           if-no-files-found: warn
           retention-days: 14
-      # Produce the narrowly scoped physical-pilot variant only after the
-      # ordinary native runtime/G3 gates have exercised their unmodified APKs.
-      # This artifact remains explicitly unverified and may submit only the
-      # five immutable A1 Mini / PLA Basic / no-support fixtures.
+      # This is a hash-bound inventory, never a source-lineage or legal PASS.
+      # Run even when build/test steps fail so partial native evidence survives.
+      - name: Record native build provenance inventory
+        if: always()
+        env:
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+        run: |
+          python3 ci/native_build_provenance.py \
+            --repo-root . \
+            --slice-beam-root slicebeam \
+            --bootstrap-root bootstrap-source \
+            --output path-native-provenance/manifest.json
+          python3 ci/native_build_provenance.py \
+            --repo-root . \
+            --validate path-native-provenance/manifest.json
+      - name: Upload native build provenance inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-build-provenance-inventory
+          path: path-native-provenance
+          if-no-files-found: warn
+          retention-days: 30
+      # Collect narrowly scoped physical-pilot evidence after native runtime
+      # instrumentation passes, even when strict G3 fails. The G3 failure still
+      # fails this workflow; this CI-debug artifact remains unqualified and can
+      # submit only the five immutable A1 Mini / PLA Basic / no-support fixtures.
       - name: Build isolated A1 Mini physical-pilot APK pair
+        if: always() && !cancelled() && steps.native_instrumentation.outcome == 'success'
+        id: pilot_apk
         run: |
           set -euxo pipefail
           gradle :app:assembleRelease :app:assembleReleaseAndroidTest \
@@ -451,6 +693,8 @@ jobs:
           test "$pilot_app_id" = "com.mbaliga.alloy.pilot"
           test "$pilot_test_id" = "com.mbaliga.alloy.pilot.test"
       - name: Run five-fixture pilot evidence on API-35 ARM translation
+        if: always() && !cancelled() && steps.native_instrumentation.outcome == 'success' && steps.pilot_apk.outcome == 'success'
+        id: pilot_evidence
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -471,6 +715,7 @@ jobs:
             adb pull /sdcard/Android/data/com.mbaliga.alloy.pilot/files/alloy-no-support-pilot/. path-a1-mini-pilot/evidence/
             python3 -c 'import json,pathlib,re; files=list(pathlib.Path("path-a1-mini-pilot/evidence").glob("run-*/software-pilot-manifest.json")); assert len(files)==1, "expected one software pilot manifest"; data=json.loads(files[0].read_text()); expected={"box-20mm.stl","mounting-block.stl","thin-wall-frame-fixture.stl","travel_obstacle.stl","box-and-lid.stl"}; fixtures=data.get("fixtures",[]); assert data.get("software_only") is True and data.get("physical_qualification")=="PENDING" and data.get("direct_send_qualification")=="PENDING"; assert {f.get("fixture") for f in fixtures}==expected; assert all(f.get("supports") is False and f.get("package_preflight")=="PASS" and re.fullmatch(r"[0-9a-f]{64}",f.get("package_sha256","")) for f in fixtures); print("validated five-fixture software-only A1 Mini pilot evidence")'
       - uses: actions/upload-artifact@v4
+        if: always() && !cancelled() && steps.native_instrumentation.outcome == 'success' && steps.pilot_apk.outcome == 'success'
         with:
           name: alloy-a1-mini-physical-pilot-ci
           path: path-a1-mini-pilot

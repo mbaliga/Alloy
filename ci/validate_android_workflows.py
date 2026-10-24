@@ -9,6 +9,7 @@ confuses a CI key with a production signing key.
 """
 
 from pathlib import Path
+import re
 import xml.etree.ElementTree as ET
 
 
@@ -47,6 +48,29 @@ def require(text: str, token: str, path: Path) -> None:
         raise SystemExit(f"{path}: missing Android workflow contract: {token}")
 
 
+def validate_pr_trigger_deduplication(workflow: Path, text: str) -> None:
+    on_section_match = re.search(r"(?ms)^on:\n(.*?)(?=^[A-Za-z][A-Za-z0-9_-]*:|\Z)", text)
+    if on_section_match is None:
+        raise SystemExit(f"{workflow}: missing workflow trigger section")
+    on_section = on_section_match.group(1)
+    for trigger in ("push", "pull_request", "workflow_dispatch"):
+        if re.search(rf"(?m)^  {re.escape(trigger)}:\s*(?:#.*)?$", on_section) is None:
+            raise SystemExit(f"{workflow}: expected {trigger} trigger must remain enabled")
+
+    push_match = re.search(
+        r"(?ms)^  push:\n(?P<body>(?:^ {4,}.*\n|^\s*$)*)",
+        on_section,
+    )
+    if push_match is None:
+        raise SystemExit(f"{workflow}: missing push trigger configuration")
+    branches_match = re.search(r"(?m)^    branches:\s*\[([^]]*)\]\s*$", push_match.group("body"))
+    if branches_match is None:
+        raise SystemExit(f"{workflow}: push trigger must keep an explicit branch filter")
+    branches = [branch.strip().strip("'\" ") for branch in branches_match.group(1).split(",")]
+    if "main" not in branches or "codex/**" in branches:
+        raise SystemExit(f"{workflow}: push must include main and exclude codex/** (PRs build through pull_request)")
+
+
 def main() -> None:
     validate_handy_visibility()
     ordinary = ROOT / ".github/workflows/android-v1.yml"
@@ -68,9 +92,12 @@ def main() -> None:
             raise SystemExit(f"{workflow}: deprecated actions/setup-java@v4 is not allowed")
 
     ordinary_text = ordinary.read_text(encoding="utf-8")
+    acceptance_runner = ROOT / "ci/run_android_acceptance_with_diagnostics.sh"
+    acceptance_runner_text = acceptance_runner.read_text(encoding="utf-8")
+    validate_pr_trigger_deduplication(ordinary, ordinary_text)
     for token in (
         "gradle :app:assembleRelease -PalloyCiDebugSign=true --no-daemon --stacktrace",
-        "gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace",
+        "script: bash ci/run_android_acceptance_with_diagnostics.sh",
         "name: alloy-v1-release-ci-apk",
         "app/build/outputs/apk/release/app-release.apk",
         "disable-animations: false",
@@ -81,11 +108,30 @@ def main() -> None:
         "runs-on: macos-15-intel",
         "BAMBU_PROFILE_REPO:",
         "BAMBU_PROFILE_SHA:",
+        "BAMBU_MATERIAL_PROFILE_SHA:",
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
+        "python3 ci/validate_learning_assets.py",
+        "name: Upload Android acceptance diagnostics\n        if: always()\n        uses: actions/upload-artifact@v4",
+        "name: alloy-android-acceptance-diagnostics",
+        "app/build/reports/androidTests/connected/",
+        "app/build/outputs/androidTest-results/connected/",
     ):
         require(ordinary_text, token, ordinary)
+    for token in (
+        "gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace",
+        "app/build/reports/androidTests/connected",
+        "gradle-acceptance.log",
+        "cat \"$log_file\"",
+        "exit \"$status\"",
+    ):
+        require(acceptance_runner_text, token, acceptance_runner)
     if "assembleDebug" in ordinary_text or "connectedDebugAndroidTest" in ordinary_text:
         raise SystemExit(f"{ordinary}: ordinary CI must use its declared release test variant")
     if "profile: pixel_6" not in ordinary_text or "profile: Pixel 6" in ordinary_text:
@@ -96,6 +142,33 @@ def main() -> None:
         raise SystemExit(f"{ordinary}: macOS Android acceptance must not carry Linux-only KVM configuration")
 
     native_text = native.read_text(encoding="utf-8")
+
+    def workflow_step(step_name):
+        marker = f"      - name: {step_name}"
+        start = native_text.index(marker)
+        end = native_text.find("\n      - ", start + len(marker))
+        return native_text[start:] if end < 0 else native_text[start:end]
+
+    native_runtime_step = workflow_step("Run native release instrumentation through API-35 ARM translation")
+    pilot_build_step = workflow_step("Build isolated A1 Mini physical-pilot APK pair")
+    pilot_run_step = workflow_step("Run five-fixture pilot evidence on API-35 ARM translation")
+    g3_step = workflow_step("Compare native G3 output with exact-PR-head Orca reference")
+    if "id: native_instrumentation" not in native_runtime_step:
+        raise SystemExit(f"{native}: evidence-only pilot must depend on the native instrumentation result")
+    if "steps.native_instrumentation.outcome == 'success'" not in pilot_build_step:
+        raise SystemExit(f"{native}: evidence-only pilot APK may build only after native runtime instrumentation passes")
+    if ("steps.native_instrumentation.outcome == 'success'" not in pilot_run_step
+            or "steps.pilot_apk.outcome == 'success'" not in pilot_run_step):
+        raise SystemExit(f"{native}: pilot evidence may run only after native instrumentation and pilot APK build pass")
+    pilot_upload_at = native_text.index("name: alloy-a1-mini-physical-pilot-ci")
+    pilot_upload_start = native_text.rfind("      - uses: actions/upload-artifact@v4", 0, pilot_upload_at)
+    pilot_upload_step = native_text[pilot_upload_start:pilot_upload_at]
+    if ("steps.native_instrumentation.outcome == 'success'" not in pilot_upload_step
+            or "steps.pilot_apk.outcome == 'success'" not in pilot_upload_step):
+        raise SystemExit(f"{native}: pilot APK artifact must be retained only when its scoped build succeeded")
+    if "continue-on-error" in g3_step:
+        raise SystemExit(f"{native}: strict G3 must remain gating and must not become continue-on-error")
+    validate_pr_trigger_deduplication(native, native_text)
     native_instrumentation = ROOT / "ci/run_native_release_instrumentation.sh"
     native_instrumentation_text = native_instrumentation.read_text(encoding="utf-8")
     for token in (
@@ -110,6 +183,56 @@ def main() -> None:
     require(app_build_text, "applicationIdSuffix '.pilot'", app_build)
     require(app_build_text, "project.findProperty('alloyAdbTimeoutMs')", app_build)
     require(app_build_text, 'timeOutInMs = adbTimeoutInMs.toString().toInteger()', app_build)
+    template_probe_script = ROOT / "ci/run_machine_template_probe.sh"
+    template_probe_script_text = template_probe_script.read_text(encoding="utf-8")
+    for token in (
+        "com.mbaliga.alloy.BambuMachineTemplateProbeTest",
+        "ci/validate_machine_template_probe_output.py",
+        "trap finish_probe EXIT",
+        "collect_diagnostics",
+        "--exit-code \"$original_status\"",
+        "ALLOY_TEMPLATE_PROBE_OUTPUT_DIR",
+        "instrumentation.txt",
+        "logcat-tail.txt",
+    ):
+        require(template_probe_script_text, token, template_probe_script)
+    template_probe_validator = ROOT / "ci/validate_machine_template_probe_output.py"
+    template_probe_validator_text = template_probe_validator.read_text(encoding="utf-8")
+    for token in (
+        "def validate_end_only(",
+        "machine-end-template-only-render-diagnostic",
+        "validate_end_only(args.directory / \"end-only\")",
+        "def validate_counterfactual_bbl(",
+        "counterfactual-bbl-identity-template-render-diagnostic",
+        "validate_counterfactual_bbl(args.directory / \"counterfactual-bbl\")",
+    ):
+        require(template_probe_validator_text, token, template_probe_validator)
+    native_java_root = ROOT / "app/src/main/java"
+    counterfactual_call = re.compile(r"\bNative\.model_slice_counterfactual_bbl\s*\(")
+    production_callers = [
+        path for path in native_java_root.rglob("*.java")
+        if counterfactual_call.search(path.read_text(encoding="utf-8"))
+    ]
+    if production_callers:
+        raise SystemExit(
+            "counterfactual BBL JNI method must have no production call sites: "
+            + ", ".join(str(path.relative_to(ROOT)) for path in production_callers)
+        )
+    native_bridge = ROOT / "app/src/main/java/ru/ytkab0bp/slicebeam/slic3r/Native.java"
+    native_bridge_text = native_bridge.read_text(encoding="utf-8")
+    require(native_bridge_text, "model_slice_counterfactual_bbl(", native_bridge)
+    require(native_bridge_text, "whose JNI wrapper always passes false", native_bridge)
+    native_engine = ROOT / "app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java"
+    require(native_engine.read_text(encoding="utf-8"), "Native.model_slice(", native_engine)
+    bridge_source = ROOT / "app/src/main/jni/slicebeam/beam_native.cpp"
+    bridge_source_text = bridge_source.read_text(encoding="utf-8")
+    require(bridge_source_text, "calibEnd, calibStep, false);", bridge_source)
+    require(bridge_source_text, "Java_ru_ytkab0bp_slicebeam_slic3r_Native_model_1slice_1counterfactual_1bbl", bridge_source)
+    require(bridge_source_text, "print.is_BBL_printer() = counterfactualBblMode;", bridge_source)
+    probe_test = ROOT / "app/src/androidTest/java/com/mbaliga/alloy/BambuMachineTemplateProbeTest.java"
+    probe_test_text = probe_test.read_text(encoding="utf-8")
+    require(probe_test_text, "Native.model_slice_counterfactual_bbl(", probe_test)
+    require(probe_test_text, "put(\"counterfactual\", true).put(\"bbl_printer_mode\", true)", probe_test)
     for token in (
         "gradle :app:assembleRelease -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
         "gradle :app:assembleReleaseAndroidTest -PalloyNativeEngine=true -PalloyOfficialOrcaCompileProbe=true",
@@ -120,6 +243,26 @@ def main() -> None:
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
         "Run native release instrumentation through API-35 ARM translation",
         "Export native G3 evidence through API-35 ARM translation",
+        "Compare hook-neutralized G3 counterfactual (diagnostic only)",
+        "Upload hook-neutralized G3 counterfactual diagnostic",
+        "alloy-hook-neutralized-g3-counterfactual",
+        "python3 ci/verify_machine_template_probe.py orca-profile-source",
+        "Initialize standalone Bambu template probe evidence",
+        "Render pinned Bambu templates independently",
+        "Compare Bambu template modes with exact-head reference (diagnostic only)",
+        "Test Bambu template probe evidence and failure collection",
+        "parity/test_machine_template_probe_output.py",
+        "parity/test_machine_template_probe_script.py",
+        "parity/test_machine_template_probe_diagnostic.py",
+        "Compare Bambu template modes with exact-head reference (diagnostic only)",
+        "continue-on-error: true",
+        "ci/compare_machine_template_probe.py",
+        "ci/compare_hook_neutralized_g3.py",
+        "alloy-bambu-template-probe-diagnostic",
+        "counterfactual-bbl",
+        "if: always() && !cancelled()",
+        "script: bash ci/run_machine_template_probe.sh",
+        "name: alloy-bambu-template-rendering-probe",
         "target: google_apis",
         "arch: x86_64",
         "disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}",
@@ -160,32 +303,65 @@ def main() -> None:
         "--libnoise-source-root third_party/orca-deps-libnoise",
         "BAMBU_PROFILE_REPO:",
         "BAMBU_PROFILE_SHA:",
+        "BAMBU_MATERIAL_PROFILE_SHA:",
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
+        "python3 ci/validate_learning_assets.py",
     ):
         require(native_text, token, native)
+    probe_comparator = ROOT / "ci/compare_machine_template_probe.py"
+    probe_comparator_text = probe_comparator.read_text(encoding="utf-8")
+    for token in (
+        '"diagnostic_only": True',
+        '"non_gating": True',
+        '"strict_g3_gate": "separate; not modified by this diagnostic"',
+        'return 0',
+        "validate_reference_manifest",
+    ):
+        require(probe_comparator_text, token, probe_comparator)
+    for path in (
+        "ci/machine_template_probe_attempt.py",
+        "ci/verify_machine_template_probe.py",
+        "ci/validate_machine_template_probe_output.py",
+        "ci/run_machine_template_probe.sh",
+        "ci/compare_machine_template_probe.py",
+        "parity/test_machine_template_probe_output.py",
+        "parity/test_machine_template_probe_script.py",
+        "parity/test_machine_template_probe_diagnostic.py",
+    ):
+        if native_text.count(f"- '{path}'") != 2:
+            raise SystemExit(f"{native}: both push and pull_request filters must run the probe contract for {path}")
     if "assembleDebug" in native_text or "app/build/outputs/apk/debug" in native_text:
         raise SystemExit(f"{native}: native workflow must use the declared release test variant")
-    if native_text.count("profile: pixel_6") != 3 or "profile: Pixel 6" in native_text:
+    if native_text.count("profile: pixel_6") != 4 or "profile: Pixel 6" in native_text:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must use the stable avdmanager profile id pixel_6")
-    if native_text.count("disable-animations: false") != 3:
+    if native_text.count("disable-animations: false") != 4:
         raise SystemExit(f"{native}: both translated-ARM emulator jobs must avoid optional post-boot animation writes")
-    if native_text.count('emulator-boot-timeout: "1800"') != 3:
+    if native_text.count('emulator-boot-timeout: "1800"') != 4:
         raise SystemExit(f"{native}: each API-35 ARM-translation emulator boot must allow the extended hosted-runner window")
     native_runtime = native_text.find("name: Run native release instrumentation through API-35 ARM translation")
     for artifact in ("alloy-native-release-ci-apk", "alloy-native-instrumentation-apk"):
         artifact_position = native_text.find(f"name: {artifact}")
         if artifact_position < 0 or artifact_position > native_runtime:
             raise SystemExit(f"{native}: {artifact} must upload before emulator startup so build evidence survives boot failures")
-    if native_text.count("target: google_apis") != 3 or native_text.count("arch: x86_64") != 3:
+    if native_text.count("target: google_apis") != 4 or native_text.count("arch: x86_64") != 4:
         raise SystemExit(f"{native}: native runtime must use API-35 ARM translation on a bootable x86_64 host")
-    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 3:
+    if native_text.count("disable-linux-hw-accel: ${{ steps.emulator-acceleration.outputs.disable-hw-accel }}") != 4:
         raise SystemExit(f"{native}: translated-ARM emulator jobs must select KVM when available and allow software fallback")
     if native_text.count("sudo udevadm trigger --name-match=kvm") != 1:
         raise SystemExit(f"{native}: native runtime must configure hosted-runner KVM permissions once before emulator boots")
-    if "group: alloy-native-${{ github.ref }}" not in native_text or "cancel-in-progress: false" not in native_text:
-        raise SystemExit(f"{native}: native source builds must queue instead of cancelling live diagnostic runs")
+    if (
+        "group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}"
+        not in native_text
+        or "cancel-in-progress: false" not in native_text
+    ):
+        raise SystemExit(f"{native}: preserve live diagnostics while isolating native runs by source revision")
     if native_text.count("app/src/androidTest/**") != 2:
         raise SystemExit(f"{native}: every full-suite native trigger must include all instrumentation tests")
     native_bootstrap = native_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
@@ -206,9 +382,17 @@ def main() -> None:
         "ci/patch_slicebeam_stage1_no_step.py slicebeam",
         "BAMBU_PROFILE_REPO:",
         "BAMBU_PROFILE_SHA:",
+        "BAMBU_MATERIAL_PROFILE_SHA:",
         "Verify pinned Bambu planning profiles",
         "bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json",
         "bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json",
+        "ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json",
+        "bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json",
+        "python3 ci/validate_learning_assets.py",
+        "PYTHONPATH=parity:ci python3 -B -m unittest discover -s parity -p 'test_*.py' -v",
     ):
         require(release_text, token, release)
     release_bootstrap = release_text.find("python3 ci/patch_orca_mobile_bootstrap.py")
@@ -221,3 +405,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

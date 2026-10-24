@@ -1,22 +1,65 @@
 # Alloy on-device MVP verification
 
-This checklist is a verification protocol, not a claim that the app is ready to print. Use the exact source-matched artifacts below and record device results. A CI pass does not establish real-printer safety, Bambu Handy acceptance, or production signing.
+This is a verification protocol, not a print-readiness claim. Passing software
+checks does not establish slicer parity, physical printer safety, Bambu Handy
+acceptance, or production signing.
 
-**Current source snapshot (2026-10-13):** PR #13 head [ae48c42c313246815e2236f133f0bf96fb51e811](https://github.com/mbaliga/Alloy/commit/ae48c42c313246815e2236f133f0bf96fb51e811). The ordinary Android workflow passed in run [38355476587](https://github.com/mbaliga/Alloy/actions/runs/38355476587) and published alloy-v1-release-ci-apk (artifact ID 11793130471, archive SHA-256 565c24c11d8aba36b0df31e68d82687f94306ff96804ce122cd2364f9e798432). It verifies the ordinary Android app only; it is not native slicing or send evidence.
+**Latest installable Android software-QA package:** exact PR head
+[`248e1f6`](https://github.com/mbaliga/Alloy/commit/248e1f6e7d1628cc0e09e636c2633761f89e7f74).
+Android acceptance [run 40054095599](https://github.com/mbaliga/Alloy/actions/runs/40054095599)
+passed all 222 connected instrumentation tests. Download the CI-signed QA
+APK archive [artifact 12545370259](https://github.com/mbaliga/Alloy/actions/runs/40054095599/artifacts/12545370259).
+Its archive SHA-256 is
+`0adfb67889297a61e468dab2820a596a448a883f836910a06692579ba7d53722`; the
+contained `app-release.apk` SHA-256 is
+`c805f6c0c4acc02d908dc4c2c0c22ebf17fd530c273ad2ff2cc3e45deea8b9f4`.
+The exact-head acceptance diagnostics are in [artifact
+12545245798](https://github.com/mbaliga/Alloy/actions/runs/40054095599/artifacts/12545245798).
+This is a software-QA build, not a production release.
 
-The corrected optional-native run [38355476630](https://github.com/mbaliga/Alloy/actions/runs/38355476630) is still active at the native-engine build step. It has not yet published native APKs, completed instrumentation, exported native G3 evidence, or run the five-fixture software pilot. Do not use a historical native APK as a substitute for that exact-source evidence.
+At this head, native build and API-35 ARM-translated instrumentation passed in
+[run 40054095569](https://github.com/mbaliga/Alloy/actions/runs/40054095569),
+but the exact-head strict G3 comparison **failed** at the unchanged 2%
+threshold. The comparison report is [artifact
+12546897499](https://github.com/mbaliga/Alloy/actions/runs/40054095569/artifacts/12546897499);
+raw G3 inputs and manifest are [artifact
+12546588222](https://github.com/mbaliga/Alloy/actions/runs/40054095569/artifacts/12546588222).
+The manifest says `qualified_for_print: false`. All 64 source-backed profile
+identity fields matched, but print-time deltas were 9.49–17.68% and used
+different time metrics (`model_printing_time` vs `estimated_printing_time`);
+three fixtures also missed the filament tolerance by 2.10–2.65%. The API-35
+emulator pilot checks and restricted APK are not a physical-printer pilot and
+do not override the failed G3 gate. Do not print, directly send, or hand off a
+native-generated job to Bambu Handy. A green Android/native build does not
+qualify the slicer.
 
-The latest desktop Orca-to-Prusa comparison, run [38359783217](https://github.com/mbaliga/Alloy/actions/runs/38359783217), passed both slicer runtime jobs but failed semantic parity's strict 2% gate: time deltas are +6.31%, +6.35%, and +28.36%; summary filament deltas are +13.21%, +28.57%, and +22.42% for cube, supported overhang, and thin-wall. Parsed positive-E lengths are diagnostic only in the current comparator; their +4.48%, +11.67%, and +4.05% deltas flag additional toolpath-extrusion differences but are not part of the strict parity verdict. The translation is not parity-qualified or printer-ready.
+**Current candidate (2026-10-24):** exact PR head `248e1f6`
+([PR #12](https://github.com/mbaliga/Alloy/pull/12)); its Android APK and
+completed tests are linked above. The native G3 result is also complete and
+failed as detailed above. This does not change the **NO-GO** for print/share.
 
-**Material-coverage integration note:** A1 Mini catalog expansion and sourced AMS Lite exception handling are tracked separately in [PR #12](https://github.com/mbaliga/Alloy/pull/12), branch `codex/a1mini-filament-route-matrix`. That change is not in the source snapshot for the APK above. Until the catalog work is integrated into the tested app branch, do not treat the APK's initial 14 material classes as complete coverage of Bambu's A1 Mini material/spool routes. Re-verify the integrated catalog and all route screens on a new source-matched build.
+**Do not send or print unqualified generated jobs.** Direct-send, external-share,
+physical-printer, and production-release gates remain fail-closed. A1 Mini
+physical acceptance, A1/P1S runtime qualification, real-printer testing,
+Bambu Handy acceptance, production signing, and release approval remain
+unverified.
 
-## 1. Install the matching artifact for ordinary app checks
+## 1. Install the matching artifact
 
-1. Download alloy-v1-release-ci-apk from current ordinary run [38355476587](https://github.com/mbaliga/Alloy/actions/runs/38355476587). Check the artifact ID and archive digest above, extract app-release.apk, and record the APK's own SHA-256 and Android version/build number.
-2. This APK is CI-debug-signed and excludes the optional native engine. Use it only for UI, onboarding, model intake, planning, learning, and conservative fallback checks. Do not infer native slicing, printer-ready output, or send capability from installing or launching it.
-3. Avoid uninstalling a working Alloy install to make room. A CI signature may not update an installed production-signed package; use a separate Android user/profile or spare device unless signature compatibility is confirmed.
-4. Wait for run 38355476630 to finish before using any native artifact. Even if it publishes APKs, native use requires instrumentation, G3 export and the software pilot to pass for the same commit. Those are software gates only; the separate on-device route and human-reviewed physical evidence are still required.
-5. Fresh G2 provenance remains FAIL / NO-GO; Path B desktop profile translation remains not parity-qualified. Direct send, Bambu Handy round-trip and production release remain unverified.
+The latest completed Android software-QA build is for `248e1f6`. Download
+[artifact 12545370259](https://github.com/mbaliga/Alloy/actions/runs/40054095599/artifacts/12545370259)
+from [run 40054095599](https://github.com/mbaliga/Alloy/actions/runs/40054095599).
+Verify the archive SHA-256 and contained APK SHA-256 listed above before
+extraction/install. Install `app-release.apk` for software checks only; record
+the APK SHA-256 and the phone/Android version with results. It is exact-head
+Android QA for `248e1f6`, but is not a print-qualified or production release.
+
+For a future candidate, wait until its Android acceptance run completes
+successfully and confirm the artifact belongs to that run/head before
+installing it. Neither the ordinary CI-debug APK nor a restricted native pilot
+APK is a production release. Passing Android acceptance does not authorize
+printing; direct print and Bambu Handy handoff remain blocked unless their
+separate exact-scope gates pass.
 
 ## 1a. Phone navigation and visual system
 
@@ -54,6 +97,9 @@ all destinations remain reachable without horizontal scrolling.
 - Verify every displayed article retains readable safety and source/scope
   labels. A hard-stop article must tell the user to stop, not merely change a
   setting.
+- Open the first-layer gaps, bunched-material, and warping guides. Confirm
+  each shared four-panel illustration names the relevant quadrant and says it
+  is a visual example, not a remote diagnosis.
 - Rotate the phone, increase Android font size, enable dark mode if supported,
   and enable Android reduced motion. Critical text and primary actions must
   remain reachable and understandable.
@@ -74,15 +120,49 @@ Expected: learning is readable offline and is never a gate-bypass path.
   not override the more conservative profile limit.
 - Confirm switching profiles clears an existing slice and labels the profile
   `review required` rather than verified.
+- With the A1 Mini active, open the material/feed/spool review and choose each
+  bundled recipe: PLA Basic, PETG Basic, PETG HF, PETG Translucent, TPU 95A HF,
+  and PVA.
+  Verify each selection updates the active recipe, clears the existing slice,
+  and survives closing/reopening Alloy. Every profile must remain marked
+  review-required and direct send must remain unavailable. Also select the
+  specific Bambu TPU 95A HF recipe and confirm its feed guidance is
+  external/direct only, not AMS Lite, and says to dry before use. Bambu's
+  current guidance specifies 70 °C for 8 hours for this HF grade. Confirm PVA
+  distinguishes dry PVA
+  (listed as AMS Lite compatible) from wet/absorbent PVA (not for AMS Lite);
+  PLA/PETG labels must still require checking physical AMS Lite spool fit.
+  Do not treat the TPU recipe as generic; other grades need their own reviewed
+  profile. Treat material compatibility and feeder route as separate questions
+  from recipe availability.
+- With the A1 active, choose A1 PETG Basic and TPU 95A; with the P1S active,
+  choose P1S PETG HF and TPU 95A HF. Confirm the displayed printer/material
+  combination is correct, each choice persists across app restart, and an
+  existing slice is cleared. The TPU profiles must be labelled external/direct
+  feed only and must not imply AMS compatibility. For P1S TPU 95A HF, confirm
+  the picker guidance says to dry before use (Bambu's 70 °C / 8 hour setting);
+  do not show that HF-specific advice for A1's standard TPU 95A profile. All
+  four profiles remain planning-only; review exact material, route, physical
+  spool fit, and printer readiness independently.
 - Open the capability view. Confirm A1 mini distinguishes direct/external
   feed, AMS lite, and unsupported regular AMS; it must show 1.75 mm guidance,
   AMS lite spool dimensions, and the TPU/PVA exclusions.
-- Open Inventory. Verify ledger rows cover all 14 A1 Mini catalog material
-  classes: PLA Basic, PETG, TPU, PVA, Support PLA, Support PETG, ABS, ASA, PC,
-  PA/Nylon, PET, PLA-CF, PETG-CF and other CF/GF-filled polymers. The eight
-  A1 Mini not-recommended rows must say “Track only” and “not recommended on
-  A1 Mini,” and must not create default reorder alerts. Every unmeasured
-  built-in quantity should read **Not recorded**, not zero, stocked, or loaded;
+- Confirm the A1 capability list shows PLA, PETG, TPU and PVA individually as
+  ideal, and ABS, ASA, PC, PA, PET and CF/GF-filled classes individually as
+  not recommended. Its AMS Lite route must remain separate from printer
+  suitability.
+- Confirm P1S lists PLA, PETG, TPU, PVA, PET, ABS and ASA individually as
+  ideal; PA and PC as capable; and CF/GF-filled polymer as not recommended
+  for the supplied stainless nozzle. Its external feed and AMS routes must
+  remain separate, and AMS Lite must not appear as a P1S route.
+- Open Inventory. Verify ledger rows cover all 24 A1 Mini catalog material
+  classes: PLA, PETG, TPU, PVA, Support for PLA, Support for PETG, ABS, ASA,
+  PC, PA/Nylon, PET, Bambu PLA-CF, PETG-CF, other CF/GF-filled polymers,
+  BVOH, PP, POM, HIPS, Bambu PAHT-CF, PLA Glow, PET-CF, PA6-CF, TPU 95A and
+  TPE. Every row marked not recommended for A1 Mini must say **Track only**,
+  and unrated rows must remain explicitly review-required; none may create
+  default reorder alerts. Every unmeasured built-in quantity should read
+  **Not recorded**, not zero, stocked, or loaded;
   unknown quantities must not generate reorder alerts or display an empty
   gauge that looks like measured zero. Record a physically checked exact
   quantity (including zero) before using add/use stock actions. Service
@@ -131,64 +211,72 @@ part of the first physical pilot.
 ## 5. Estimate and export boundary
 
 - Open **Print plan** after a slice. It should show the engine-reported
-  filament in mm and an *approximate* g value, time if reported, current
+  filament in mm and an *approximate* g value, time if reported (clearly
+  labelled **approximate engine time, unverified** until desktop and printer
+  parity pass), current
   nozzle/plate temperatures and current orientation. With supports off, the
   figure is labelled **MODEL TOOLPATH FILAMENT**; with supports on, it is
   labelled **ENGINE FILAMENT TOTAL** and must not be described as model-only.
 - Confirm separate support material is `0 g` only when supports are off.
-  When supports are on, the total may include support material, but the support
-  portion itself must say separately unreported rather than inventing a value.
-- Confirm prime/purge/cleaning and live printer temperature/idle state say
-  unavailable/not reported unless a qualified engine or printer supplied them.
+  When supports are on, the total may include support material. If exported
+  G-code has feature-type markers, the separate support amount must be derived
+  only from support-tagged positive-E moves and labelled approximate; if those
+  markers are absent, show that support is not reported separately rather than
+  inventing a value.
+- Confirm startup accounting reports only pre-layer positive-E measured in the
+  exported G-code, when a layer marker makes that boundary observable. It must
+  explicitly exclude printer-firmware flushing and cleaning outside the file;
+  never present it as complete printer-side waste or add a fixed assumed
+  purge amount. If the G-code has no layer marker, startup priming, purge and
+  cleaning must remain explicitly unmodeled. Live printer temperature/idle
+  state must remain unavailable unless supplied by a qualified printer
+  connection.
 - Export the `.gcode.3mf`; reopen it in a compatible desktop verifier if
   available and retain its SHA-256.
-- With Bambu Handy installed, tap **Share to Bambu Handy** for a structurally
-  validated package. On Android 11+, confirm Alloy resolves the intended
-  receiver and launches Handy directly; then check Handy's own import result.
-  A successful launch is not proof of acceptance. If Handy is absent or has no
-  receiver, confirm the ordinary chooser fallback opens and can be cancelled
-  without altering the package. Alloy must not call the file Bambu-ready or
-  claim Handy accepted it unless the app visibly confirms the import.
+- While the engine/profile/support gates are unverified, tap both **Share
+  package** and **Try Bambu Handy**. Each must block external sharing with a
+  clear reason; neither may launch Android's chooser or Handy. **Export package**
+  may still save a review copy, visibly marked unverified. Do not open that
+  review copy in Handy or print it.
+- Only after the package, engine, selected printer profile and any requested
+  support engine are qualified should either share action become available.
+  Then verify Android resolves and launches Handy (or falls back to a
+  cancellable chooser if Handy is unavailable), and inspect Handy's own import
+  result. A successful launch is not proof of acceptance.
 - Return to Alloy and open **Print readiness**. In the ordinary build, confirm
   direct-print controls remain blocked until every native/profile/support/
   artifact/pairing/certificate and recovery gate is actually satisfied.
 
-Expected: a structurally validated, inspectable package can be exported; no
-unverified physical dispatch or Bambu Handy compatibility claim is made.
+Expected: an inspectable package can be exported, but unqualified jobs cannot
+be externally handed off through Alloy. No physical dispatch or Bambu Handy
+compatibility claim is made until evidence passes.
 
-## 6. Narrow A1 Mini evidence run (do not broaden the scope)
+## 6. Narrow A1 Mini physical pilot — currently blocked
 
-Only after sections 1–5 pass, follow
-[`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md) exactly:
+Do not upload or start a physical job from Alloy yet. The current CI pilot
+artifact is software evidence only and leaves `physical_qualification=PENDING`
+and `direct_send_qualification=PENDING`; desktop slicer semantic parity and
+fresh G2 provenance also remain unresolved.
 
-- Scope: A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI, one colour,
-  external/direct feed, no AMS and no supports.
-- The package-ID-verified pilot artifact from
-  [native run 37883851621](https://github.com/mbaliga/Alloy/actions/runs/37883851621)
-  is an historical successful baseline; its app/test package-ID assertions
-  passed, but it does not represent the current branch. Wait for a fresh
-  successful native run, then install only that run's `app-release.apk`; its
-  `.pilot` ID should coexist with regular Alloy. The matching
-  instrumentation APK is optional for ADB diagnostics. Keep the included
-  `evidence/run-*/software-pilot-manifest.json` as software evidence; it must
-  remain software-only and does not itself authorize upload or start.
-- In Alloy, open each of the five untouched bundled fixtures from Library,
-  verify the pinned A1 Mini / PLA Basic / 0.4 mm recipe and supports off, then
-  slice and inspect the toolpath and preflight. Pair the actual printer, verify
-  model N1, save its leaf-certificate pin, and use the two separate upload and
-  start confirmations for each fixture. No arbitrary imported model, changed
-  recipe, support setting, AMS route, or ordinary build may reach this pilot
-  transport path.
-- For every physical fixture retain the artifact hash, first-layer and
+When those gates are independently cleared and a reviewed, source-matched
+physical pilot is authorized, use the exact scope and evidence protocol in
+[`NO_SUPPORT_PLA_PILOT.md`](NO_SUPPORT_PLA_PILOT.md):
+
+- Scope is limited to A1 Mini model N1, 0.4 mm nozzle, PLA Basic, textured PEI,
+  one colour, external/direct feed, no AMS and no supports.
+- Use only a newly reviewed source-matched pilot APK pair whose app/test
+  package IDs are verified to coexist with the normal Alloy installation.
+  Keep the run's software manifest; it is not physical evidence and does not
+  authorize upload or start by itself.
+- Before any print, verify the profile, recipe, first layer, clear motion path,
+  temperature and printer state. Stop if anything differs or if Alloy cannot
+  show the required confirmations. Never auto-retry a printer command.
+- For every authorized fixture retain the package hash, first-layer and
   completed-part photos, measurements where relevant, redacted printer
-  telemetry, and each check result in `release/no-support-pla-pilot.json`.
-  The in-app route and physical prints can be performed from the phone; ADB is
-  optional for rerunning the software-only instrumentation export. Do not
-  automatically retry a printer command. Stop and investigate any unexpected
-  motion, temperature, routing, adhesion or printer state.
+  telemetry and each check result in
+  `release/no-support-pla-pilot.json`. Review all evidence before running
+  `ci/validate_no_support_pla_pilot.py`.
 
-Review all physical evidence before running
-`ci/validate_no_support_pla_pilot.py`; that validator is a release-evidence
-review step and need not run on the phone. A passing narrow pilot is not
-support parity, A1/P1S qualification, Bambu Handy validation, or production
-release approval.
+A passing narrow pilot would not establish support parity, A1/P1S
+qualification, Bambu Handy acceptance or production release approval.
+

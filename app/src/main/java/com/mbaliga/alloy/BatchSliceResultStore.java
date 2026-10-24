@@ -116,6 +116,7 @@ public final class BatchSliceResultStore {
                 .put("artifact_name", artifact.displayName).put("artifact_size", artifact.sizeBytes)
                 .put("artifact_sha256", artifact.sha256).put("layers", result.slice.layers.size())
                 .put("filament_mm", result.slice.filamentMm).put("print_time_seconds", result.slice.printTimeSeconds)
+                .put("print_time_source", result.slice.printTimeSource)
                 .put("engine", result.slice.engineId).put("engine_verified", result.slice.engineVerified);
     }
 
@@ -123,6 +124,7 @@ public final class BatchSliceResultStore {
         if (value.getInt("layers") != slice.layers.size()
                 || Math.abs((float) value.getDouble("filament_mm") - slice.filamentMm) > 0.01f
                 || Math.abs((float) value.getDouble("print_time_seconds") - slice.printTimeSeconds) > 0.01f
+                || !value.optString("print_time_source", slice.printTimeSource).equals(slice.printTimeSource)
                 || !value.getString("engine").equals(slice.engineId)
                 || value.getBoolean("engine_verified") != slice.engineVerified)
             throw new IOException("Batch result metrics do not match its durable slice");
