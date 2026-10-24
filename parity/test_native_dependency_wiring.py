@@ -182,6 +182,26 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertLess(native_upload, compare_step)
         self.assertLess(compare_step, report_upload)
         self.assertLess(report_upload, pilot)
+        runtime_step = workflow[
+            workflow.index("Run native release instrumentation through API-35 ARM translation"):
+            workflow.index("Initialize standalone Bambu template probe evidence")
+        ]
+        pilot_build_step = workflow[pilot:workflow.index("Run five-fixture pilot evidence on API-35 ARM translation")]
+        pilot_evidence_step = workflow[
+            workflow.index("Run five-fixture pilot evidence on API-35 ARM translation"):
+            workflow.index("name: alloy-a1-mini-physical-pilot-ci")
+        ]
+        self.assertIn("id: native_instrumentation", runtime_step)
+        self.assertIn("steps.native_instrumentation.outcome == 'success'", pilot_build_step)
+        self.assertIn("if: always() && !cancelled()", pilot_build_step)
+        self.assertIn("steps.native_instrumentation.outcome == 'success'", pilot_evidence_step)
+        self.assertIn("steps.pilot_apk.outcome == 'success'", pilot_evidence_step)
+        g3_step = workflow[compare_step:report_upload]
+        self.assertNotIn("continue-on-error", g3_step)
+        self.assertIn("steps.pilot_apk.outcome == 'success'", workflow[
+            workflow.rfind("- uses: actions/upload-artifact@v4", 0, workflow.index("name: alloy-a1-mini-physical-pilot-ci")):
+            workflow.index("name: alloy-a1-mini-physical-pilot-ci")
+        ])
 
     def test_all_initial_printers_slice_representative_review_only_geometry(self) -> None:
         smoke = (ROOT / "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java").read_text(
