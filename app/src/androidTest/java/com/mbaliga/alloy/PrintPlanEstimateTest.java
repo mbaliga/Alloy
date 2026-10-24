@@ -61,4 +61,17 @@ public final class PrintPlanEstimateTest {
         Assert.assertTrue(estimate.primePurgeCleaning.startsWith("3.0 mm pre-layer positive-E"));
         Assert.assertTrue(estimate.primePurgeCleaning.contains("outside this G-code are not included"));
     }
+
+    @Test public void emittedSupportMovesOverrideARecipeThatClaimsSupportsAreOff() {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = false;
+        Slicer.Result slice = new Slicer.Result("", new ArrayList<>(), 100f, 0,
+                "native", false, 600f, Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED,
+                25f, 20f, 3f);
+
+        PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
+
+        Assert.assertTrue(estimate.supportMaterial.startsWith("20.0 mm"));
+        Assert.assertEquals("ENGINE FILAMENT TOTAL", estimate.filamentScope);
+    }
 }
