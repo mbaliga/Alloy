@@ -47,6 +47,8 @@ public final class SliceResultStore {
                     result.printTimeSeconds >= 0f ? Slicer.Result.PRINT_TIME_SOURCE_UNKNOWN
                             : Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED));
             value.put("travel_mm", result.travelMm);
+            value.put("support_filament_mm", result.supportFilamentMm);
+            value.put("startup_filament_mm", result.startupFilamentMm);
         } catch (Exception error) { throw new IOException("Slice result metadata could not be encoded", error); }
         File metaTemporary = new File(jobDir, "." + META + ".part");
         try (FileOutputStream raw = new FileOutputStream(metaTemporary);
@@ -81,10 +83,14 @@ public final class SliceResultStore {
                 parsed.printTimeSource);
         if (time < 0f) timeSource = Slicer.Result.PRINT_TIME_SOURCE_UNREPORTED;
         float travel = finite(value.optDouble("travel_mm", parsed.travelMm), parsed.travelMm);
+        float supportFilament = optionalLength(value.optDouble("support_filament_mm", parsed.supportFilamentMm),
+                parsed.supportFilamentMm);
+        float startupFilament = optionalLength(value.optDouble("startup_filament_mm", parsed.startupFilamentMm),
+                parsed.startupFilamentMm);
         int warnings = value.optInt("warnings", parsed.warnings);
         if (warnings < 0 || warnings > 1_000_000) throw new IOException("Slice warning count is invalid");
         return new Slicer.Result(parsed.gcode, parsed.layers, filament, warnings, engineId, verified,
-                time, timeSource, travel);
+                time, timeSource, travel, supportFilament, startupFilament);
     }
 
     private static String safePrintTimeSource(String value, String fallback) {
@@ -97,6 +103,12 @@ public final class SliceResultStore {
 
     private static float finite(double value, float fallback) {
         return Double.isNaN(value) || Double.isInfinite(value) || value < 0d || value > 1_000_000_000d ? fallback : (float) value;
+    }
+
+    private static float optionalLength(double value, float fallback) {
+        if (Double.isNaN(value) || Double.isInfinite(value) || value < -1d || value > 1_000_000_000d)
+            return fallback;
+        return value < 0d ? -1f : (float) value;
     }
 
     private static String safeEngineId(String value) throws IOException {

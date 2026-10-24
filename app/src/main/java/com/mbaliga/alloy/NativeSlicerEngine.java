@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 20158)
-Total output lines: 1272
-
 package com.mbaliga.alloy;
 
 import java.io.BufferedWriter;
@@ -107,9 +104,7 @@ public final class NativeSlicerEngine implements SlicerEngine {
             // the instance owns the policy decision made when this engine was
             // constructed. Carry it through to the result that gets packaged
             // and sent to a printer.
-            Slicer.Result result = new Slicer.Result(parsed.gcode, parsed.layers, parsed.filamentMm,
-                    parsed.warnings, parsed.engineId, engineVerified,
-                    parsed.printTimeSeconds, parsed.printTimeSource, parsed.travelMm);
+            Slicer.Result result = withEngineVerification(parsed, engineVerified);
             A1MiniTemplatePolicy.requireSafe(result.gcode);
             return result;
         } catch (IOException error) {
@@ -368,7 +363,495 @@ public final class NativeSlicerEngine implements SlicerEngine {
         String supportBottomInterfaceLayers = config.nativeSettings.getOrDefault(
                 "support_material_bottom_interface_layers", supportInterfaceLayers);
         setting(settings, "support_interface_top_layers", supportInterfaceLayers);
-        setting(settings, "support_interface_bottom_layers", supportBottom…8158 tokens truncated…ive output can be tested
+        setting(settings, "support_interface_bottom_layers", supportBottomInterfaceLayers);
+        setting(settings, "support_top_z_distance",
+                config.nativeSettings.getOrDefault("support_material_contact_distance", number(Math.max(0.1f, config.layerHeight))));
+        setting(settings, "support_bottom_z_distance",
+                config.nativeSettings.getOrDefault("support_material_bottom_contact_distance", number(Math.max(0.1f, config.layerHeight))));
+        // These Bambu support-policy values have the same registered native
+        // meanings. Emit them explicitly so profile identity does not depend
+        // on an implicit PrintConfig default.
+        setting(settings, "support_object_first_layer_gap",
+                config.nativeSettings.getOrDefault("support_object_first_layer_gap", "0.2"));
+        setting(settings, "support_interface_not_for_body",
+                config.nativeSettings.getOrDefault("support_interface_not_for_body", "1"));
+        String supportBasePattern = config.nativeSettings.get("support_base_pattern");
+        if (supportBasePattern == null) {
+            supportBasePattern = config.nativeSettings.getOrDefault("support_material_pattern", "rectilinear");
+            // The pinned Bambu A1 Mini profile resolves its legacy organic
+            // support recipe to the current Orca `default` base pattern.
+            // Leaving the old `rectilinear` spelling in this newer key makes
+            // TreeSupport3D emit an additional base-infill route and changes
+            // both support material and timing. Preserve an explicit current
+            // key when a refreshed profile supplies one; otherwise apply the
+            // source-backed organic translation only.
+            if ("organic".equals(currentSupportStyle) && "rectilinear".equalsIgnoreCase(supportBasePattern))
+                supportBasePattern = "default";
+        }
+        setting(settings, "support_base_pattern", supportBasePattern);
+        setting(settings, "support_interface_pattern",
+                config.nativeSettings.getOrDefault("support_material_interface_pattern", "auto"));
+        String supportInterfaceSpacing = config.nativeSettings.getOrDefault(
+                "support_interface_spacing", config.nativeSettings.getOrDefault(
+                        "support_material_interface_spacing", number(Math.max(0.5f, config.nozzle))));
+        String supportBottomInterfaceSpacing = config.nativeSettings.getOrDefault(
+                "support_bottom_interface_spacing", supportInterfaceSpacing);
+        setting(settings, "support_interface_spacing", supportInterfaceSpacing);
+        setting(settings, "support_bottom_interface_spacing", supportBottomInterfaceSpacing);
+        setting(settings, "support_base_pattern_spacing",
+                config.nativeSettings.getOrDefault("support_material_spacing", "2.5"));
+        setting(settings, "support_speed",
+                config.nativeSettings.getOrDefault("support_material_speed", number(Math.min(config.infillSpeed, 80f))));
+        if (config.nativeSettings.containsKey("support_tree_angle")) {
+            String angle = config.nativeSettings.get("support_tree_angle");
+            setting(settings, "tree_support_branch_angle_organic", angle);
+        }
+        // The native schema registers ordinary and organic tree fields
+        // independently. Preserve both recipes even when only one style is
+        // active; switching styles must not silently restore engine defaults.
+        // Missing organic overrides must never inherit ordinary tree values.
+        if (config.nativeSettings.containsKey("support_tree_branch_distance_organic")) {
+            setting(settings, "tree_support_branch_distance_organic",
+                    config.nativeSettings.get("support_tree_branch_distance_organic"));
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_distance")) {
+            // Legacy tree and organic tree profiles have distinct branch
+            // spacing fields. Never let the legacy value override the
+            // organic field's own resolved value/default.
+            setting(settings, "tree_support_branch_distance",
+                    config.nativeSettings.get("support_tree_branch_distance"));
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_diameter_organic")) {
+            setting(settings, "tree_support_branch_diameter_organic",
+                    config.nativeSettings.get("support_tree_branch_diameter_organic"));
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_diameter")) {
+            setting(settings, "tree_support_branch_diameter",
+                    config.nativeSettings.get("support_tree_branch_diameter"));
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_diameter_angle")) {
+            String diameterAngle = config.nativeSettings.get("support_tree_branch_diameter_angle");
+            setting(settings, "tree_support_branch_diameter_angle", diameterAngle);
+        }
+        if (config.nativeSettings.containsKey("support_tree_branch_diameter_double_wall")) {
+            String wallCount = config.nativeSettings.get("support_tree_branch_diameter_double_wall");
+            // Bambu's -1 means automatic/default wall policy. The embedded
+            // core expresses that same policy as zero extra walls and rejects
+            // the provider sentinel as outside its bounded enum range.
+            if ("-1".equals(wallCount.trim())) wallCount = "0";
+            setting(settings, "tree_support_wall_count", wallCount);
+        }
+        if (!hasApprovedNativeSetting(config, "support_material_contact_distance"))
+            setting(settings, "support_material_contact_distance", number(Math.max(0.1f, config.layerHeight)));
+        if (!hasApprovedNativeSetting(config, "support_material_bottom_contact_distance"))
+            setting(settings, "support_material_bottom_contact_distance", number(Math.max(0.1f, config.layerHeight)));
+        if (!hasApprovedNativeSetting(config, "support_material_interface_layers"))
+            setting(settings, "support_material_interface_layers", "2");
+        if (!hasApprovedNativeSetting(config, "support_material_interface_spacing"))
+            setting(settings, "support_material_interface_spacing", number(Math.max(0.5f, config.nozzle)));
+        if (!hasApprovedNativeSetting(config, "support_material_spacing"))
+            setting(settings, "support_material_spacing", number(Math.max(1.0f, config.nozzle * 3f)));
+        if (!hasApprovedNativeSetting(config, "support_material_speed"))
+            setting(settings, "support_material_speed", number(Math.min(config.infillSpeed, 80f)));
+        setting(settings, "travel_speed", number(config.travelSpeed));
+        setting(settings, "external_perimeter_speed", number(config.outerWallSpeed));
+        setting(settings, "perimeter_speed", number(config.innerWallSpeed));
+        setting(settings, "infill_speed", number(config.infillSpeed));
+        setting(settings, "outer_wall_speed", number(config.outerWallSpeed));
+        setting(settings, "inner_wall_speed", number(config.innerWallSpeed));
+        setting(settings, "sparse_infill_speed", number(config.infillSpeed));
+        optionalSetting(settings, config.nativeSettings, "gap_fill_speed", "gap_infill_speed");
+        // The pinned Bambu resolved recipe may use legacy `skirts`, while the
+        // Orca core consumes `skirt_loops`. Preserve the resolved count
+        // exactly: auto-brim is not evidence that the desktop output adds a
+        // fallback skirt (the strict G3 desktop fixtures resolve skirt_loops=0).
+        setting(settings, "skirt_loops", config.nativeSettings.getOrDefault("skirts", "0"));
+        String defaultLineWidth = config.nativeSettings.getOrDefault("extrusion_width", number(config.nozzle));
+        setting(settings, "line_width", defaultLineWidth);
+        setting(settings, "outer_wall_line_width",
+                config.nativeSettings.getOrDefault("external_perimeter_extrusion_width", defaultLineWidth));
+        setting(settings, "inner_wall_line_width",
+                config.nativeSettings.getOrDefault("perimeter_extrusion_width", defaultLineWidth));
+        setting(settings, "sparse_infill_line_width",
+                config.nativeSettings.getOrDefault("infill_extrusion_width", defaultLineWidth));
+        setting(settings, "internal_solid_infill_line_width",
+                config.nativeSettings.getOrDefault("solid_infill_extrusion_width", defaultLineWidth));
+        setting(settings, "top_surface_line_width",
+                config.nativeSettings.getOrDefault("top_infill_extrusion_width", defaultLineWidth));
+        setting(settings, "initial_layer_line_width",
+                config.nativeSettings.getOrDefault("first_layer_extrusion_width", defaultLineWidth));
+        setting(settings, "support_line_width",
+                config.nativeSettings.getOrDefault("support_material_extrusion_width", defaultLineWidth));
+        // These current Orca fields are optional in older pinned snapshots.
+        // Emit them only when provenance carries the source value; omitting
+        // them is safer than inventing a compatibility constant.
+        optionalSetting(settings, config.nativeSettings, "initial_layer_infill_speed", "initial_layer_infill_speed");
+        optionalSetting(settings, config.nativeSettings, "initial_layer_travel_acceleration", "initial_layer_travel_acceleration");
+        optionalSetting(settings, config.nativeSettings, "initial_layer_acceleration", "first_layer_acceleration");
+        optionalSetting(settings, config.nativeSettings, "initial_layer_acceleration", "initial_layer_acceleration");
+        optionalSetting(settings, config.nativeSettings, "outer_wall_acceleration", "external_perimeter_acceleration");
+        optionalSetting(settings, config.nativeSettings, "outer_wall_acceleration", "outer_wall_acceleration");
+        optionalSetting(settings, config.nativeSettings, "inner_wall_acceleration", "perimeter_acceleration");
+        optionalSetting(settings, config.nativeSettings, "inner_wall_acceleration", "inner_wall_acceleration");
+        optionalSetting(settings, config.nativeSettings, "top_surface_acceleration", "top_solid_infill_acceleration");
+        optionalSetting(settings, config.nativeSettings, "top_surface_acceleration", "top_surface_acceleration");
+        optionalSetting(settings, config.nativeSettings, "infill_acceleration", "sparse_infill_acceleration");
+        optionalSetting(settings, config.nativeSettings, "sparse_infill_acceleration", "sparse_infill_acceleration");
+        optionalSetting(settings, config.nativeSettings, "internal_solid_infill_acceleration", "internal_solid_infill_acceleration");
+        if (!hasApprovedNativeSetting(config, "solid_infill_speed"))
+            setting(settings, "solid_infill_speed", number(config.innerWallSpeed));
+        if (!hasApprovedNativeSetting(config, "top_solid_infill_speed"))
+            setting(settings, "top_solid_infill_speed", number(config.outerWallSpeed));
+        setting(settings, "internal_solid_infill_speed",
+                config.nativeSettings.getOrDefault("solid_infill_speed", number(config.innerWallSpeed)));
+        setting(settings, "top_surface_speed",
+                config.nativeSettings.getOrDefault("top_solid_infill_speed", number(config.outerWallSpeed)));
+        setting(settings, "first_layer_speed", number(config.initialLayerSpeed));
+        setting(settings, "initial_layer_speed", number(config.initialLayerSpeed));
+        setting(settings, "top_surface_pattern",
+                currentSurfacePattern(config.nativeSettings.get("top_fill_pattern"), "monotonicline"));
+        setting(settings, "bottom_surface_pattern",
+                currentSurfacePattern(config.nativeSettings.get("bottom_fill_pattern"), "monotonic"));
+        setting(settings, "ironing_flow",
+                config.nativeSettings.getOrDefault("ironing_flowrate", "10%"));
+        setting(settings, "spiral_mode",
+                booleanValue(config.nativeSettings.getOrDefault("spiral_vase", "0")));
+        // Orca separates the filament calibration multiplier from the
+        // process/object and role-specific flow ratios. Keep the typed
+        // filament value authoritative, then pass any imported per-role
+        // overrides through only when the source profile supplied them.
+        setting(settings, "filament_flow_ratio", number(config.extrusionMultiplier));
+        setting(settings, "print_flow_ratio",
+                config.nativeSettings.getOrDefault("print_flow_ratio", "1"));
+        boolean hasRoleFlowOverrides = false;
+        for (String flowKey : new String[]{"first_layer_flow_ratio", "outer_wall_flow_ratio",
+                "inner_wall_flow_ratio", "overhang_flow_ratio", "sparse_infill_flow_ratio",
+                "internal_solid_infill_flow_ratio", "gap_fill_flow_ratio",
+                "top_solid_infill_flow_ratio", "bottom_solid_infill_flow_ratio"}) {
+            if (config.nativeSettings.containsKey(flowKey)) {
+                hasRoleFlowOverrides = true;
+                optionalSetting(settings, config.nativeSettings, flowKey, flowKey);
+            }
+        }
+        // Preserve an explicit Bambu project choice (notably 0 in the
+        // retained A1 Mini G3 project). For custom imports that provide role
+        // ratios but omit the switch, enable them so those overrides are not
+        // silently ignored.
+        if (hasRoleFlowOverrides && !config.nativeSettings.containsKey("set_other_flow_ratios"))
+            setting(settings, "set_other_flow_ratios", "1");
+        setting(settings, "extrusion_multiplier", number(config.extrusionMultiplier));
+        // Bambu's resolved PLA profile carries the cap on the filament, not
+        // on the global object. Preserve that distinction for SliceBeam while
+        // keeping the typed value as a fallback for custom recipes.
+        String filamentVolumetricCap = config.nativeSettings.get("filament_max_volumetric_speed");
+        if (filamentVolumetricCap != null) {
+            setting(settings, "filament_max_volumetric_speed", filamentVolumetricCap);
+            setting(settings, "max_volumetric_speed", "0");
+        } else {
+            setting(settings, "max_volumetric_speed", number(config.maxVolumetricSpeed));
+        }
+        // Bambu's A1 output can explicitly select either legacy `marlin` or
+        // the newer `marlin2` vocabulary. Keep the reviewed mobile default on
+        // `marlin2`, but honor a source-backed project override so a parity
+        // fixture can reproduce the exact desktop flavor without changing
+        // ordinary phone jobs. Only the two registered engine values are
+        // accepted; arbitrary slicer command text never crosses this boundary.
+        String requestedGcodeFlavor = config.nativeSettings.get("gcode_flavor");
+        if (!"marlin".equalsIgnoreCase(requestedGcodeFlavor)
+                && !"marlin2".equalsIgnoreCase(requestedGcodeFlavor)) {
+            requestedGcodeFlavor = "marlin2";
+        }
+        setting(settings, "gcode_flavor", requestedGcodeFlavor.toLowerCase(Locale.US));
+        // Preserve an explicit source/profile choice for arc fitting. The
+        // default remains linear until a profile opts in; the phone preview
+        // discretizes G2/G3 moves into bounded display segments without
+        // changing the native artifact that will be exported.
+        if (!hasApprovedNativeSetting(config, "arc_fitting"))
+            setting(settings, "arc_fitting", "disabled");
+        // The current Orca engine consumes a boolean enable_arc_fitting key;
+        // keep Alloy's source-facing arc_fitting value as the compatibility
+        // projection and translate it explicitly for the native writer.
+        String arcFitting = config.nativeSettings.get("arc_fitting");
+        setting(settings, "enable_arc_fitting",
+                "emit_center".equalsIgnoreCase(arcFitting == null ? "" : arcFitting.trim()) ? "1" : "0");
+        setting(settings, "gcode_comments", "1");
+        // The native exporter dereferences this option before checking
+        // whether binary output is enabled; define it explicitly for the
+        // standalone mobile recipe instead of relying on preset defaults.
+        setting(settings, "binary_gcode", "0");
+        setting(settings, "use_relative_e_distances", "1");
+        setting(settings, "cooling", "1");
+        // Current Orca stores temperatures as integer vectors, split between
+        // nozzle and the selected plate. Emit both the current fields and
+        // the compatibility fields used by older Alloy project snapshots.
+        setting(settings, "temperature", number(config.nozzleTemperature));
+        setting(settings, "first_layer_temperature", integerNumber(config.firstLayerNozzleTemperature));
+        setting(settings, "nozzle_temperature", integerNumber(config.nozzleTemperature));
+        setting(settings, "nozzle_temperature_initial_layer", integerNumber(config.firstLayerNozzleTemperature));
+        // Bambu stores temperatures for several plate materials in the same
+        // resolved process. The active plate is selected by curr_bed_type;
+        // collapsing that choice to hot_plate_temp can make an imported phone
+        // job heat the wrong surface. Keep the typed values as the fallback
+        // for older Alloy projects that do not carry plate metadata.
+        setting(settings, "bed_temperature", selectedBedTemperature(config, false));
+        setting(settings, "first_layer_bed_temperature", selectedBedTemperature(config, true));
+        setting(settings, "cool_plate_temp", plateTemperature(config, "cool_plate_temp", config.bedTemperature, false));
+        setting(settings, "cool_plate_temp_initial_layer", plateTemperature(config, "cool_plate_temp_initial_layer", config.firstLayerBedTemperature, true));
+        setting(settings, "min_fan_speed", number(config.fanMinPercent));
+        setting(settings, "max_fan_speed", number(config.fanMaxPercent));
+        String fanCoolingTime = config.nativeSettings.getOrDefault("fan_below_layer_time", "60");
+        String slowDownTime = config.nativeSettings.getOrDefault("slowdown_below_layer_time", "8");
+        String slowDownMinimumSpeed = config.nativeSettings.getOrDefault("min_print_speed", "10");
+        setting(settings, "fan_below_layer_time", fanCoolingTime);
+        setting(settings, "fan_cooling_layer_time", fanCoolingTime);
+        setting(settings, "slowdown_below_layer_time", slowDownTime);
+        setting(settings, "slow_down_layer_time", slowDownTime);
+        setting(settings, "min_print_speed", slowDownMinimumSpeed);
+        setting(settings, "slow_down_min_speed", slowDownMinimumSpeed);
+        // Orca/Prusa uses machine_start_gcode/machine_end_gcode for these
+        // hooks. The older SliceBeam names start_gcode/end_gcode are kept in
+        // the helper method names for compatibility with the Java seam, but
+        // emitting those legacy keys would leave the reviewed template out
+        // of the native artifact.
+        setting(settings, "machine_start_gcode", startGcode(config));
+        setting(settings, "machine_end_gcode", endGcode(config));
+        // SliceBeam requires an explicit E reset when relative extrusion is enabled.
+        // Keep this per-layer so long jobs cannot accumulate floating-point drift.
+        // Current Orca/Prusa libslic3r names this hook layer_change_gcode;
+        // older SliceBeam snapshots called the equivalent hook layer_gcode.
+        // Keep the legacy spelling in this comment for source-audit
+        // compatibility, but emit only the reset body: the current writer
+        // owns the LAYER_CHANGE/LAYER markers. Re-emitting those markers here
+        // doubles the reported layer count and corrupts Bambu's header.
+        setting(settings, "layer_change_gcode", "G92 E0");
+
+        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), StandardCharsets.UTF_8))) {
+            for (Map.Entry<String, String> entry : settings.entrySet())
+                line(out, entry.getKey(), entry.getValue());
+        }
+    }
+
+    private static void mirrorFilamentSetting(LinkedHashMap<String, String> output,
+                                              Map<String, String> source,
+                                              String sourceKey,
+                                              String filamentKey) {
+        String value = source.get(sourceKey);
+        if (value != null && value.trim().length() > 0)
+            setting(output, filamentKey, value);
+    }
+
+    private static String normalizedBrimType(String raw) {
+        String value = raw == null ? "" : raw.trim().toLowerCase(Locale.US);
+        if ("no_brim".equals(value) || "outer_only".equals(value)
+                || "inner_only".equals(value) || "outer_and_inner".equals(value)
+                || "auto_brim".equals(value) || "brim_ears".equals(value)
+                || "painted".equals(value)) return value;
+        throw new IllegalArgumentException("Unsupported brim_type: " + raw);
+    }
+
+    private static String selectedBedTemperature(Slicer.Config config, boolean initialLayer) {
+        String bedType = config.nativeSettings.get("curr_bed_type");
+        String key = plateKey(bedType, initialLayer);
+        if (key != null && config.nativeSettings.containsKey(key))
+            return integerNumber(parseTemperature(config.nativeSettings.get(key),
+                    initialLayer ? config.firstLayerBedTemperature : config.bedTemperature));
+        return integerNumber(initialLayer ? config.firstLayerBedTemperature : config.bedTemperature);
+    }
+
+    private static String plateTemperature(Slicer.Config config, String key, float fallback, boolean initialLayer) {
+        String value = config.nativeSettings.get(key);
+        if (value == null || value.trim().isEmpty()) return integerNumber(fallback);
+        return integerNumber(parseTemperature(value, fallback));
+    }
+
+    private static String plateKey(String bedType, boolean initialLayer) {
+        if (bedType == null) return null;
+        String normalized = bedType.trim().toLowerCase(Locale.US);
+        String suffix = initialLayer ? "_initial_layer" : "";
+        if (normalized.contains("cool")) return "cool_plate_temp" + suffix;
+        if (normalized.contains("engineering") || normalized.startsWith("eng")) return "eng_plate_temp" + suffix;
+        if (normalized.contains("supertack") || normalized.contains("super tack")) return "supertack_plate_temp" + suffix;
+        if (normalized.contains("textured")) return "textured_plate_temp" + suffix;
+        if (normalized.contains("hot")) return "hot_plate_temp" + suffix;
+        return null;
+    }
+
+    private static float parseTemperature(String raw, float fallback) {
+        if (raw == null) return fallback;
+        String value = raw.trim();
+        int comma = value.indexOf(',');
+        if (comma >= 0) value = value.substring(0, comma).trim();
+        try {
+            float parsed = Float.parseFloat(value);
+            return Float.isFinite(parsed) && parsed >= 0f && parsed <= 150f ? parsed : fallback;
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
+    /** Keep the native artifact self-contained and printable on Marlin-like firmware. */
+    private static String startGcode(Slicer.Config config) {
+        // Bambu's A1 start sequence establishes the travel acceleration here;
+        // the process default is applied later by the resolved toolpath. Using
+        // the default in the start block injects an extra M204 S6000 and makes
+        // an otherwise matched artifact advertise a different acceleration
+        // envelope before the first layer begins.
+        String flavor = config.nativeSettings.get("gcode_flavor");
+        boolean desktopMarlinStart = "marlin".equalsIgnoreCase(flavor == null ? "" : flavor.trim());
+        // Imported Bambu projects provide a dedicated initial-layer travel
+        // ceiling. It is the acceleration active when the first layer starts,
+        // regardless of whether the native output uses legacy Marlin or
+        // marlin2 vocabulary. The bundled profile keeps its reviewed 6000
+        // value, while imported A1 projects correctly carry Bambu's 500.
+        // Alloy's normal marlin2 recipe owns the machine-start acceleration
+        // through default_acceleration. An imported desktop-Marlin project
+        // may explicitly carry a different first-layer travel transition;
+        // preserve that narrow parity behavior without allowing a conflicting
+        // native-only value to override the typed Alloy start contract.
+        float startAcceleration = desktopMarlinStart
+                ? parseFirstNumber(config.nativeSettings.get("initial_layer_travel_acceleration"))
+                : Float.NaN;
+        if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f) {
+            startAcceleration = desktopMarlinStart
+                    ? parseFirstNumber(config.nativeSettings.get("travel_acceleration"))
+                    : Float.NaN;
+        }
+        if (!Float.isFinite(startAcceleration) || startAcceleration <= 0f)
+            startAcceleration = parseFirstNumber(config.nativeSettings.get("default_acceleration"));
+        String acceleration = Float.isFinite(startAcceleration) && startAcceleration > 0f
+                ? String.format(Locale.US, "M204 S%.0f\\n", startAcceleration) : "";
+        // The typed profile temperatures describe generic bed values, while
+        // Bambu recipes carry a separate temperature for each plate. Match
+        // the startup block to the same active-plate resolution used by the
+        // native config writer, or a Cool Plate job can silently heat to the
+        // profile's generic Hot Plate temperature.
+        float firstLayerBedTemperature = parseTemperature(
+                selectedBedTemperature(config, true), config.firstLayerBedTemperature);
+        return String.format(Locale.US,
+                "; Alloy native start · %s\\n; Alloy template policy: %s\\n%sM140 S%.0f\\nM104 S%.0f\\nM190 S%.0f\\nM109 S%.0f\\nG28\\nG90\\nM83\\nG92 E0\\nM107",
+                config.printer, A1MiniTemplatePolicy.ID, acceleration, firstLayerBedTemperature, config.nozzleTemperature,
+                firstLayerBedTemperature, config.firstLayerNozzleTemperature);
+    }
+
+    private static String endGcode(Slicer.Config config) {
+        return "; Alloy native end\\nG91\\nG1 Z2 F600\\nG90\\nG1 X0 Y0 F9000\\nM104 S0\\nM140 S0\\nM107\\nM84";
+    }
+
+    private static void setting(LinkedHashMap<String, String> settings, String key, String value) {
+        settings.put(key, value == null ? "" : value);
+    }
+
+    private static void optionalSetting(LinkedHashMap<String, String> settings,
+                                        Map<String, String> source, String sourceKey, String nativeKey) {
+        String value = source.get(sourceKey);
+        if (value != null && value.trim().length() > 0) setting(settings, nativeKey, value);
+    }
+
+    private static String currentSparseInfillPattern(String value) {
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.US);
+        if ("zig-zag".equals(normalized)) normalized = "zigzag";
+        if ("monotoniclines".equals(normalized) || "monotonic".equals(normalized)) normalized = "grid";
+        if ("rectilinear".equals(normalized) || "alignedrectilinear".equals(normalized)
+                || "zigzag".equals(normalized) || "crosszag".equals(normalized)
+                || "lockedzag".equals(normalized) || "line".equals(normalized)
+                || "grid".equals(normalized) || "triangles".equals(normalized)
+                || "tri-hexagon".equals(normalized) || "cubic".equals(normalized)
+                || "adaptivecubic".equals(normalized) || "quartercubic".equals(normalized)
+                || "supportcubic".equals(normalized) || "lightning".equals(normalized)
+                || "honeycomb".equals(normalized)) return normalized;
+        return "grid";
+    }
+
+    private static String currentSurfacePattern(String value, String fallback) {
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.US);
+        if ("monotoniclines".equals(normalized)) normalized = "monotonicline";
+        if ("zig-zag".equals(normalized)) normalized = "rectilinear";
+        if ("monotonic".equals(normalized) || "monotonicline".equals(normalized)
+                || "rectilinear".equals(normalized) || "alignedrectilinear".equals(normalized)
+                || "concentric".equals(normalized) || "hilbertcurve".equals(normalized)
+                || "archimedeanchords".equals(normalized) || "octagramspiral".equals(normalized))
+            return normalized;
+        return fallback;
+    }
+
+    private static String currentWallGenerator(String value) {
+        return "arachne".equalsIgnoreCase(value == null ? "" : value.trim()) ? "arachne" : "classic";
+    }
+
+    private static String booleanValue(String value) {
+        return "1".equals(value) || "true".equalsIgnoreCase(value) ? "1" : "0";
+    }
+
+    private static boolean hasApprovedNativeSetting(Slicer.Config config, String key) {
+        return config.nativeSettings.containsKey(key) && NativeSettings.isApprovedKey(key);
+    }
+
+    private static void line(BufferedWriter out, String key, String value) throws IOException {
+        out.write(key); out.write(" = "); out.write(value == null ? "" : value.replace("\n", "\\n")); out.newLine();
+    }
+
+    private static String number(float value) { return String.format(Locale.US, "%.5f", value); }
+
+    private static String integerNumber(float value) { return String.format(Locale.US, "%.0f", value); }
+
+    private static String accelerationPair(String value) {
+        String first = value.trim();
+        int comma = first.indexOf(',');
+        if (comma >= 0) first = first.substring(0, comma).trim();
+        if (first.length() == 0) return value.trim();
+        return first + "," + first;
+    }
+
+    /**
+     * The stock Orca compatibility profile advertises larger inherited axis
+     * maxima than Bambu's effective default acceleration, so the historical
+     * adapter collapses those values to the default. A resolved Bambu
+     * project, however, may explicitly lower one or more axes (and may use
+     * asymmetric travel limits). Preserve that project choice instead of
+     * silently replacing it with the stock compatibility pair.
+     */
+    private static boolean shouldApplyCompatibilityAcceleration(Slicer.Config config,
+                                                                 String defaultAcceleration) {
+        float defaultValue = parseFirstNumber(defaultAcceleration);
+        if (!Float.isFinite(defaultValue) || defaultValue <= 0f) return false;
+        String x = config.nativeSettings.get("machine_max_acceleration_x");
+        String y = config.nativeSettings.get("machine_max_acceleration_y");
+        String travel = config.nativeSettings.get("machine_max_acceleration_travel");
+        // An explicit effective project limit is represented by a lower axis
+        // ceiling or by asymmetric travel values. The shipped inherited
+        // profile uses equal values above default_acceleration and therefore
+        // still takes the compatibility route.
+        if (hasLowerFirstValue(x, defaultValue) || hasLowerFirstValue(y, defaultValue)) return false;
+        if (travel != null && !samePair(travel)) return false;
+        return !hasLowerFirstValue(travel, defaultValue);
+    }
+
+    private static boolean hasLowerFirstValue(String raw, float threshold) {
+        float value = parseFirstNumber(raw);
+        return Float.isFinite(value) && value > 0f && value < threshold;
+    }
+
+    private static float parseFirstNumber(String raw) {
+        if (raw == null) return Float.NaN;
+        String value = raw.trim();
+        int comma = value.indexOf(',');
+        if (comma >= 0) value = value.substring(0, comma).trim();
+        try { return Float.parseFloat(value); }
+        catch (NumberFormatException ignored) { return Float.NaN; }
+    }
+
+    private static boolean samePair(String raw) {
+        if (raw == null) return true;
+        String value = raw.trim();
+        int comma = value.indexOf(',');
+        if (comma < 0) return true;
+        String left = value.substring(0, comma).trim();
+        String right = value.substring(comma + 1).trim();
+        return left.equals(right);
+    }
+
+    // Package-visible for the Android parser regression test. This method is
+    // independent of JNI so malformed or unusual native output can be tested
     // without loading the full slicer library.
     static Slicer.Result parseGcode(File file, Slicer.Config config) throws IOException {
         // Keep the legacy parser default for fixture/backward-compatibility
@@ -557,6 +1040,14 @@ public final class NativeSlicerEngine implements SlicerEngine {
 
     static boolean isNativeEngineId(String engineId) {
         return ORCA_NATIVE_ENGINE_ID.equals(engineId) || LEGACY_NATIVE_ENGINE_ID.equals(engineId);
+    }
+
+    static Slicer.Result withEngineVerification(Slicer.Result parsed, boolean engineVerified) {
+        if (parsed == null) throw new IllegalArgumentException("Parsed slice result is missing");
+        return new Slicer.Result(parsed.gcode, parsed.layers, parsed.filamentMm,
+                parsed.warnings, parsed.engineId, engineVerified, parsed.printTimeSeconds,
+                parsed.printTimeSource, parsed.travelMm, parsed.supportFilamentMm,
+                parsed.startupFilamentMm);
     }
 
     /**
