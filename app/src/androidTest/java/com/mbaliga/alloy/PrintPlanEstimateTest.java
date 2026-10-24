@@ -43,4 +43,22 @@ public final class PrintPlanEstimateTest {
         Assert.assertTrue(estimate.primePurgeCleaning.contains("startup priming, purge and cleaning waste"));
         Assert.assertEquals("No time estimate reported", estimate.time);
     }
+
+    @Test public void reportedSupportAndPreLayerExtrusionAreSeparatedFromEngineTotal() {
+        Slicer.Config config = new Slicer.Config();
+        config.filament = "PETG";
+        config.supports = true;
+        config.nativeSettings.put("filament_density", "1.27");
+        Slicer.Result slice = new Slicer.Result("", new ArrayList<>(), 100f, 0,
+                "native", false, 600f, Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED,
+                25f, 20f, 3f);
+
+        PrintPlanEstimate estimate = PrintPlanEstimate.from(slice, config);
+
+        Assert.assertEquals(100f, estimate.reportedFilamentMm, 0f);
+        Assert.assertTrue(estimate.supportMaterial.startsWith("20.0 mm"));
+        Assert.assertTrue(estimate.supportMaterial.contains("about"));
+        Assert.assertTrue(estimate.primePurgeCleaning.startsWith("3.0 mm pre-layer positive-E"));
+        Assert.assertTrue(estimate.primePurgeCleaning.contains("outside this G-code are not included"));
+    }
 }

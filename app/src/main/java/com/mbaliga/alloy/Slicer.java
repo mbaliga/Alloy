@@ -119,6 +119,10 @@ public final class Slicer {
         /** Exact G-code header metric selected for {@link #printTimeSeconds}. */
         public final String printTimeSource;
         public final float travelMm;
+        /** Positive E length tagged as support in the exported G-code, or -1 when unavailable. */
+        public final float supportFilamentMm;
+        /** Positive E length before the first model-layer marker, or -1 when unavailable. */
+        public final float startupFilamentMm;
         public static String normalizePrintTimeSource(String value, float seconds) {
             if (seconds < 0f || Float.isNaN(seconds) || Float.isInfinite(seconds))
                 return PRINT_TIME_SOURCE_UNREPORTED;
@@ -139,11 +143,23 @@ public final class Slicer {
         public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
                       String engineId, boolean engineVerified, float printTimeSeconds,
                       String printTimeSource, float travelMm) {
+            this(gcode, layers, filamentMm, warnings, engineId, engineVerified, printTimeSeconds,
+                    printTimeSource, travelMm, -1f, -1f);
+        }
+        public Result(String gcode, ArrayList<Layer> layers, float filamentMm, int warnings,
+                      String engineId, boolean engineVerified, float printTimeSeconds,
+                      String printTimeSource, float travelMm, float supportFilamentMm,
+                      float startupFilamentMm) {
             this.gcode = gcode; this.layers = layers; this.filamentMm = filamentMm; this.warnings = warnings;
             this.engineId = engineId; this.engineVerified = engineVerified;
             this.printTimeSeconds = printTimeSeconds;
             this.printTimeSource = normalizePrintTimeSource(printTimeSource, printTimeSeconds);
             this.travelMm = travelMm;
+            this.supportFilamentMm = validOptionalLength(supportFilamentMm);
+            this.startupFilamentMm = validOptionalLength(startupFilamentMm);
+        }
+        private static float validOptionalLength(float value) {
+            return Float.isFinite(value) && value >= 0f ? value : -1f;
         }
     }
 
