@@ -22,6 +22,15 @@ The physical-pilot APK and five-fixture pilot were skipped. These packages are
 diagnostic only; do not print, directly send, or hand off a native-generated job
 to Bambu Handy. A green Android/native build does not qualify the slicer.
 
+**Current candidate (2026-10-24):** app source `acb37a2` is under validation in
+[Android run 40047781437](https://github.com/mbaliga/Alloy/actions/runs/40047781437)
+and [native run 40047781445](https://github.com/mbaliga/Alloy/actions/runs/40047781445).
+At the last check, Android acceptance tests and native dependency compilation
+were still running; no matching APK or pilot artifact had been published. These
+runs may establish software evidence for `acb37a2`, but cannot be treated as
+finished until the jobs and their artifacts are inspected. A doc-only update to
+this checklist does not change that app source.
+
 **Do not send or print unqualified generated jobs.** Direct-send, external-share,
 physical-printer, and production-release gates remain fail-closed. A1 Mini
 physical acceptance, A1/P1S runtime qualification, real-printer testing,
@@ -30,16 +39,22 @@ unverified.
 
 ## 1. Install the matching artifact
 
-For phone-only software QA, use the exact-head CI-signed APK above:
+The last completed Android software-QA build is for `a32eb30`, not the
+current candidate. If you need software-only exploration before the current
+Android run finishes, use [artifact 12507085635](https://github.com/mbaliga/Alloy/actions/runs/39962333697/artifacts/12507085635)
+from [run 39962333697](https://github.com/mbaliga/Alloy/actions/runs/39962333697).
+Verify its archive SHA-256 is
+`43599957f1badb870a6169c59b9779a83342bd9d000013aec3cdc200f59f859b` before
+extraction. Install `app-release.apk` for software checks only; record the
+APK SHA-256 and the phone/Android version with results. Do not use it as
+exact-head validation for `acb37a2`.
 
-- Download [Android QA APK archive, artifact 12476638827](https://github.com/mbaliga/Alloy/actions/runs/39894310373/artifacts/12476638827).
-  Verify the archive SHA-256 is
-  `b3f7d370eedb482a079789a4982b61096d84355c2fd1542b126f52d48827e8a1`
-  before extraction. Install the extracted `app-release.apk` for software
-  checks only; record its SHA-256 and the phone/Android version with results.
-- This ordinary Android acceptance APK is not a production release and does
-  not authorize printing. Native-engine artifacts must remain diagnostic-only
-  until exact-head native G3, isolated pilot, and physical A1 Mini gates pass.
+The current candidate becomes installable for software QA only after its
+Android acceptance run completes successfully and the artifact is confirmed to
+belong to that run/head. Neither the ordinary CI-debug APK nor a restricted
+native pilot APK is a production release. Passing Android acceptance does not
+authorize printing; direct print and Bambu Handy handoff remain blocked unless
+their separate exact-scope gates pass.
 
 ## 1a. Phone navigation and visual system
 
