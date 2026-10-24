@@ -142,6 +142,32 @@ def main() -> None:
         raise SystemExit(f"{ordinary}: macOS Android acceptance must not carry Linux-only KVM configuration")
 
     native_text = native.read_text(encoding="utf-8")
+
+    def workflow_step(step_name):
+        marker = f"      - name: {step_name}"
+        start = native_text.index(marker)
+        end = native_text.find("\n      - ", start + len(marker))
+        return native_text[start:] if end < 0 else native_text[start:end]
+
+    native_runtime_step = workflow_step("Run native release instrumentation through API-35 ARM translation")
+    pilot_build_step = workflow_step("Build isolated A1 Mini physical-pilot APK pair")
+    pilot_run_step = workflow_step("Run five-fixture pilot evidence on API-35 ARM translation")
+    g3_step = workflow_step("Compare native G3 output with exact-PR-head Orca reference")
+    if "id: native_instrumentation" not in native_runtime_step:
+        raise SystemExit(f"{native}: evidence-only pilot must depend on the native instrumentation result")
+    if "steps.native_instrumentation.outcome == 'success'" not in pilot_build_step:
+        raise SystemExit(f"{native}: evidence-only pilot APK may build only after native runtime instrumentation passes")
+    if ("steps.native_instrumentation.outcome == 'success'" not in pilot_run_step
+            or "steps.pilot_apk.outcome == 'success'" not in pilot_run_step):
+        raise SystemExit(f"{native}: pilot evidence may run only after native instrumentation and pilot APK build pass")
+    pilot_upload_at = native_text.index("name: alloy-a1-mini-physical-pilot-ci")
+    pilot_upload_start = native_text.rfind("      - uses: actions/upload-artifact@v4", 0, pilot_upload_at)
+    pilot_upload_step = native_text[pilot_upload_start:pilot_upload_at]
+    if ("steps.native_instrumentation.outcome == 'success'" not in pilot_upload_step
+            or "steps.pilot_apk.outcome == 'success'" not in pilot_upload_step):
+        raise SystemExit(f"{native}: pilot APK artifact must be retained only when its scoped build succeeded")
+    if "continue-on-error" in g3_step:
+        raise SystemExit(f"{native}: strict G3 must remain gating and must not become continue-on-error")
     validate_pr_trigger_deduplication(native, native_text)
     native_instrumentation = ROOT / "ci/run_native_release_instrumentation.sh"
     native_instrumentation_text = native_instrumentation.read_text(encoding="utf-8")
