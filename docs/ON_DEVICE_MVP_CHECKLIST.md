@@ -5,39 +5,38 @@ checks does not establish slicer parity, physical printer safety, Bambu Handy
 acceptance, or production signing.
 
 **Latest installable Android software-QA package:** exact PR head
-[`4e6cc47`](https://github.com/mbaliga/Alloy/commit/4e6cc473fd924afe7e0db379ab99f4f7fc785a3f).
-Android acceptance [run 40052398037](https://github.com/mbaliga/Alloy/actions/runs/40052398037)
+[`248e1f6`](https://github.com/mbaliga/Alloy/commit/248e1f6e7d1628cc0e09e636c2633761f89e7f74).
+Android acceptance [run 40054095599](https://github.com/mbaliga/Alloy/actions/runs/40054095599)
 passed all 222 connected instrumentation tests. Download the CI-signed QA
-APK archive [artifact 12544183939](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544183939).
+APK archive [artifact 12545370259](https://github.com/mbaliga/Alloy/actions/runs/40054095599/artifacts/12545370259).
 Its archive SHA-256 is
-`36dd5fa26a86bd0d1598cfe520fa71a1307d0858e2084595909453e6c1c6cbef`; the
+`0adfb67889297a61e468dab2820a596a448a883f836910a06692579ba7d53722`; the
 contained `app-release.apk` SHA-256 is
-`3a68ac8804f22b4988b074567b4f348b48940c3b4f16e33cc1bcaf6d18dbe192`.
+`c805f6c0c4acc02d908dc4c2c0c22ebf17fd530c273ad2ff2cc3e45deea8b9f4`.
 The exact-head acceptance diagnostics are in [artifact
-12544955647](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544955647).
+12545245798](https://github.com/mbaliga/Alloy/actions/runs/40054095599/artifacts/12545245798).
 This is a software-QA build, not a production release.
 
-On the earlier source baseline `a32eb30`, the optional native engine built and
-API-35 ARM-translated instrumentation passed in [run
-39962333540](https://github.com/mbaliga/Alloy/actions/runs/39962333540).
-However, its strict G3 comparison **failed** at the unchanged threshold; report
-artifact [12510976889](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12510976889)
-and raw native evidence [12511266224](https://github.com/mbaliga/Alloy/actions/runs/39962333540/artifacts/12511266224).
-The physical-pilot APK and five-fixture pilot were skipped. This historical
-result is not G3 evidence for `4e6cc47`; its exact-head native run remains
-pending below. Do not print, directly send, or hand off a native-generated job
-to Bambu Handy. A green Android/native build does not qualify the slicer.
+At this head, native build and API-35 ARM-translated instrumentation passed in
+[run 40054095569](https://github.com/mbaliga/Alloy/actions/runs/40054095569),
+but the exact-head strict G3 comparison **failed** at the unchanged 2%
+threshold. The comparison report is [artifact
+12546897499](https://github.com/mbaliga/Alloy/actions/runs/40054095569/artifacts/12546897499);
+raw G3 inputs and manifest are [artifact
+12546588222](https://github.com/mbaliga/Alloy/actions/runs/40054095569/artifacts/12546588222).
+The manifest says `qualified_for_print: false`. All 64 source-backed profile
+identity fields matched, but print-time deltas were 9.49–17.68% and used
+different time metrics (`model_printing_time` vs `estimated_printing_time`);
+three fixtures also missed the filament tolerance by 2.10–2.65%. The API-35
+emulator pilot checks and restricted APK are not a physical-printer pilot and
+do not override the failed G3 gate. Do not print, directly send, or hand off a
+native-generated job to Bambu Handy. A green Android/native build does not
+qualify the slicer.
 
-**Current candidate (2026-10-24):** app source `4e6cc47`
-([PR #12](https://github.com/mbaliga/Alloy/pull/12)) passed Android acceptance
-in [run 40052398037](https://github.com/mbaliga/Alloy/actions/runs/40052398037),
-including all 222 connected instrumentation tests; its APK is the software-QA
-artifact linked above. Native validation is still running in
-[run 40052397964](https://github.com/mbaliga/Alloy/actions/runs/40052397964),
-currently building native dependencies. No matching G3 comparison or pilot
-artifact has been published, so this Android result does not change the
-NO-GO for print/share. A doc-only update to this checklist does not change
-that app source.
+**Current candidate (2026-10-24):** exact PR head `248e1f6`
+([PR #12](https://github.com/mbaliga/Alloy/pull/12)); its Android APK and
+completed tests are linked above. The native G3 result is also complete and
+failed as detailed above. This does not change the **NO-GO** for print/share.
 
 **Do not send or print unqualified generated jobs.** Direct-send, external-share,
 physical-printer, and production-release gates remain fail-closed. A1 Mini
@@ -47,13 +46,13 @@ unverified.
 
 ## 1. Install the matching artifact
 
-The latest completed Android software-QA build is for `4e6cc47`. Download
-[artifact 12544183939](https://github.com/mbaliga/Alloy/actions/runs/40052398037/artifacts/12544183939)
-from [run 40052398037](https://github.com/mbaliga/Alloy/actions/runs/40052398037).
+The latest completed Android software-QA build is for `248e1f6`. Download
+[artifact 12545370259](https://github.com/mbaliga/Alloy/actions/runs/40054095599/artifacts/12545370259)
+from [run 40054095599](https://github.com/mbaliga/Alloy/actions/runs/40054095599).
 Verify the archive SHA-256 and contained APK SHA-256 listed above before
 extraction/install. Install `app-release.apk` for software checks only; record
 the APK SHA-256 and the phone/Android version with results. It is exact-head
-Android QA for `4e6cc47`, but is not a print-qualified or production release.
+Android QA for `248e1f6`, but is not a print-qualified or production release.
 
 For a future candidate, wait until its Android acceptance run completes
 successfully and confirm the artifact belongs to that run/head before
