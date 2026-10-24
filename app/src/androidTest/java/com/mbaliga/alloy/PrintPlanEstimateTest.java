@@ -40,7 +40,7 @@ public final class PrintPlanEstimateTest {
         Assert.assertTrue(estimate.supportMaterial.contains("Not reported separately"));
         Assert.assertEquals("ENGINE FILAMENT TOTAL", estimate.filamentScope);
         Assert.assertTrue(estimate.primePurgeCleaning.startsWith("Not included in this estimate"));
-        Assert.assertTrue(estimate.primePurgeCleaning.contains("startup priming, purge and cleaning waste"));
+        Assert.assertTrue(estimate.primePurgeCleaning.contains("Startup priming, purge and cleaning waste"));
         Assert.assertEquals("No time estimate reported", estimate.time);
     }
 
