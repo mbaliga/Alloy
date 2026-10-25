@@ -28,6 +28,13 @@ public final class Native {
     public static native long model_slice(long ptr, String configPath, String path, SliceListener listener,
                                           int numFilaments, int[] filamentColors, int calibMode,
                                           double calibStart, double calibEnd, double calibStep) throws Slic3rRuntimeError;
+    // Counterfactual-only seam for the offline Bambu template instrumentation probe. The regular
+    // application path must continue to call model_slice(), whose JNI wrapper always passes false.
+    // This method has no app/src/main caller; its sole call site is the instrumentation test.
+    public static native long model_slice_counterfactual_bbl(long ptr, String configPath, String path,
+                                          SliceListener listener, int numFilaments, int[] filamentColors,
+                                          int calibMode, double calibStart, double calibEnd,
+                                          double calibStep, boolean counterfactualBblMode) throws Slic3rRuntimeError;
     public static native void model_cancel(long ptr);
     public static native void model_export_3mf(long ptr, String configPath, String path) throws Slic3rRuntimeError;
     public static native void model_release(long ptr);

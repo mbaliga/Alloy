@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.app.Activity;
+import android.app.Instrumentation;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -302,6 +303,18 @@ public final class AndroidPipelineTest {
             Slicer.Result restored = SliceResultStore.read(jobDir, request.config);
             Assert.assertEquals(result.gcode, restored.gcode);
             Assert.assertEquals(result.engineId, restored.engineId);
+            Assert.assertEquals(result.printTimeSource, restored.printTimeSource);
+            Slicer.Result resultWithConsumables = new Slicer.Result(result.gcode, result.layers,
+                    result.filamentMm, result.warnings, result.engineId, result.engineVerified,
+                    result.printTimeSeconds, result.printTimeSource, result.travelMm, 12f, 3f);
+            SliceResultStore.write(jobDir, resultWithConsumables);
+            restored = SliceResultStore.read(jobDir, request.config);
+            Assert.assertEquals(12f, restored.supportFilamentMm, 0f);
+            Assert.assertEquals(3f, restored.startupFilamentMm, 0f);
+            Assert.assertEquals(result.printTimeSource,
+                    new org.json.JSONObject(new String(java.nio.file.Files.readAllBytes(
+                            new File(jobDir, "result.json").toPath()), StandardCharsets.UTF_8))
+                            .getString("print_time_source"));
             Assert.assertEquals(result.layers.size(), restored.layers.size());
             PrinterTransport.Artifact artifact = ArtifactStore.stage(root, request.model, restored, request.config, "foreground-slice-test");
             jobs.complete(jobId, artifact, "Slice complete");
@@ -389,6 +402,9 @@ public final class AndroidPipelineTest {
             BatchSliceJobController.BatchResult restored = BatchSliceResultStore.read(context.getFilesDir(), context.getContentResolver(), request, resultBatchDir);
             Assert.assertEquals(result.plates.size(), restored.plates.size());
             Assert.assertEquals(result.totalLayers(), restored.totalLayers());
+            for (int index = 0; index < result.plates.size(); index++)
+                Assert.assertEquals(result.plates.get(index).slice.printTimeSource,
+                        restored.plates.get(index).slice.printTimeSource);
             jobs.complete(jobId, "All plates ready");
             Assert.assertEquals(BatchSliceJobStore.State.COMPLETED, jobs.load().state);
         } finally {
@@ -1201,6 +1217,55 @@ public final class AndroidPipelineTest {
     }
 
     @Test
+    public void inventoryIncludesEveryA1MiniMaterialClassWithoutInventingStock() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences = context.getSharedPreferences("alloy-test-material-inventory", Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        InventoryStore inventory = new InventoryStore(preferences);
+        String[] ids = {"pla-basic", "petg-basic", "tpu", "pva", "support-pla", "support-petg",
+                "abs", "asa", "pc", "pa", "pet", "pla-cf", "petg-cf", "cf-gf-filled",
+                "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf",
+                "tpu-95a", "tpe"};
+        for (String id : ids) {
+            InventoryStore.Item found = null;
+            for (InventoryStore.Item item : inventory.items()) if (id.equals(item.id)) found = item;
+            Assert.assertNotNull("missing filament inventory class " + id, found);
+            Assert.assertEquals("Filament", found.category);
+            Assert.assertFalse("built-in stock must start unmeasured: " + id, found.quantityConfirmed);
+            Assert.assertFalse("unmeasured stock must not raise reorder: " + id, found.needsReorder());
+        }
+        preferences.edit().clear().commit();
+    }
+
+    @Test
+    public void completedPetAndPetgPrintsDebitTheirOwnInventoryRows() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences preferences = context.getSharedPreferences("alloy-test-pet-material-match", Context.MODE_PRIVATE);
+        preferences.edit().clear().commit();
+        InventoryStore inventory = new InventoryStore(preferences);
+        InventoryStore.Item pet = findInventoryItem(inventory, "pet");
+        InventoryStore.Item petg = findInventoryItem(inventory, "petg-basic");
+        Assert.assertNotNull(pet);
+        Assert.assertNotNull(petg);
+        inventory.setExactQuantity(pet, 1_000);
+        inventory.setExactQuantity(petg, 1_000);
+
+        InventoryStore.Usage petUsage = inventory.recordCompletedPrint("pet-only-job", "PET", 1_000f, 1.75f);
+        Assert.assertTrue(petUsage.recorded);
+        Assert.assertEquals(pet.name, petUsage.itemName);
+        int petAfter = findInventoryItem(inventory, "pet").quantity;
+        Assert.assertTrue(petAfter < 1_000);
+        Assert.assertEquals(1_000, findInventoryItem(inventory, "petg-basic").quantity);
+
+        InventoryStore.Usage petgUsage = inventory.recordCompletedPrint("petg-only-job", "PETG", 1_000f, 1.75f);
+        Assert.assertTrue(petgUsage.recorded);
+        Assert.assertEquals(petg.name, petgUsage.itemName);
+        Assert.assertEquals(petAfter, findInventoryItem(inventory, "pet").quantity);
+        Assert.assertTrue(findInventoryItem(inventory, "petg-basic").quantity < 1_000);
+        preferences.edit().clear().commit();
+    }
+
+    @Test
     public void projectAndInventoryCheckpointsSurviveReload() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
@@ -1794,7 +1859,8 @@ public final class AndroidPipelineTest {
         layers.add(layer);
         Slicer.Result result = new Slicer.Result(
                 "G90\nM83\nG1 X10 Y10 E0.4\nM104 S0\n",
-                layers, 0.4f, 0, "test-engine", false, 1f, 0f);
+                layers, 0.4f, 0, "test-engine", false, 1f,
+                Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED, 0f);
         try (java.io.FileOutputStream output = new java.io.FileOutputStream(packageFile)) {
             GcodePackageWriter.write(mesh, result, config, output);
         }
@@ -1803,6 +1869,7 @@ public final class AndroidPipelineTest {
             String sliceInfo = readZipText(zip, "Metadata/slice_info.config");
             Assert.assertTrue(metadata.contains("\"support_engine\":\"disabled\""));
             Assert.assertTrue(metadata.contains("\"support_parity_verified\":true"));
+            Assert.assertTrue(metadata.contains("\"print_time_source\":\"estimated_printing_time\""));
             Assert.assertTrue(sliceInfo.contains("key=\"support_engine\" value=\"disabled\""));
             Assert.assertTrue(sliceInfo.contains("key=\"support_parity_verified\" value=\"true\""));
         }
@@ -1873,6 +1940,60 @@ public final class AndroidPipelineTest {
             Assert.assertEquals(1, result.layers.get(0).segments.size()
                     - result.layers.get(0).perimeterSegments.size()
                     - result.layers.get(0).supportSegments.size());
+            Assert.assertEquals(0.3f, result.supportFilamentMm, 0.001f);
+        } finally {
+            Assert.assertTrue(!gcode.exists() || gcode.delete());
+        }
+    }
+
+    @Test
+    public void nativePreviewTracksTheSelectedTimeHeaderSource() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File gcode = new File(context.getCacheDir(), "native-preview-time-source-" + System.nanoTime() + ".gcode");
+        String source = "; model printing time: 1m 12s\n"
+                + "; estimated printing time (normal mode) = 2m 05s\n"
+                + "G90\nM83\n;LAYER:0\nG1 X10 Y10 E0.2\nM104 S0\n";
+        java.nio.file.Files.write(gcode.toPath(), source.getBytes(StandardCharsets.UTF_8));
+        try {
+            Slicer.Result result = NativeSlicerEngine.parseGcode(gcode, new Slicer.Config());
+            Assert.assertEquals(125f, result.printTimeSeconds, 0.01f);
+            Assert.assertEquals(Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED, result.printTimeSource);
+        } finally {
+            Assert.assertTrue(!gcode.exists() || gcode.delete());
+        }
+
+        java.nio.file.Files.write(gcode.toPath(), source.replace(
+                "; estimated printing time (normal mode) = 2m 05s\n", "")
+                .getBytes(StandardCharsets.UTF_8));
+        try {
+            Slicer.Result result = NativeSlicerEngine.parseGcode(gcode, new Slicer.Config());
+            Assert.assertEquals(72f, result.printTimeSeconds, 0.01f);
+            Assert.assertEquals(Slicer.Result.PRINT_TIME_SOURCE_MODEL, result.printTimeSource);
+        } finally {
+            Assert.assertTrue(!gcode.exists() || gcode.delete());
+        }
+    }
+
+    @Test
+    public void nativePreviewMeasuresSupportAndPreLayerFilamentFromPositiveE() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File gcode = new File(context.getCacheDir(), "native-consumables-" + System.nanoTime() + ".gcode");
+        String source = "G90\nM83\nG1 E3 F120\n;LAYER:0\n"
+                + ";TYPE:Support material\nG1 E2 F120\nG1 X1 Y0 E1 F120\n"
+                + ";TYPE:Outer wall\nG1 X2 Y0 E4 F120\nM104 S0\n";
+        java.nio.file.Files.write(gcode.toPath(), source.getBytes(StandardCharsets.UTF_8));
+        try {
+            Slicer.Result result = NativeSlicerEngine.parseGcode(gcode, new Slicer.Config());
+            Assert.assertEquals("stationary positive-E before the first layer is counted", 3f,
+                    result.startupFilamentMm, 0.001f);
+            Assert.assertEquals("support-tagged positive-E includes stationary moves", 3f,
+                    result.supportFilamentMm, 0.001f);
+            Assert.assertEquals("fallback total counts every positive-E move", 10f,
+                    result.filamentMm, 0.001f);
+            Slicer.Result verified = NativeSlicerEngine.withEngineVerification(result, true);
+            Assert.assertTrue(verified.engineVerified);
+            Assert.assertEquals(result.supportFilamentMm, verified.supportFilamentMm, 0f);
+            Assert.assertEquals(result.startupFilamentMm, verified.startupFilamentMm, 0f);
         } finally {
             Assert.assertTrue(!gcode.exists() || gcode.delete());
         }
@@ -2256,6 +2377,14 @@ public final class AndroidPipelineTest {
                 "A1 Mini", "192.168.1.2", "01S123", "1234",
                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "N1");
         Assert.assertTrue(discovered.isA1Mini());
+        PrinterCredentialStore.Credentials a1 = new PrinterCredentialStore.Credentials(
+                "A1", "192.168.1.3", "039123", "1234",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "N2S");
+        PrinterCredentialStore.Credentials p1s = new PrinterCredentialStore.Credentials(
+                "P1S", "192.168.1.4", "01P123", "1234",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "C12");
+        Assert.assertFalse("A1 model N2S must not enter the separately qualified A1 Mini lane", a1.isA1Mini());
+        Assert.assertFalse("P1S model C12 must not enter the separately qualified A1 Mini lane", p1s.isA1Mini());
         String preferencesName = "printer-credentials-model-test-" + System.nanoTime();
         android.content.SharedPreferences preferences = InstrumentationRegistry.getInstrumentation()
                 .getTargetContext().getSharedPreferences(preferencesName, Context.MODE_PRIVATE);
@@ -2690,13 +2819,23 @@ public final class AndroidPipelineTest {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Intent intent = new Intent(context, MainActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        Activity activity = InstrumentationRegistry.getInstrumentation().startActivitySync(intent);
+        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        // MainActivity owns a continuously animated GLES viewport, so its
+        // main looper may never become idle. startActivitySync waits for idle
+        // and can time out even after the Activity has started. Wait for the
+        // actual Activity launch instead, then keep the capture assertion real.
+        Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor(
+                MainActivity.class.getName(), null, false);
+        context.startActivity(intent);
+        Activity activity = monitor.waitForActivityWithTimeout(45_000L);
+        instrumentation.removeMonitor(monitor);
+        Assert.assertNotNull("main activity should launch for a live GLES capture", activity);
         try {
             Field viewportField = MainActivity.class.getDeclaredField("viewport");
             viewportField.setAccessible(true);
             ViewportView viewport = (ViewportView) viewportField.get(activity);
             Assert.assertNotNull("main activity should expose its 3D viewport", viewport);
-            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> viewport.setMachineStudy(true));
+            instrumentation.runOnMainSync(() -> viewport.setMachineStudy(true));
             SystemClock.sleep(750L);
             CountDownLatch captured = new CountDownLatch(1);
             byte[][] holder = new byte[1][];
@@ -2713,7 +2852,7 @@ public final class AndroidPipelineTest {
             Assert.assertTrue(bitmap.getWidth() <= 512 && bitmap.getHeight() <= 512);
             bitmap.recycle();
         } finally {
-            InstrumentationRegistry.getInstrumentation().runOnMainSync(activity::finish);
+            instrumentation.runOnMainSync(activity::finish);
         }
     }
 

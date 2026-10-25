@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,6 +67,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_VISUALIZATION_EXPORT = 50;
     private static final String IMPORTED_PROFILE_FILE = "profiles/imported-bambu.json";
     private static final String BUNDLED_PROFILE_PRINTER_ID = "bundled_profile_printer_id";
+    private static final String BUNDLED_PROFILE_ID = "bundled_profile_id";
     private static final int HISTORY_RESET = 0;
     private static final int HISTORY_RESTORE = 1;
     private static final int HISTORY_MUTATION = 2;
@@ -257,9 +260,12 @@ public final class MainActivity extends Activity {
             batchSlicing = true;
         }
         try {
-            String bundledPrinterId = getPreferences(MODE_PRIVATE)
-                    .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
-            profile = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
+            android.content.SharedPreferences profilePreferences = getPreferences(MODE_PRIVATE);
+            String bundledPrinterId = profilePreferences.getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+            String bundledProfileId = profilePreferences.getString(BUNDLED_PROFILE_ID, "");
+            profile = bundledProfileId.isEmpty()
+                    ? ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId)
+                    : ProfileCatalog.loadPlanningById(getAssets(), bundledProfileId);
             java.io.File importedProfileFile = new java.io.File(getFilesDir(), IMPORTED_PROFILE_FILE);
             if (importedProfileFile.isFile()) {
                 try {
@@ -3115,12 +3121,94 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void showMaterialRecipePicker() {
+        if (profile == null) {
+            Toast.makeText(this, "Select a planning printer first", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (importedProfileActive()) {
+            Toast.makeText(this, "Reset the imported preset before choosing a bundled recipe", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            List<ProfileCatalog.Profile> choices = ProfileCatalog.loadMaterialProfiles(getAssets(), profile.printerId);
+            String[] labels = new String[choices.size()];
+            for (int index = 0; index < choices.size(); index++) {
+                labels[index] = materialRecipePickerLabel(choices.get(index));
+            }
+            String printerName = profile.printerId.equals("bambu.a1-mini") ? "A1 Mini"
+                    : profile.printerId.equals("bambu.a1") ? "A1" : "P1S";
+            new AlertDialog.Builder(this)
+                    .setTitle(printerName + " material recipe")
+                    .setMessage(materialRecipePickerGuidance(profile.printerId))
+                    .setItems(labels, (ignored, which) -> {
+                        if (which >= 0 && which < choices.size()) applyBundledProfile(choices.get(which));
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } catch (Exception error) {
+            Toast.makeText(this, "Material recipes are unavailable: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    static String materialRecipePickerLabel(ProfileCatalog.Profile choice) {
+        if (choice != null && "bambu.a1-mini".equals(choice.printerId))
+            return a1MiniMaterialPickerLabel(choice);
+        if (choice == null) return "Unknown recipe · planning only";
+        String routeNote = "TPU".equalsIgnoreCase(choice.material)
+                ? "external/direct feed only · do not infer AMS compatibility"
+                : "check material route and spool compatibility";
+        if (isTpu95aHf(choice)) routeNote += " · dry before use";
+        return choice.filamentName + "\n" + choice.material
+                + " · " + routeNote + " · 0.4 mm nozzle · planning only";
+    }
+
+    static String materialRecipePickerGuidance(String printerId) {
+        if ("bambu.a1-mini".equals(printerId)) return a1MiniMaterialPickerGuidance();
+        String guidance = "Choose a source-backed 0.4 mm starter recipe for the selected printer. "
+                + "Material suitability does not confirm the exact spool, feeder route, temperature, or printer condition. "
+                + "Flexible TPU recipes require external/direct feed; do not infer powered-AMS compatibility. "
+                + "Review material and feed route before slicing. These recipes are for planning and inspection only; "
+                + "Alloy print/send actions remain unqualified.";
+        if ("bambu.p1s".equals(printerId)) {
+            guidance += " Bambu TPU 95A HF should be dried before use (70 °C for 8 hours); "
+                    + "that advice is specific to the HF recipe, not a generic TPU preset.";
+        }
+        return guidance;
+    }
+
+    static String a1MiniMaterialPickerLabel(ProfileCatalog.Profile choice) {
+        if (choice == null) return "Unknown recipe · planning only";
+        String feedNote;
+        if ("TPU".equalsIgnoreCase(choice.material)) {
+            feedNote = "external/direct feed only";
+            if (isTpu95aHf(choice)) feedNote += " · dry before use";
+        } else if ("PVA".equalsIgnoreCase(choice.material)) {
+            feedNote = "dry PVA only in AMS Lite; otherwise external";
+        } else {
+            feedNote = "AMS Lite-compatible spool (check fit) or external";
+        }
+        return choice.filamentName + "\n" + choice.material + " · " + feedNote
+                + " · 0.4 mm nozzle · planning only";
+    }
+
+    static String a1MiniMaterialPickerGuidance() {
+        return "Choose a source-backed 0.4 mm recipe. Bambu lists PLA, PETG, TPU and PVA as ideal for A1 Mini; ABS, ASA, PC, PA, PET and fiber-reinforced materials are not recommended. AMS Lite does not support TPU or wet/absorbent PVA; dry PVA is listed as compatible, but keep it dry. Check that every spool physically fits the AMS Lite. The bundled TPU recipe is specifically Bambu TPU 95A HF for A1 Mini and requires external/direct feed; it is not a generic TPU profile. Bambu says TPU 95A HF should be dried before use (70 °C for 8 hours). Choosing a recipe replaces the active recipe and clears the current slice. Alloy print/send actions remain unqualified.";
+    }
+
+    private static boolean isTpu95aHf(ProfileCatalog.Profile choice) {
+        return choice != null && "TPU".equalsIgnoreCase(choice.material)
+                && choice.filamentName != null
+                && choice.filamentName.toUpperCase(java.util.Locale.ROOT).contains("95A HF");
+    }
+
     private void applyBundledProfile(ProfileCatalog.Profile selected) {
         if (selected == null) return;
         profile = selected;
         profile.applyTo(config);
         getPreferences(MODE_PRIVATE).edit()
-                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId).apply();
+                .putString(BUNDLED_PROFILE_PRINTER_ID, selected.printerId)
+                .putString(BUNDLED_PROFILE_ID, selected.id).apply();
         projectStore.saveRecipe(config);
         slice = null;
         stagedArtifact = null;
@@ -3210,9 +3298,12 @@ public final class MainActivity extends Activity {
                         return;
                     }
                     try {
-                        String bundledPrinterId = getPreferences(MODE_PRIVATE)
-                                .getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
-                        ProfileCatalog.Profile restored = ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId);
+                        android.content.SharedPreferences profilePreferences = getPreferences(MODE_PRIVATE);
+                        String bundledPrinterId = profilePreferences.getString(BUNDLED_PROFILE_PRINTER_ID, "bambu.a1-mini");
+                        String bundledProfileId = profilePreferences.getString(BUNDLED_PROFILE_ID, "");
+                        ProfileCatalog.Profile restored = bundledProfileId.isEmpty()
+                                ? ProfileCatalog.loadInitialByPrinterId(getAssets(), bundledPrinterId)
+                                : ProfileCatalog.loadPlanningById(getAssets(), bundledProfileId);
                         profile = restored;
                         profile.applyTo(config);
                         projectStore.saveRecipe(config);
@@ -3317,6 +3408,7 @@ public final class MainActivity extends Activity {
                         for (ModelBundleExtractor.Extracted item : extracted) {
                             String itemName = item.displayName;
                             if (".3mf".equals(item.materialized.extension)) {
+                                rejectUnsupportedMultiPlateBambuProject(item.materialized.file);
                                 embeddedProjectSettings = mergeProjectSettings(embeddedProjectSettings,
                                         BambuProjectSettingsExtractor.extract(item.materialized.file));
                             }
@@ -3333,6 +3425,7 @@ public final class MainActivity extends Activity {
                     } else {
                         ModelStore.Materialized materialized = ModelStore.materialize(getFilesDir(), getContentResolver(), uri, name);
                         if (".3mf".equals(materialized.extension)) {
+                            rejectUnsupportedMultiPlateBambuProject(materialized.file);
                             embeddedProjectSettings = mergeProjectSettings(embeddedProjectSettings,
                                     BambuProjectSettingsExtractor.extract(materialized.file));
                         }
@@ -3453,6 +3546,12 @@ public final class MainActivity extends Activity {
         if (existing != null && !Arrays.equals(existing, candidate))
             throw new IOException("Select one Bambu 3MF project when embedded recipes differ");
         return candidate;
+    }
+
+    private static void rejectUnsupportedMultiPlateBambuProject(java.io.File packageFile) throws IOException {
+        if (BambuPlateAssignmentExtractor.hasMultiplePlates(packageFile))
+            throw new IOException("This Bambu 3MF contains multiple plates. Alloy does not yet preserve "
+                    + "per-plate object assignments. Export each plate as a separate 3MF and import them one at a time.");
     }
 
     private synchronized void cancelImport() {
@@ -3687,7 +3786,14 @@ public final class MainActivity extends Activity {
         title.setPadding(0, dp(4), 0, dp(5)); card.addView(title);
         TextView summary = label(article.summary, 13, MUTED); summary.setLineSpacing(dp(3), 1f); card.addView(summary);
         if (article.artwork.length() > 0) {
-            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary);
+            addLearnArtwork(card, article.artwork, article.title + ". " + article.summary
+                    + (article.visualNote.isEmpty() ? "" : ". " + article.visualNote));
+            if (!article.visualNote.isEmpty()) {
+                TextView visualNote = label(article.visualNote, 11, MUTED);
+                visualNote.setLineSpacing(dp(2), 1f);
+                visualNote.setPadding(dp(2), dp(2), dp(2), dp(2));
+                card.addView(visualNote);
+            }
         } else {
             addLearnDiagram(card, article);
         }
@@ -3773,9 +3879,27 @@ public final class MainActivity extends Activity {
         TextView name = label(printer.name, 18, TEXT); name.setTypeface(null, android.graphics.Typeface.BOLD); card.addView(name);
         TextView facts = label(printer.buildVolume + " · " + printer.nozzle + " · Bed " + printer.bed, 12, MUTED); facts.setPadding(0, dp(3), 0, 0); card.addView(facts);
         TextView direct = label("ALLOY DIRECT SEND · " + printer.directSendState, 10, RED); direct.setLetterSpacing(0.07f); direct.setPadding(0, dp(10), 0, dp(4)); card.addView(direct);
-        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu: " + material.bambuStatus + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        for (PrinterCapabilityCatalog.Material material : printer.materials) { TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus + (material.amsLiteStatus.isEmpty() ? "" : " · AMS Lite: " + material.amsLiteStatus) + " · Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT); row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
+        if (!amsLiteSourceUrl.isEmpty()) {
+            final String sourceUrl = amsLiteSourceUrl;
+            TextView feedSource = label("AMS Lite handling is feeder guidance only; it does not override this printer's material rating.", 11, MUTED);
+            feedSource.setPadding(0, dp(8), 0, 0); card.addView(feedSource);
+            Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
+            LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); card.addView(sourceButton, sourceLp);
+        }
         TextView routes = label("SPOOL / FEED ROUTES", 10, INK); routes.setLetterSpacing(0.08f); routes.setPadding(0, dp(12), 0, dp(2)); card.addView(routes);
-        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) { TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT); row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row); }
+        for (PrinterCapabilityCatalog.FeedRoute route : printer.feedRoutes) {
+            TextView row = label(route.title + " · " + route.state + "\n" + route.note, 12, TEXT);
+            row.setPadding(0, dp(6), 0, 0); row.setLineSpacing(dp(2), 1f); card.addView(row);
+            if (!route.sourceUrl.isEmpty()) {
+                final String routeSourceUrl = route.sourceUrl;
+                Button routeSourceButton = dialogButton("Open official " + route.title + " compatibility guidance",
+                        v -> openCapabilitySource(routeSourceUrl));
+                LinearLayout.LayoutParams routeSourceLp = new LinearLayout.LayoutParams(-1, dp(40));
+                routeSourceLp.topMargin = dp(4); card.addView(routeSourceButton, routeSourceLp);
+            }
+        }
         TextView forms = label("SPOOL FORM & FIT", 10, INK); forms.setLetterSpacing(0.08f); forms.setPadding(0, dp(12), 0, dp(2)); card.addView(forms);
         for (PrinterCapabilityCatalog.SpoolForm form : printer.spoolForms) {
             TextView row = label(form.title + " · " + form.state + "\n"
@@ -5270,11 +5394,11 @@ public final class MainActivity extends Activity {
         }
         int selected = viewport.getSelectedLayer() < 0 ? slice.layers.size() - 1 : viewport.getSelectedLayer();
         Slicer.Layer layer = slice.layers.get(Math.max(0, Math.min(slice.layers.size() - 1, selected)));
-        String time = slice.printTimeSeconds < 0f ? "Not reported by engine" : formatDuration(slice.printTimeSeconds);
+        String time = PrintPlanEstimate.formatTime(slice);
         String engine = slice.engineId == null ? "Unknown" : slice.engineId;
         if (!slice.engineVerified) engine += " · unverified";
         String message = String.format(Locale.US,
-                "Selected layer\n%d / %d  ·  Z %.2f mm  ·  %d segments\n\nFilament estimate\n%.1f mm\n\nEstimated time\n%s\n\nTravel\n%s\n\nWarnings\n%d\n\nEngine\n%s",
+                "Selected layer\n%d / %d  ·  Z %.2f mm  ·  %d segments\n\nFilament estimate\n%.1f mm\n\nPrint time estimate\n%s\n\nTravel\n%s\n\nWarnings\n%d\n\nEngine\n%s",
                 layer.index + 1, slice.layers.size(), layer.z, layer.segments.size(), slice.filamentMm, time,
                 slice.travelMm < 0f ? "Not reported" : String.format(Locale.US, "%.1f mm", slice.travelMm), slice.warnings, engine);
         new AlertDialog.Builder(this)
@@ -5299,7 +5423,7 @@ public final class MainActivity extends Activity {
         String orientation = String.format(Locale.US, "Z rotation %.0f°  ·  X tilt %.0f°  ·  Y tilt %.0f°  ·  scale %.0f%%",
                 modelRotationDegrees, modelTiltXDegrees, modelTiltYDegrees, modelScale * 100f);
         String message = String.format(Locale.US,
-                "%s\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nESTIMATED PRINT TIME\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
+                "%s\n%.0f mm  ·  about %.1f g of %s\n\nSUPPORT MATERIAL\n%s\n\nPRIME / PURGE / CLEANING\n%s\n\nPRINT TIME ESTIMATE\n%s\n\nCURRENT RECIPE\nNozzle %.0f°C (first layer %.0f°C)  ·  plate %.0f°C (first layer %.0f°C)\n%.2f mm layers  ·  %.0f%% infill  ·  %d walls\n\nORIENTATION\n%s\nUse Model → Lay flat or Auto orient, then review the first layer and supports before slicing again.\n\nPRINTER STATUS\nPlanning profile only  ·  no live printer temperature or idle/running telemetry has been verified.",
                 estimate.filamentScope, estimate.reportedFilamentMm, estimate.approximateReportedFilamentGrams, config.filament,
                 estimate.supportMaterial, estimate.primePurgeCleaning, estimate.time,
                 config.nozzleTemperature, config.firstLayerNozzleTemperature,
@@ -5336,7 +5460,7 @@ public final class MainActivity extends Activity {
         intent.putExtra(Intent.EXTRA_TITLE, safeName(artifactDisplayName()) + ".gcode.3mf"); startActivityForResult(intent, REQUEST_EXPORT);
     }
 
-    /** Offer a bounded package to another Android app without implying recipient compatibility. */
+    /** Share only a qualified print package; exporting an unverified file remains a separate path. */
     private void sharePackage() {
         sharePackage(false);
     }
@@ -5359,6 +5483,17 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "Sharing blocked: " + report.summary(), Toast.LENGTH_LONG).show();
             return;
         }
+        String handoffBlock = BambuHandyHandoff.validationBlockReason(
+                report.isValid(), slice.engineVerified, profile != null && profile.verified,
+                SupportEngineStatus.physicalPrintReady(config, slice));
+        if (handoffBlock != null) {
+            new AlertDialog.Builder(this)
+                    .setTitle(preferBambuHandy ? "Not ready for Bambu Handy" : "Package not ready to share")
+                    .setMessage(handoffBlock + "\n\nAlloy will not share an unqualified print job to another app. You can still export it for inspection; exported jobs remain marked unverified and must not be printed.")
+                    .setPositiveButton("Understood", null)
+                    .show();
+            return;
+        }
         try {
             if (stagedArtifact == null || stagedArtifact.sourceFile == null
                     || stagedArtifact.sourceFile.length() != stagedArtifact.sizeBytes
@@ -5366,6 +5501,7 @@ public final class MainActivity extends Activity {
                 stagedArtifact = ArtifactStore.stage(getFilesDir(), model, slice, config,
                         artifactDisplayName(), viewport.thumbnailPng(512));
             }
+            GcodePackageValidator.validateForPhysicalPrint(stagedArtifact.sourceFile, config);
             Uri uri = ArtifactShareProvider.uriFor(getPackageName(), stagedArtifact.displayName);
             if (preferBambuHandy) {
                 Intent targeted = BambuHandyHandoff.targetedShare(uri);
@@ -5392,6 +5528,12 @@ public final class MainActivity extends Activity {
             } else {
                 startActivity(BambuHandyHandoff.chooserShare(uri));
             }
+        } catch (IOException notPrinterReady) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Package failed print-readiness checks")
+                    .setMessage(notPrinterReady.getMessage() + "\n\nThe file was not shared. You can export it for inspection, but do not print an unverified job.")
+                    .setPositiveButton("Understood", null)
+                    .show();
         } catch (Exception error) {
             Toast.makeText(this, "Package sharing failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -5571,8 +5713,38 @@ public final class MainActivity extends Activity {
         EditText supportSpeed = field(nativeSetting(config, "support_material_speed", "150"), "Support speed (mm/s)");
         EditText supportInterfaceSpeed = field(nativeSetting(config, "support_material_interface_speed", "80"), "Interface speed (mm/s)");
         EditText treeAngle = field(nativeSetting(config, "support_tree_angle", "45"), "Tree branch angle (degrees)");
-        EditText treeDistance = field(nativeSetting(config, "support_tree_branch_distance", "5"), "Tree branch distance (mm)");
-        EditText treeDiameter = field(nativeSetting(config, "support_tree_branch_diameter", "2"), "Tree branch diameter (mm)");
+        boolean organicTreeStyle = "organic".equalsIgnoreCase(supportStyleValue);
+        String treeDistanceKey = organicTreeStyle
+                ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
+        String treeDiameterKey = organicTreeStyle
+                ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
+        EditText treeDistance = field(nativeSetting(config, treeDistanceKey,
+                organicTreeStyle ? "1" : "5"), "Tree branch distance (mm)");
+        EditText treeDiameter = field(nativeSetting(config, treeDiameterKey,
+                organicTreeStyle ? "2" : "5"), "Tree branch diameter (mm)");
+        Map<String, String> treeGeometryValues = new HashMap<>();
+        String[] displayedTreeStyle = {supportStyleValue};
+        treeGeometryValues.put(supportStyleValue + ":distance", treeDistance.getText().toString());
+        treeGeometryValues.put(supportStyleValue + ":diameter", treeDiameter.getText().toString());
+        supportStyles.setOnCheckedChangeListener((group, checkedId) -> {
+            RadioButton selected = group.findViewById(checkedId);
+            if (selected == null) return;
+            String nextStyle = String.valueOf(selected.getTag());
+            String previousStyle = displayedTreeStyle[0];
+            if (nextStyle.equals(previousStyle)) return;
+            treeGeometryValues.put(previousStyle + ":distance", treeDistance.getText().toString());
+            treeGeometryValues.put(previousStyle + ":diameter", treeDiameter.getText().toString());
+            boolean nextOrganic = "organic".equalsIgnoreCase(nextStyle);
+            String nextDistanceKey = nextOrganic
+                    ? "support_tree_branch_distance_organic" : "support_tree_branch_distance";
+            String nextDiameterKey = nextOrganic
+                    ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter";
+            treeDistance.setText(treeGeometryValues.getOrDefault(nextStyle + ":distance",
+                    nativeSetting(config, nextDistanceKey, nextOrganic ? "1" : "5")));
+            treeDiameter.setText(treeGeometryValues.getOrDefault(nextStyle + ":diameter",
+                    nativeSetting(config, nextDiameterKey, nextOrganic ? "2" : "5")));
+            displayedTreeStyle[0] = nextStyle;
+        });
         EditText treeDiameterAngle = field(nativeSetting(config, "support_tree_branch_diameter_angle", "5"), "Branch thickening angle (degrees)");
         EditText treeWallCount = field(nativeSetting(config, "support_tree_branch_diameter_double_wall", "0"), "Tree wall mode (0–4)");
         fields.addView(sectionLabel("QUALITY"));
@@ -5691,8 +5863,9 @@ public final class MainActivity extends Activity {
                 config.nativeSettings.put("ironing_flowrate", number(nextIroningFlow) + "%");
                 config.nativeSettings.put("bridge_speed", number(nextBridgeSpeed));
                 config.nativeSettings.put("default_acceleration", number(nextDefaultAcceleration));
-                config.nativeSettings.put("support_material_style",
-                        String.valueOf(supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag()));
+                String selectedTreeStyle = String.valueOf(
+                        supportStyles.findViewById(supportStyles.getCheckedRadioButtonId()).getTag());
+                config.nativeSettings.put("support_material_style", selectedTreeStyle);
                 config.nativeSettings.put("support_material_interface_layers", Integer.toString(nextSupportTopLayers));
                 config.nativeSettings.put("support_material_bottom_interface_layers", Integer.toString(nextSupportBottomLayers));
                 config.nativeSettings.put("support_material_xy_spacing", number(nextSupportXyDistance));
@@ -5702,8 +5875,13 @@ public final class MainActivity extends Activity {
                 config.nativeSettings.put("support_material_speed", number(nextSupportSpeed));
                 config.nativeSettings.put("support_material_interface_speed", number(nextSupportInterfaceSpeed));
                 config.nativeSettings.put("support_tree_angle", number(nextTreeAngle));
-                config.nativeSettings.put("support_tree_branch_distance", number(nextTreeDistance));
-                config.nativeSettings.put("support_tree_branch_diameter", number(nextTreeDiameter));
+                boolean selectedOrganicTree = "organic".equalsIgnoreCase(selectedTreeStyle);
+                config.nativeSettings.put(selectedOrganicTree
+                        ? "support_tree_branch_distance_organic" : "support_tree_branch_distance",
+                        number(nextTreeDistance));
+                config.nativeSettings.put(selectedOrganicTree
+                        ? "support_tree_branch_diameter_organic" : "support_tree_branch_diameter",
+                        number(nextTreeDiameter));
                 config.nativeSettings.put("support_tree_branch_diameter_angle", number(nextTreeDiameterAngle));
                 config.nativeSettings.put("support_tree_branch_diameter_double_wall", Integer.toString(nextTreeWallCount));
                 projectStore.saveRecipe(config);
@@ -5730,7 +5908,7 @@ public final class MainActivity extends Activity {
         }
         try {
             PrinterCapabilityCatalog catalog = PrinterCapabilityCatalog.load(getAssets());
-            PrinterCapabilityCatalog.Printer printer = catalog.byId(profile.printerId);
+            PrinterCapabilityCatalog.Printer printer = catalog.forProfile(profile);
             if (printer == null) {
                 Toast.makeText(this, "No bounded material catalog is available for this profile", Toast.LENGTH_LONG).show();
                 return;
@@ -5745,12 +5923,25 @@ public final class MainActivity extends Activity {
             TextView boundary = label("Compatibility is not a recipe. To change filament, select or import a source-backed material profile, then re-slice and review. Direct send remains " + printer.directSendState + ".", 12, RED);
             boundary.setPadding(0, dp(10), 0, dp(6)); boundary.setLineSpacing(dp(2), 1f);
             page.addView(boundary);
+            Button recipeButton = dialogButton("Choose material recipe", v -> showMaterialRecipePicker());
+            LinearLayout.LayoutParams recipeLp = new LinearLayout.LayoutParams(-1, dp(44));
+            recipeLp.topMargin = dp(6); page.addView(recipeButton, recipeLp);
+            Button importButton = dialogButton("Import a reviewed Bambu preset", v -> openBambuProfile());
+            LinearLayout.LayoutParams importLp = new LinearLayout.LayoutParams(-1, dp(44));
+            importLp.topMargin = dp(6); page.addView(importButton, importLp);
             TextView materials = label("MATERIAL SCOPE", 10, GOLD); materials.setLetterSpacing(0.08f);
             materials.setPadding(0, dp(8), 0, 0); page.addView(materials);
             for (PrinterCapabilityCatalog.Material material : printer.materials) {
-                TextView row = label(material.name + "\nBambu: " + material.bambuStatus
-                        + " · Alloy: " + material.directSendState + "\n" + material.note, 12, TEXT);
+                TextView row = label(material.name + "\nBambu printer: " + material.bambuStatus
+                        + (material.amsLiteStatus.isEmpty() ? "" : " · AMS Lite: " + material.amsLiteStatus)
+                        + " · Alloy send: " + material.directSendState + "\n" + material.note, 12, TEXT);
                 row.setPadding(0, dp(7), 0, 0); row.setLineSpacing(dp(2), 1f); page.addView(row);
+            }
+            String amsLiteSourceUrl = printer.materials.isEmpty() ? "" : printer.materials.get(0).amsLiteSourceUrl;
+            if (!amsLiteSourceUrl.isEmpty()) {
+                final String sourceUrl = amsLiteSourceUrl;
+                Button sourceButton = dialogButton("Open official AMS Lite material list", v -> openCapabilitySource(sourceUrl));
+                LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(-1, dp(42)); sourceLp.topMargin = dp(6); page.addView(sourceButton, sourceLp);
             }
             TextView routes = label("FEED ROUTES", 10, GOLD); routes.setLetterSpacing(0.08f);
             routes.setPadding(0, dp(12), 0, 0); page.addView(routes);

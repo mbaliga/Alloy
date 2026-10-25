@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Initial Bambu capability catalog. Bambu-published compatibility and Alloy direct-send qualification are separate states.",
+  "scope": "Initial Bambu capability catalog. Printer material guidance, feeder material handling, physical spool fit, and Alloy direct-send qualification are separate states.",
   "printers": [
     {
       "id": "a1-mini",
@@ -8,7 +8,7 @@
       "build_volume": "180 × 180 × 180 mm",
       "nozzle": "0.4 mm stainless supplied; 0.2 / 0.6 / 0.8 mm options",
       "bed": "up to 80 °C",
-      "reviewed": "2026-09-28",
+      "reviewed": "2026-10-13",
       "alloy_direct_send": "Not qualified — physical acceptance gates remain incomplete",
       "source": "Bambu Lab A1 mini specifications and material guidance",
       "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
@@ -19,7 +19,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "Start with an exact reviewed recipe; 1.75 mm filament.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Supported by AMS Lite listing; 1.75 mm filament and spool fit still require physical confirmation.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "petg",
@@ -27,7 +29,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "Bambu ideal classification is not an Alloy send qualification.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Supported by AMS Lite listing; 1.75 mm filament and spool fit still require physical confirmation.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "tpu",
@@ -35,7 +39,9 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "Specific flexible TPU grades may be direct-feed only; inspect the chosen feed route.",
-          "source_url": "https://us.store.bambulab.com/products/tpu-85a-tpu-90a/"
+          "source_url": "https://us.store.bambulab.com/products/tpu-85a-tpu-90a/",
+          "ams_lite_status": "Unsupported for AMS Lite; use external/direct feed. Check the exact TPU grade and A1 mini printer guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pva",
@@ -43,23 +49,29 @@
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
           "note": "Use only a reviewed material/profile/route combination.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Dry PVA only is listed for AMS Lite; wet/damp PVA is unsupported. Alloy defaults to external feed pending review.",
+          "ams_lite_source_url": "https://au.store.bambulab.com/products/pva"
         },
         {
           "id": "support-pla",
           "name": "Support for PLA",
           "bambu_status": "Supported as support filament (product/profile-specific)",
           "alloy_direct_send": "Not qualified",
-          "note": "The A1 mini FAQ mentions support filament generally. Confirm the exact support-filament product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "note": "A1 mini guidance includes support-filament families, and Bambu describes AMS Lite support for snap-away or dissolvable support. Confirm the exact product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "AMS Lite is described for snap-away or dissolvable support; the exact Support for PLA/PETG product, profile and route are not identified in the compatibility table—confirm with Bambu.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "support-petg",
           "name": "Support for PETG",
           "bambu_status": "Supported as support filament (product/profile-specific)",
           "alloy_direct_send": "Not qualified",
-          "note": "The A1 mini FAQ mentions support filament generally. Confirm the exact support-filament product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "note": "A1 mini guidance includes support-filament families, and Bambu describes AMS Lite support for snap-away or dissolvable support. Confirm the exact product, slicer profile, feed route and purge behavior; this row does not imply AMS lite compatibility.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "AMS Lite is described for snap-away or dissolvable support; the exact Support for PLA/PETG product, profile and route are not identified in the compatibility table—confirm with Bambu.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "abs",
@@ -67,7 +79,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Not listed in the AMS Lite supported-material table; do not infer feeder compatibility.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "asa",
@@ -75,7 +89,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer guidance still marks ASA not recommended.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pc",
@@ -83,7 +99,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer guidance still marks PC not recommended.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pa",
@@ -91,7 +109,9 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer guidance still marks PA not recommended.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "pet",
@@ -99,31 +119,139 @@
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
           "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer guidance still marks PET not recommended.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
-          "id": "pla-cf",
-          "name": "PLA-CF",
-          "bambu_status": "Not recommended",
+          "id": "bambu-pla-cf",
+          "name": "Bambu PLA-CF",
+          "bambu_status": "Not recommended (A1 mini fiber-filled class)",
           "alloy_direct_send": "Blocked",
-          "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "note": "Bambu's AMS Lite listing is brand-specific; it does not override the A1 mini printer/nozzle warning for fiber-filled materials.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Bambu PLA-CF is listed as AMS Lite compatible; the A1 mini printer class marks CF materials not recommended.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "petg-cf",
           "name": "PETG-CF",
-          "bambu_status": "Not recommended",
+          "bambu_status": "Not recommended (A1 mini fiber-filled class)",
           "alloy_direct_send": "Blocked",
           "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Not recommended for AMS Lite (Bambu PETG-CF); A1 mini printer/nozzle suitability is separate.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
           "id": "cf-gf-filled",
-          "name": "Other CF/GF-filled polymer",
+          "name": "Third-party CF/GF-filled polymer",
           "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
-          "note": "Alloy will not prepare a direct job for this A1 mini material class.",
-          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
+          "note": "A1 mini printer guidance marks fiber-filled polymers not recommended; AMS Lite excludes third-party CF/GF. No direct-send qualification.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Unsupported for AMS Lite: other-brand carbon/glass-fiber materials are excluded.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "bvoh",
+          "name": "BVOH",
+          "bambu_status": "Not listed in the A1 mini printer material table; review an exact Bambu printer profile.",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists only dry BVOH as AMS Lite compatible; use the exact material and drying guidance.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Dry BVOH only is listed as AMS Lite compatible; wet/damp BVOH is unsupported.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pp",
+          "name": "PP",
+          "bambu_status": "Not listed in the A1 mini printer material table; review an exact Bambu printer profile.",
+          "alloy_direct_send": "Not qualified",
+          "note": "AMS Lite feeder listing is not printer/profile qualification.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer-specific suitability/profile is not listed here.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pom",
+          "name": "POM",
+          "bambu_status": "Not listed in the A1 mini printer material table; review an exact Bambu printer profile.",
+          "alloy_direct_send": "Not qualified",
+          "note": "AMS Lite feeder listing is not printer/profile qualification.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer-specific suitability/profile is not listed here.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "hips",
+          "name": "HIPS",
+          "bambu_status": "Not listed in the A1 mini printer material table; review an exact Bambu printer profile.",
+          "alloy_direct_send": "Not qualified",
+          "note": "AMS Lite feeder listing is not printer/profile qualification.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Listed as AMS Lite compatible; A1 mini printer-specific suitability/profile is not listed here.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "bambu-paht-cf",
+          "name": "Bambu PAHT-CF",
+          "bambu_status": "Not recommended for A1 mini (fiber-filled material class).",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu-specific AMS Lite listing does not override A1 mini printer/nozzle suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Bambu PAHT-CF is listed as AMS Lite compatible; A1 mini printer class marks fiber-filled material not recommended.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pla-glow",
+          "name": "PLA Glow",
+          "bambu_status": "PLA-family specialty filament; review exact product guidance and printer limits.",
+          "alloy_direct_send": "Not qualified",
+          "note": "Not recommended for AMS Lite; Bambu warns of loading errors and/or faster wear.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Not recommended for AMS Lite (Bambu PLA Glow and generic glow-in-the-dark PLA).",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pet-cf",
+          "name": "PET-CF",
+          "bambu_status": "Not recommended for A1 mini (fiber-filled material class).",
+          "alloy_direct_send": "Not qualified",
+          "note": "Unsupported for AMS Lite per Bambu guidance.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Unsupported for AMS Lite (Bambu PET-CF).",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pa6-cf",
+          "name": "PA6-CF",
+          "bambu_status": "Not recommended for A1 mini (fiber-filled material class).",
+          "alloy_direct_send": "Not qualified",
+          "note": "Unsupported for AMS Lite per Bambu guidance.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Unsupported for AMS Lite (Bambu PA6-CF).",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "tpu-95a",
+          "name": "TPU 95A",
+          "bambu_status": "A1 Mini profile exists for Bambu TPU 95A HF; this is grade-specific, not generic TPU approval.",
+          "alloy_direct_send": "Not qualified",
+          "note": "Use the A1 Mini-specific Bambu TPU 95A HF profile only; other grades need review. Unsupported for AMS Lite.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Unsupported for AMS Lite (TPU 95A); follow exact A1 mini/product guidance for printer use.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "tpe",
+          "name": "TPE",
+          "bambu_status": "Not rated for A1 mini; use exact product and printer guidance.",
+          "alloy_direct_send": "Not qualified",
+          "note": "Unsupported for AMS Lite per Bambu guidance.",
+          "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101",
+          "ams_lite_status": "Unsupported for AMS Lite (TPE).",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         }
       ],
       "feed_routes": [
@@ -141,9 +269,24 @@
         },
         {
           "id": "regular-ams",
-          "title": "Regular AMS",
-          "state": "Unsupported",
-          "note": "Do not select this route for A1 mini."
+          "title": "Original AMS (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu introduced Original AMS support on the A1 series in public-beta firmware 01.06.10.33; the A1 release history subsequently records stable 01.07.01.00. Use current compatible A1 mini firmware, Bambu Studio 2.3.0 or later, and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-2-pro",
+          "title": "AMS 2 Pro (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu introduced AMS 2 Pro support on the A1 series in public-beta firmware 01.06.10.33; the A1 release history subsequently records stable 01.07.01.00. Use current compatible A1 mini firmware, Bambu Studio 2.3.0 or later, and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-ht",
+          "title": "AMS HT (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu introduced AMS HT support on the A1 series in public-beta firmware 01.06.10.33; the A1 release history subsequently records stable 01.07.01.00. Use current compatible A1 mini firmware, Bambu Studio 2.3.0 or later, and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
         }
       ],
       "spool_forms": [
@@ -184,10 +327,10 @@
           "id": "regular-ams-spool",
           "title": "Regular AMS-compatible spool",
           "form": "AMS spool",
-          "compatible_routes": "Not available on A1 mini",
-          "geometry": "Do not treat a regular AMS-compatible label as A1 mini compatibility.",
-          "state": "Unsupported route",
-          "note": "A1 mini uses AMS lite for multi-colour, not regular AMS.",
+          "compatible_routes": "Original AMS, AMS 2 Pro or AMS HT only with the A1 Series AMS Hub and compatible printer firmware; not AMS Lite",
+          "geometry": "Check the exact spool against the selected AMS unit. AMS Lite dimensions do not apply to these enclosed AMS systems.",
+          "state": "Manual review required",
+          "note": "Hardware route availability does not confirm spool fit or material compatibility. Do not mix AMS Lite with this AMS family.",
           "source": "Bambu A1 mini FAQ; reviewed 2026-09-29",
           "source_url": "https://us.store.bambulab.com/products/a1-mini?id=543566369394393101"
         }
@@ -197,7 +340,9 @@
         "External/direct feed is the initial route for every material trial; check the spool state, tangles, dryness and remaining material.",
         "AMS lite physical-spool range: 40–68 mm width and 53–58 mm inner diameter.",
         "Use external/direct feed as the default for TPU and PVA. Bambu lists dry PVA as AMS lite-compatible but warns against wet/absorbent PVA; consider AMS lite only when the exact spool is known dry and its material profile explicitly permits that route.",
-        "Regular AMS is unsupported on A1 mini."
+        "Original AMS, AMS 2 Pro and AMS HT are supported on A1 mini only with the A1 Series AMS Hub and compatible firmware; do not mix them with AMS Lite. Verify exact spool and material compatibility.",
+        "AMS Lite material routing is a separate check: Bambu lists PLA, PETG, ASA, PET, PA, PC, dry PVA/BVOH, PP, POM, HIPS and Bambu PLA-CF/PAHT-CF; specific materials are not recommended or unsupported as listed below.",
+        "AMS Lite spool size: 40–68 mm width and 53–58 mm inner diameter; this physical range does not qualify a material, printer profile or Alloy send."
       ]
     },
     {
@@ -206,26 +351,110 @@
       "build_volume": "256 × 256 × 256 mm",
       "nozzle": "0.4 mm supplied; nozzle/profile must be selected exactly",
       "bed": "up to 100 °C",
-      "reviewed": "2026-09-28",
+      "reviewed": "2026-10-13",
       "alloy_direct_send": "Not qualified — physical acceptance gates remain incomplete",
       "source": "Bambu Lab A1 specifications and material cautions",
       "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
       "materials": [
         {
-          "id": "ideal-family",
-          "name": "PLA · PETG · TPU · PVA",
+          "id": "pla",
+          "name": "PLA",
           "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
-          "note": "Open-frame material cautions still apply; material is profile-specific.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "note": "A1-series printer guidance marks PLA ideal. This is not an Alloy recipe or send qualification.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Listed as AMS Lite compatible; exact PLA grade and spool fit still require review.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         },
         {
-          "id": "high-temp-fibre",
-          "name": "High-temperature / fibre-filled material classes",
-          "bambu_status": "Review manufacturer guidance",
+          "id": "petg",
+          "name": "PETG",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "A1-series printer guidance marks PETG ideal. AMS Lite loading is a separate compatibility check.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Bambu PETG is listed as AMS Lite compatible; exact grade and spool fit still require review.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "tpu",
+          "name": "TPU",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "A1-series printer guidance marks TPU ideal; do not infer AMS Lite compatibility.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Unsupported for AMS Lite; use external/direct feed only after exact grade and recipe review.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pva",
+          "name": "PVA",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "A1-series printer guidance marks PVA ideal; AMS Lite lists dry PVA only and route must be reviewed.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Dry PVA only is listed for AMS Lite; wet/absorbent PVA is unsupported.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "abs",
+          "name": "ABS",
+          "bambu_status": "Not recommended",
           "alloy_direct_send": "Blocked",
-          "note": "Do not transfer A1 mini or P1S qualification to A1.",
-          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+          "note": "Bambu does not recommend ABS for the open-frame A1; Alloy blocks direct-send preparation.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "ABS is not listed in Bambu's AMS Lite material table; do not infer feeder compatibility.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "asa",
+          "name": "ASA",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend ASA for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "ASA is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pc",
+          "name": "PC",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend PC for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "PC is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pa",
+          "name": "PA / Nylon",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend PA for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "PA is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "pet",
+          "name": "PET",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend PET for the open-frame A1; AMS Lite feeder support does not change printer suitability.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "PET is listed as AMS Lite compatible; this does not override A1 printer-level not-recommended guidance.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
+        },
+        {
+          "id": "cf-gf-filled",
+          "name": "Carbon / glass fiber reinforced polymer",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu does not recommend carbon/glass-fiber reinforced polymers for the A1; no nozzle or feeder exception is implied.",
+          "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes",
+          "ams_lite_status": "Generic third-party CF/GF is unsupported; Bambu has brand-specific exceptions and warnings that do not override A1 printer suitability.",
+          "ams_lite_source_url": "https://ca.store.bambulab.com/products/ams-lite"
         }
       ],
       "feed_routes": [
@@ -240,6 +469,27 @@
           "title": "AMS lite",
           "state": "Capability-specific",
           "note": "Route and material compatibility must be explicit."
+        },
+        {
+          "id": "regular-ams",
+          "title": "Original AMS (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu introduced Original AMS support on the A1 series in public-beta firmware 01.06.10.33; the A1 release history subsequently records stable 01.07.01.00. Use current compatible A1 firmware, Bambu Studio 2.3.0 or later, and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-2-pro",
+          "title": "AMS 2 Pro (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu introduced AMS 2 Pro support on the A1 series in public-beta firmware 01.06.10.33; the A1 release history subsequently records stable 01.07.01.00. Use current compatible A1 firmware, Bambu Studio 2.3.0 or later, and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
+        },
+        {
+          "id": "ams-ht",
+          "title": "AMS HT (A1 Series AMS Hub)",
+          "state": "Requires A1 Series AMS Hub",
+          "note": "Bambu introduced AMS HT support on the A1 series in public-beta firmware 01.06.10.33; the A1 release history subsequently records stable 01.07.01.00. Use current compatible A1 firmware, Bambu Studio 2.3.0 or later, and select the matching AMS type in printer settings. Do not mix AMS Lite with this AMS family. Hardware support only: exact material/profile and spool fit still require review, and Alloy send remains unqualified.",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
         }
       ],
       "spool_forms": [
@@ -275,11 +525,23 @@
           "note": "Diameter alone is not a feed-route approval.",
           "source": "Alloy safety policy; manufacturer spool dimensions required",
           "source_url": "https://us.store.bambulab.com/products/a1?id=579550514255634440&skr=yes"
+        },
+        {
+          "id": "ams-hub-spool",
+          "title": "Original AMS / AMS 2 Pro / AMS HT spool",
+          "form": "AMS feeder-compatible spool",
+          "compatible_routes": "Original AMS, AMS 2 Pro or AMS HT only with the A1 Series AMS Hub and compatible printer firmware; not AMS Lite",
+          "geometry": "Check the exact spool against the selected AMS unit. AMS Lite dimensions do not apply to these enclosed AMS systems.",
+          "state": "Manual review required",
+          "note": "Hardware route availability does not confirm spool fit or material compatibility. Do not mix AMS Lite with this AMS family.",
+          "source": "Bambu A1 Series firmware compatibility note; physical spool fit remains unit-specific",
+          "source_url": "https://forum.bambulab.com/t/a1-series-firmware-v01-06-10-33-now-in-public-beta/201055"
         }
       ],
       "spool_guidance": [
         "Use the documented 1.75 mm material and route for the exact recipe.",
-        "AMS lite compatibility is material- and spool-specific; never infer it from a material family alone."
+        "AMS lite compatibility is material- and spool-specific; never infer it from a material family alone.",
+        "Original AMS, AMS 2 Pro and AMS HT are supported on A1 only with the A1 Series AMS Hub and compatible firmware; do not mix them with AMS Lite. Verify exact spool and material compatibility."
       ]
     },
     {
@@ -288,25 +550,89 @@
       "build_volume": "256 × 256 × 256 mm",
       "nozzle": "0.4 mm supplied; nozzle/profile must be selected exactly",
       "bed": "up to 100 °C",
-      "reviewed": "2026-09-28",
+      "reviewed": "2026-10-13",
       "alloy_direct_send": "Not qualified — physical acceptance gates remain incomplete",
       "source": "Bambu Lab P1S specifications",
       "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213",
       "materials": [
         {
-          "id": "pla-petg-tpu",
-          "name": "PLA · PETG · TPU",
-          "bambu_status": "Profile-dependent",
+          "id": "pla",
+          "name": "PLA",
+          "bambu_status": "Ideal",
           "alloy_direct_send": "Not qualified",
-          "note": "Check the exact plate, nozzle, enclosure and material recipe.",
+          "note": "Bambu lists PLA as ideal for P1S. The exact plate, nozzle and recipe remain profile-specific.",
           "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
         },
         {
-          "id": "abs-asa-engineering",
-          "name": "ABS · ASA and engineering materials",
-          "bambu_status": "Profile-dependent",
-          "alloy_direct_send": "Blocked until qualified",
-          "note": "An enclosed printer is not a blanket compatibility or direct-send claim.",
+          "id": "petg",
+          "name": "PETG",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PETG as ideal for P1S. AMS compatibility remains a separate material/feeder check.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "tpu",
+          "name": "TPU",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists TPU as ideal for P1S; do not infer compatibility with a powered AMS feed route.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pva",
+          "name": "PVA",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PVA as ideal for P1S. Keep material dryness and exact feeder-route checks explicit.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pet",
+          "name": "PET",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PET as ideal for P1S; AMS Lite is not compatible with the P1 series.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "abs",
+          "name": "ABS",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists ABS as ideal for P1S. Enclosure, ventilation, plate and exact profile remain user-critical checks.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "asa",
+          "name": "ASA",
+          "bambu_status": "Ideal",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists ASA as ideal for P1S. Enclosure, ventilation, plate and exact profile remain user-critical checks.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pa",
+          "name": "PA / Nylon",
+          "bambu_status": "Capable",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PA as capable for P1S; exact grade, drying, build surface and profile require review.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "pc",
+          "name": "PC",
+          "bambu_status": "Capable",
+          "alloy_direct_send": "Not qualified",
+          "note": "Bambu lists PC as capable for P1S; exact grade, drying, build surface and profile require review.",
+          "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
+        },
+        {
+          "id": "cf-gf-filled",
+          "name": "Carbon / glass fiber reinforced polymer",
+          "bambu_status": "Not recommended",
+          "alloy_direct_send": "Blocked",
+          "note": "Bambu says not to directly print fiber-reinforced filaments before an extruder and hotend upgrade. A nozzle change alone is not the stated prerequisite; review the exact material and upgraded hardware separately. This does not qualify an Alloy profile or send.",
           "source_url": "https://us.store.bambulab.com/products/p1s?id=583855874739507213"
         }
       ],
@@ -319,9 +645,24 @@
         },
         {
           "id": "ams",
-          "title": "AMS",
+          "title": "Original AMS",
           "state": "Capability-specific",
-          "note": "Multi-material is a separate future Alloy qualification gate."
+          "note": "Original AMS is supported on P1 Series printers. One AMS can use the supplied buffer; multiple units require the AMS Hub. Check exact spool and material fit; Alloy multi-material jobs remain unqualified.",
+          "source_url": "https://forum.bambulab.com/t/the-ams-filament-drying-feature-is-now-available/165280"
+        },
+        {
+          "id": "ams-2-pro",
+          "title": "AMS 2 Pro",
+          "state": "Requires compatible P1 Series firmware",
+          "note": "Bambu adds AMS 2 Pro support for P1 Series with compatible printer and feeder firmware; update the printer before connecting. P1 Series supports up to four AMS units total across models. Exact spool/material fit and Alloy multi-material send remain separately unqualified.",
+          "source_url": "https://forum.bambulab.com/t/the-ams-filament-drying-feature-is-now-available/165280"
+        },
+        {
+          "id": "ams-ht",
+          "title": "AMS HT",
+          "state": "Requires compatible P1 Series firmware",
+          "note": "Bambu adds AMS HT support for P1 Series with compatible printer and feeder firmware; update the printer before connecting. P1 Series supports up to four AMS units total across models. Exact spool/material fit and Alloy multi-material send remain separately unqualified.",
+          "source_url": "https://forum.bambulab.com/t/the-ams-filament-drying-feature-is-now-available/165280"
         }
       ],
       "spool_forms": [
@@ -329,7 +670,7 @@
           "id": "bambu-spooled",
           "title": "Bambu filament on reusable spool",
           "form": "Complete spool",
-          "compatible_routes": "External/direct; AMS only when material and physical fit permit",
+          "compatible_routes": "External/direct; Original AMS, AMS 2 Pro or AMS HT only when exact material and spool fit permit",
           "geometry": "1.75 mm filament; inspect exact spool fit before loading.",
           "state": "Capability-specific",
           "note": "A physical fit does not qualify a direct send or material recipe.",
@@ -340,7 +681,7 @@
           "id": "bambu-refill",
           "title": "Bambu filament refill",
           "form": "Refill; no spool supplied",
-          "compatible_routes": "External/direct or AMS only after a compatible reusable spool is assembled and checked",
+          "compatible_routes": "External/direct or Original AMS / AMS 2 Pro / AMS HT only after assembly on a compatible spool and route review",
           "geometry": "Refill must be installed on a reusable spool.",
           "state": "Manual preparation required",
           "note": "Do not load a loose refill.",
@@ -351,7 +692,7 @@
           "id": "third-party-ams",
           "title": "Third-party 1.75 mm spool",
           "form": "Manufacturer spool",
-          "compatible_routes": "External/direct pending manual fit; AMS needs an explicit measured compatibility decision",
+          "compatible_routes": "External/direct pending manual fit; AMS, AMS 2 Pro and AMS HT require a unit-specific measured compatibility decision",
           "geometry": "Inspect width, hub, flange clearance, winding and free rotation.",
           "state": "Manual review required",
           "note": "Diameter alone is not an AMS or direct-send approval.",
@@ -361,7 +702,8 @@
       ],
       "spool_guidance": [
         "Use the documented 1.75 mm material and route for the exact recipe.",
-        "AMS capability does not qualify an Alloy multi-material job; purge, mapping and recovery are separate gates."
+        "AMS capability does not qualify an Alloy multi-material job; purge, mapping and recovery are separate gates.",
+        "P1 Series can use Original AMS, AMS 2 Pro and AMS HT; update firmware before connecting AMS 2 Pro/HT and keep the total to four AMS units. AMS Lite is not compatible with P1S."
       ]
     }
   ]

@@ -19,7 +19,7 @@ final class BambuHandyHandoff {
     /** Current Google Play application id for Bambu Handy, reviewed 2026-10-01. */
     static final String PACKAGE_NAME = "bbl.intl.bambulab.com";
     static final String MIME_TYPE = "application/octet-stream";
-    static final String CHOOSER_TITLE = "Share validated package — confirm recipient compatibility";
+    static final String CHOOSER_TITLE = "Share Alloy package — review before printing";
 
     private BambuHandyHandoff() { }
 
@@ -47,6 +47,22 @@ final class BambuHandyHandoff {
         return packages != null && targetedIntent != null
                 && PACKAGE_NAME.equals(targetedIntent.getPackage())
                 && packages.resolveActivity(targetedIntent, PackageManager.MATCH_DEFAULT_ONLY) != null;
+    }
+
+    /**
+     * A structurally sound archive is not necessarily a printer-ready job.
+     * Keep the Bambu Handy route closed until engine, selected printer profile,
+     * and requested support generation have each been qualified.
+     */
+    static String validationBlockReason(boolean packageStructurallyValid,
+                                        boolean engineVerified,
+                                        boolean printerProfileVerified,
+                                        boolean supportParityReady) {
+        if (!packageStructurallyValid) return "The .gcode.3mf package did not pass structural and motion-safety checks.";
+        if (!engineVerified) return "This slicer output has not passed the required desktop parity checks.";
+        if (!printerProfileVerified) return "This printer profile is for planning and has not been qualified for printing.";
+        if (!supportParityReady) return "The requested support output has not passed Bambu TreeSupport3D parity checks.";
+        return null;
     }
 
     private static void validateArtifactUri(Uri uri) {

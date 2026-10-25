@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""Audit current pinned Orca A1 Mini profiles against SliceBeam/Prusa 2.8 keys.
+"""Audit pinned Bambu printer profiles against SliceBeam/Prusa 2.8 keys.
 
 This is a static G4 pre-gate. It does not prove that SliceBeam slices correctly;
 it determines whether a deterministic Alloy profile adapter can represent the
 critical Bambu profile fields before native G3/G4 execution.
 
 Inputs:
-  1. pinned OrcaSlicer checkout
+  1. pinned OrcaSlicer or Bambu Studio profile checkout
   2. pinned SliceBeam checkout
   3. output directory
 
-The Orca profile snapshot is expected to be pinned by the caller. No network
-fetch occurs inside this script.
+The profile snapshot is expected to be pinned by the caller. No network fetch
+occurs inside this script. The legacy `orca_commit` report field is retained
+for the original A1 Mini audit consumer; new consumers should use
+`profile_source_commit`.
 """
 
 from __future__ import annotations
@@ -22,9 +24,23 @@ from pathlib import Path
 import re
 import sys
 
-MACHINE = "Bambu Lab A1 mini 0.4 nozzle"
-PROCESS = "0.20mm Standard @BBL A1M"
-FILAMENT = "Bambu PLA Basic @BBL A1M"
+PRINTER_PROFILES = {
+    "a1-mini": {
+        "printer": "Bambu Lab A1 mini 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1M",
+        "filament": "Bambu PLA Basic @BBL A1M",
+    },
+    "a1": {
+        "printer": "Bambu Lab A1 0.4 nozzle",
+        "process": "0.20mm Standard @BBL A1",
+        "filament": "Bambu PLA Basic @BBL A1",
+    },
+    "p1s": {
+        "printer": "Bambu Lab P1S 0.4 nozzle",
+        "process": "0.20mm Standard @BBL X1C",
+        "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+    },
+}
 
 # Compatibility renames from Orca/Bambu terminology to the PrusaSlicer 2.8
 # configuration vocabulary used by SliceBeam. Most already exist in SliceBeam's
@@ -303,13 +319,19 @@ def audit_one(kind: str, resolved: dict, supported: set[str]) -> dict:
 
 
 def main():
-    if len(sys.argv) != 4:
-        raise SystemExit("usage: audit_path_b_a1mini_profile.py <orca> <slicebeam> <out>")
-    orca, sb, out = map(Path, sys.argv[1:])
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Static critical-field compatibility pre-gate for a Bambu profile")
+    parser.add_argument("orca", type=Path)
+    parser.add_argument("slicebeam", type=Path)
+    parser.add_argument("out", type=Path)
+    parser.add_argument("--printer", choices=tuple(PRINTER_PROFILES), default="a1-mini")
+    args = parser.parse_args()
+    orca, sb, out = args.orca, args.slicebeam, args.out
     out.mkdir(parents=True, exist_ok=True)
     supported = supported_slice_keys(sb)
 
-    selections = {"printer": MACHINE, "process": PROCESS, "filament": FILAMENT}
+    selections = PRINTER_PROFILES[args.printer]
     resolved = {}
     sources = {}
     for kind, name in selections.items():
@@ -318,8 +340,10 @@ def main():
         resolved[kind] = resolve(name, profiles)
         sources[kind] = source[name]
 
+    profile_source_commit = subprocess_rev(orca)
     audit = {
-        "orca_commit": subprocess_rev(orca),
+        "profile_source_commit": profile_source_commit,
+        "orca_commit": profile_source_commit,
         "slicebeam_commit": subprocess_rev(sb),
         "selections": selections,
         "sources": sources,
@@ -347,14 +371,15 @@ def main():
         (out / f"resolved-{kind}.json").write_text(json.dumps(cfg, indent=2) + "\n")
 
     md = [
-        "# Path B G4 static A1 Mini profile audit",
+        f"# Path B static {args.printer.upper()} profile compatibility pre-gate",
         "",
-        f"- Orca profile snapshot: `{audit['orca_commit']}`",
+        f"- Pinned profile source snapshot: `{audit['profile_source_commit']}`",
         f"- SliceBeam: `{audit['slicebeam_commit']}`",
         f"- Prusa-core registered/static config keys parsed: {len(supported)}",
-        f"- machine: `{MACHINE}`",
-        f"- process: `{PROCESS}`",
-        f"- filament: `{FILAMENT}`",
+        f"- printer: `{args.printer}`",
+        f"- machine: `{selections['printer']}`",
+        f"- process: `{selections['process']}`",
+        f"- filament: `{selections['filament']}`",
         f"- static critical-field result: **{audit['static_critical_result'].upper()}**",
         "",
     ]

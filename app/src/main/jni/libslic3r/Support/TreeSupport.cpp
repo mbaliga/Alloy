@@ -2100,6 +2100,165 @@ Polygons TreeSupport::get_trim_support_regions(
     return polygons_trimming;
 }
 
+// Adapted from Bambu Studio v02.08.02.61, commit
+// 926a7192574bcb9b3a732e1ec59a46d79cb45466 (AGPL-3.0-or-later).
+// Keep this pass local to Alloy's ordinary TreeSupport geometry. The organic route uses
+// generate_tree_support_3D() and does not enter draw_circles().
+static double carried_area_ratio(const ExPolygons &carrier,
+                                 const std::vector<BoundingBox> &carrier_bboxes,
+                                 const ExPolygon &region)
+{
+    const double region_area = region.area();
+    if (region_area <= 0.) return 0.;
+    const BoundingBox region_bbox = get_extents(region);
+    Polygons near_carrier;
+    for (size_t i = 0; i < carrier.size(); ++i) {
+        if (carrier_bboxes[i].overlap(region_bbox))
+            append(near_carrier, ClipperUtils::clip_clipper_polygons_with_subject_bbox(carrier[i], region_bbox));
+    }
+    if (near_carrier.empty()) return 0.;
+    double carried_area = 0.;
+    for (const ExPolygon &part : intersection_ex(region, near_carrier)) carried_area += part.area();
+    return carried_area / region_area;
+}
+
+void TreeSupport::prune_floating_supports()
+{
+    SupportLayerPtrs &ts_layers = m_object->support_layers();
+    if (m_object->layers().empty() || ts_layers.size() <= size_t(m_raft_layers)) return;
+
+    constexpr int num_area_types = SupportLayer::Roof1stLayer + 1;
+    static_assert(SupportLayer::BaseType == 0 && SupportLayer::RoofType == 1 &&
+                  SupportLayer::FloorType == 2 && SupportLayer::Roof1stLayer == 3,
+                  "regions_by_type must be indexed by SupportLayer::AreaType");
+
+    const PrintObjectConfig &config = m_object->config();
+    const coordf_t gap_object_support = std::max(0., m_slicing_params.gap_object_support);
+    const coordf_t grounded_z = m_raft_layers > 0 ? ts_layers[m_raft_layers - 1]->print_z : 0.;
+    const double branch_angle = config.tree_support_branch_angle.value * M_PI / 180.;
+    if (branch_angle >= M_PI / 2) return;
+    const double tan_branch_angle = tan(branch_angle);
+    const coordf_t support_extrusion_width = m_support_params.support_extrusion_width;
+    const int wall_count = std::max(1, config.tree_support_wall_count.value);
+
+    std::vector<coordf_t> obj_print_z;
+    obj_print_z.reserve(m_object->layers().size());
+    for (const Layer *object_layer : m_object->layers()) obj_print_z.emplace_back(object_layer->print_z);
+
+    size_t num_pruned = 0;
+    ExPolygons support_below;
+    for (size_t layer_nr = m_raft_layers; layer_nr < ts_layers.size(); ++layer_nr) {
+        if (m_object->print()->canceled()) return;
+        SupportLayer *ts_layer = ts_layers[layer_nr];
+        if (ts_layer->height < EPSILON) continue;
+
+        BoundingBox layer_bbox;
+        for (const SupportLayer::AreaGroup &area_group : ts_layer->area_groups) {
+            if (area_group.area != nullptr) layer_bbox.merge(get_extents(*area_group.area));
+        }
+        if (!layer_bbox.defined) {
+            support_below.clear();
+            continue;
+        }
+
+        const coordf_t bottom_z = ts_layer->print_z - ts_layer->height;
+        const bool grounded = bottom_z <= grounded_z + EPSILON;
+        ExPolygons carrier;
+        if (!grounded) {
+            const coordf_t carry_slack = std::max({
+                std::min(tan_branch_angle * ts_layer->height, support_extrusion_width),
+                tan_branch_angle * ts_layer->height * wall_count,
+                support_extrusion_width / 2.
+            });
+            layer_bbox.offset(scale_(carry_slack) + SCALED_EPSILON);
+
+            const int top_obj_layer_nr = int(std::upper_bound(
+                obj_print_z.begin(), obj_print_z.end(), bottom_z + EPSILON) - obj_print_z.begin()) - 1;
+            const coordf_t lowest_z = top_obj_layer_nr >= 0
+                ? bottom_z - gap_object_support - m_object->get_layer(top_obj_layer_nr)->height
+                : 0.;
+            Polygons candidates = ClipperUtils::clip_clipper_polygons_with_subject_bbox(support_below, layer_bbox);
+            for (int obj_layer_nr = top_obj_layer_nr;
+                 obj_layer_nr >= 0 && obj_print_z[obj_layer_nr] >= lowest_z - EPSILON;
+                 --obj_layer_nr) {
+                append(candidates, ClipperUtils::clip_clipper_polygons_with_subject_bbox(
+                    m_object->get_layer(obj_layer_nr)->lslices, layer_bbox));
+            }
+            carrier = offset_ex(union_ex(candidates), scale_(carry_slack));
+        }
+        const std::vector<BoundingBox> carrier_bboxes = get_extents_vector(carrier);
+
+        ExPolygons *regions_by_type[num_area_types] = {
+            &ts_layer->base_areas, &ts_layer->roof_areas,
+            &ts_layer->floor_areas, &ts_layer->roof_1st_layer
+        };
+        ExPolygons kept_regions[num_area_types];
+        std::vector<SupportLayer::AreaGroup> kept_groups;
+        kept_groups.reserve(ts_layer->area_groups.size());
+        size_t next_index[num_area_types] = {};
+        for (const SupportLayer::AreaGroup &area_group : ts_layer->area_groups) {
+            const int type = area_group.type;
+            if (type < SupportLayer::BaseType || type > SupportLayer::Roof1stLayer) continue;
+            const size_t index = next_index[type]++;
+            if (index >= regions_by_type[type]->size()) continue;
+            assert(area_group.area == &(*regions_by_type[type])[index]);
+            ExPolygon &region = (*regions_by_type[type])[index];
+            const bool is_interface = type == SupportLayer::RoofType || type == SupportLayer::Roof1stLayer;
+            const double ratio = grounded ? 1. : carried_area_ratio(carrier, carrier_bboxes, region);
+            if (ratio < (is_interface ? MIN_CARRIED_RATIO_INTERFACE : MIN_CARRIED_RATIO)) {
+                ++num_pruned;
+                continue;
+            }
+            kept_regions[type].emplace_back(std::move(region));
+            kept_groups.emplace_back(area_group);
+        }
+
+        for (int type = 0; type < num_area_types; ++type)
+            *regions_by_type[type] = std::move(kept_regions[type]);
+        size_t rebound_index[num_area_types] = {};
+        for (SupportLayer::AreaGroup &area_group : kept_groups) {
+            ExPolygons &regions = *regions_by_type[area_group.type];
+            const size_t index = rebound_index[area_group.type]++;
+            area_group.area = &regions[index];
+            assert(area_group.area == &regions[index]);
+        }
+        ts_layer->area_groups = std::move(kept_groups);
+
+        // Alloy's tree brim/skirt path snapshots these slices before pruning. Rebuild that snapshot
+        // from the surviving groups when it exists so no removed support is resurrected as a skirt.
+        if (!ts_layer->lslices.empty()) {
+            ts_layer->lslices.clear();
+            for (const SupportLayer::AreaGroup &area_group : ts_layer->area_groups)
+                ts_layer->lslices.emplace_back(*area_group.area);
+            ts_layer->lslices = std::move(union_ex(ts_layer->lslices));
+            ts_layer->lslices_bboxes.clear();
+            ts_layer->lslices_bboxes.reserve(ts_layer->lslices.size());
+            for (const ExPolygon &expoly : ts_layer->lslices)
+                ts_layer->lslices_bboxes.emplace_back(get_extents(expoly));
+            ts_layer->backup_untyped_slices();
+        }
+
+        // Keep retraction-avoidance outlines and their boxes in sync with surviving support regions.
+        if (!ts_layer->support_islands.empty()) {
+            ExPolygons islands;
+            islands.reserve(ts_layer->area_groups.size());
+            for (const SupportLayer::AreaGroup &area_group : ts_layer->area_groups) {
+                assert(area_group.area != nullptr);
+                islands.emplace_back(*area_group.area);
+            }
+            ts_layer->support_islands = union_ex(islands);
+        }
+
+        support_below.clear();
+        support_below.reserve(ts_layer->area_groups.size());
+        for (const SupportLayer::AreaGroup &area_group : ts_layer->area_groups) {
+            assert(area_group.area != nullptr);
+            support_below.emplace_back(*area_group.area);
+        }
+    }
+    BOOST_LOG_TRIVIAL(info) << "Tree support floating region pruning done. " << num_pruned << " regions removed.";
+}
+
 void TreeSupport::draw_circles()
 {
     const PrintObjectConfig &config = m_object->config();
@@ -2521,6 +2680,12 @@ void TreeSupport::draw_circles()
 
             }
         });
+        // Bambu v02.08.02.61 (926a7192574bcb9b3a732e1ec59a46d79cb45466) prunes
+        // unsupported final regions here, before lightning and hole-moving consume base areas.
+        // Alloy keeps its local Hybrid area construction and Orca interface normalization; the
+        // organic TreeSupport3D path returns from generate() before reaching draw_circles().
+        prune_floating_supports();
+
         // ORCA: normalize interface_id sequencing to follow printed interface layers only.
         const int top_base_layers = int(m_support_params.num_top_base_interface_layers);
         const bool interlaced = m_object_config->support_interface_pattern == smipRectilinearInterlaced;

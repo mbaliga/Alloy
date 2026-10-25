@@ -1262,7 +1262,10 @@ extern "C" {
         if (model != nullptr) model->cancel_requested.store(true, std::memory_order_release);
     }
 
-    JNIEXPORT jlong JNICALL Java_ru_ytkab0bp_slicebeam_slic3r_Native_model_1slice(JNIEnv* env, jclass, jlong ptr, jstring configPath, jstring path, jobject listener, jint numFilaments, jintArray colorsArr, jint calibMode, jdouble calibStart, jdouble calibEnd, jdouble calibStep) {
+    static jlong model_slice_internal(JNIEnv* env, jlong ptr, jstring configPath, jstring path,
+                                      jobject listener, jint numFilaments, jintArray colorsArr,
+                                      jint calibMode, jdouble calibStart, jdouble calibEnd,
+                                      jdouble calibStep, bool counterfactualBblMode) {
         jobject listenerGlobal = nullptr;
         try {
             if (ptr == 0 || configPath == nullptr || path == nullptr)
@@ -1516,9 +1519,11 @@ extern "C" {
             }
 
             // OrcaSlicer incorrectly suppresses standard tool changes (T0, T1, etc.) if it thinks
-            // the printer is a Bambu Lab machine (is_BBL_printer == true). We force it to false
-            // to ensure standard G-code emission for regular Klipper/Marlin printers.
-            print.is_BBL_printer() = false;
+            // the printer is a Bambu Lab machine (is_BBL_printer == true). Production slicing
+            // keeps this false for standard Klipper/Marlin emission. The separately named,
+            // instrumentation-only counterfactual entry point may set it true to measure BBL
+            // scheduling differences; it is never used by application code or qualification.
+            print.is_BBL_printer() = counterfactualBblMode;
 
             __android_log_print(ANDROID_LOG_WARN, "BeamPaint", "step: assigned extruders, validating config");
 
@@ -1603,6 +1608,23 @@ extern "C" {
             env->ThrowNew(env->FindClass("ru/ytkab0bp/slicebeam/slic3r/Slic3rRuntimeError"), e.what());
             return 0;
         }
+    }
+
+    JNIEXPORT jlong JNICALL Java_ru_ytkab0bp_slicebeam_slic3r_Native_model_1slice(
+            JNIEnv* env, jclass, jlong ptr, jstring configPath, jstring path, jobject listener,
+            jint numFilaments, jintArray colorsArr, jint calibMode, jdouble calibStart,
+            jdouble calibEnd, jdouble calibStep) {
+        return model_slice_internal(env, ptr, configPath, path, listener, numFilaments, colorsArr,
+                                    calibMode, calibStart, calibEnd, calibStep, false);
+    }
+
+    JNIEXPORT jlong JNICALL Java_ru_ytkab0bp_slicebeam_slic3r_Native_model_1slice_1counterfactual_1bbl(
+            JNIEnv* env, jclass, jlong ptr, jstring configPath, jstring path, jobject listener,
+            jint numFilaments, jintArray colorsArr, jint calibMode, jdouble calibStart,
+            jdouble calibEnd, jdouble calibStep, jboolean counterfactualBblMode) {
+        return model_slice_internal(env, ptr, configPath, path, listener, numFilaments, colorsArr,
+                                    calibMode, calibStart, calibEnd, calibStep,
+                                    counterfactualBblMode == JNI_TRUE);
     }
 
     JNIEXPORT void JNICALL Java_ru_ytkab0bp_slicebeam_slic3r_Native_model_1export_13mf(JNIEnv* env, jclass, jlong ptr, jstring configPath, jstring path) {

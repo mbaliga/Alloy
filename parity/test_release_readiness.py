@@ -4,10 +4,34 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ci.validate_release_readiness import REQUIRED_GATES, validate
+from ci.validate_release_readiness import PRINTER_SPECIFIC_GATES, REQUIRED_GATES, validate
+
+
+PHYSICAL_GATES = {
+    "a1-mini": "physical_a1_mini_transport",
+    "a1": "physical_a1_transport",
+    "p1s": "physical_p1s_transport",
+}
 
 
 class ReleaseReadinessTests(unittest.TestCase):
+    def _physical_record(self, printer, scope):
+        return {
+            "schema_version": 1,
+            "evidence_id": f"{printer}-2027-01-01",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": scope,
+            "apk_sha256": "a" * 64,
+            "instrumentation_sha256": "b" * 64,
+            "signer_sha256": "c" * 64,
+            "printer_certificate_sha256": "d" * 64,
+            "cases": {case: "PASS" for case in (
+                "discovery", "upload", "start", "running", "completion",
+                "pause_resume", "cancel", "recovery", "offline",
+            )},
+        }
+
     def _write(self, value):
         directory = tempfile.TemporaryDirectory()
         path = Path(directory.name) / "readiness.json"
@@ -19,9 +43,25 @@ class ReleaseReadinessTests(unittest.TestCase):
             content = f"reviewed evidence for {gate}\n".encode("utf-8")
             (path.parent / name).write_bytes(content)
             evidence[gate] = {"path": name, "sha256": hashlib.sha256(content).hexdigest()}
+            printer_id = PRINTER_SPECIFIC_GATES.get(gate)
+            if printer_id:
+                evidence[gate]["printer_id"] = printer_id
         value.setdefault("gate_evidence", evidence)
         path.write_text(json.dumps(value), encoding="utf-8")
         return directory, path
+
+    def _attach_physical_record(self, path, value, printer, filename, scope):
+        record = self._physical_record(printer, scope)
+        data = json.dumps(record).encode("utf-8")
+        (path.parent / filename).write_bytes(data)
+        digest = hashlib.sha256(data).hexdigest()
+        reference = {"path": filename, "sha256": digest}
+        value["physical_acceptance_evidence"][printer] = reference
+        value["gate_evidence"][PHYSICAL_GATES[printer]] = {
+            **reference,
+            "printer_id": printer,
+        }
+        path.write_text(json.dumps(value), encoding="utf-8")
 
     def test_all_required_gates_are_explicit(self):
         value = {
@@ -29,28 +69,23 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "a1-mini-acceptance-2027-01-01",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
-        value["physical_acceptance_evidence"] = "physical.json"
+        value["physical_acceptance_evidence"] = {
+            "a1-mini": {"path": "physical-a1-mini.json", "sha256": "0" * 64},
+            "a1": {"path": "physical-a1.json", "sha256": "0" * 64},
+            "p1s": {"path": "physical-p1s.json", "sha256": "0" * 64},
+        }
         directory, path = self._write(value)
         try:
-            (path.parent / "physical.json").write_text(json.dumps({
-                "schema_version": 1,
-                "evidence_id": "a1-mini-2027-01-01",
-                "verified_at": "2027-01-01T00:00:00Z",
-                "reviewer": "release-owner",
-                "device_scope": "Bambu Lab A1 Mini / N1 / firmware 01.00",
-                "apk_sha256": "a" * 64,
-                "instrumentation_sha256": "b" * 64,
-                "signer_sha256": "c" * 64,
-                "printer_certificate_sha256": "d" * 64,
-                "cases": {
-                    "discovery": "PASS", "upload": "PASS", "start": "PASS",
-                    "running": "PASS", "completion": "PASS", "pause_resume": "PASS",
-                    "cancel": "PASS", "recovery": "PASS", "offline": "PASS",
-                },
-            }))
+            scopes = {
+                "a1-mini": "Bambu Lab A1 Mini / N1 / firmware 01.00",
+                "a1": "Bambu Lab A1 / firmware 01.00",
+                "p1s": "Bambu Lab P1S / firmware 01.00",
+            }
+            for printer, reference in value["physical_acceptance_evidence"].items():
+                self._attach_physical_record(path, value, printer, reference["path"], scopes[printer])
             self.assertEqual("a1-mini-acceptance-2027-01-01", validate(path)["evidence_id"])
         finally:
             directory.cleanup()
@@ -72,18 +107,63 @@ class ReleaseReadinessTests(unittest.TestCase):
         finally:
             directory.cleanup()
 
+    def test_engine_source_provenance_and_license_gate_cannot_be_omitted_or_softened(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        value["gates"]["native_engine_source_provenance_and_license"] = "PENDING"
+        directory, path = self._write(value)
+        try:
+            with self.assertRaisesRegex(SystemExit, "native_engine_source_provenance_and_license"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
     def test_physical_pass_requires_valid_acceptance_record(self):
         value = {
             "schema_version": 1,
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         directory, path = self._write(value)
         try:
             with self.assertRaises(SystemExit):
+                validate(path)
+        finally:
+            directory.cleanup()
+
+    def test_each_physical_printer_pass_requires_its_own_model_matched_record(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini / N1, A1, P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "physical_acceptance_evidence": {
+                "a1-mini": {"path": "mini.json", "sha256": "0" * 64},
+                "a1": {"path": "a1.json", "sha256": "0" * 64},
+                "p1s": {"path": "p1s.json", "sha256": "0" * 64},
+            },
+        }
+        directory, path = self._write(value)
+        try:
+            # Deliberately provide A1 evidence for the P1S gate: model substitution must fail.
+            self._attach_physical_record(path, value, "a1-mini", "mini.json",
+                                         "Bambu Lab A1 Mini / N1 / firmware 01.00")
+            self._attach_physical_record(path, value, "a1", "a1.json",
+                                         "Bambu Lab A1 / firmware 01.00")
+            self._attach_physical_record(path, value, "p1s", "p1s.json",
+                                         "Bambu Lab A1 / firmware 01.00")
+            with self.assertRaisesRegex(SystemExit, "physical P1S acceptance"):
                 validate(path)
         finally:
             directory.cleanup()
@@ -94,10 +174,10 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "REPLACE-WITH-REVIEWED-ID",
             "verified_at": "REPLACE-WITH-UTC-TIMESTAMP",
             "reviewer": "REPLACE-WITH-REVIEWER",
-            "device_scope": "Bambu Lab A1 Mini / N1 / firmware REPLACE",
+            "device_scope": "Bambu Lab A1 Mini (N1), A1, and P1S / firmware REPLACE",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
-        value["physical_acceptance_evidence"] = "physical.json"
+        value["physical_acceptance_evidence"] = {"a1-mini": "physical.json"}
         directory, path = self._write(value)
         try:
             with self.assertRaises(SystemExit):
@@ -111,14 +191,32 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         directory, path = self._write(value)
         try:
-            evidence_path = path.parent / value["gate_evidence"]["g3_toolpath_parity"]["path"]
+            evidence_path = path.parent / value["gate_evidence"]["a1_mini_g3_toolpath_parity"]["path"]
             evidence_path.write_text("altered after review\n", encoding="utf-8")
             with self.assertRaisesRegex(SystemExit, "SHA-256 does not match"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
+    def test_per_printer_gate_evidence_cannot_be_relabelled_for_another_model(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini / N1, A1, P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+        }
+        directory, path = self._write(value)
+        try:
+            value["gate_evidence"]["p1s_g3_toolpath_parity"]["printer_id"] = "a1"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "printer_id must be p1s"):
                 validate(path)
         finally:
             directory.cleanup()
@@ -129,7 +227,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             "evidence_id": "candidate",
             "verified_at": "2027-01-01T00:00:00Z",
             "reviewer": "release-owner",
-            "device_scope": "Android arm64 + Bambu Lab A1 Mini",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
         }
         directory, path = self._write(value)
@@ -148,6 +246,73 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertTrue(all(status == "PENDING" for status in value["gates"].values()))
         with self.assertRaisesRegex(SystemExit, "still contains a placeholder"):
             validate(template)
+
+    def test_physical_acceptance_record_must_be_the_hash_bound_transport_evidence(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "physical_acceptance_evidence": {
+                "a1-mini": {"path": "physical.json", "sha256": "0" * 64},
+                "a1": {"path": "a1.json", "sha256": "0" * 64},
+                "p1s": {"path": "p1s.json", "sha256": "0" * 64},
+            },
+        }
+        directory, path = self._write(value)
+        try:
+            scopes = {
+                "a1-mini": "Bambu Lab A1 Mini / N1 / firmware 01.00",
+                "a1": "Bambu Lab A1 / firmware 01.00",
+                "p1s": "Bambu Lab P1S / firmware 01.00",
+            }
+            for printer, filename in (("a1-mini", "physical.json"), ("a1", "a1.json"), ("p1s", "p1s.json")):
+                self._attach_physical_record(path, value, printer, filename, scopes[printer])
+
+            # The transport gate's own hash-bound report is deliberately substituted.
+            unrelated = path.parent / "unrelated-transport-report.txt"
+            unrelated_bytes = b"a separately hashed but unrelated transport report\n"
+            unrelated.write_bytes(unrelated_bytes)
+            value["gate_evidence"][PHYSICAL_GATES["a1-mini"]].update({
+                "path": unrelated.name,
+                "sha256": hashlib.sha256(unrelated_bytes).hexdigest(),
+            })
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "must be the hash-bound evidence"):
+                validate(path)
+        finally:
+            directory.cleanup()
+
+    def test_physical_acceptance_digest_must_match_record_bytes(self):
+        value = {
+            "schema_version": 1,
+            "evidence_id": "candidate",
+            "verified_at": "2027-01-01T00:00:00Z",
+            "reviewer": "release-owner",
+            "device_scope": "Android arm64 + Bambu Lab A1 Mini (N1), A1, and P1S",
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "physical_acceptance_evidence": {
+                "a1-mini": {"path": "physical.json", "sha256": "0" * 64},
+                "a1": {"path": "a1.json", "sha256": "0" * 64},
+                "p1s": {"path": "p1s.json", "sha256": "0" * 64},
+            },
+        }
+        directory, path = self._write(value)
+        try:
+            scopes = {
+                "a1-mini": "Bambu Lab A1 Mini / N1 / firmware 01.00",
+                "a1": "Bambu Lab A1 / firmware 01.00",
+                "p1s": "Bambu Lab P1S / firmware 01.00",
+            }
+            for printer, filename in (("a1-mini", "physical.json"), ("a1", "a1.json"), ("p1s", "p1s.json")):
+                self._attach_physical_record(path, value, printer, filename, scopes[printer])
+            (path.parent / "physical.json").write_text("changed after review", encoding="utf-8")
+            with self.assertRaisesRegex(SystemExit, "SHA-256 does not match"):
+                validate(path)
+        finally:
+            directory.cleanup()
 
 
 if __name__ == "__main__":

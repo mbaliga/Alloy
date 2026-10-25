@@ -18,6 +18,7 @@ env:
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
   BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
+  BAMBU_MATERIAL_PROFILE_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
 
@@ -44,10 +45,16 @@ jobs:
         run: |
           set -euxo pipefail
           git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
-          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/export_a1mini_material_profiles.py orca-profile-source --check
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-translucent.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-tpu-95a-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pva.json
 
       - name: Verify pinned Bambu planning profiles
         shell: bash
@@ -59,6 +66,15 @@ jobs:
           test "$(git -C bambu-profile-source rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json
+          git clone --filter=blob:none --sparse --no-checkout "$BAMBU_PROFILE_REPO" bambu-material-profile-source
+          git -C bambu-material-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
+          git -C bambu-material-profile-source checkout --detach "$BAMBU_MATERIAL_PROFILE_SHA"
+          test "$(git -C bambu-material-profile-source rev-parse HEAD)" = "$BAMBU_MATERIAL_PROFILE_SHA"
+          python3 ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json
 
       - name: Validate release inputs
         shell: bash
@@ -67,6 +83,7 @@ jobs:
           python3 ci/validate_android_wiring.py
           python3 ci/validate_profile_assets.py
           python3 ci/validate_capability_catalog.py
+          python3 ci/validate_learning_assets.py
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
           python3 ci/validate_model_assets.py
           python3 ci/validate_3mf_contract.py
@@ -75,7 +92,7 @@ jobs:
           python3 ci/validate_native_prebuilts.py arm64-v8a
           python3 ci/validate_transport_wiring.py
           python3 ci/validate_release_wiring.py
-          python3 -B -m unittest discover -s parity -p 'test_*.py' -v
+          PYTHONPATH=parity:ci python3 -B -m unittest discover -s parity -p 'test_*.py' -v
 
       - name: Validate production evidence before a tag release
         if: github.event_name == 'push'

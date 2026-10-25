@@ -55,15 +55,123 @@ if (productionRelease) {
     try {
         def readiness = new JsonSlurper().parse(readinessFile)
         def requiredReadinessGates = [
+                'native_engine_source_provenance_and_license',
                 'native_engine_source_build', 'native_smoke_on_arm64_device',
-                'a1_mini_profile_parity', 'g3_toolpath_parity',
-                'g4_profile_runtime_parity', 'bambu_treesupport3d_parity',
-                'physical_a1_mini_transport', 'signed_install_and_upgrade',
+                'a1_mini_profile_parity', 'a1_profile_parity', 'p1s_profile_parity',
+                'a1_mini_g3_toolpath_parity', 'a1_g3_toolpath_parity', 'p1s_g3_toolpath_parity',
+                'a1_mini_g4_profile_runtime_parity', 'a1_g4_profile_runtime_parity', 'p1s_g4_profile_runtime_parity',
+                'bambu_treesupport3d_parity',
+                'physical_a1_mini_transport', 'physical_a1_transport', 'physical_p1s_transport',
+                'signed_install_and_upgrade',
                 'interruption_and_recovery'
         ]
         if (readiness.schema_version != 1 || !(readiness.gates instanceof Map)
                 || requiredReadinessGates.any { readiness.gates[it] != 'PASS' }) {
             throw new GradleException('release/production-readiness.json does not mark every required gate PASS')
+        }
+        def readinessScope = readiness.device_scope instanceof String
+                ? readiness.device_scope.toLowerCase(Locale.ROOT) : ''
+        if (!readinessScope.contains('a1 mini') || !readinessScope.contains('n1')
+                || !(readinessScope =~ /\ba1\b/) || !readinessScope.contains('p1s')) {
+            throw new GradleException('release/production-readiness.json must identify A1 Mini/N1, A1 and P1S')
+        }
+        if (!(readiness.gate_evidence instanceof Map)) {
+            throw new GradleException('release/production-readiness.json must retain evidence for every gate')
+        }
+        def printerGateIds = [
+                'a1_mini_profile_parity': 'a1-mini', 'a1_profile_parity': 'a1',
+                'p1s_profile_parity': 'p1s', 'a1_mini_g3_toolpath_parity': 'a1-mini',
+                'a1_g3_toolpath_parity': 'a1', 'p1s_g3_toolpath_parity': 'p1s',
+                'a1_mini_g4_profile_runtime_parity': 'a1-mini',
+                'a1_g4_profile_runtime_parity': 'a1', 'p1s_g4_profile_runtime_parity': 'p1s',
+                'physical_a1_mini_transport': 'a1-mini', 'physical_a1_transport': 'a1',
+                'physical_p1s_transport': 'p1s'
+        ]
+        def evidenceRoot = readinessFile.parentFile.canonicalFile
+        requiredReadinessGates.each { gate ->
+            def item = readiness.gate_evidence[gate]
+            if (!(item instanceof Map) || !(item.path instanceof String)
+                    || item.path.trim().isEmpty() || new File(item.path).absolute) {
+                throw new GradleException("release evidence for ${gate} must name a relative retained file")
+            }
+            if (printerGateIds.containsKey(gate) && item.printer_id != printerGateIds[gate]) {
+                throw new GradleException("release evidence for ${gate} must identify printer ${printerGateIds[gate]}")
+            }
+            if (!(item.sha256 instanceof String) || !(item.sha256 ==~ /[0-9a-f]{64}/)) {
+                throw new GradleException("release evidence for ${gate} must include a lowercase SHA-256")
+            }
+            def evidenceFile = new File(evidenceRoot, item.path).canonicalFile
+            if (!evidenceFile.toPath().startsWith(evidenceRoot.toPath()) || !evidenceFile.isFile()) {
+                throw new GradleException("release evidence for ${gate} is missing or escapes the evidence directory")
+            }
+            def actualSha = java.security.MessageDigest.getInstance('SHA-256')
+                    .digest(evidenceFile.bytes).collect { String.format('%02x', it & 0xff) }.join()
+            if (actualSha != item.sha256) {
+                throw new GradleException("release evidence digest mismatch for ${gate}")
+            }
+        }
+        def physicalGateIds = [
+                'physical_a1_mini_transport': 'a1-mini',
+                'physical_a1_transport': 'a1',
+                'physical_p1s_transport': 'p1s'
+        ]
+        def physicalAcceptance = readiness.physical_acceptance_evidence
+        if (!(physicalAcceptance instanceof Map)) {
+            throw new GradleException('release readiness must retain separate physical acceptance records')
+        }
+        def requiredPhysicalCases = [
+                'discovery', 'upload', 'start', 'running', 'completion',
+                'pause_resume', 'cancel', 'recovery', 'offline'
+        ]
+        def requiredPhysicalHashes = [
+                'apk_sha256', 'instrumentation_sha256', 'signer_sha256',
+                'printer_certificate_sha256'
+        ]
+        physicalGateIds.each { gate, printerId ->
+            def acceptanceEvidence = physicalAcceptance[printerId]
+            if (!(acceptanceEvidence instanceof Map)
+                    || !(acceptanceEvidence.path instanceof String)
+                    || acceptanceEvidence.path.trim().isEmpty()
+                    || new File(acceptanceEvidence.path).absolute
+                    || !(acceptanceEvidence.sha256 instanceof String)
+                    || !(acceptanceEvidence.sha256 ==~ /[0-9a-f]{64}/)) {
+                throw new GradleException("physical acceptance evidence for ${printerId} must include a relative path and lowercase SHA-256")
+            }
+            def physicalGateEvidence = readiness.gate_evidence[gate]
+            if (physicalGateEvidence.path != acceptanceEvidence.path
+                    || physicalGateEvidence.sha256 != acceptanceEvidence.sha256) {
+                throw new GradleException("physical acceptance evidence for ${printerId} must be the hash-bound file for ${gate}")
+            }
+            def acceptanceFile = new File(evidenceRoot, acceptanceEvidence.path).canonicalFile
+            if (!acceptanceFile.toPath().startsWith(evidenceRoot.toPath()) || !acceptanceFile.isFile()) {
+                throw new GradleException("physical acceptance evidence for ${printerId} is missing or escapes the evidence directory")
+            }
+            def acceptance = new JsonSlurper().parse(acceptanceFile)
+            if (acceptance.schema_version != 1) {
+                throw new GradleException("physical acceptance evidence for ${printerId} has an unsupported schema")
+            }
+            ['evidence_id', 'verified_at', 'reviewer', 'device_scope'].each { field ->
+                if (!(acceptance[field] instanceof String) || acceptance[field].trim().isEmpty()) {
+                    throw new GradleException("physical acceptance evidence for ${printerId} is missing ${field}")
+                }
+            }
+            def printerScope = acceptance.device_scope.toLowerCase(Locale.ROOT)
+            def matchesPrinter = printerId == 'a1-mini'
+                    ? printerScope.contains('a1 mini') && printerScope.contains('n1')
+                    : printerId == 'a1'
+                            ? (printerScope =~ /\ba1\b/) && !printerScope.contains('a1 mini')
+                            : printerScope.contains('p1s')
+            if (!matchesPrinter) {
+                throw new GradleException("physical acceptance evidence does not match printer ${printerId}")
+            }
+            if (requiredPhysicalHashes.any { !(acceptance[it] instanceof String)
+                    || !(acceptance[it] ==~ /[0-9a-fA-F]{64}/) }) {
+                throw new GradleException("physical acceptance evidence for ${printerId} has invalid SHA-256 fields")
+            }
+            if (!(acceptance.cases instanceof Map)
+                    || requiredPhysicalCases.any { acceptance.cases[it] != 'PASS' }) {
+                throw new GradleException("physical acceptance evidence for ${printerId} is incomplete")
+            }
         }
     } catch (GradleException error) {
         throw error

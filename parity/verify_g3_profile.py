@@ -60,10 +60,14 @@ FIELDS = OrderedDict([
     ("brim_object_gap", ("brim_object_gap", "brim_object_gap")),
     ("brim_type", ("brim_type", "brim_type")),
     ("brim_width", ("brim_width", "brim_width")),
+    ("skirt_loops", ("skirt_loops", "skirt_loops")),
     ("temperature", ("nozzle_temperature", "temperature")),
     ("first_layer_temperature", ("nozzle_temperature_initial_layer", "first_layer_temperature")),
-    ("bed_temperature", ("hot_plate_temp", "bed_temperature")),
-    ("first_layer_bed_temperature", ("hot_plate_temp_initial_layer", "first_layer_bed_temperature")),
+    # Compare resolved profile values as settings, and separately compare the
+    # emitted M140/M190 command sequence below. This distinguishes a nominal
+    # plate preset from the actual heater targets selected by the engine.
+    ("bed_temperature", ("hot_plate_temp", "hot_plate_temp")),
+    ("first_layer_bed_temperature", ("first_layer_bed_temperature", "first_layer_bed_temperature")),
     ("filament_diameter", ("filament_diameter", "filament_diameter")),
     ("extrusion_multiplier", ("filament_flow_ratio", "extrusion_multiplier")),
     ("filament_max_volumetric_speed", ("filament_max_volumetric_speed", "filament_max_volumetric_speed")),
@@ -98,6 +102,16 @@ FIELDS = OrderedDict([
 # without allowing an arbitrary fallback or silently ignoring a missing key.
 NATIVE_KEY_ALIASES = {
     "retraction_minimum_travel": ("retraction_minimum_travel", "retract_before_travel"),
+    "skirt_loops": ("skirt_loops", "skirts"),
+    # Organic tree keys are distinct from the legacy tree profile values.
+    "support_tree_branch_diameter": ("tree_support_branch_diameter_organic", "support_tree_branch_diameter"),
+    "support_tree_branch_distance": ("tree_support_branch_distance_organic", "support_tree_branch_distance"),
+}
+
+DESKTOP_KEY_ALIASES = {
+    "skirt_loops": ("skirt_loops", "skirts"),
+    "support_tree_branch_diameter": ("tree_support_branch_diameter_organic", "tree_support_branch_diameter"),
+    "support_tree_branch_distance": ("tree_support_branch_distance_organic", "tree_support_branch_distance"),
 }
 
 
@@ -216,6 +230,14 @@ def normalize(field: str, value: Any, source: str, settings: dict[str, Any]) -> 
     result = _scalar(value)
     low = result.lower()
 
+    if field == "support_tree_branch_diameter_double_wall" and source == "native" and result == "-1":
+        # Bambu's automatic wall policy is represented by -1 in the profile
+        # projection. NativeSlicerEngine deliberately lowers that sentinel to
+        # zero extra walls because the pinned mobile engine rejects -1. Compare
+        # the effective engine value, not the pre-adapter spelling.
+        result = "0"
+        low = result
+
     if field == "support_material_style" and source == "desktop":
         result = {
             "tree(auto)": "organic",
@@ -259,10 +281,43 @@ def normalize(field: str, value: Any, source: str, settings: dict[str, Any]) -> 
     return _number(result) or result
 
 
-def verify(desktop: dict[str, Any], native: dict[str, str]) -> dict[str, Any]:
+def bed_temperature_commands(gcode: str) -> list[str]:
+    """Return emitted bed-target commands, not just profile/config values."""
+    commands: list[str] = []
+    for raw in gcode.splitlines():
+        line = raw.strip()
+        if not line or line.startswith(";"):
+            continue
+        match = re.match(r"^(M140|M190)\b([^;]*)", line, re.IGNORECASE)
+        if not match:
+            continue
+        command, parameters = match.groups()
+        target = re.search(
+            r"(?:^|\s)S\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))(?=\s|$)",
+            parameters,
+            re.IGNORECASE,
+        )
+        if not target:
+            commands.append(f"{command.upper()} S<missing>")
+            continue
+        normalized = _number(target.group(1)) or target.group(1)
+        commands.append(f"{command.upper()} S{normalized}")
+    return commands
+
+
+def verify(
+    desktop: dict[str, Any],
+    native: dict[str, str],
+    *,
+    desktop_gcode: str | None = None,
+    native_gcode: str | None = None,
+) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     for field, (desktop_key, native_key) in FIELDS.items():
-        desktop_raw = desktop.get(desktop_key)
+        desktop_candidates = DESKTOP_KEY_ALIASES.get(field, (desktop_key,))
+        desktop_match = next(((key, desktop[key]) for key in desktop_candidates if key in desktop), None)
+        desktop_key_used = desktop_match[0] if desktop_match else desktop_key
+        desktop_raw = desktop_match[1] if desktop_match else None
         native_candidates = NATIVE_KEY_ALIASES.get(field, (native_key,))
         native_match = next(((key, native[key]) for key in native_candidates if key in native), None)
         native_key_used = native_match[0] if native_match else native_key
@@ -271,7 +326,7 @@ def verify(desktop: dict[str, Any], native: dict[str, str]) -> dict[str, Any]:
             checks.append({
                 "field": field,
                 "status": "fail",
-                "desktop_key": desktop_key,
+                "desktop_key": desktop_key_used,
                 "native_key": native_key_used,
                 "desktop": None if desktop_raw is None else _scalar(desktop_raw),
                 "native": native_raw,
@@ -283,11 +338,34 @@ def verify(desktop: dict[str, Any], native: dict[str, str]) -> dict[str, Any]:
         checks.append({
             "field": field,
             "status": "pass" if left == right else "fail",
-            "desktop_key": desktop_key,
+            "desktop_key": desktop_key_used,
             "native_key": native_key_used,
             "desktop": left,
             "native": right,
         })
+    if desktop_gcode is not None or native_gcode is not None:
+        desktop_commands = bed_temperature_commands(desktop_gcode or "")
+        native_commands = bed_temperature_commands(native_gcode or "")
+        if desktop_gcode is None or native_gcode is None:
+            status = "fail"
+            detail = "emitted bed command evidence is missing from one side"
+        elif not desktop_commands or not native_commands:
+            status = "fail"
+            detail = "emitted bed command evidence is missing or unrecognized"
+        else:
+            status = "pass" if desktop_commands == native_commands else "fail"
+            detail = None
+        command_check = {
+            "field": "bed_temperature_commands",
+            "status": status,
+            "desktop_key": "M140/M190 command sequence",
+            "native_key": "M140/M190 command sequence",
+            "desktop": desktop_commands,
+            "native": native_commands,
+        }
+        if detail:
+            command_check["detail"] = detail
+        checks.append(command_check)
     failures = [check for check in checks if check["status"] != "pass"]
     return {
         "result": "pass" if not failures else "fail",

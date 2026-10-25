@@ -18,6 +18,107 @@ import java.nio.charset.StandardCharsets;
 @RunWith(AndroidJUnit4.class)
 public final class ProfileCatalogImportTest {
     @Test
+    public void exposesPinnedA1MiniMaterialRecipesAsPlanningOnlyProfiles() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        java.util.List<ProfileCatalog.Profile> profiles =
+                ProfileCatalog.loadA1MiniMaterialProfiles(context.getAssets());
+        Assert.assertEquals(6, profiles.size());
+        String[] ids = {
+                "bambu.a1-mini.0.4.pla-basic",
+                "bambu.a1-mini.0.4.petg-basic",
+                "bambu.a1-mini.0.4.petg-hf",
+                "bambu.a1-mini.0.4.petg-translucent",
+                "bambu.a1-mini.0.4.tpu-95a-hf",
+                "bambu.a1-mini.0.4.pva"
+        };
+        String[] materials = {"PLA", "PETG", "PETG", "PETG", "TPU", "PVA"};
+        PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
+        String guidance = MainActivity.a1MiniMaterialPickerGuidance();
+        Assert.assertTrue(guidance.contains("PLA, PETG, TPU and PVA as ideal"));
+        Assert.assertTrue(guidance.contains("ABS, ASA, PC, PA, PET"));
+        Assert.assertTrue(guidance.contains("AMS Lite does not support TPU or wet/absorbent PVA"));
+        Assert.assertTrue(guidance.contains("dry PVA is listed as compatible"));
+        Assert.assertTrue(guidance.contains("Check that every spool physically fits the AMS Lite"));
+        Assert.assertTrue(guidance.contains("Alloy print/send actions remain unqualified"));
+        for (int index = 0; index < profiles.size(); index++) {
+            ProfileCatalog.Profile profile = profiles.get(index);
+            Assert.assertEquals(ids[index], profile.id);
+            Assert.assertEquals(materials[index], profile.material);
+            Assert.assertEquals("bambu.a1-mini", profile.printerId);
+            Assert.assertEquals(180f, profile.bedX, 0.001f);
+            Assert.assertEquals(180f, profile.bedY, 0.001f);
+            Assert.assertEquals(180f, profile.buildZ, 0.001f);
+            Assert.assertEquals(0.4f, profile.nozzle, 0.001f);
+            Assert.assertEquals(0.2f, profile.layerHeight, 0.001f);
+            Assert.assertFalse("upstream profiles are not physical qualification", profile.verified);
+            Assert.assertEquals(40, profile.provenanceRevision.length());
+            Assert.assertTrue(profile.nativeSettings.containsKey("printer_model"));
+            PrinterCapabilityCatalog.Printer printer = capabilities.forProfile(profile);
+            Assert.assertNotNull(printer);
+            Assert.assertEquals("a1-mini", printer.id);
+            Assert.assertTrue(printer.directSendState, printer.directSendState.contains("Not qualified"));
+            String pickerLabel = MainActivity.a1MiniMaterialPickerLabel(profile);
+            Assert.assertTrue(pickerLabel.contains("0.4 mm nozzle · planning only"));
+            if ("TPU".equals(materials[index])) {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("external/direct feed only"));
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("dry before use"));
+            } else if ("PVA".equals(materials[index])) {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("dry PVA only in AMS Lite; otherwise external"));
+            } else {
+                Assert.assertTrue(pickerLabel, pickerLabel.contains("AMS Lite-compatible spool (check fit) or external"));
+            }
+            Assert.assertEquals(profile.id, ProfileCatalog.loadPlanningById(
+                    context.getAssets(), profile.id).id);
+        }
+    }
+
+    @Test
+    public void exposesSourcePinnedPetgRecipesForA1AndP1sWithoutQualifyingSend() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        PrinterCapabilityCatalog capabilities = PrinterCapabilityCatalog.load(context.getAssets());
+        for (String[] printer : new String[][]{
+                {"bambu.a1", "a1", "Bambu PETG Basic"},
+                {"bambu.p1s", "p1s", "Bambu PETG HF"}
+        }) {
+            java.util.List<ProfileCatalog.Profile> profiles =
+                    ProfileCatalog.loadMaterialProfiles(context.getAssets(), printer[0]);
+            Assert.assertEquals(3, profiles.size());
+            Assert.assertEquals("PLA", profiles.get(0).material);
+            ProfileCatalog.Profile petg = profiles.get(1);
+            Assert.assertEquals(printer[0], petg.printerId);
+            Assert.assertEquals("PETG", petg.material);
+            Assert.assertTrue(petg.filamentName, petg.filamentName.contains(printer[2]));
+            Assert.assertEquals(0.4f, petg.nozzle, 0.001f);
+            Assert.assertEquals(40, petg.provenanceRevision.length());
+            Assert.assertFalse("source-backed planning recipes are not print qualification", petg.verified);
+            Assert.assertTrue(capabilities.forProfile(petg).directSendState.contains("Not qualified"));
+            Assert.assertEquals(petg.id, ProfileCatalog.loadPlanningById(context.getAssets(), petg.id).id);
+            Assert.assertTrue(MainActivity.materialRecipePickerLabel(petg).contains("planning only"));
+            Assert.assertTrue(MainActivity.materialRecipePickerGuidance(printer[0])
+                    .contains("Alloy print/send actions remain unqualified"));
+            String guidance = MainActivity.materialRecipePickerGuidance(printer[0]);
+            if ("bambu.p1s".equals(printer[0])) {
+                Assert.assertTrue(guidance.contains("Bambu TPU 95A HF should be dried before use (70 °C for 8 hours)"));
+            } else {
+                Assert.assertFalse(guidance.contains("70 °C for 8 hours"));
+            }
+            ProfileCatalog.Profile tpu = profiles.get(2);
+            Assert.assertEquals(printer[0], tpu.printerId);
+            Assert.assertEquals("TPU", tpu.material);
+            Assert.assertEquals(40, tpu.provenanceRevision.length());
+            Assert.assertFalse(tpu.verified);
+            Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu)
+                    .contains("external/direct feed only · do not infer AMS compatibility"));
+            if (tpu.filamentName.contains("95A HF")) {
+                Assert.assertTrue(MainActivity.materialRecipePickerLabel(tpu).contains("dry before use"));
+            } else {
+                Assert.assertFalse(MainActivity.materialRecipePickerLabel(tpu).contains("dry before use"));
+            }
+            Assert.assertEquals(tpu.id, ProfileCatalog.loadPlanningById(context.getAssets(), tpu.id).id);
+        }
+    }
+
+    @Test
     public void importsMachineProcessAndFilamentPresetsWithSafeProjection() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         ProfileCatalog.Profile baseline = ProfileCatalog.loadDefault(context.getAssets());
@@ -124,7 +225,7 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("support_speed = 80"));
             Assert.assertTrue(serialized.contains("support_interface_spacing = 0.45"));
             Assert.assertTrue(serialized.contains("support_bottom_interface_spacing = 0.5"));
-            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
         } finally {
             if (nativeConfig.exists()) Assert.assertTrue(nativeConfig.delete());
         }
@@ -236,6 +337,19 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("9", imported.nativeSettings.get("top_surface_jerk"));
         Assert.assertEquals("9", imported.nativeSettings.get("initial_layer_jerk"));
         Assert.assertEquals("9", imported.nativeSettings.get("travel_jerk"));
+        Assert.assertEquals("Cool Plate", imported.nativeSettings.get("curr_bed_type"));
+        Assert.assertEquals("35", imported.nativeSettings.get("cool_plate_temp"));
+        Assert.assertEquals("35", imported.nativeSettings.get("cool_plate_temp_initial_layer"));
+        Assert.assertEquals("0.28", imported.nativeSettings.get("max_layer_height"));
+        Assert.assertEquals("0.08", imported.nativeSettings.get("min_layer_height"));
+        Assert.assertEquals("disabled", imported.nativeSettings.get("draft_shield"));
+        Assert.assertEquals("0.01", imported.nativeSettings.get("resolution"));
+        Assert.assertEquals("0,0", imported.nativeSettings.get("machine_min_extruding_rate"));
+        Assert.assertEquals("0,0", imported.nativeSettings.get("machine_min_travel_rate"));
+        Assert.assertFalse("project machine templates must never be projected",
+                imported.nativeSettings.containsKey("machine_start_gcode")
+                        || imported.nativeSettings.containsKey("machine_end_gcode")
+                        || imported.nativeSettings.containsKey("start_gcode"));
         Assert.assertEquals("400%", imported.nativeSettings.get("infill_anchor"));
         Assert.assertEquals("20", imported.nativeSettings.get("infill_anchor_max"));
         Assert.assertEquals("auto_brim", imported.nativeSettings.get("brim_type"));
@@ -248,6 +362,8 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("2", imported.nativeSettings.get("wipe_distance"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_remove_small_overhang"));
         Assert.assertEquals("5", imported.nativeSettings.get("support_tree_branch_distance"));
+        Assert.assertEquals("1", imported.nativeSettings.get("support_tree_branch_distance_organic"));
+        Assert.assertEquals("2", imported.nativeSettings.get("support_tree_branch_diameter_organic"));
         Assert.assertEquals("0.2", imported.nativeSettings.get("support_object_first_layer_gap"));
         Assert.assertEquals("1", imported.nativeSettings.get("support_interface_not_for_body"));
         Assert.assertEquals("cubic", imported.nativeSettings.get("fill_pattern"));
@@ -288,13 +404,21 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("top_surface_jerk = 9"));
             Assert.assertTrue(serialized.contains("initial_layer_jerk = 9"));
             Assert.assertTrue(serialized.contains("travel_jerk = 9"));
+            Assert.assertTrue(serialized.contains("enable_arc_fitting = 0"));
+            Assert.assertTrue(serialized.contains("bed_temperature = 35"));
+            Assert.assertTrue(serialized.contains("first_layer_bed_temperature = 35"));
+            Assert.assertTrue(serialized.contains("set_other_flow_ratios = 0"));
+            Assert.assertTrue(serialized.contains("outer_wall_flow_ratio = 1"));
+            Assert.assertTrue(serialized.contains("top_solid_infill_flow_ratio = 1"));
             Assert.assertTrue(serialized.contains("infill_anchor = 400%"));
             Assert.assertTrue(serialized.contains("infill_anchor_max = 20"));
             Assert.assertTrue(serialized.contains("retract_length = 0.8"));
             Assert.assertTrue(serialized.contains("retract_lift = 0.4"));
             Assert.assertTrue(serialized.contains("wipe_distance = 2"));
             Assert.assertTrue(serialized.contains("support_remove_small_overhang = 1"));
-            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_diameter_organic = 2"));
             Assert.assertTrue(serialized.contains("support_object_first_layer_gap = 0.2"));
             Assert.assertTrue(serialized.contains("support_interface_not_for_body = 1"));
             Assert.assertTrue(serialized.contains("internal_solid_infill_pattern = rectilinear"));
@@ -368,6 +492,7 @@ public final class ProfileCatalogImportTest {
                         + "\"line_width\":\"0.4\",\"outer_wall_line_width\":\"0.42\","
                         + "\"inner_wall_line_width\":\"0.45\",\"internal_solid_infill_line_width\":\"0.42\","
                         + "\"top_surface_line_width\":\"0.42\",\"initial_layer_line_width\":\"0.5\","
+                        + "\"enable_arc_fitting\":\"0\","
                         + "\"filament_flow_ratio\":\"0.97\",\"print_flow_ratio\":\"1.02\","
                         + "\"initial_layer_flow_ratio\":\"1.03\",\"top_solid_infill_flow_ratio\":\"0.98\","
                         + "\"bottom_solid_infill_flow_ratio\":\"1.01\","
@@ -390,6 +515,7 @@ public final class ProfileCatalogImportTest {
         Assert.assertEquals("0.42", imported.nativeSettings.get("solid_infill_extrusion_width"));
         Assert.assertEquals("0.42", imported.nativeSettings.get("top_infill_extrusion_width"));
         Assert.assertEquals("0.5", imported.nativeSettings.get("first_layer_extrusion_width"));
+        Assert.assertEquals("disabled", imported.nativeSettings.get("arc_fitting"));
         Assert.assertEquals(0.97f, imported.flowRatio, 0.001f);
         Assert.assertEquals("1.02", imported.nativeSettings.get("print_flow_ratio"));
         Assert.assertEquals("1.03", imported.nativeSettings.get("first_layer_flow_ratio"));
@@ -423,6 +549,7 @@ public final class ProfileCatalogImportTest {
             Assert.assertTrue(serialized.contains("top_solid_infill_flow_ratio = 0.98"));
             Assert.assertTrue(serialized.contains("bottom_solid_infill_flow_ratio = 1.01"));
             Assert.assertTrue(serialized.contains("set_other_flow_ratios = 1"));
+            Assert.assertTrue(serialized.contains("enable_arc_fitting = 0"));
             Assert.assertTrue(serialized.contains("bridge_flow = 1.05"));
             Assert.assertTrue(serialized.contains("bridge_no_support = 1"));
             Assert.assertTrue(serialized.contains("gap_fill_speed = 30"));
@@ -551,7 +678,80 @@ public final class ProfileCatalogImportTest {
         }
     }
 
+    @Test
+    public void treeRecipesRemainIndependentAcrossSupportStyleSwitches() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        // Deliberately different from each other AND from native defaults:
+        // checking only the stock 5/1/2 values can hide a dropped override.
+        config.nativeSettings.put("support_tree_branch_distance", "7");
+        config.nativeSettings.put("support_tree_branch_distance_organic", "3");
+        config.nativeSettings.put("support_tree_branch_diameter", "6");
+        config.nativeSettings.put("support_tree_branch_diameter_organic", "4");
+        for (String style : new String[]{"organic", "tree", "organic"}) {
+            config.nativeSettings.put("support_material_style", style);
+            String serialized = serializeTreeRecipe(config);
+            assertNativeSetting(serialized, "tree_support_branch_distance", "7");
+            assertNativeSetting(serialized, "tree_support_branch_distance_organic", "3");
+            assertNativeSetting(serialized, "tree_support_branch_diameter", "6");
+            assertNativeSetting(serialized, "tree_support_branch_diameter_organic", "4");
+        }
+    }
+
+    @Test
+    public void ordinaryTreeOverridesNeverBecomeOrganicOverrides() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        config.nativeSettings.put("support_material_style", "organic");
+        config.nativeSettings.put("support_tree_branch_distance", "7");
+        config.nativeSettings.put("support_tree_branch_diameter", "6");
+        String serialized = serializeTreeRecipe(config);
+        assertNativeSetting(serialized, "tree_support_branch_distance", "7");
+        assertNativeSetting(serialized, "tree_support_branch_diameter", "6");
+        assertNativeSetting(serialized, "tree_support_branch_distance_organic", null);
+        assertNativeSetting(serialized, "tree_support_branch_diameter_organic", null);
+    }
+
+    @Test
+    public void organicTreeOverridesNeverBecomeOrdinaryOverrides() throws Exception {
+        Slicer.Config config = new Slicer.Config();
+        config.supports = true;
+        config.nativeSettings.put("support_material_style", "tree");
+        config.nativeSettings.put("support_tree_branch_distance_organic", "3");
+        config.nativeSettings.put("support_tree_branch_diameter_organic", "4");
+        String serialized = serializeTreeRecipe(config);
+        assertNativeSetting(serialized, "tree_support_branch_distance", null);
+        assertNativeSetting(serialized, "tree_support_branch_diameter", null);
+        assertNativeSetting(serialized, "tree_support_branch_distance_organic", "3");
+        assertNativeSetting(serialized, "tree_support_branch_diameter_organic", "4");
+    }
+
+    private static String serializeTreeRecipe(Slicer.Config config) throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        File file = File.createTempFile("tree-recipe-", ".ini", context.getCacheDir());
+        try {
+            NativeSlicerEngine.writeConfig(config, file);
+            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.US_ASCII);
+        } finally {
+            if (file.exists()) Assert.assertTrue(file.delete());
+        }
+    }
+
+    private static void assertNativeSetting(String serialized, String key, String expected) {
+        int occurrences = 0;
+        for (String line : serialized.split("\\r?\\n")) {
+            if (line.startsWith(key + " = ")) {
+                occurrences++;
+                Assert.assertEquals("native setting " + key, expected,
+                        line.substring((key + " = ").length()));
+            }
+        }
+        Assert.assertEquals("native setting occurrence count: " + key,
+                expected == null ? 0 : 1, occurrences);
+    }
+
     private static byte[] json(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
     }
 }
+

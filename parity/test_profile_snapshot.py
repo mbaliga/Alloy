@@ -18,6 +18,16 @@ PROFILE_DIRECTORY = ROOT / "app/src/main/assets/profiles"
 
 
 class ProfileSnapshotTests(unittest.TestCase):
+    def test_percent_acceleration_projection_handles_mixed_extruder_arrays(self):
+        resolved = {"process": {"default_acceleration": ["10000", "8000"]}}
+        self.assertEqual(
+            "10000,100",
+            verify_profile_snapshot.normalize_native_projection(
+                "infill_acceleration", "process", "sparse_infill_acceleration",
+                "100%,100", resolved,
+            ),
+        )
+
     def test_every_packaged_planning_profile_has_a_declared_source_selection(self):
         profile_ids = {
             json.loads(path.read_text(encoding="utf-8"))["id"]
@@ -27,6 +37,18 @@ class ProfileSnapshotTests(unittest.TestCase):
             profile_ids,
             set(verify_profile_snapshot.SELECTIONS),
         )
+
+    def test_a1_and_p1s_profiles_include_source_backed_motion_envelopes(self):
+        for profile_id, required in verify_profile_snapshot.MOTION_NATIVE_PROJECTIONS.items():
+            profile = next(
+                json.loads(path.read_text(encoding="utf-8"))
+                for path in PROFILE_DIRECTORY.glob("*.json")
+                if json.loads(path.read_text(encoding="utf-8"))["id"] == profile_id
+            )
+            self.assertTrue(
+                required.issubset(profile["native_settings"]),
+                f"{profile_id} is missing {sorted(required - set(profile['native_settings']))}",
+            )
 
     def test_auto_brim_is_explicitly_normalized_for_slicebeam(self):
         self.assertEqual(
@@ -267,6 +289,15 @@ class ProfileSnapshotTests(unittest.TestCase):
         }
         for relative, value in {**machine_files, **process_files, **filament_files}.items():
             self._write(repo, relative, value)
+        engine_defaults = repo / "src/libslic3r/PrintConfig.cpp"
+        engine_defaults.parent.mkdir(parents=True, exist_ok=True)
+        engine_defaults.write_text(
+            'this->add("tree_support_branch_distance_organic", coFloat);\n'
+            '    def->set_default_value(new ConfigOptionFloat(1.));\n'
+            '    def = this->add("tree_support_branch_diameter_organic", coFloat);\n'
+            '    def->set_default_value(new ConfigOptionFloat(2.));\n',
+            encoding="utf-8",
+        )
         self._git(repo, "add", ".")
         subprocess.run(
             [
@@ -296,7 +327,8 @@ class ProfileSnapshotTests(unittest.TestCase):
             self.assertEqual(report["projected_field_count"], 26)
             self.assertEqual(
                 report["native_projected_field_count"],
-                len(verify_profile_snapshot.NATIVE_PROJECTIONS),
+                len(verify_profile_snapshot.NATIVE_PROJECTIONS)
+                + len(verify_profile_snapshot.NATIVE_ENGINE_DEFAULTS),
             )
 
     def test_rejects_projection_drift(self):
@@ -339,6 +371,39 @@ class ProfileSnapshotTests(unittest.TestCase):
             profile_path.write_text(json.dumps(profile), encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "unverified_setting"):
+                verify_profile_snapshot.verify(repo, profile_path)
+
+    def test_rejects_organic_tree_engine_default_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo, revision = self._make_orca_checkout(Path(directory))
+            profile = json.loads(PROFILE.read_text(encoding="utf-8"))
+            profile["provenance"]["revision"] = revision
+            for source in profile["provenance"]["files"]:
+                source["sha"] = self._git(repo, "rev-parse", f"{revision}:{source['path']}")
+            defaults_path = repo / "src/libslic3r/PrintConfig.cpp"
+            defaults_path.write_text(
+                defaults_path.read_text(encoding="utf-8").replace(
+                    "ConfigOptionFloat(1.)", "ConfigOptionFloat(5.)"
+                ),
+                encoding="utf-8",
+            )
+            self._git(repo, "add", "src/libslic3r/PrintConfig.cpp")
+            subprocess.run(
+                [
+                    "git", "-C", str(repo), "-c", "user.name=Alloy tests", "-c",
+                    "user.email=alloy-tests@example.invalid", "commit", "--quiet", "-m", "engine default drift",
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            revision = self._git(repo, "rev-parse", "HEAD")
+            profile["provenance"]["revision"] = revision
+            profile_path = Path(directory) / "profile.json"
+            profile_path.write_text(json.dumps(profile), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "pinned engine default drift"):
                 verify_profile_snapshot.verify(repo, profile_path)
 
 

@@ -1,0 +1,88 @@
+name: Bambu printer profile compatibility pre-gate
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/bambu-profile-compatibility.yml'
+      - 'parity/audit_path_b_a1mini_profile.py'
+      - 'parity/test_g4_workflow.py'
+      - 'parity/test_checkout_pinned_snapshot.py'
+      - 'ci/checkout_pinned_snapshot.py'
+      - 'ci/verify_profile_snapshot.py'
+      - 'ci/validate_profile_assets.py'
+      - 'app/src/main/assets/profiles/**'
+      - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
+      - 'app/src/main/java/com/mbaliga/alloy/NativeSettings.java'
+      - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
+  BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
+  SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
+  SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+
+jobs:
+  profile-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        printer: [a1-mini, a1, p1s]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone pinned Bambu Studio profile snapshot
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p profile-compatibility-evidence
+          python3 ci/checkout_pinned_snapshot.py \
+            "$BAMBU_PROFILE_REPO" "$BAMBU_PROFILE_SHA" bambustudio \
+            --attempts 3 --retry-delay 8 \
+            2>&1 | tee profile-compatibility-evidence/bambustudio-checkout.log
+
+      - name: Clone pinned SliceBeam source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p profile-compatibility-evidence
+          python3 ci/checkout_pinned_snapshot.py \
+            "$SLICEBEAM_REPO" "$SLICEBEAM_SHA" slicebeam \
+            --attempts 3 --retry-delay 8 \
+            2>&1 | tee profile-compatibility-evidence/slicebeam-checkout.log
+
+      - name: Audit selected Bambu profile compatibility
+        id: audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p profile-compatibility-evidence
+          python3 parity/audit_path_b_a1mini_profile.py \
+            bambustudio slicebeam profile-compatibility-evidence \
+            --printer "${{ matrix.printer }}" \
+            2>&1 | tee profile-compatibility-evidence/run.log
+          exit "${PIPESTATUS[0]}"
+
+      - name: Upload static compatibility pre-gate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-compatibility-${{ matrix.printer }}
+          path: profile-compatibility-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce static compatibility pre-gate
+        if: steps.audit.outcome != 'success'
+        shell: bash
+        run: |
+          cat profile-compatibility-evidence/PATH_B_G4_PROFILE_AUDIT.md 2>/dev/null || true
+          echo "${{ matrix.printer }} failed the static compatibility pre-gate; it is not runtime parity" >&2
+          exit 1

@@ -2,10 +2,10 @@ name: Alloy Android v1
 
 on:
   push:
-    branches: [main, 'codex/**']
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    branches: [main]
+    paths: ['app/**', 'ci/run_android_acceptance_with_diagnostics.sh', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_release_wiring.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/export_a1mini_material_profiles.py', 'ci/export_a1_p1s_material_profiles.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'parity/test_android_acceptance_diagnostics.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   pull_request:
-    paths: ['app/**', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/verify_profile_snapshot.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths: ['app/**', 'ci/run_android_acceptance_with_diagnostics.sh', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_release_wiring.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/export_a1mini_material_profiles.py', 'ci/export_a1_p1s_material_profiles.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'parity/test_android_acceptance_diagnostics.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ env:
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
   BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
+  BAMBU_MATERIAL_PROFILE_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
 
 jobs:
   verify:
@@ -32,10 +33,16 @@ jobs:
         run: |
           set -euxo pipefail
           git clone --filter=blob:none --sparse --no-checkout "$ORCA_PROFILE_REPO" orca-profile-source
-          git -C orca-profile-source sparse-checkout set resources/profiles/BBL
+          git -C orca-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
           git -C orca-profile-source checkout --detach "$ORCA_PROFILE_SHA"
           test "$(git -C orca-profile-source rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
+          python3 ci/export_a1mini_material_profiles.py orca-profile-source --check
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-petg-translucent.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-tpu-95a-hf.json
+          python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pva.json
       - name: Verify pinned Bambu planning profiles
         shell: bash
         run: |
@@ -46,6 +53,15 @@ jobs:
           test "$(git -C bambu-profile-source rev-parse HEAD)" = "$BAMBU_PROFILE_SHA"
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/a1-0.4-pla-basic.json
           python3 ci/verify_profile_snapshot.py bambu-profile-source app/src/main/assets/profiles/p1s-0.4-pla-basic.json
+          git clone --filter=blob:none --sparse --no-checkout "$BAMBU_PROFILE_REPO" bambu-material-profile-source
+          git -C bambu-material-profile-source sparse-checkout set resources/profiles/BBL src/libslic3r/PrintConfig.cpp
+          git -C bambu-material-profile-source checkout --detach "$BAMBU_MATERIAL_PROFILE_SHA"
+          test "$(git -C bambu-material-profile-source rev-parse HEAD)" = "$BAMBU_MATERIAL_PROFILE_SHA"
+          python3 ci/export_a1_p1s_material_profiles.py bambu-material-profile-source --check
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-petg-basic.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-petg-hf.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/a1-0.4-tpu-95a.json
+          python3 ci/verify_profile_snapshot.py bambu-material-profile-source app/src/main/assets/profiles/p1s-0.4-tpu-95a-hf.json
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -55,10 +71,13 @@ jobs:
           packages: platform-tools
       - name: Validate Android workflow variants
         run: python3 ci/validate_android_workflows.py
+      - name: Validate release workflow wiring
+        run: python3 ci/validate_release_wiring.py
       - name: Validate packaged profiles
         run: |
           python3 ci/validate_profile_assets.py
           python3 ci/validate_capability_catalog.py
+          python3 ci/validate_learning_assets.py
           python3 ci/verify_profile_snapshot.py orca-profile-source app/src/main/assets/profiles/a1-mini-0.4-pla-basic.json
       - name: Validate Android shell and import wiring
         run: python3 ci/validate_android_wiring.py
@@ -105,9 +124,19 @@ jobs:
           # animation scales, so leave the device default intact and exercise
           # the actual release acceptance suite instead.
           disable-animations: false
-          script: gradle :app:connectedReleaseAndroidTest -PalloyCiDebugSign=true --no-daemon --stacktrace
+          script: bash ci/run_android_acceptance_with_diagnostics.sh
+      - name: Upload Android acceptance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-android-acceptance-diagnostics
+          path: |
+            app/build/reports/androidTests/connected/
+            app/build/outputs/androidTest-results/connected/
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-v1-release-ci-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+

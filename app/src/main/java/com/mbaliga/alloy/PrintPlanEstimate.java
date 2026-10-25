@@ -34,20 +34,52 @@ public final class PrintPlanEstimate {
 
     public static PrintPlanEstimate from(Slicer.Result slice, Slicer.Config config) {
         if (slice == null || config == null) throw new IllegalArgumentException("slice and config are required");
-        String support = config.supports
-                ? "Not reported separately; included, if present, in the engine's total filament figure."
-                : "0 g  ·  supports are off for this recipe.";
-        String scope = config.supports
+        String support;
+        if (slice.supportFilamentMm > 0f) {
+            support = String.format(Locale.US, "%.1f mm  ·  about %.1f g in support-tagged moves (same selected material density).",
+                    slice.supportFilamentMm, grams(slice.supportFilamentMm, config.filamentDiameter,
+                            config.filament, config.nativeSettings.get("filament_density")));
+        } else if (slice.supportFilamentMm == 0f) {
+            support = config.supports
+                    ? "0 g  ·  no support-tagged extrusion was emitted."
+                    : "0 g  ·  supports are off for this recipe.";
+        } else if (!config.supports) {
+            support = "0 g  ·  supports are off for this recipe.";
+        } else {
+            support = "Not reported separately; included, if present, in the engine's total filament figure.";
+        }
+        String scope = config.supports || slice.supportFilamentMm > 0f
                 ? "ENGINE FILAMENT TOTAL"
                 : "MODEL TOOLPATH FILAMENT";
-        String time = slice.printTimeSeconds < 0f ? "Not reported by engine" : duration(slice.printTimeSeconds);
+        String time = formatTime(slice);
+        String startup;
+        if (slice.startupFilamentMm >= 0f) {
+            startup = String.format(Locale.US,
+                    "%.1f mm pre-layer positive-E in exported G-code  ·  about %.1f g. "
+                            + "Printer-firmware flush and cleaning outside this G-code are not included.",
+                    slice.startupFilamentMm, grams(slice.startupFilamentMm, config.filamentDiameter,
+                            config.filament, config.nativeSettings.get("filament_density")));
+        } else {
+            startup = "Not included in this estimate. Startup priming, purge and cleaning waste are not currently modeled.";
+        }
         return new PrintPlanEstimate(slice.filamentMm,
                 grams(slice.filamentMm, config.filamentDiameter, config.filament,
                         config.nativeSettings.get("filament_density")),
                 scope,
                 support,
-                "Not available. This is not a verified multi-material or printer-telemetry estimate.",
+                startup,
                 time);
+    }
+
+    static String formatTime(Slicer.Result slice) {
+        if (slice == null || slice.printTimeSeconds < 0f) return "No time estimate reported";
+        String source;
+        if (Slicer.Result.PRINT_TIME_SOURCE_ESTIMATED.equals(slice.printTimeSource))
+            source = "slicer estimate; actual time may vary";
+        else if (Slicer.Result.PRINT_TIME_SOURCE_MODEL.equals(slice.printTimeSource))
+            source = "model time from file; actual time may vary";
+        else source = "slicer-reported time; actual time may vary";
+        return duration(slice.printTimeSeconds) + "  ·  " + source;
     }
 
     static float grams(float lengthMm, float diameterMm, String material, String profileDensity) {

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith;
 
 import ru.ytkab0bp.slicebeam.slic3r.Native;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +24,46 @@ import java.nio.file.Files;
 /** End-to-end on-device proof for the optional arm64 native slice path. */
 @RunWith(AndroidJUnit4.class)
 public final class NativeEngineSmokeTest {
+    private static final String G3_TRAVEL_OBSTACLE_TRANSFORM = "profiles/g3-travel-obstacle-transform.json";
+
+    @Test
+    public void g3ReferenceTransformRotatesOnlyTheTravelObstacleComparisonFixture() throws Exception {
+        Context target = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        MeshModel cube;
+        MeshModel obstacle;
+        try (InputStream input = target.getAssets().open("models/box-20mm.stl")) {
+            cube = MeshModel.read("box-20mm.stl", input);
+        }
+        try (InputStream input = target.getAssets().open("models/travel_obstacle.stl")) {
+            obstacle = MeshModel.read("travel_obstacle.stl", input);
+        }
+
+        Assert.assertSame("ordinary G3 fixtures keep their original orientation", cube,
+                applyG3ReferenceTransform("box-20mm.stl", cube));
+        MeshModel rotated = applyG3ReferenceTransform("travel_obstacle.stl", obstacle);
+        Assert.assertNotSame("only the G3 comparison copy is transformed", obstacle, rotated);
+        Assert.assertEquals(obstacle.maxY - obstacle.minY, rotated.maxX - rotated.minX, 0.001f);
+        Assert.assertEquals(obstacle.maxX - obstacle.minX, rotated.maxY - rotated.minY, 0.001f);
+        int asymmetricVertex = -1;
+        float centerX = (obstacle.minX + obstacle.maxX) / 2f;
+        float centerY = (obstacle.minY + obstacle.maxY) / 2f;
+        for (int i = 0; i < obstacle.vertices.length; i += 3) {
+            if (Math.abs(obstacle.vertices[i] - centerX)
+                    + Math.abs(obstacle.vertices[i + 1] - centerY) > 0.001f) {
+                asymmetricVertex = i;
+                break;
+            }
+        }
+        Assert.assertTrue("fixture must contain a vertex that distinguishes rotation direction",
+                asymmetricVertex >= 0);
+        Assert.assertEquals("3MF row-vector matrix maps x to positive y under Java's conventional rotation",
+                centerX + obstacle.vertices[asymmetricVertex + 1] - centerY,
+                rotated.vertices[asymmetricVertex], 0.001f);
+        Assert.assertEquals("3MF row-vector matrix maps y to negative x under Java's conventional rotation",
+                centerY - obstacle.vertices[asymmetricVertex] + centerX,
+                rotated.vertices[asymmetricVertex + 1], 0.001f);
+    }
+
     @Test
     public void slicesBundledCubeAndStagesValidatedPackage() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
@@ -29,22 +71,31 @@ public final class NativeEngineSmokeTest {
         ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
         Slicer.Config config = new Slicer.Config();
         profile.applyTo(config);
+        config.nativeSettings.put("curr_bed_type", "Cool Plate");
+        config.nativeSettings.put("cool_plate_temp", "35");
+        config.nativeSettings.put("cool_plate_temp_initial_layer", "35");
 
-        assertSlicesAndStages(context, config, "box-20mm.stl", "native-smoke-box");
+        Slicer.Result result = assertSlicesAndStages(context, config, "box-20mm.stl", "native-smoke-box");
+        Assert.assertTrue("native startup must heat the selected Cool Plate, not the generic profile bed",
+                result.gcode.contains("M140 S35\n"));
+        Assert.assertTrue("native startup must wait for the selected Cool Plate temperature",
+                result.gcode.contains("M190 S35\n"));
     }
 
-    @Test(timeout = 240_000)
+    @Test(timeout = 480_000)
     public void slicesAndStagesReviewOnlyPackagesForAllThreeInitialBambuProfiles() throws Exception {
         Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         java.util.List<ProfileCatalog.Profile> profiles = ProfileCatalog.loadInitial(context.getAssets());
         Assert.assertEquals("the initial Bambu cohort must remain A1 Mini, A1 and P1S", 3, profiles.size());
-        MeshModel mesh;
-        try (InputStream input = context.getAssets().open("models/box-20mm.stl")) {
-            mesh = MeshModel.read("box-20mm.stl", input);
-        }
         NativeSlicerEngine engine = new NativeSlicerEngine(context.getCacheDir(), false);
         String[] printerIds = {"bambu.a1-mini", "bambu.a1", "bambu.p1s"};
+        String[] fixtures = {
+                "box-20mm.stl",
+                "overhang-support-fixture.stl",
+                "thin-wall-frame-fixture.stl",
+                "travel_obstacle.stl"
+        };
         for (int i = 0; i < printerIds.length; i++) {
             ProfileCatalog.Profile profile = profiles.get(i);
             Assert.assertEquals("profiles must keep their documented order", printerIds[i], profile.printerId);
@@ -57,32 +108,50 @@ public final class NativeEngineSmokeTest {
             Assert.assertEquals(profile.nozzleTemperature, config.nozzleTemperature, 0.001f);
             Assert.assertEquals(profile.bedTemperature, config.bedTemperature, 0.001f);
 
-            Slicer.Result result = engine.slice(mesh, config, null);
-            Assert.assertEquals("each printer profile must reach the native slicer",
-                    NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
-            Assert.assertFalse("software smoke evidence must not qualify direct send", result.engineVerified);
-            Assert.assertFalse("native result must contain toolpaths", result.gcode.isEmpty());
-            Assert.assertFalse("native result must contain inspectable layers", result.layers.isEmpty());
-            Assert.assertTrue("selected nozzle temperature must reach the toolpath for " + profile.printerId,
-                    result.gcode.contains("M109 S" + Math.round(profile.nozzleTemperature)));
-            GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
-            Assert.assertTrue(profile.printerId + ": " + safety.summary(), safety.isValid());
-            Assert.assertTrue("toolpath must contain printable motion for " + profile.printerId,
-                    safety.hasPrintableMotion);
+            String selectedAcceleration = config.nativeSettings.get("default_acceleration");
+            Assert.assertNotNull("each initial printer profile must carry its source-backed default acceleration",
+                    selectedAcceleration);
+            String firstAcceleration = selectedAcceleration.split(",", 2)[0].trim();
+            for (String fixture : fixtures) {
+                MeshModel mesh;
+                try (InputStream input = context.getAssets().open("models/" + fixture)) {
+                    mesh = MeshModel.read(fixture, input);
+                }
+                Slicer.Config fixtureConfig = config.copy();
+                if (fixture.equals("overhang-support-fixture.stl")) fixtureConfig.supports = true;
 
-            File storage = new File(context.getCacheDir(), "native-profile-" + profile.printerId
-                    + "-" + System.nanoTime());
-            PrinterTransport.Artifact artifact = null;
-            try {
-                artifact = ArtifactStore.stage(storage, mesh, result, config,
-                        "native-profile-" + profile.printerId);
-                Assert.assertTrue("profile package must be non-empty for " + profile.printerId,
-                        artifact.sizeBytes > 0L);
-                GcodePackageValidator.validate(artifact.sourceFile, config);
-            } finally {
-                if (artifact != null && artifact.sourceFile.exists())
-                    Assert.assertTrue(artifact.sourceFile.delete());
-                if (storage.exists()) Assert.assertTrue(storage.delete());
+                Slicer.Result result = engine.slice(mesh, fixtureConfig, null);
+                String scope = profile.printerId + " / " + fixture;
+                Assert.assertEquals(scope + " must reach the native slicer",
+                        NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
+                Assert.assertFalse("software smoke evidence must not qualify direct send", result.engineVerified);
+                Assert.assertFalse(scope + " must contain toolpaths", result.gcode.isEmpty());
+                Assert.assertFalse(scope + " must contain inspectable layers", result.layers.isEmpty());
+                Assert.assertTrue(scope + " must use the selected nozzle temperature",
+                        result.gcode.contains("M109 S" + Math.round(profile.nozzleTemperature)));
+                Assert.assertTrue(scope + " must use the source-backed profile acceleration",
+                        result.gcode.contains("M204 S" + Math.round(Float.parseFloat(firstAcceleration))));
+                GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
+                Assert.assertTrue(scope + ": " + safety.summary(), safety.isValid());
+                Assert.assertTrue(scope + " must contain printable motion", safety.hasPrintableMotion);
+                if (fixtureConfig.supports) {
+                    Assert.assertTrue(scope + " must include support toolpaths",
+                            result.gcode.contains(";TYPE:Support"));
+                }
+
+                File storage = new File(context.getCacheDir(), "native-profile-" + profile.printerId
+                        + "-" + fixture + "-" + System.nanoTime());
+                PrinterTransport.Artifact artifact = null;
+                try {
+                    artifact = ArtifactStore.stage(storage, mesh, result, fixtureConfig,
+                            "native-profile-" + profile.printerId + "-" + fixture);
+                    Assert.assertTrue(scope + " package must be non-empty", artifact.sizeBytes > 0L);
+                    GcodePackageValidator.validate(artifact.sourceFile, fixtureConfig);
+                } finally {
+                    if (artifact != null && artifact.sourceFile.exists())
+                        Assert.assertTrue(artifact.sourceFile.delete());
+                    if (storage.exists()) Assert.assertTrue(storage.delete());
+                }
             }
         }
     }
@@ -156,6 +225,33 @@ public final class NativeEngineSmokeTest {
         assertSlicesAndStages(context, config, "travel_obstacle.stl", "native-smoke-travel-obstacle");
     }
 
+    @Test(timeout = 480_000)
+    public void nonOrganicTreeSupportPruningKeepsOverhangToolpathsValid() throws Exception {
+        Assume.assumeTrue("Run this test with -PalloyNativeEngine=true", BuildConfig.NATIVE_ENGINE_ENABLED);
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        ProfileCatalog.Profile profile = ProfileCatalog.loadDefault(context.getAssets());
+        Slicer.Config config = new Slicer.Config();
+        profile.applyTo(config);
+        config.supports = true;
+        // The ordinary "tree" choice maps to tree_slim and enters TreeSupport::draw_circles();
+        // organic remains on the separate TreeSupport3D path.
+        config.nativeSettings.put("support_material_style", "tree");
+
+        MeshModel mesh;
+        try (InputStream input = context.getAssets().open("models/overhang-support-fixture.stl")) {
+            mesh = MeshModel.read("overhang-support-fixture.stl", input);
+        }
+        NativeSlicerEngine engine = new NativeSlicerEngine(context.getCacheDir(), false);
+        Slicer.Result result = engine.slice(mesh, config, null);
+        Assert.assertEquals(NativeSlicerEngine.ORCA_NATIVE_ENGINE_ID, result.engineId);
+        Assert.assertFalse("software regression output must remain unqualified", result.engineVerified);
+        Assert.assertTrue("tree-style overhang must produce support geometry",
+                result.gcode.contains(";TYPE:Support"));
+        GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
+        Assert.assertTrue(safety.summary(), safety.isValid());
+        Assert.assertTrue("tree-style overhang output must contain printable motion", safety.hasPrintableMotion);
+    }
+
     @Test
     public void typedRecipeOwnsOverlappingNativeSettings() throws Exception {
         // Config projection is pure Java and must be covered by the ordinary
@@ -168,6 +264,19 @@ public final class NativeEngineSmokeTest {
         File defaultConfigFile = new File(context.getCacheDir(), "native-config-default-brim.ini");
         NativeSlicerEngine.writeConfig(config, defaultConfigFile);
         String defaultSerialized = new String(Files.readAllBytes(defaultConfigFile.toPath()), StandardCharsets.US_ASCII);
+        Assert.assertTrue(defaultSerialized.contains("cool_plate_temp = 60"));
+        Assert.assertTrue(defaultSerialized.contains("cool_plate_temp_initial_layer = 60"));
+        Slicer.Config selectedCoolPlateConfig = config.copy();
+        selectedCoolPlateConfig.nativeSettings.put("curr_bed_type", "Cool Plate");
+        selectedCoolPlateConfig.nativeSettings.put("cool_plate_temp", "35");
+        selectedCoolPlateConfig.nativeSettings.put("cool_plate_temp_initial_layer", "35");
+        File coolPlateConfigFile = new File(context.getCacheDir(), "native-config-selected-cool-plate.ini");
+        NativeSlicerEngine.writeConfig(selectedCoolPlateConfig, coolPlateConfigFile);
+        String coolPlateSerialized = new String(Files.readAllBytes(coolPlateConfigFile.toPath()), StandardCharsets.US_ASCII);
+        Assert.assertTrue("machine start must use the selected plate temperature",
+                coolPlateSerialized.contains("M140 S35\\n"));
+        Assert.assertTrue("machine start wait must use the selected plate temperature",
+                coolPlateSerialized.contains("M190 S35\\n"));
         Assert.assertTrue(defaultSerialized.contains("brim_type = no_brim"));
         Assert.assertTrue(defaultSerialized.contains("brim_width = 0"));
         Assert.assertTrue(defaultSerialized.contains("brim_object_gap = 0"));
@@ -302,7 +411,8 @@ public final class NativeEngineSmokeTest {
             Assert.assertTrue(serialized.contains("support_tree_branch_diameter_double_wall = 0"));
             Assert.assertTrue(serialized.contains("support_tree_branch_distance = 5"));
             Assert.assertTrue(serialized.contains("support_tree_branch_diameter_angle = 5"));
-        Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 5"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_distance_organic = 1"));
+            Assert.assertTrue(serialized.contains("tree_support_branch_diameter_organic = 2"));
             Assert.assertTrue(serialized.contains("filament_max_volumetric_speed = 21"));
             Assert.assertTrue(serialized.contains("max_volumetric_speed = 0"));
             Assert.assertTrue(serialized.contains("gcode_flavor = marlin2"));
@@ -369,6 +479,34 @@ public final class NativeEngineSmokeTest {
         Slicer.Result result = new NativeSlicerEngine(context.getCacheDir(), false).slice(mesh, config, null);
         Assert.assertTrue(result.gcode.contains("M109 S220"));
         Assert.assertFalse(result.gcode.contains("M109 S999"));
+    }
+
+    @Test
+    public void importedAutoBrimPreservesResolvedSkirtCount() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context testContext = InstrumentationRegistry.getInstrumentation().getContext();
+        ProfileCatalog.Profile profile = loadG3ReferenceProfile(context, testContext);
+        Slicer.Config config = new Slicer.Config();
+        profile.applyTo(config);
+        Assert.assertEquals("0", config.nativeSettings.get("skirts"));
+
+        File configFile = new File(context.getCacheDir(), "native-config-resolved-skirt-count.ini");
+        try {
+            NativeSlicerEngine.writeConfig(config, configFile);
+            String serialized = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.US_ASCII);
+            Assert.assertTrue(serialized.contains("brim_type = auto_brim\n"));
+            Assert.assertTrue(serialized.contains("brim_width = 5\n"));
+            Assert.assertTrue("the desktop's explicit zero skirt count must not be synthesized into a skirt",
+                    serialized.contains("skirt_loops = 0\n"));
+
+            config.nativeSettings.put("skirts", "2");
+            NativeSlicerEngine.writeConfig(config, configFile);
+            serialized = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.US_ASCII);
+            Assert.assertTrue("an explicitly requested skirt count must still be preserved",
+                    serialized.contains("skirt_loops = 2\n"));
+        } finally {
+            if (configFile.exists()) Assert.assertTrue(configFile.delete());
+        }
     }
 
     @Test(timeout = 30_000)
@@ -514,7 +652,13 @@ public final class NativeEngineSmokeTest {
         String travelSlope = requestedTravelSlope(arguments);
         if (travelSlope != null) config.nativeSettings.put("travel_slope", travelSlope);
         boolean arcFitting = requestedArcFitting(arguments);
-        if (arcFitting) config.nativeSettings.put("arc_fitting", "emit_center");
+        // The retained desktop G3 project explicitly resolves
+        // enable_arc_fitting=0. Do not let the shipped phone profile's
+        // arc-fitting default leak into the parity fixture; the optional
+        // experiment opts back in without changing production recipes.
+        config.nativeSettings.put("arc_fitting", arcFitting ? "emit_center" : "disabled");
+        Assert.assertEquals("G3 evidence must use the requested desktop arc-fitting mode",
+                arcFitting ? "emit_center" : "disabled", config.nativeSettings.get("arc_fitting"));
         File evidenceDir = new File(context.getExternalFilesDir(null), "alloy-g3-evidence");
         if (!evidenceDir.exists()) Assert.assertTrue(evidenceDir.mkdirs());
         copyAsset(context, "profiles/a1-mini-0.4-pla-basic.json",
@@ -536,7 +680,7 @@ public final class NativeEngineSmokeTest {
                     StandardCharsets.UTF_8);
             Assert.assertFalse("auto-brim must not force a fixed outer brim on the stable obstacle fixture",
                     obstacleGcode.contains(";TYPE:Brim"));
-            Assert.assertTrue("auto-brim must preserve Bambu's fallback skirt",
+            Assert.assertFalse("the exact desktop fixture resolves skirt_loops=0",
                     obstacleGcode.contains(";TYPE:Skirt"));
         }
         Slicer.Config supportConfig = config.copy();
@@ -846,12 +990,36 @@ public final class NativeEngineSmokeTest {
         try (InputStream input = context.getAssets().open("models/" + assetName)) {
             mesh = MeshModel.read(assetName, input);
         }
+        mesh = applyG3ReferenceTransform(assetName, mesh);
         Slicer.Result result = new NativeSlicerEngine(context.getCacheDir(), false)
                 .slice(mesh, config.copy(), null);
         GcodeSafetyValidator.Report safety = GcodeSafetyValidator.inspect(result.gcode);
         Assert.assertTrue(safety.summary(), safety.isValid());
         Files.write(new File(evidenceDir, outputName).toPath(),
                 result.gcode.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Applies the desktop G3 arrange rotation to this evidence copy only. */
+    private static MeshModel applyG3ReferenceTransform(String assetName, MeshModel mesh) throws Exception {
+        if (!"travel_obstacle.stl".equals(assetName)) return mesh;
+        Context instrumentationContext = InstrumentationRegistry.getInstrumentation().getContext();
+        JSONObject contract;
+        try (InputStream input = instrumentationContext.getAssets().open(G3_TRAVEL_OBSTACLE_TRANSFORM)) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int count;
+            while ((count = input.read(buffer)) >= 0) {
+                if (count > 0) bytes.write(buffer, 0, count);
+            }
+            contract = new JSONObject(new String(bytes.toByteArray(), StandardCharsets.UTF_8));
+        }
+        Assert.assertEquals("transform contract must stay fixture-specific", "travel_obstacle",
+                contract.getString("fixture"));
+        Assert.assertEquals("transform contract must stay test-only",
+                "test-only strict G3 comparison input transform", contract.getString("scope"));
+        Assert.assertEquals("transform angle must match the pinned desktop 3MF row-vector rotation", -90.0,
+                contract.getDouble("rotation_degrees"), 0.0);
+        return mesh.transformed(assetName, 1f, (float) contract.getDouble("rotation_degrees"));
     }
 
     private static void copyAsset(Context context, String assetName, File target) throws Exception {
