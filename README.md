@@ -10,8 +10,9 @@ The repository now contains a runnable Android application. It can:
 - show a touch-rotatable, pinch-zoomable model and its A1 Mini build plate;
 - edit the conservative v1 recipe (layer height and infill);
 - slice offline on-device into deterministic perimeter and clipped scanline-infill G-code;
-- inspect the generated toolpath one layer at a time; and
-- export an inspectable `.gcode.3mf` package through Android Storage Access Framework.
+- inspect the generated toolpath one layer at a time;
+- export an inspectable `.gcode.3mf` package through Android Storage Access Framework; and
+- launch with the alloy adaptive icon and a matching splash screen.
 
 This is a personal-use v1 foundation, not yet a replacement for OrcaSlicer. The current slicer does not implement organic/tree supports, multi-object arrangement, modifiers, multi-material, advanced cooling/seam logic, or verified Bambu metadata. Exported jobs must be opened and checked before any physical print. The app intentionally does not expose a misleading one-tap Print button until the engine/profile and LAN transport gates are proven.
 

@@ -38,6 +38,7 @@ public final class MainActivity extends Activity {
     private final Slicer.Config config = new Slicer.Config();
 
     @Override public void onCreate(Bundle state) {
+        setTheme(R.style.AppTheme); // swap out of Theme.Alloy.Starting once the window is ready
         super.onCreate(state);
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
