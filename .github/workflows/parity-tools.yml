@@ -1,0 +1,50 @@
+name: Parity tooling checks
+
+on:
+  push:
+    branches: [stage1-gates-prep]
+    paths:
+      - 'parity/**'
+      - '.github/workflows/parity-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tools:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile Python tools
+        run: |
+          python3 -m py_compile parity/*.py
+
+      - name: Run profile resolver tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_profile_resolver.py
+
+      - name: Run G-code comparator tests
+        working-directory: parity
+        run: |
+          python3 -m unittest -v test_compare_gcode.py
+
+      - name: Generate deterministic geometry fixtures
+        run: |
+          rm -rf parity/generated-fixtures
+          python3 parity/generate_fixtures.py --out parity/generated-fixtures
+          test -s parity/generated-fixtures/cube_20mm.stl
+          test -s parity/generated-fixtures/overhang_support.stl
+          test -s parity/generated-fixtures/thin_wall_frame.stl
+          sha256sum parity/generated-fixtures/*.stl | tee parity/generated-fixtures/SHA256SUMS
+
+      - name: Upload fixture evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-generated-fixtures
+          path: parity/generated-fixtures
+          if-no-files-found: error

@@ -1,0 +1,82 @@
+name: G2 Orca engine provenance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/g2-orca-engine-provenance.yml'
+      - 'ci/identify_orca_engine.py'
+      - 'ci/find_orca_profile_anchor.py'
+      - 'docs/UPSTREAM_EVALUATION.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ORCA_MOBILE_REPO: https://github.com/CodeMasterCody3D/OrcaSlicer-Mobile.git
+  ORCA_MOBILE_SHA: d996a9cadb65b354997f2d5d8734b46bb9ea4efd
+  ORCA_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
+
+jobs:
+  provenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out Alloy gate scripts
+        uses: actions/checkout@v4
+
+      - name: Clone pinned OrcaSlicer-Mobile source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$ORCA_MOBILE_REPO" mobile
+          git -C mobile checkout --detach "$ORCA_MOBILE_SHA"
+          test "$(git -C mobile rev-parse HEAD)" = "$ORCA_MOBILE_SHA"
+
+      - name: Clone official OrcaSlicer history
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --single-branch --branch main "$ORCA_REPO" orca
+          git -C orca rev-parse HEAD
+
+      - name: Locate bundled BBL profile in official history
+        id: profile_anchor
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 ci/find_orca_profile_anchor.py mobile orca g2-evidence 2>&1 | tee g2-profile-anchor.log
+          status=${PIPESTATUS[0]}
+          cp g2-profile-anchor.log g2-evidence/profile-anchor-run.log || true
+          exit "$status"
+
+      - name: Match mobile engine tree to official history
+        id: provenance
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 ci/identify_orca_engine.py mobile orca g2-evidence 2>&1 | tee g2-run.log
+          status=${PIPESTATUS[0]}
+          cp g2-run.log g2-evidence/run.log || true
+          exit "$status"
+
+      - name: Upload G2 provenance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g2-orca-engine-provenance
+          path: g2-evidence
+          if-no-files-found: error
+
+      - name: Enforce G2 evidence thresholds
+        if: steps.profile_anchor.outcome != 'success' || steps.provenance.outcome != 'success'
+        shell: bash
+        run: |
+          echo 'G2 did not reach all documented provenance thresholds.' >&2
+          cat g2-evidence/G2_BBL_PROFILE_ANCHOR.md 2>/dev/null || true
+          cat g2-evidence/G2_PROVENANCE.md 2>/dev/null || true
+          exit 1

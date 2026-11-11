@@ -1,0 +1,145 @@
+name: Desktop Orca A1 Mini reference slices
+
+on:
+  push:
+    branches: [stage1-runtime-parity]
+    paths:
+      - '.github/workflows/desktop-orca-reference.yml'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/generate_fixtures.py'
+      - 'parity/verify_gcode_3mf.py'
+  pull_request:
+    branches: [stage1-gates-prep]
+    paths:
+      - '.github/workflows/desktop-orca-reference.yml'
+      - 'parity/export_resolved_orca_profiles.py'
+      - 'parity/generate_fixtures.py'
+      - 'parity/verify_gcode_3mf.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ORCA_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
+  ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
+  ORCA_VERSION: 2.4.2
+  ORCA_APPIMAGE_URL: https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.4.2/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.4.2.AppImage
+
+jobs:
+  reference-slices:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate deterministic G3 geometry
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/generate_fixtures.py --out runtime/fixtures
+          sha256sum runtime/fixtures/*.stl | tee runtime/fixtures/SHA256SUMS
+
+      - name: Clone pinned Orca profile snapshot
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$ORCA_REPO" orca-profiles
+          git -C orca-profiles checkout --detach "$ORCA_PROFILE_SHA"
+          test "$(git -C orca-profiles rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
+
+      - name: Flatten pinned A1 Mini profiles
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 parity/export_resolved_orca_profiles.py orca-profiles runtime/profiles
+          sha256sum runtime/profiles/*.json | tee runtime/profiles/SHA256SUMS
+
+      - name: Install AppImage host OpenGL runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libopengl0 libglu1-mesa
+
+      - name: Download and extract OrcaSlicer 2.4.2 AppImage
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p runtime/orca
+          curl -L --fail --retry 3 -o runtime/orca/OrcaSlicer.AppImage "$ORCA_APPIMAGE_URL"
+          chmod +x runtime/orca/OrcaSlicer.AppImage
+          sha256sum runtime/orca/OrcaSlicer.AppImage | tee runtime/orca/SHA256SUMS
+          (
+            cd runtime/orca
+            ./OrcaSlicer.AppImage --appimage-extract >/dev/null
+          )
+          test -x runtime/orca/squashfs-root/AppRun
+
+      - name: Capture Orca CLI help/version evidence
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
+          mkdir -p runtime/evidence
+          "$ORCA" --help > runtime/evidence/orca-help.txt 2>&1 || true
+          head -n 120 runtime/evidence/orca-help.txt || true
+          grep -E -- '--load-settings|--load-filaments|--slice|--export-3mf' runtime/evidence/orca-help.txt || true
+
+      - name: Slice all three fixtures with pinned A1 Mini profiles
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
+          MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"
+          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/process.json"
+          FILAMENT="$GITHUB_WORKSPACE/runtime/profiles/filament.json"
+          mkdir -p runtime/orca-reference
+
+          for stl in runtime/fixtures/*.stl; do
+            name="$(basename "$stl" .stl)"
+            out="$GITHUB_WORKSPACE/runtime/orca-reference/$name"
+            mkdir -p "$out"
+            "$ORCA" \
+              --debug 2 \
+              --arrange 1 \
+              --slice 0 \
+              --load-settings "$MACHINE;$PROCESS" \
+              --load-filaments "$FILAMENT" \
+              --allow-newer-file \
+              --outputdir "$out" \
+              --export-3mf "$out/$name.gcode.3mf" \
+              "$GITHUB_WORKSPACE/$stl" \
+              > "$out/orca.log" 2>&1
+
+            python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
+          done
+
+      - name: Record authoritative baseline manifest
+        shell: bash
+        run: |
+          set -euxo pipefail
+          {
+            echo "OrcaSlicer release: v${ORCA_VERSION}"
+            echo "Orca profile source: ${ORCA_PROFILE_SHA}"
+            echo "Machine: Bambu Lab A1 mini 0.4 nozzle"
+            echo "Process: 0.20mm Standard @BBL A1M"
+            echo "Filament: Bambu PLA Basic @BBL A1M"
+            echo
+            sha256sum runtime/orca-reference/*/*.gcode.3mf
+          } > runtime/evidence/reference-manifest.txt
+          cat runtime/evidence/reference-manifest.txt
+
+      - name: Upload Orca reference slices
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a1mini-orca-2.4.2-reference-slices
+          path: |
+            runtime/orca-reference
+            runtime/profiles
+            runtime/fixtures/SHA256SUMS
+            runtime/orca/SHA256SUMS
+            runtime/evidence
+          if-no-files-found: error

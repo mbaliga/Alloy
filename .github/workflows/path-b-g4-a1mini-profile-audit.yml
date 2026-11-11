@@ -1,0 +1,67 @@
+name: Path B G4 A1 Mini profile audit
+
+on:
+  pull_request:
+    branches: [stage1-gates-prep]
+    paths:
+      - '.github/workflows/path-b-g4-a1mini-profile-audit.yml'
+      - 'parity/audit_path_b_a1mini_profile.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ORCA_REPO: https://github.com/OrcaSlicer/OrcaSlicer.git
+  ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
+  SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
+  SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+
+jobs:
+  profile-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone pinned Orca profile snapshot
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$ORCA_REPO" orca
+          git -C orca checkout --detach "$ORCA_PROFILE_SHA"
+          test "$(git -C orca rev-parse HEAD)" = "$ORCA_PROFILE_SHA"
+
+      - name: Clone pinned SliceBeam source
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --filter=blob:none --no-checkout "$SLICEBEAM_REPO" slicebeam
+          git -C slicebeam checkout --detach "$SLICEBEAM_SHA"
+          test "$(git -C slicebeam rev-parse HEAD)" = "$SLICEBEAM_SHA"
+
+      - name: Audit A1 Mini profile compatibility
+        id: audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p path-b-g4-evidence
+          python3 parity/audit_path_b_a1mini_profile.py orca slicebeam path-b-g4-evidence 2>&1 | tee path-b-g4-evidence/run.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload G4 static evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: path-b-g4-a1mini-profile-audit
+          path: path-b-g4-evidence
+          if-no-files-found: error
+
+      - name: Enforce critical-field compatibility
+        if: steps.audit.outcome != 'success'
+        shell: bash
+        run: |
+          cat path-b-g4-evidence/PATH_B_G4_PROFILE_AUDIT.md 2>/dev/null || true
+          exit 1

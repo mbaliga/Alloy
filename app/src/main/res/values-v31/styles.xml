@@ -1,0 +1,12 @@
+<resources>
+    <!-- API 31+: use the platform SplashScreen background attribute instead of the
+         windowBackground trick. windowSplashScreenAnimatedIcon is left unset so the system
+         falls back to the app's own adaptive launcher icon, which already carries the alloy
+         wordmark. There is no framework "postSplashScreenTheme" attribute to set here - that
+         name belongs to the androidx core-splashscreen compat library, which this module
+         doesn't depend on. MainActivity.onCreate() already calls setTheme(R.style.AppTheme)
+         before any content is drawn, which is what actually restores the normal theme. -->
+    <style name="Theme.Alloy.Starting" parent="AppTheme">
+        <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>
+    </style>
+</resources>
