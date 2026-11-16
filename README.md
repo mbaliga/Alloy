@@ -19,3 +19,7 @@ Engineering work that can proceed before that gate includes:
 ## Licensing
 
 Any engine-derived code incorporated from SliceBeam, OrcaSlicer-Mobile, OrcaSlicer, or PrusaSlicer will retain its required notices and comply with the applicable GNU AGPL-3.0 obligations.
+
+## Licence
+
+Source-available, free for noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE) (SPDX: `PolyForm-Noncommercial-1.0.0`). Copyright 2026 Madhav Baliga. For commercial use, contact the copyright holder.
