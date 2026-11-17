@@ -85,7 +85,9 @@ jobs:
       - name: Install into a click staging directory and check its layout
         run: |
           set -eu
-          DESTDIR="$PWD/stage" cmake --install build/ut
+          # Absolute --prefix instead of DESTDIR + the configure-time prefix /. : cmake 4.2.3 on the ubuntu-26.04
+          # runner failed with "file INSTALL given no DESTINATION" on the latter (not reproducible with 3.28/4.2.3 pip builds).
+          cmake --install build/ut --prefix "$PWD/stage"
           python3 ubuntu-touch/tools/check_click_layout.py stage --arch amd64
       - name: Upload screenshots (diagnostic; quota-limited so never fails the job)
         if: always()
