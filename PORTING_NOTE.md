@@ -100,3 +100,7 @@ Status: PLAN. Nothing here is built, run on a device, signed or submitted. This 
 - **Skin contract (OQ-39, 2026-10-14):** Alloy is not in the draft spec's app inventory (its app is on an unmerged branch), so no level is proposed; it declares one when its theme is mapped. The owner chose Tier 1 (palette) everywhere first and every app declaring its own level; the assistant chose JSON, not XML, after the owner asked for a check; the draft spec is Personal-Tracker `porting/skin-contract/SPEC-DRAFT.md`.
 
 When the owner confirms or changes the line, this repo's original cells above stay as the engineering detail; only the verdicts and re-costs in program section 5A.12 change.
+
+## Update 2026-11-17: iOS (owner directive overrides the no-port proposal)
+
+Status for iOS/iPadOS: **companion built, partly verified here, not a slicer port.** Details, evidence classes and owner actions: [`docs/IOS_PORT.md`](docs/IOS_PORT.md). The Swift core (G-code safety, plate planner, STL reader) is BUILT-HERE with golden parity against the Java sources; the SwiftUI shell and CI lanes (`.github/workflows/ios.yml`) are CODE-ONLY / CI-LANE-WRITTEN; device behaviour is NEEDS-DEVICE-VALIDATION. The slicing engine is not on iOS.

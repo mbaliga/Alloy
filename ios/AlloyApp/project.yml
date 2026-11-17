@@ -1,0 +1,44 @@
+# XcodeGen spec (https://github.com/yonaskolb/XcodeGen). `xcodegen generate` produces
+# Alloy.xcodeproj; the .xcodeproj is deliberately not committed.
+name: Alloy
+options:
+  bundleIdPrefix: com.asoc
+  deploymentTarget: { iOS: "16.0" }
+  createIntermediateGroups: true
+packages:
+  AlloyCore:
+    path: ../AlloyCore
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    # ---- OWNER-DECIDED IDENTIFIER (single config location) ------------------
+    # Apple bundle id rule: com.asoc.<appname>. NAMES.md (outside this repo) has
+    # no row for Alloy yet (plan rule R11) -> owner follow-up: add the row.
+    PRODUCT_BUNDLE_IDENTIFIER: com.asoc.alloy
+    # --------------------------------------------------------------------------
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Signing material is never in the repo. CI builds unsigned; the tag-gated
+    # archive job injects team/profile from a GitHub *environment* secret.
+    CODE_SIGNING_ALLOWED: "NO"
+    DEVELOPMENT_TEAM: ""
+targets:
+  Alloy:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: [Sources, Resources]
+    dependencies:
+      - package: AlloyCore
+    info:
+      path: Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Alloy
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportsDocumentBrowser: false
+        UIFileSharingEnabled: false
+        LSSupportsOpeningDocumentsInPlace: false
+        ITSAppUsesNonExemptEncryption: false
+        # No NSLocalNetworkUsageDescription / ATS exceptions: this build has no
+        # networking at all. Add them only together with the printer transport.

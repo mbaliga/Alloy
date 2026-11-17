@@ -4,7 +4,7 @@
 
 Alloy is Android-first for the foreseeable future. The phone is the primary workstation: importing a model, preparing it, slicing it, inspecting the result, exporting it and eventually sending it to a paired printer must not require a companion computer.
 
-Linux support is appreciated but intentionally frozen at the lightweight bridge/model-inspection milestone. It should share the engine, profile, project and transport contracts with Android rather than becoming a second product. iOS is intentionally deferred until the Android workflow and printer safety gates are proven.
+Linux support is appreciated but intentionally frozen at the lightweight bridge/model-inspection milestone. It should share the engine, profile, project and transport contracts with Android rather than becoming a second product. iOS was deferred until the Android workflow and printer safety gates are proven; on 2026-11-17 the owner directed an iOS build anyway. It ships only as a preparation and inspection companion (no slicing engine), see `docs/IOS_PORT.md`.
 
 ## Visual language
 
