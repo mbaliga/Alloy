@@ -1,0 +1,12 @@
+package com.mbaliga.alloy;
+import java.nio.file.*; import java.util.*;
+public class Dump { public static void main(String[] a) throws Exception {
+ StringBuilder sb=new StringBuilder();
+ for (String l: Files.readAllLines(Paths.get(a[0]))) { String[] p=l.split("\t",2);
+  byte[] b=new byte[p[1].length()/2]; for(int i=0;i<b.length;i++) b[i]=(byte)Integer.parseInt(p[1].substring(2*i,2*i+2),16);
+  String g=new String(b,"UTF-8");
+  GcodeSafetyValidator.Report r = p[0].equals("1") ? GcodeSafetyValidator.inspect(g,new Slicer.Config()) : GcodeSafetyValidator.inspect(g);
+  sb.append(p[0]).append('\t').append(p[1]).append('\t')
+    .append(r.hasAbsolutePositioning?1:0).append(r.hasExtrusionMode?1:0).append(r.hasStopTemperature?1:0).append(r.hasStopBed?1:0).append(r.hasHoming?1:0).append(r.hasMotion?1:0).append(r.hasPrintableMotion?1:0)
+    .append('\t').append(String.join("|",r.errors)).append('\n'); }
+ Files.write(Paths.get(a[1]), sb.toString().getBytes("UTF-8")); } }

@@ -1,0 +1,15 @@
+package com.mbaliga.alloy;
+import java.nio.file.*; import java.util.*;
+/** Input line: bedW bedD clearance n w0 d0 idx0 w1 d1 idx1 ... Output: placements or ERR:message. */
+public class PlanDump { public static void main(String[] a) throws Exception {
+ StringBuilder sb=new StringBuilder();
+ for (String l: Files.readAllLines(Paths.get(a[0]))) { String[] p=l.trim().split(" ");
+  float bw=Float.parseFloat(p[0]),bd=Float.parseFloat(p[1]),c=Float.parseFloat(p[2]); int n=Integer.parseInt(p[3]);
+  ArrayList<PlateArrangementPlanner.Part> parts=new ArrayList<>();
+  for(int i=0;i<n;i++) parts.add(new PlateArrangementPlanner.Part(Integer.parseInt(p[6+3*i]),Float.parseFloat(p[4+3*i]),Float.parseFloat(p[5+3*i])));
+  sb.append(l.trim()).append('\t');
+  try { for (PlateArrangementPlanner.Placement q: PlateArrangementPlanner.plan(parts,bw,bd,c))
+     sb.append(q.sourceIndex).append(',').append(Float.floatToIntBits(q.x)).append(',').append(Float.floatToIntBits(q.y)).append(',').append(Float.floatToIntBits(q.width)).append(',').append(Float.floatToIntBits(q.depth)).append(',').append((int)q.rotationDegrees).append(';');
+  } catch (IllegalArgumentException e) { sb.append("ERR:").append(e.getMessage()); }
+  sb.append('\n'); }
+ Files.write(Paths.get(a[1]), sb.toString().getBytes("UTF-8")); } }
