@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "evidence_only": true,
+  "g2_status": "FAIL",
+  "classification_policy": "Every file-level origin/port classification remains UNREVIEWED; visible difference categories are not ownership or semantic-equivalence findings.",
+  "source_refs": {
+    "mobile_repository": "CodeMasterCody3D/OrcaSlicer-Mobile",
+    "mobile_commit": "d996a9cadb65b354997f2d5d8734b46bb9ea4efd",
+    "mobile_root": "app/src/main/jni/libslic3r/",
+    "candidate_repository": "OrcaSlicer/OrcaSlicer",
+    "candidate_commit": "83738cacd84c616b62fc3cc15be8b65665569be8",
+    "candidate_root": "src/libslic3r/"
+  },
+  "files": [
+    {
+      "path": "PrintConfig.cpp",
+      "mobile_blob_sha": "9e22613c0a3cf106d85e32e95feaaf2c7449dd34",
+      "candidate_blob_sha": "c053cad8a9d9b28285aba1b34a1df539fdabbf87",
+      "mobile_line_count": 11621,
+      "candidate_line_count": 10494,
+      "difference_category": "slicer configuration definitions and printer-host integration",
+      "origin_port_classification": "UNREVIEWED",
+      "evidence": [
+        {"source": "mobile", "start_line": 807, "end_line": 827, "observation": "Physical-printer config includes bbl_use_printhost and printer_agent options; printer_agent is absent in candidate blob."},
+        {"source": "mobile", "start_line": 6443, "end_line": 6461, "observation": "Ordinary and organic tree-support branch distances are defined separately."},
+        {"source": "candidate", "start_line": 5758, "end_line": 5767, "observation": "Candidate defines the ordinary tree-support branch distance at a different location; options and defaults require broader review."}
+      ]
+    },
+    {
+      "path": "Config.cpp",
+      "mobile_blob_sha": "f017c75462f8d54a2431542788a01ff53bfea26d",
+      "candidate_blob_sha": "75935b217703c18b973cf5f2fd3dc6515323c76b",
+      "mobile_line_count": 1963,
+      "candidate_line_count": 1870,
+      "difference_category": "explicit SliceBeam config integration plus validation and diagnostics",
+      "origin_port_classification": "UNREVIEWED",
+      "evidence": [
+        {"source": "mobile", "start_line": 793, "end_line": 808, "observation": "Comment and branch explicitly restore flat INI loading for SliceBeam config."},
+        {"source": "candidate", "start_line": 786, "end_line": 790, "observation": "Corresponding INI load call is commented out."},
+        {"source": "mobile", "start_line": 321, "end_line": 335, "observation": "Mobile adds numeric value validation; impact on accepted settings requires testing."},
+        {"source": "mobile", "start_line": 1724, "end_line": 1748, "observation": "Mobile adds DynamicConfig diff reporting."}
+      ]
+    },
+    {
+      "path": "Preset.cpp",
+      "mobile_blob_sha": "9fbfe906c3228690a5170ef7e8f2fa0cd7177f45",
+      "candidate_blob_sha": "7c8b27d1faacf671dcf4a51bd068e0c7579630ce",
+      "mobile_line_count": 4410,
+      "candidate_line_count": 3958,
+      "difference_category": "mobile preset/cloud/bundle integration mixed with preset compatibility policy",
+      "origin_port_classification": "UNREVIEWED",
+      "evidence": [
+        {"source": "mobile", "start_line": 57, "end_line": 86, "observation": "PresetOrigin parser distinguishes local/subscribed bundle namespaces and bare names; PresetOrigin is absent in candidate blob."},
+        {"source": "mobile", "start_line": 586, "end_line": 600, "observation": "Info persistence skips project-embedded and bundled presets and includes sync state."},
+        {"source": "candidate", "start_line": 518, "end_line": 530, "observation": "Candidate checks project-embedded presets but has no bundle-origin branch here."},
+        {"source": "mobile", "start_line": 970, "end_line": 1005, "observation": "Mobile has a broad preset-transfer option list; later portions include support, filament, tree-support and G-code settings, which can affect preset compatibility."}
+      ]
+    },
+    {
+      "path": "PresetBundle.cpp",
+      "mobile_blob_sha": "1ace4db685643ee44a6f338c7e68a3ae71231a52",
+      "candidate_blob_sha": "062d3930ef0968540c93d316098cc01b6c55c9cf",
+      "mobile_line_count": 5562,
+      "candidate_line_count": 4418,
+      "difference_category": "app resource, preset-bundle import/selection, and active config resolution",
+      "origin_port_classification": "UNREVIEWED",
+      "evidence": [
+        {"source": "mobile", "start_line": 245, "end_line": 290, "observation": "find_preset_vendor searches packaged profile resources; helper is absent in candidate blob."},
+        {"source": "mobile", "start_line": 950, "end_line": 983, "observation": "Local bundle metadata and PresetOrigin are used while loading printer/process/filament presets; this origin-aware loading path is absent in candidate blob."},
+        {"source": "mobile", "start_line": 1138, "end_line": 1185, "observation": "apply_vendor_config uses AppConfig and installs selected bundles from resources; helper is absent in candidate blob."}
+      ]
+    },
+    {
+      "path": "GCode.cpp",
+      "mobile_blob_sha": "54b4d4bcff92aab321376e1dc7fba5acc0546915",
+      "candidate_blob_sha": "9b71918d2c9e23c690a92daa64426ed9c62b6666",
+      "mobile_line_count": 8272,
+      "candidate_line_count": 7654,
+      "difference_category": "G-code generation and Bambu-specific machine/template behavior",
+      "origin_port_classification": "UNREVIEWED",
+      "evidence": [
+        {"source": "mobile", "start_line": 97, "end_line": 105, "observation": "X2D-specific hotend placeholder mapping; helper is absent in candidate blob."},
+        {"source": "mobile", "start_line": 931, "end_line": 954, "observation": "Tool-change template config adds filament cooling, flush and interface values; these are generated-output semantics."},
+        {"source": "mobile", "start_line": 2547, "end_line": 2561, "observation": "Top-level file_start_gcode is processed with deferred time and filament placeholders; matching hook is absent in candidate blob."}
+      ]
+    },
+    {
+      "path": "GCode/GCodeProcessor.cpp",
+      "mobile_blob_sha": "08993b53661fa3dc3f0cc16ff43c0031dfe4e7c0",
+      "candidate_blob_sha": "9f7687d2c65937d160ce3bddc3714e90beee260b",
+      "mobile_line_count": 6101,
+      "candidate_line_count": 6043,
+      "difference_category": "G-code parsing, motion-time planning, and print-statistics post-processing",
+      "origin_port_classification": "UNREVIEWED",
+      "evidence": [
+        {"source": "mobile", "start_line": 315, "end_line": 350, "observation": "Planner forward/reverse kernels use different signatures and recalculation conditions from candidate."},
+        {"source": "candidate", "start_line": 340, "end_line": 373, "observation": "Candidate planner kernels use different control flow; this is not a formatting-only difference."},
+        {"source": "mobile", "start_line": 1108, "end_line": 1142, "observation": "Mobile replaces inline print_time_sec and used_filament_length placeholders during G-code processing."},
+        {"source": "mobile", "start_line": 1365, "end_line": 1378, "observation": "Layer changes are tracked by comparing the reserved marker after stripping BBL/compatible flavor variation."}
+      ]
+    }
+  ]
+}

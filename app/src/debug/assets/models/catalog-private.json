@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "path": "models/redmagic-keyboard-main-chassis-v04.stl",
+      "name": "Redmagic keyboard · v0.4 angled main chassis",
+      "author": "Owner-provided design",
+      "license": "Owner-provided · private visual review",
+      "source": "Redmagic Keyboard Case v0.4 print set · angled/main chassis STL",
+      "sha256": "c49e635e7120ef74f797eda82d8ee62e23647eb0c839ed758703d4ffbcf54fb9"
+    },
+    {
+      "path": "models/redmagic-keyboard-bezel-v04.stl",
+      "name": "Redmagic keyboard · v0.4 bezel",
+      "author": "Owner-provided design",
+      "license": "Owner-provided · private visual review",
+      "source": "Redmagic Keyboard Case v0.4 print set · angled/keyboard bezel STL",
+      "sha256": "de7f28ed8b4dcde707ac0377df863c2d3bbc2477905ef150f240764d65e89096"
+    },
+    {
+      "path": "models/redmagic-phone-sled-v04.stl",
+      "name": "Redmagic keyboard · v0.4 phone sled",
+      "author": "Owner-provided design",
+      "license": "Owner-provided · private visual review",
+      "source": "Redmagic Keyboard Case v0.4 print set · angled/phone sled STL",
+      "sha256": "bd78afb7436213de08ec3550374744d4264b7c6fc5befbd8fe61212985e10e03"
+    },
+    {
+      "path": "models/redmagic-service-hatch-v04.stl",
+      "name": "Redmagic keyboard · v0.4 service hatch",
+      "author": "Owner-provided design",
+      "license": "Owner-provided · private visual review",
+      "source": "Redmagic Keyboard Case v0.4 print set · angled/service hatch STL",
+      "sha256": "d047187e2828ee6b1d57459fef5e8e617cbcd401369ac9513e12f2c3d760be23"
+    },
+    {
+      "path": "models/redmagic-phone-corner-fit-test-v04.stl",
+      "name": "Redmagic keyboard · v0.4 phone corner fit test",
+      "author": "Owner-provided design",
+      "license": "Owner-provided · private visual review",
+      "source": "Redmagic Keyboard Case v0.4 print set · common/phone corner fit test STL",
+      "sha256": "557f8d7a0882e204d8bc526d10ec1c5544e1f3a9711918a9560bb0671a82334b"
+    },
+    {
+      "path": "models/redmagic-keyboard-case-assembly-v04-angled.step",
+      "name": "Redmagic keyboard · v0.4 angled editable assembly",
+      "author": "Owner-provided design",
+      "license": "Owner-provided · private visual review",
+      "source": "Redmagic Keyboard Case v0.4 print set · positioned editable STEP assembly",
+      "sha256": "2fc0f237c50eec6b87e68624ac1b40fe66b5b0e2def6930690edaa13ca9010c5"
+    },
+    {
+      "path": "models/a1-mini-v5-owner.3mf",
+      "name": "Bambu Lab A1 Mini · v5 owner reference 3MF",
+      "author": "Owner-provided reference",
+      "license": "Owner-provided · private visual review",
+      "source": "Bambu Lab A1 Mini v5 3MF supplied for Alloy visual/model inspection",
+      "sha256": "ff5c34d0e0bb259973e1ff2aacc8912cd228bf8e5c9f72a8058f759b6280bca7"
+    }
+  ]
+}
