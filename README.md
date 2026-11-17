@@ -23,3 +23,5 @@ Any engine-derived code incorporated from SliceBeam, OrcaSlicer-Mobile, OrcaSlic
 ## Licence
 
 Source-available, free for noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE) (SPDX: `PolyForm-Noncommercial-1.0.0`). Copyright 2026 Madhav Baliga. For commercial use, contact the copyright holder.
+
+Multi-platform porting disposition (nothing to port today): see [`PORTING_NOTE.md`](PORTING_NOTE.md).
