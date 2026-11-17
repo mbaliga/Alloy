@@ -235,4 +235,4 @@ The optional native tree and its source provenance are tracked in `THIRD_PARTY_N
 
 `LICENSE` is the GNU AGPL-3.0 text carried by the real app branch: the vendored/derived engine code is AGPL, so a build that contains it cannot be distributed under a noncommercial-only licence. The PolyForm Noncommercial 1.0.0 text added on `main` in #15 (Copyright 2026 Madhav Baliga) is preserved verbatim at `LICENSES/PolyForm-Noncommercial-1.0.0.txt` so the owner decision is not lost; it may still apply to Alloy-authored code that contains no engine-derived code. Which governs what is an OWNER decision (see `docs/IOS_PORT.md`).
 
-Multi-platform porting disposition: see [`PORTING_NOTE.md`](PORTING_NOTE.md); iOS port status: [`docs/IOS_PORT.md`](docs/IOS_PORT.md).
+Multi-platform porting disposition: see [`PORTING_NOTE.md`](PORTING_NOTE.md); iOS port status: [`docs/IOS_PORT.md`](docs/IOS_PORT.md); Ubuntu Touch port status: [`docs/UBUNTU_TOUCH_PORT.md`](docs/UBUNTU_TOUCH_PORT.md).

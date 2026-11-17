@@ -104,3 +104,7 @@ When the owner confirms or changes the line, this repo's original cells above st
 ## Update 2026-11-17: iOS (owner directive overrides the no-port proposal)
 
 Status for iOS/iPadOS: **companion built, partly verified here, not a slicer port.** Details, evidence classes and owner actions: [`docs/IOS_PORT.md`](docs/IOS_PORT.md). The Swift core (G-code safety, plate planner, STL reader) is BUILT-HERE with golden parity against the Java sources; the SwiftUI shell and CI lanes (`.github/workflows/ios.yml`) are CODE-ONLY / CI-LANE-WRITTEN; device behaviour is NEEDS-DEVICE-VALIDATION. The slicing engine is not on iOS.
+
+## Update 2026-11-17: Ubuntu Touch (owner directive overrides the no-port proposal)
+
+Status for Ubuntu Touch: **companion built, partly verified here, not a slicer port.** Details, evidence classes and owner actions: [`docs/UBUNTU_TOUCH_PORT.md`](docs/UBUNTU_TOUCH_PORT.md). The C++17 core (G-code safety, plate planner, STL reader) is BUILT-HERE with golden parity against the Java sources (same fixtures as iOS); the Qt 5.15/QML shell is BUILT-HERE only as a headless x86_64 smoke test; the Content Hub picker is CODE-ONLY; the Clickable click lanes (`.github/workflows/ubuntu-touch.yml`) are CI-LANE-WRITTEN; device behaviour is NEEDS-DEVICE-VALIDATION. The slicing engine is not on Ubuntu Touch, and Waydroid is not offered as a port.
