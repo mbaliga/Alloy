@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: swift test
         working-directory: ios/AlloyCore
-        run: swift test 2>&1 | tee swift-test.log
+        run: swift test
 
   parity-vs-java:
     name: Regenerate Java golden corpora and require no diff

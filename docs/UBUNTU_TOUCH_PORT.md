@@ -15,7 +15,7 @@ Waydroid would not be a port either (owner ruling OQ-21) and nothing here depend
 | Capability | Ubuntu Touch today | Evidence class |
 |---|---|---|
 | G-code safety preflight (same invariants as Android, incl. bed/Z/arc bounds) | `ubuntu-touch/core` `inspectGcode` + streaming `GcodeStream` | BUILT-HERE (x86_64, gcc 13): the 1,508-case golden corpus produced by the real Java class matches exactly |
-| Plate arrangement (best-fit shelf, 0/90 deg) | `planPlate` | BUILT-HERE: 600-case bit-exact float parity vs Java (344 of those are error cases) |
+| Plate arrangement (best-fit shelf, 0/90 deg) | `planPlate` | BUILT-HERE: 670-case bit-exact float parity vs Java (356 are error cases; includes 70 boundary cases around the 0.0001 epsilon, and a mutated epsilon is detected) |
 | STL import (binary + ASCII), bounds | `readStl` | BUILT-HERE: unit tests only; not corpus-diffed against Java |
 | Preparation session (import, remove, plate review) | `PreparationSession` | BUILT-HERE: unit tests |
 | Core under AddressSanitizer + UBSan | same tests | BUILT-HERE: clean |

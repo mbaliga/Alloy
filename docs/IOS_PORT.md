@@ -15,7 +15,7 @@ says so on every screen that could be mistaken for slicing, and its output is ne
 | Capability | iOS today | Evidence class |
 |---|---|---|
 | G-code safety preflight (same invariants as Android, incl. bed/Z/arc bounds) | `AlloyCore.GcodeSafetyValidator` | BUILT-HERE (Linux Swift 6.0.3): 1,508-case golden corpus produced by the real Java class matches exactly |
-| Plate arrangement (best-fit shelf, 0/90 deg) | `AlloyCore.PlateArrangementPlanner` | BUILT-HERE: 600-case bit-exact float parity vs Java |
+| Plate arrangement (best-fit shelf, 0/90 deg) | `AlloyCore.PlateArrangementPlanner` | BUILT-HERE: 670-case bit-exact float parity vs Java (356 are error cases; includes epsilon-boundary cases) |
 | STL import (binary + ASCII), bounds | `AlloyCore.StlReader` | BUILT-HERE (unit tests; not corpus-diffed against Java) |
 | Preparation session logic (import, remove, plate review) | `AlloyCore.PreparationSession` | BUILT-HERE (unit tests) |
 | SwiftUI shell (Models, Plate, G-code, About) | `ios/AlloyApp` | CODE-ONLY: `swiftc -parse` syntax check only; never type-checked against SwiftUI, never built with Xcode |

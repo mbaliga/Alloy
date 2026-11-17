@@ -27,11 +27,11 @@ targets:
     type: application
     platform: iOS
     deploymentTarget: "16.0"
-    sources: [Sources, Resources]
+    sources: [Sources]
     dependencies:
       - package: AlloyCore
     info:
-      path: Resources/Info.plist
+      path: Generated/Info.plist
       properties:
         CFBundleDisplayName: Alloy
         UILaunchScreen: {}
