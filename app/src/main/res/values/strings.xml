@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Alloy</string>
+    <string name="app_description">Phone-first 3D printing workspace</string>
+</resources>

@@ -1,0 +1,225 @@
+package com.mbaliga.alloy;
+
+import android.content.res.AssetManager;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+/** Source-labelled printer/material capability data. "Compatible" never means Alloy may send a job. */
+public final class PrinterCapabilityCatalog {
+    private static final String ASSET = "capabilities/bambu-initial-v1.json";
+
+    public static final class Material {
+        public final String id, name, bambuStatus, directSendState, note, sourceUrl, amsLiteStatus, amsLiteSourceUrl;
+        Material(JSONObject o) {
+            id = need(o, "id"); name = need(o, "name"); bambuStatus = need(o, "bambu_status");
+            directSendState = need(o, "alloy_direct_send"); note = need(o, "note");
+            sourceUrl = officialSourceUrl(o, "source_url");
+            amsLiteStatus = o.optString("ams_lite_status", "").trim();
+            amsLiteSourceUrl = amsLiteStatus.isEmpty() ? "" : officialSourceUrl(o, "ams_lite_source_url");
+        }
+    }
+    public static final class FeedRoute {
+        public final String id, title, state, note, sourceUrl;
+        FeedRoute(JSONObject o) {
+            id = need(o, "id"); title = need(o, "title"); state = need(o, "state"); note = need(o, "note");
+            sourceUrl = o.has("source_url") ? officialSourceUrl(o, "source_url") : "";
+        }
+    }
+    /** A physical spool/refill form; this is distinct from its material and feed route. */
+    public static final class SpoolForm {
+        public final String id, title, form, compatibleRoutes, geometry, state, note, source, sourceUrl;
+        SpoolForm(JSONObject o) {
+            id = need(o, "id"); title = need(o, "title"); form = need(o, "form");
+            compatibleRoutes = need(o, "compatible_routes"); geometry = need(o, "geometry");
+            state = need(o, "state"); note = need(o, "note"); source = need(o, "source");
+            sourceUrl = officialSourceUrl(o, "source_url");
+        }
+    }
+    public static final class Printer {
+        public final String id, name, buildVolume, nozzle, bed, source, sourceUrl, reviewed, directSendState;
+        public final List<Material> materials; public final List<FeedRoute> feedRoutes;
+        public final List<SpoolForm> spoolForms; public final List<String> spoolGuidance;
+        Printer(JSONObject o) {
+            id = need(o, "id"); name = need(o, "name"); buildVolume = need(o, "build_volume");
+            nozzle = need(o, "nozzle"); bed = need(o, "bed"); source = need(o, "source");
+            sourceUrl = officialSourceUrl(o, "source_url");
+            reviewed = need(o, "reviewed"); directSendState = need(o, "alloy_direct_send");
+            materials = materialList(o.optJSONArray("materials")); feedRoutes = routeList(o.optJSONArray("feed_routes"));
+            spoolForms = spoolFormList(o.optJSONArray("spool_forms"));
+            spoolGuidance = textList(o.optJSONArray("spool_guidance"), "spool guidance");
+        }
+    }
+    public final int version; public final List<Printer> printers;
+    private PrinterCapabilityCatalog(int version, List<Printer> printers) { this.version = version; this.printers = Collections.unmodifiableList(printers); }
+
+    public static PrinterCapabilityCatalog load(AssetManager assets) throws IOException {
+        try (InputStream input = assets.open(ASSET)) { return parse(read(input));
+        }
+    }
+
+    /** Package-local for corruption-regression tests; callers should use {@link #load(AssetManager)}. */
+    static PrinterCapabilityCatalog parse(byte[] bytes) throws IOException {
+        try {
+            JSONObject root = new JSONObject(new String(bytes, StandardCharsets.UTF_8));
+            int version = root.getInt("schema_version");
+            if (version != 1) throw new IOException("Unsupported capability catalog version: " + version);
+            JSONArray values = root.getJSONArray("printers"); ArrayList<Printer> printers = new ArrayList<>();
+            for (int i = 0; i < values.length(); i++) printers.add(new Printer(values.getJSONObject(i)));
+            validateInitialContract(printers);
+            return new PrinterCapabilityCatalog(version, printers);
+        } catch (IOException error) { throw error;
+        } catch (Exception error) { throw new IOException("Invalid capability catalog: " + error.getMessage(), error); }
+    }
+    public Printer byId(String id) { for (Printer printer : printers) if (printer.id.equals(id)) return printer; return null; }
+    /**
+     * Resolve the sourced material/feed/spool record for a planning profile.
+     * Planning profile IDs and capability-catalog IDs are separate namespaces;
+     * imported profiles are mapped only when their exact model slug is one of
+     * the three reviewed printers. This is an information lookup, not send
+     * approval and not proof that the attached printer matches the profile.
+     */
+    public Printer forProfile(ProfileCatalog.Profile profile) {
+        if (profile == null) return null;
+        if ("bambu.a1-mini".equals(profile.printerId)) return byId("a1-mini");
+        if ("bambu.a1".equals(profile.printerId)) return byId("a1");
+        if ("bambu.p1s".equals(profile.printerId)) return byId("p1s");
+        if (!"Bambu JSON preset import".equals(profile.provenanceSource)
+                || !profile.printerId.startsWith("bambu.imported.")) return null;
+        String model = profile.printerId.substring("bambu.imported.".length()).toLowerCase(Locale.US);
+        if (modelMatches(model, "bambu-lab-a1-mini")) return byId("a1-mini");
+        if (modelMatches(model, "bambu-lab-a1")) return byId("a1");
+        if (modelMatches(model, "bambu-lab-p1s")) return byId("p1s");
+        return null;
+    }
+
+    private static boolean modelMatches(String model, String base) {
+        return model.equals(base) || model.matches(java.util.regex.Pattern.quote(base) + "-0-[0-9]+-nozzle");
+    }
+    private static boolean has(List<Printer> printers, String id) { for (Printer p : printers) if (p.id.equals(id)) return true; return false; }
+    /**
+     * CI validates the source file too, but this check keeps a malformed or
+     * accidentally broadened packaged asset from changing user-visible safety
+     * state after the app has been built.
+     */
+    private static void validateInitialContract(List<Printer> printers) throws IOException {
+        if (printers.size() != 3 || !has(printers, "a1-mini") || !has(printers, "a1") || !has(printers, "p1s")
+                || !uniquePrinterIds(printers))
+            throw new IOException("Initial catalog must contain exactly A1 mini, A1 and P1S");
+        for (Printer printer : printers) {
+            if (!unavailable(printer.directSendState))
+                throw new IOException(printer.id + " must remain not qualified for Alloy direct send");
+            if (!uniqueIds(printer.materials, "material") || !uniqueIds(printer.feedRoutes, "feed route")
+                    || !uniqueIds(printer.spoolForms, "spool form"))
+                throw new IOException(printer.id + " has duplicate capability identifiers");
+            for (Material material : printer.materials) if (!unavailable(material.directSendState))
+                throw new IOException(printer.id + " material " + material.id + " cannot qualify direct send");
+        }
+        Printer mini = null;
+        Printer a1 = null, p1s = null;
+        for (Printer printer : printers) if ("a1-mini".equals(printer.id)) mini = printer;
+        else if ("a1".equals(printer.id)) a1 = printer;
+        else if ("p1s".equals(printer.id)) p1s = printer;
+        if (mini == null || !ids(mini.materials).equals(setOf("pla", "petg", "tpu", "pva", "support-pla", "support-petg", "abs", "asa", "pc", "pa", "pet", "bambu-pla-cf", "petg-cf", "cf-gf-filled", "bvoh", "pp", "pom", "hips", "bambu-paht-cf", "pla-glow", "pet-cf", "pa6-cf", "tpu-95a", "tpe"))
+                || !ids(mini.spoolForms).equals(setOf("bambu-spooled", "bambu-refill", "third-party-direct", "regular-ams-spool"))
+                || !ids(mini.feedRoutes).equals(setOf("external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht")))
+            throw new IOException("A1 mini capability coverage is incomplete");
+        for (FeedRoute route : mini.feedRoutes) {
+            if (setOf("regular-ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.state.contains("A1 Series AMS Hub")
+                    || !route.note.contains("01.06.10.33") || !route.note.contains("Do not mix AMS Lite")))
+                throw new IOException("A1 mini " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
+        }
+        if (a1 == null || !ids(a1.materials).equals(setOf("pla", "petg", "tpu", "pva", "abs", "asa", "pc", "pa", "pet", "cf-gf-filled"))
+                || !ids(a1.feedRoutes).equals(setOf("external-direct", "ams-lite", "regular-ams", "ams-2-pro", "ams-ht"))
+                || !ids(a1.spoolForms).contains("ams-hub-spool"))
+            throw new IOException("A1 capability coverage must disclose each sourced material class separately");
+        for (Material material : a1.materials) if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
+            throw new IOException("A1 material " + material.id + " lacks sourced AMS Lite route status");
+        for (FeedRoute route : a1.feedRoutes) {
+            if (setOf("regular-ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.state.contains("A1 Series AMS Hub")
+                    || !route.note.contains("01.06.10.33") || !route.note.contains("Do not mix AMS Lite")))
+                throw new IOException("A1 " + route.id + " must retain sourced hub, firmware and AMS Lite separation requirements");
+        }
+        if (p1s == null || !ids(p1s.materials).equals(setOf("pla", "petg", "tpu", "pva", "pet", "abs", "asa", "pa", "pc", "cf-gf-filled"))
+                || !ids(p1s.feedRoutes).equals(setOf("external-direct", "ams", "ams-2-pro", "ams-ht")))
+            throw new IOException("P1S capability coverage must disclose each sourced material class separately");
+        for (FeedRoute route : p1s.feedRoutes) {
+            if (setOf("ams", "ams-2-pro", "ams-ht").contains(route.id)
+                    && (route.sourceUrl.isEmpty() || !route.note.contains("P1 Series")
+                    || (("ams-2-pro".equals(route.id) || "ams-ht".equals(route.id))
+                    && (!route.note.contains("before connecting") || !route.note.contains("four AMS units")))))
+                throw new IOException("P1S " + route.id + " must retain sourced model and firmware requirements");
+        }
+        for (Material material : mini.materials) {
+            if (material.amsLiteStatus.isEmpty() || material.amsLiteSourceUrl.isEmpty())
+                throw new IOException("A1 mini material " + material.id + " lacks sourced AMS Lite route status");
+            if (!unavailable(material.directSendState))
+                throw new IOException("A1 mini material " + material.id + " cannot qualify direct send");
+        }
+        Material pva = null, bvoh = null, genericTpu = null, tpu95a = null, supportPla = null, genericFiber = null;
+        for (Material material : mini.materials) {
+            if ("pva".equals(material.id)) pva = material;
+            else if ("bvoh".equals(material.id)) bvoh = material;
+            else if ("tpu".equals(material.id)) genericTpu = material;
+            else if ("tpu-95a".equals(material.id)) tpu95a = material;
+            else if ("support-pla".equals(material.id)) supportPla = material;
+            else if ("cf-gf-filled".equals(material.id)) genericFiber = material;
+        }
+        if (pva == null || !pva.amsLiteStatus.toLowerCase(Locale.US).contains("dry pva only")
+                || !pva.amsLiteStatus.toLowerCase(Locale.US).contains("wet/damp pva is unsupported")
+                || bvoh == null || !bvoh.amsLiteStatus.toLowerCase(Locale.US).contains("dry bvoh only")
+                || genericTpu == null || !genericTpu.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
+                || tpu95a == null || !tpu95a.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported")
+                || supportPla == null || !supportPla.amsLiteStatus.toLowerCase(Locale.US).contains("snap-away or dissolvable support")
+                || genericFiber == null || !genericFiber.amsLiteStatus.toLowerCase(Locale.US).contains("unsupported"))
+            throw new IOException("A1 mini AMS Lite exceptions are incomplete");
+    }
+    private static boolean unavailable(String state) {
+        String normalized = state.toLowerCase(Locale.US);
+        return normalized.startsWith("not qualified") || normalized.startsWith("blocked");
+    }
+    private static boolean uniquePrinterIds(List<Printer> printers) { return ids(printers).size() == printers.size(); }
+    private static boolean uniqueIds(List<?> values, String ignored) { return ids(values).size() == values.size(); }
+    private static Set<String> ids(List<?> values) {
+        HashSet<String> result = new HashSet<>();
+        for (Object value : values) {
+            if (value instanceof Printer) result.add(((Printer) value).id);
+            else if (value instanceof Material) result.add(((Material) value).id);
+            else if (value instanceof FeedRoute) result.add(((FeedRoute) value).id);
+            else if (value instanceof SpoolForm) result.add(((SpoolForm) value).id);
+        }
+        return result;
+    }
+    private static Set<String> setOf(String... values) {
+        HashSet<String> result = new HashSet<>(); Collections.addAll(result, values); return result;
+    }
+    private static String need(JSONObject o, String key) { String value = o.optString(key, "").trim(); if (value.length() == 0) throw new IllegalArgumentException("Missing " + key); return value; }
+    /** Capability claims must carry a direct, HTTPS Bambu source—not a vague documentation pointer. */
+    private static String officialSourceUrl(JSONObject o, String key) {
+        String value = need(o, key);
+        android.net.Uri uri = android.net.Uri.parse(value);
+        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(java.util.Locale.US);
+        if (!"https".equalsIgnoreCase(uri.getScheme())
+                || !(host.equals("bambulab.com") || host.endsWith(".bambulab.com")))
+            throw new IllegalArgumentException("Invalid official source URL");
+        return value;
+    }
+    private static List<Material> materialList(JSONArray values) { if (values == null) throw new IllegalArgumentException("Missing materials"); ArrayList<Material> result = new ArrayList<>(); for (int i = 0; i < values.length(); i++) { JSONObject value = values.optJSONObject(i); if (value == null) throw new IllegalArgumentException("Invalid material"); result.add(new Material(value)); } return Collections.unmodifiableList(result); }
+    private static List<FeedRoute> routeList(JSONArray values) { if (values == null) throw new IllegalArgumentException("Missing feed routes"); ArrayList<FeedRoute> result = new ArrayList<>(); for (int i = 0; i < values.length(); i++) { JSONObject value = values.optJSONObject(i); if (value == null) throw new IllegalArgumentException("Invalid feed route"); result.add(new FeedRoute(value)); } return Collections.unmodifiableList(result); }
+    private static List<SpoolForm> spoolFormList(JSONArray values) { if (values == null || values.length() == 0) throw new IllegalArgumentException("Missing spool forms"); ArrayList<SpoolForm> result = new ArrayList<>(); for (int i = 0; i < values.length(); i++) { JSONObject value = values.optJSONObject(i); if (value == null) throw new IllegalArgumentException("Invalid spool form"); result.add(new SpoolForm(value)); } return Collections.unmodifiableList(result); }
+    private static List<String> textList(JSONArray values, String label) { if (values == null || values.length() == 0) throw new IllegalArgumentException("Missing " + label); ArrayList<String> result = new ArrayList<>(); for (int i = 0; i < values.length(); i++) { String value = values.optString(i, "").trim(); if (value.length() == 0 || value.length() > 512) throw new IllegalArgumentException("Invalid " + label); result.add(value); } return Collections.unmodifiableList(result); }
+    private static byte[] read(InputStream input) throws IOException { ByteArrayOutputStream out = new ByteArrayOutputStream(); byte[] b = new byte[4096]; int n, total = 0; while ((n = input.read(b)) >= 0) { total += n; if (total > 128 * 1024) throw new IOException("Capability catalog exceeds size limit"); out.write(b, 0, n); } return out.toByteArray(); }
+}

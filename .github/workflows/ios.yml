@@ -1,0 +1,150 @@
+name: Alloy iOS (preparation and inspection companion)
+
+# Evidence class for every job below: CI-LANE-WRITTEN (no run seen yet).
+# OWNER DIRECTIVE 2026-11-17: iOS builds happen on GitHub Actions (macos-latest).
+# NOTE: private repos bill hosted macOS minutes at a multiplier.
+# No signing material is in this repository. The archive job reads it only from
+# the `ios-release` GitHub *environment* (required reviewers = approval gate).
+
+on:
+  push:
+    branches: [main, 'claude/**', 'codex/**']
+    tags: ['ios-v*']
+    paths: ['ios/**', 'app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['ios/**', 'app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-linux:
+    name: AlloyCore tests (Linux Swift 6.0.3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: swift:6.0.3-noble
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: swift test
+        working-directory: ios/AlloyCore
+        run: swift test
+
+  parity-vs-java:
+    name: Regenerate Java golden corpora and require no diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: JDK 17 and python3 are preinstalled on ubuntu-latest
+        run: java -version && python3 --version
+      - name: Regenerate with the real Java sources
+        run: sh ios/parity/regen.sh
+      - name: Goldens must be unchanged (Java source and Swift fixtures agree)
+        run: git diff --exit-code -- ios/AlloyCore/Tests/AlloyCoreTests/Fixtures
+
+  app-macos:
+    name: Build and test (macOS, iOS Simulator SDK, unsigned)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: [core-linux]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Toolchain versions
+        run: xcodebuild -version && swift --version
+      - name: AlloyCore tests on macOS
+        working-directory: ios/AlloyCore
+        run: swift test
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: ios/AlloyApp
+        run: xcodegen generate
+      - name: Build for iOS Simulator (unsigned)
+        working-directory: ios/AlloyApp
+        run: |
+          xcodebuild build -project Alloy.xcodeproj -scheme Alloy \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+      - name: Zip simulator app
+        if: startsWith(github.ref, 'refs/tags/ios-v')
+        run: cd ios/AlloyApp/build/Build/Products/Debug-iphonesimulator && ditto -c -k --keepParent Alloy.app "$GITHUB_WORKSPACE/Alloy-simulator.zip"
+      - name: Upload simulator build (tags only; artifact quota is limited)
+        if: startsWith(github.ref, 'refs/tags/ios-v')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        continue-on-error: true
+        with:
+          name: Alloy-simulator
+          path: Alloy-simulator.zip
+          retention-days: 7
+
+  archive-ipa:
+    name: Archive signed IPA (tag + approval gate)
+    if: startsWith(github.ref, 'refs/tags/ios-v')
+    needs: [app-macos]
+    runs-on: macos-latest
+    timeout-minutes: 45
+    environment: ios-release   # configure required reviewers; holds the secrets below
+    env:
+      # Environment secrets (never in the repo): base64 .p12, its password,
+      # base64 provisioning profile, profile name, Apple team id.
+      APPLE_CERT_P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
+      APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+      APPLE_PROFILE_BASE64: ${{ secrets.APPLE_PROFILE_BASE64 }}
+      APPLE_PROFILE_NAME: ${{ secrets.APPLE_PROFILE_NAME }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Import signing material into a throwaway keychain
+        run: |
+          set -eu
+          KC="$RUNNER_TEMP/alloy.keychain-db"; PW="$(uuidgen)"
+          echo "$APPLE_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$PW" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$PW" "$KC"
+          security import "$RUNNER_TEMP/cert.p12" -P "$APPLE_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple: -k "$PW" "$KC"
+          security list-keychains -d user -s "$KC" login.keychain
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$APPLE_PROFILE_BASE64" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/alloy.mobileprovision"
+      - name: Generate project, archive, export
+        working-directory: ios/AlloyApp
+        run: |
+          set -eu
+          xcodegen generate
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict><key>com.asoc.alloy</key><string>${APPLE_PROFILE_NAME}</string></dict>
+          </dict></plist>
+          PLIST
+          xcodebuild archive -project Alloy.xcodeproj -scheme Alloy -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Alloy.xcarchive" \
+            CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES \
+            PROVISIONING_PROFILE_SPECIFIER="$APPLE_PROFILE_NAME"
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Alloy.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$GITHUB_WORKSPACE/ipa"
+      - name: Upload IPA (owner uploads to TestFlight with Transporter; nothing is auto-submitted)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: Alloy-ipa
+          path: ipa/*.ipa
+          retention-days: 7
+      - name: Remove keychain and profile
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/alloy.keychain-db" || true
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/alloy.mobileprovision"

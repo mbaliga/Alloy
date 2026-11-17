@@ -1,0 +1,364 @@
+plugins {
+    id 'com.android.application'
+}
+
+import groovy.json.JsonSlurper
+
+def nativeEngineEnabled = project.findProperty('alloyNativeEngine')?.toString()?.toBoolean() ?: false
+def officialOrcaCompileProbe = project.findProperty('alloyOfficialOrcaCompileProbe')?.toString()?.toBoolean() ?: false
+def nativeEngineVerified = project.findProperty('alloyNativeEngineVerified')?.toString()?.toBoolean() ?: false
+def productionRelease = project.findProperty('alloyProductionRelease')?.toString()?.toBoolean() ?: false
+def ciDebugSign = project.findProperty('alloyCiDebugSign')?.toString()?.toBoolean() ?: false
+// This is a deliberately narrow evidence-collection lane, not a release
+// qualification switch. It can only be compiled as a CI-debug-signed native
+// build and the Java layer restricts it to immutable bundled A1 Mini fixtures
+// with PLA and supports disabled.
+def physicalPilot = project.findProperty('alloyPhysicalPilot')?.toString()?.toBoolean() ?: false
+// Release packaging may consume a separately verified native bundle. This is
+// useful for offline/reproducible builds and keeps Java/profile changes from
+// forcing a full CMake rebuild when the native ABI has not changed.
+def nativeEnginePrebuiltDir = project.findProperty('alloyNativeEnginePrebuiltDir')?.toString()
+def nativeEngineBuild = nativeEngineEnabled && nativeEnginePrebuiltDir == null
+// Supplied reference meshes do not carry complete public redistribution
+// rights. Keep them available in debug builds and private visual-review
+// releases, but require an explicit opt-in for any release variant.
+def includeSuppliedReferenceVisuals = project.hasProperty('alloyIncludeSuppliedReferenceVisuals')
+        ? project.findProperty('alloyIncludeSuppliedReferenceVisuals').toString().toBoolean()
+        : false
+
+// Verification is a promotion claim about the native slicer, never about the
+// fallback engine. Reject an inconsistent build at configuration time so a
+// release pipeline cannot accidentally label a Java-only APK as verified.
+if (nativeEngineVerified && !nativeEngineEnabled) {
+    throw new GradleException('alloyNativeEngineVerified=true requires alloyNativeEngine=true')
+}
+if (officialOrcaCompileProbe && !nativeEngineEnabled) {
+    throw new GradleException('alloyOfficialOrcaCompileProbe=true requires alloyNativeEngine=true')
+}
+if (productionRelease && (!nativeEngineEnabled || !nativeEngineVerified)) {
+    throw new GradleException('alloyProductionRelease=true requires the native engine and its explicit verification flag')
+}
+if (productionRelease && ciDebugSign) {
+    throw new GradleException('alloyProductionRelease=true cannot use the CI debug signing key')
+}
+if (physicalPilot && (!nativeEngineEnabled || nativeEngineVerified || productionRelease || !ciDebugSign)) {
+    throw new GradleException('alloyPhysicalPilot=true requires a native, unverified, CI-debug-signed non-production build')
+}
+if (productionRelease && includeSuppliedReferenceVisuals) {
+    throw new GradleException('Production release cannot include private visual-review assets without documented redistribution rights')
+}
+if (productionRelease) {
+    def readinessFile = file('../release/production-readiness.json')
+    if (!readinessFile.isFile()) {
+        throw new GradleException('alloyProductionRelease=true requires the reviewed release/production-readiness.json evidence record')
+    }
+    try {
+        def readiness = new JsonSlurper().parse(readinessFile)
+        def requiredReadinessGates = [
+                'native_engine_source_provenance_and_license',
+                'native_engine_source_build', 'native_smoke_on_arm64_device',
+                'a1_mini_profile_parity', 'a1_profile_parity', 'p1s_profile_parity',
+                'a1_mini_g3_toolpath_parity', 'a1_g3_toolpath_parity', 'p1s_g3_toolpath_parity',
+                'a1_mini_g4_profile_runtime_parity', 'a1_g4_profile_runtime_parity', 'p1s_g4_profile_runtime_parity',
+                'bambu_treesupport3d_parity',
+                'physical_a1_mini_transport', 'physical_a1_transport', 'physical_p1s_transport',
+                'signed_install_and_upgrade',
+                'interruption_and_recovery'
+        ]
+        if (readiness.schema_version != 1 || !(readiness.gates instanceof Map)
+                || requiredReadinessGates.any { readiness.gates[it] != 'PASS' }) {
+            throw new GradleException('release/production-readiness.json does not mark every required gate PASS')
+        }
+        def readinessScope = readiness.device_scope instanceof String
+                ? readiness.device_scope.toLowerCase(Locale.ROOT) : ''
+        if (!readinessScope.contains('a1 mini') || !readinessScope.contains('n1')
+                || !(readinessScope =~ /\ba1\b/) || !readinessScope.contains('p1s')) {
+            throw new GradleException('release/production-readiness.json must identify A1 Mini/N1, A1 and P1S')
+        }
+        if (!(readiness.gate_evidence instanceof Map)) {
+            throw new GradleException('release/production-readiness.json must retain evidence for every gate')
+        }
+        def printerGateIds = [
+                'a1_mini_profile_parity': 'a1-mini', 'a1_profile_parity': 'a1',
+                'p1s_profile_parity': 'p1s', 'a1_mini_g3_toolpath_parity': 'a1-mini',
+                'a1_g3_toolpath_parity': 'a1', 'p1s_g3_toolpath_parity': 'p1s',
+                'a1_mini_g4_profile_runtime_parity': 'a1-mini',
+                'a1_g4_profile_runtime_parity': 'a1', 'p1s_g4_profile_runtime_parity': 'p1s',
+                'physical_a1_mini_transport': 'a1-mini', 'physical_a1_transport': 'a1',
+                'physical_p1s_transport': 'p1s'
+        ]
+        def evidenceRoot = readinessFile.parentFile.canonicalFile
+        requiredReadinessGates.each { gate ->
+            def item = readiness.gate_evidence[gate]
+            if (!(item instanceof Map) || !(item.path instanceof String)
+                    || item.path.trim().isEmpty() || new File(item.path).absolute) {
+                throw new GradleException("release evidence for ${gate} must name a relative retained file")
+            }
+            if (printerGateIds.containsKey(gate) && item.printer_id != printerGateIds[gate]) {
+                throw new GradleException("release evidence for ${gate} must identify printer ${printerGateIds[gate]}")
+            }
+            if (!(item.sha256 instanceof String) || !(item.sha256 ==~ /[0-9a-f]{64}/)) {
+                throw new GradleException("release evidence for ${gate} must include a lowercase SHA-256")
+            }
+            def evidenceFile = new File(evidenceRoot, item.path).canonicalFile
+            if (!evidenceFile.toPath().startsWith(evidenceRoot.toPath()) || !evidenceFile.isFile()) {
+                throw new GradleException("release evidence for ${gate} is missing or escapes the evidence directory")
+            }
+            def actualSha = java.security.MessageDigest.getInstance('SHA-256')
+                    .digest(evidenceFile.bytes).collect { String.format('%02x', it & 0xff) }.join()
+            if (actualSha != item.sha256) {
+                throw new GradleException("release evidence digest mismatch for ${gate}")
+            }
+        }
+        def physicalGateIds = [
+                'physical_a1_mini_transport': 'a1-mini',
+                'physical_a1_transport': 'a1',
+                'physical_p1s_transport': 'p1s'
+        ]
+        def physicalAcceptance = readiness.physical_acceptance_evidence
+        if (!(physicalAcceptance instanceof Map)) {
+            throw new GradleException('release readiness must retain separate physical acceptance records')
+        }
+        def requiredPhysicalCases = [
+                'discovery', 'upload', 'start', 'running', 'completion',
+                'pause_resume', 'cancel', 'recovery', 'offline'
+        ]
+        def requiredPhysicalHashes = [
+                'apk_sha256', 'instrumentation_sha256', 'signer_sha256',
+                'printer_certificate_sha256'
+        ]
+        physicalGateIds.each { gate, printerId ->
+            def acceptanceEvidence = physicalAcceptance[printerId]
+            if (!(acceptanceEvidence instanceof Map)
+                    || !(acceptanceEvidence.path instanceof String)
+                    || acceptanceEvidence.path.trim().isEmpty()
+                    || new File(acceptanceEvidence.path).absolute
+                    || !(acceptanceEvidence.sha256 instanceof String)
+                    || !(acceptanceEvidence.sha256 ==~ /[0-9a-f]{64}/)) {
+                throw new GradleException("physical acceptance evidence for ${printerId} must include a relative path and lowercase SHA-256")
+            }
+            def physicalGateEvidence = readiness.gate_evidence[gate]
+            if (physicalGateEvidence.path != acceptanceEvidence.path
+                    || physicalGateEvidence.sha256 != acceptanceEvidence.sha256) {
+                throw new GradleException("physical acceptance evidence for ${printerId} must be the hash-bound file for ${gate}")
+            }
+            def acceptanceFile = new File(evidenceRoot, acceptanceEvidence.path).canonicalFile
+            if (!acceptanceFile.toPath().startsWith(evidenceRoot.toPath()) || !acceptanceFile.isFile()) {
+                throw new GradleException("physical acceptance evidence for ${printerId} is missing or escapes the evidence directory")
+            }
+            def acceptance = new JsonSlurper().parse(acceptanceFile)
+            if (acceptance.schema_version != 1) {
+                throw new GradleException("physical acceptance evidence for ${printerId} has an unsupported schema")
+            }
+            ['evidence_id', 'verified_at', 'reviewer', 'device_scope'].each { field ->
+                if (!(acceptance[field] instanceof String) || acceptance[field].trim().isEmpty()) {
+                    throw new GradleException("physical acceptance evidence for ${printerId} is missing ${field}")
+                }
+            }
+            def printerScope = acceptance.device_scope.toLowerCase(Locale.ROOT)
+            def matchesPrinter = printerId == 'a1-mini'
+                    ? printerScope.contains('a1 mini') && printerScope.contains('n1')
+                    : printerId == 'a1'
+                            ? (printerScope =~ /\ba1\b/) && !printerScope.contains('a1 mini')
+                            : printerScope.contains('p1s')
+            if (!matchesPrinter) {
+                throw new GradleException("physical acceptance evidence does not match printer ${printerId}")
+            }
+            if (requiredPhysicalHashes.any { !(acceptance[it] instanceof String)
+                    || !(acceptance[it] ==~ /[0-9a-fA-F]{64}/) }) {
+                throw new GradleException("physical acceptance evidence for ${printerId} has invalid SHA-256 fields")
+            }
+            if (!(acceptance.cases instanceof Map)
+                    || requiredPhysicalCases.any { acceptance.cases[it] != 'PASS' }) {
+                throw new GradleException("physical acceptance evidence for ${printerId} is incomplete")
+            }
+        }
+    } catch (GradleException error) {
+        throw error
+    } catch (Exception error) {
+        throw new GradleException('release/production-readiness.json is not valid JSON: ' + error.message)
+    }
+}
+
+android {
+    namespace 'com.mbaliga.alloy'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.mbaliga.alloy'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'boolean', 'NATIVE_ENGINE_ENABLED', nativeEngineEnabled ? 'true' : 'false'
+        // Enabling native code is not proof of print-safe output. Promotion
+        // stays an explicit build-time decision after all acceptance gates.
+        buildConfigField 'boolean', 'NATIVE_ENGINE_VERIFIED', nativeEngineVerified ? 'true' : 'false'
+        buildConfigField 'boolean', 'PHYSICAL_PILOT_ENABLED', physicalPilot ? 'true' : 'false'
+    }
+
+    // Exercise the same shrink/signing/resource variant that is distributed;
+    // release validation must not silently run against a debug-only APK.
+    testBuildType 'release'
+
+    // ARM translation on hosted x86_64 emulators can make APK session commit
+    // much slower than a physical device. Keep the normal timeout unchanged;
+    // native CI opts into a longer ADB operation timeout explicitly.
+    def adbTimeoutInMs = project.findProperty('alloyAdbTimeoutMs')
+    if (adbTimeoutInMs != null) {
+        adbOptions {
+            timeOutInMs = adbTimeoutInMs.toString().toInteger()
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    // Bouncy Castle publishes the same multi-release OSGi manifest in its
+    // provider and TLS artifacts. It is metadata for the JVM packaging model,
+    // not an Android runtime resource; excluding the duplicate keeps the APK
+    // merge deterministic without weakening the TLS implementation.
+    packaging {
+        resources {
+            excludes += 'META-INF/versions/**/OSGI-INF/MANIFEST.MF'
+            pickFirsts += ['META-INF/LICENSE.md', 'META-INF/MANIFEST.MF']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Keep the explicitly gated, CI-debug physical-pilot app beside
+            // the ordinary Alloy install. Its signing key can differ across
+            // runner images, and a separate ID avoids prompting users to
+            // uninstall an app that may contain local projects or inventory.
+            if (physicalPilot) {
+                applicationIdSuffix '.pilot'
+            }
+            // Ordinary CI needs an installable release variant for
+            // connectedReleaseAndroidTest, but the release-candidate workflow
+            // deliberately omits this property and remains unsigned until the
+            // organization-owned signing service is configured.
+            if (ciDebugSign) {
+                signingConfig signingConfigs.debug
+            }
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    if (nativeEngineBuild) {
+        defaultConfig {
+            ndk {
+                // The phone-first native gate targets current Android phones;
+                // CI must not spend hours building unsupported simulator ABIs.
+                abiFilters 'arm64-v8a'
+            }
+            externalNativeBuild {
+                cmake {
+                    arguments '-DANDROID_STL=c++_shared', '-DANDROID_PLATFORM=26',
+                            '-DCMAKE_BUILD_TYPE=Release', '-DSLIC3R_VERSION="1.0.0"',
+                            '-DSLIC3R_BUILD_ID="1"',
+                            "-DALLOY_BUILD_OFFICIAL_ORCA_COMPILE_PROBE=${officialOrcaCompileProbe ? 'ON' : 'OFF'}"
+                    if (officialOrcaCompileProbe) {
+                        targets 'slic3r', 'official_orca_compile_probe', 'official_orca_link_probe'
+                    }
+                }
+            }
+        }
+        externalNativeBuild {
+            cmake {
+                path file('CMakeLists.txt')
+            }
+        }
+        ndkVersion '23.1.7779620'
+    }
+
+    sourceSets {
+        main {
+            // Keep the full libnoise LGPL-2.1 notice in every APK that can
+            // include the optional native engine. The source snapshot verifier
+            // pins this exact file before CMake is allowed to build libnoise.
+            assets.srcDirs += file('../third_party/licenses')
+            if (nativeEnginePrebuiltDir != null) {
+                jniLibs.srcDirs = [file(nativeEnginePrebuiltDir)]
+            } else if (nativeEngineEnabled) {
+                // CMake packages every imported native target, including the
+                // NDK's libc++_shared.so. Keep the OCCT directory here because
+                // Android's packaging task does not always copy imported
+                // libraries that are only transitive DT_NEEDED entries.
+                // Excluding the generic fallback bundle avoids its second
+                // libc++_shared.so while retaining the complete OCCT chain.
+                jniLibs.srcDirs = [file('src/main/occt/jniLibs')]
+            } else {
+                // The default phone shell must not ship native code while the
+                // native slicer is disabled and unverified. Native-enabled
+                // variants select the complete ABI bundle above.
+                jniLibs.srcDirs = []
+            }
+        }
+        release {
+            if (includeSuppliedReferenceVisuals) {
+                assets.srcDirs += file('src/debug/assets')
+            }
+        }
+    }
+}
+
+// A native-enabled APK must never silently degrade to a Java-only package when
+// a caller supplies a stale or empty prebuilt directory. Run this as a normal
+// build task so an invalid bundle fails cleanly before signing or packaging,
+// without turning a deliberate negative check into a misleading configuration
+// error from the Android plugin.
+if (nativeEngineEnabled && nativeEnginePrebuiltDir != null) {
+    def validateNativePrebuiltDirectory = tasks.register('validateNativePrebuiltDirectory') {
+        doLast {
+            def prebuiltRoot = file(nativeEnginePrebuiltDir)
+            def requiredNativeFiles = [
+                    'arm64-v8a/libslic3r.so',
+                    'arm64-v8a/libc++_shared.so',
+                    'arm64-v8a/libTKBO.so',
+                    'arm64-v8a/libgmp.so',
+                    'arm64-v8a/libmpfr.so'
+            ]
+            def missingNativeFiles = requiredNativeFiles.findAll { !new File(prebuiltRoot, it).isFile() }
+            if (!prebuiltRoot.isDirectory() || !missingNativeFiles.isEmpty()) {
+                throw new GradleException('Native prebuilt directory is incomplete; missing: ' +
+                        (missingNativeFiles.isEmpty() ? prebuiltRoot.absolutePath : missingNativeFiles.join(', ')))
+            }
+        }
+    }
+    tasks.named('preBuild').configure { dependsOn(validateNativePrebuiltDirectory) }
+}
+
+// Keep the promotion contract visible in the build graph. Ordinary CI and
+// emulator builds remain intentionally permissive; only the explicit
+// production-release workflow is fail-closed before either release artifact
+// can be assembled.
+if (productionRelease) {
+    def verifyProductionRelease = tasks.register('verifyProductionRelease') {
+        doLast {
+            if (!nativeEngineEnabled || !nativeEngineVerified)
+                throw new GradleException('Production release requires a verified native engine')
+        }
+    }
+    tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach {
+        dependsOn(verifyProductionRelease)
+    }
+}
+
+dependencies {
+    // Bambu's FTPS server requires the data TLS channel to resume the exact
+    // control-channel session. BCJSSE exposes that operation as a supported
+    // API; the stock Android JSSE API does not.
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.85.2'
+    implementation 'org.bouncycastle:bctls-jdk18on:1.85'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
