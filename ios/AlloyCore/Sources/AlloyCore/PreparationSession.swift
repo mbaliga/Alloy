@@ -13,6 +13,11 @@ public struct ImportedModel: Equatable, Identifiable {
 public struct PlateReview: Equatable {
     public let placements: [PlateArrangementPlanner.Placement]
     public let error: String?
+
+    public init(placements: [PlateArrangementPlanner.Placement], error: String?) {
+        self.placements = placements
+        self.error = error
+    }
 }
 
 public struct PreparationSession: Equatable {
