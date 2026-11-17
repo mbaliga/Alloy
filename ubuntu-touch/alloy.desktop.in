@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Alloy
+Comment=Prepare and inspect 3D-print files (not a slicer)
+Exec=alloy
+Icon=assets/icon.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
+X-Lomiri-Touch=true

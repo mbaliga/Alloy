@@ -15,7 +15,7 @@ target_compile_options(alloycore PRIVATE -Wall -Wextra -Wpedantic)
 foreach(tgt alloycore)
   target_compile_options(${tgt} PUBLIC -ffp-contract=off -fno-fast-math)
 endforeach()
-set_property(TARGET alloycore PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(alloycore PROPERTIES POSITION_INDEPENDENT_CODE ON AUTOMOC OFF AUTORCC OFF AUTOUIC OFF)
 
 if(NOT ALLOYCORE_NO_TESTS)
   enable_testing()
