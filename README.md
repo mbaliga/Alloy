@@ -4,6 +4,10 @@ Alloy is a native Android 3D-print slicer project, initially targeting the Bambu
 
 The product is phone-first and is intended to scale to foldables, tablets, and Android desktop/windowed sessions. It will use the open-source OrcaSlicer/PrusaSlicer engine lineage rather than attempting to port Bambu Studio's wxWidgets desktop UI.
 
+## Alloy Forge (web)
+
+[`forge/`](forge/) holds Alloy Forge, a browser-based parametric CAD editor for enclosures and small product design, with BYOK AI editing. See [forge/README.md](forge/README.md).
+
 ## Current phase
 
 Stage 1 is at the architecture and information-design gate. Per the project plan, the phone IA and screen behavior must be approved before Jetpack Compose UI implementation begins.
