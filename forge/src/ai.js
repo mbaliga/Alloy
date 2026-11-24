@@ -62,7 +62,8 @@ export function extractJSON(text) {
 export const needsKey = (cfg) => cfg.provider !== 'claude';
 export async function hostedSample() { try { return window.claude ? await window.claude.use('sample') : null; } catch (_) { return null; } }
 
-export async function callModel(cfg, messages, signal, system = systemPrompt()) {
+/** `meta` (optional) receives `usage: { inputTokens, outputTokens }` when the provider reports it (used by the design loop for budgets). */
+export async function callModel(cfg, messages, signal, system = systemPrompt(), meta = null) {
   if (cfg.provider === 'claude') {
     const sample = await hostedSample();
     if (!sample) throw new Error('Built-in Claude is only available on the hosted page. Pick a provider and add a key in Settings.');
@@ -82,6 +83,7 @@ export async function callModel(cfg, messages, signal, system = systemPrompt()) 
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j?.error?.message || `Anthropic API error ${r.status}`);
+    if (meta && j.usage) meta.usage = { inputTokens: j.usage.input_tokens ?? 0, outputTokens: j.usage.output_tokens ?? 0 };
     return (j.content || []).map((c) => c.text || '').join('');
   }
   const r = await fetch((cfg.base || PROVIDERS.openai.base).replace(/\/$/, '') + '/chat/completions', {
@@ -91,6 +93,7 @@ export async function callModel(cfg, messages, signal, system = systemPrompt()) 
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j?.error?.message || `API error ${r.status}`);
+  if (meta && j.usage) meta.usage = { inputTokens: j.usage.prompt_tokens ?? 0, outputTokens: j.usage.completion_tokens ?? 0 };
   return j.choices?.[0]?.message?.content || '';
 }
 
