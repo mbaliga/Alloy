@@ -193,3 +193,10 @@ Approved defaults applied: D1 `android/` stays AGPL-3.0 and the rest PolyForm No
 | P4 `COMMERCIAL-LICENSE.md` | skipped (D6) |
 
 **Checks run after the move (no Android SDK here):** `tools/` 26/26; `ci/` 5/5 modules; `parity/` 225/232 (the 7 need the `orca-official` submodule, as before); validators `validate_model_assets`, `validate_android_wiring`, `validate_android_workflows`, `validate_native_wiring`, `validate_learning_assets`, `validate_capability_catalog`, `validate_profile_assets`, `validate_release_wiring` pass; Forge `npm test` 46/46 after merging main. The slicer workflows still need adapting to the new paths; they are inert under `android/.github/` until the CI phase.
+
+## 10. Phase 3 record: shared core
+
+- **Loop engine re-vendored at `7a6ea4b`** (`cd forge && node tools/vendor-loop-engine.mjs <checkout>`). The engine sources are byte-identical to `8141a7e` (no upstream commit touched `web/loop-engine` in between); only the 15 per-file headers and `src/loop/VENDORED.md` changed. Forge `npm test` 46/46.
+- **Overlaps listed and a shared-package plan written** in `docs/ALLOY_FAMILY.md` ("Where Forge and the Slicer overlap", "Plan: what moves into shared packages"). Nothing moved. One new decision for the owner: **D7**, the licence of the shared data package (the Slicer is AGPL, Forge is noncommercial).
+- Findings worth knowing: `alloy.config.json` exists in neither app; the 180 mm A1 mini volume is written in at least ten places; Forge's default PLA density (1.24) already differs from the Slicer profile (1.26); the two viewports do not match although `STYLE.md` calls them shared.
+
