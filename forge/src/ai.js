@@ -10,7 +10,7 @@ export const PROVIDERS = {
 export function systemPrompt() {
   const types = Object.entries(TYPES).map(([t, T]) => {
     const fs = fieldsFor(t).filter((f) => !['name'].includes(f.k)).map((f) => {
-      const d = f.kind === 'enum' ? f.opts.map((o) => `"${o}"`).join('|') : f.kind === 'vec3' ? '[e,e,e]' : f.kind === 'num' ? 'expr' : 'text';
+      const d = f.kind === 'enum' ? f.opts.map((o) => `"${o}"`).join('|') : f.kind === 'vec3' ? '[e,e,e]' : f.kind === 'num' ? 'expr' : f.kind === 'json' ? 'object' : 'text';
       return `${f.k}:${d}${f.tip ? ` — ${f.tip}` : ''}`;
     });
     return `• ${t}: ${T.desc}\n    ${fs.join('\n    ')}`;
@@ -20,7 +20,7 @@ export function systemPrompt() {
 COORDINATES: millimetres, right-handed, Z up. Angles in degrees. Trig functions in expressions use degrees.
 PARAMETERS: the project has named parameters (name = expression). Every numeric field of a feature is an EXPRESSION STRING that may use parameters, + - * / % ^, parentheses, pi, and sin cos tan sqrt abs min max round floor ceil pow hypot atan2. Prefer adding or editing parameters over hard-coding numbers so the model stays parametric.
 BODIES: features build named bodies ("Base", "Lid", …). op "add" unions, "cut" subtracts, "intersect" intersects, "ref" is a ghost shown for reference only (e.g. a PCB). body "*" on a cut applies to every body. Features evaluate top to bottom; order matters.
-GEOMETRY KERNEL: mesh-based solids (no edge fillets on existing edges). Round corners via the radius field of box / shell_box. Use pattern/mirror fields instead of duplicating features.
+GEOMETRY KERNEL: settings.kernel is "manifold" (mesh-based solids, no edge fillets on existing edges; fast) or "occt" (true B-rep, needed by the pcb enclosure feature, which is generated from the project's pcb block). Change it with set_setting key "kernel". On manifold: Round corners via the radius field of box / shell_box. Use pattern/mirror fields instead of duplicating features.
 
 FEATURE TYPES (all numeric fields are expression strings or numbers):
 ${types}
@@ -35,7 +35,9 @@ Ops:
  {"op":"update_feature","id":"<id or name>","set":{"d":"4","pos":["1","2","3"]}}
  {"op":"remove_feature","id":"<id or name>"}
  {"op":"move_feature","id":"<id or name>","index":2}
- {"op":"set_setting","key":"detail","value":64}   (detail = circle segments, density = g/cm³)
+ {"op":"set_setting","key":"detail","value":64}   (detail = circle segments, density = g/cm³; key "kernel" takes "manifold" or "occt")
+ {"op":"set_pcb_component","component":{"name":"battery","kind":"box","box":[x0,x1,y0,y1,z0,z1],"insert":"rear"}}   (adds or replaces a keep-out in the pcb block; numbers only)
+ {"op":"remove_pcb_component","name":"battery"}
 LOCKS: features, parameters and bodies marked "locked": true were locked by the user. Never change, remove or reorder them, and never add cuts/adds into a locked body. If the request needs that, return no ops for it and say what must be unlocked.
 If the request is a question or needs no change, return "ops":[] and answer in "explanation". If the request is ambiguous in a way that matters, make the most reasonable choice, say so in "explanation", and keep it easy to change via parameters. Never invent feature types or fields. Imported assets can only be placed/cut, not edited.`;
 }
@@ -110,7 +112,7 @@ export async function assist({ cfg, history, prompt, project, summary, selection
     try {
       plan = extractJSON(text);
       if (!Array.isArray(plan.ops)) plan.ops = [];
-      const res = tryApply(plan.ops);
+      const res = await tryApply(plan.ops);
       return { plan, res, assistantText: text, userText: msgs[history.length].content };
     } catch (e) {
       lastErr = e;

@@ -243,6 +243,17 @@ function loadOcct(base = '') {
   return occtPromise;
 }
 
+/** Read a STEP assembly keeping its solids apart (names + bounding boxes) so they can be tagged as pcb parts. The original bytes are kept for the B-rep kernel. */
+export async function importAssembly(file, base = '') {
+  const buf = await file.arrayBuffer();
+  const occt = await loadOcct(base);
+  const r = occt.ReadStepFile(new Uint8Array(buf), { linearUnit: 'millimeter', linearDeflectionType: 'bounding_box_ratio', linearDeflection: 0.001, angularDeflection: 0.3 });
+  if (!r.success || !r.meshes.length) throw new Error('STEP file could not be read');
+  const parts = r.meshes.map((m, i) => ({ i, name: m.name || `part ${i + 1}`, tris: m.index.array.length / 3, bbox: bbox(m.attributes.position.array), tag: '' }));
+  const mn = [0, 1, 2].map((k) => Math.min(...parts.map((p) => p.bbox.min[k]))), mx = [0, 1, 2].map((k) => Math.max(...parts.map((p) => p.bbox.max[k])));
+  return { kind: 'assembly', name: file.name.replace(/\.[^.]+$/, ''), tris: parts.reduce((a, p) => a + p.tris, 0), bbox: { min: mn, max: mx }, parts, stepB64: bytesToB64(new Uint8Array(buf)) };
+}
+
 export async function importFile(file, base = '') {
   const buf = await file.arrayBuffer();
   const ext = file.name.toLowerCase().split('.').pop();

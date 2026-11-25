@@ -7,15 +7,18 @@
     "build": "node build.mjs",
     "test:ui": "node test_ui_loop.mjs",
     "vendor:loop": "node tools/vendor-loop-engine.mjs",
-    "test": "node test_kernel.mjs && node --test test_loop.mjs",
+    "test": "node test_kernel.mjs && node --test test_loop.mjs test_occt.mjs",
     "serve": "cd dist && python3 -m http.server 8765"
   },
   "author": "Madhav Baliga",
   "license": "SEE LICENSE IN ../LICENSE",
   "dependencies": {
+    "d3-delaunay": "^6.0.6",
     "esbuild": "^0.28.2",
     "manifold-3d": "^3.5.5",
     "occt-import-js": "^0.0.23",
+    "replicad": "^1.2.1",
+    "replicad-opencascadejs": "^1.2.1",
     "three": "^0.187.0"
   },
   "private": true

@@ -122,7 +122,7 @@ export function createView(el, cb) {
     for (const b of res.bodies) {
       if (hidden.has(b.name) || (m.solo && m.solo !== b.name)) continue;
       const g = geom(b.view);
-      const fits = inside(b.bbox);
+      const fits = b.noPlate || inside(b.bbox);
       const sel = m.selBody === b.name;
       const mat = new THREE.MeshStandardMaterial({ color: fits ? b.color : theme.grey, roughness: 0.82, metalness: 0, clippingPlanes: clipArr(), emissive: sel ? 0x0c2a20 : 0x000000 });
       const mesh = new THREE.Mesh(g, mat); mesh.userData = { body: b.name };

@@ -55,6 +55,43 @@ assert.equal((await page.$$('#p-loop .variants .vh')).length, 2);
 await page.click('#p-loop .variants .vh .btn >> nth=0');
 await page.waitForSelector('#p-loop .afterline:not([hidden])');
 assert.match(await page.textContent('#p-loop .afterline'), /Applied variant/);
+
+// ── OCCT kernel: New from template -> PCB enclosure builds in the worker (wasm loads on first use) -> scorecard panel
+assert.equal(await page.$eval('#kernel', (e) => e.value), 'manifold', 'Manifold stays the default kernel');
+assert.equal((await page.textContent('#kstate')).trim(), '', 'no kernel status until the OCCT kernel is used');
+await page.selectOption('#tmpl', 'pcb-enclosure');
+await page.waitForSelector('#p-check .crow', { timeout: 180000 });
+assert.equal(await page.$eval('#kernel', (e) => e.value), 'occt');
+assert.match(await page.textContent('#kstate'), /ready/);
+const rowsN = await page.$$eval('#p-check .crow', (r) => r.length);
+assert.ok(rowsN >= 14, `scorecard rows: ${rowsN}`);
+assert.equal((await page.$$('#p-check .crow.fail')).length, 0, 'every row passes on the demo board');
+assert.match(await page.textContent('#card-verdict'), /all checks pass/);
+assert.match(await page.textContent('#card-metrics'), /plastic[\s\S]*cm³/);
+assert.match(await page.textContent('#card-metrics'), /envelope[\s\S]*mm/);
+const bodies = await page.$$eval('#stats .stat b', (r) => r.map((x) => x.textContent));
+assert.deepEqual(bodies, ['Shell', 'Cap']);
+// export STEP: true B-rep from the OCCT kernel, not the faceted writer
+await page.click('#exp'); 
+const dl = page.waitForEvent('download');
+await page.click('#expm button:has-text("STEP")');
+const stepTxt = fs.readFileSync(await (await dl).path(), 'utf8');
+assert.match(stepTxt, /ADVANCED_FACE/); assert.match(stepTxt, /CYLINDRICAL_SURFACE|B_SPLINE_SURFACE/);
+// tagging an imported STEP assembly in the Objects pane -> keep-outs -> an enclosure feature on OCCT
+await page.evaluate(() => { const A = window.__af, np = JSON.parse(JSON.stringify(A.S.project)); np.features = np.features.filter((f) => f.type !== 'enclosure'); np.pcb = { name: '', board: null, components: [], cutouts: [], supports: [], keep: [] }; np.settings.kernel = 'manifold'; A.commit(np); });
+await page.waitForFunction(() => window.__af.S.project.settings.kernel === 'manifold' && window.__af.S.result && window.__af.S.result.kernel !== 'occt');
+await page.click('[data-pane=objects]');
+const fc = page.waitForEvent('filechooser');
+await page.click('#impasm');
+await (await fc).setFiles(path.resolve('node_modules/occt-import-js/test/testfiles/cax-if/as1-tu-203.stp'));
+await page.waitForSelector('#p-objects select[data-part]', { timeout: 30000 });
+const nParts = await page.$$eval('#p-objects select[data-part]', (r) => r.length);
+assert.ok(nParts >= 2, 'assembly solids are listed for tagging');
+await page.selectOption('#p-objects select[data-part="0"]', 'board');
+await page.selectOption('#p-objects select[data-part="1"]', 'component');
+await page.click('#gen-keepouts');
+await page.waitForFunction(() => window.__af.S.project.features.some((f) => f.type === 'enclosure') && window.__af.S.project.pcb.components.length >= 2);
+assert.equal(await page.$eval('#kernel', (e) => e.value), 'occt', 'generating keep-outs from a tagged assembly switches the document to OCCT');
 assert.deepEqual(errors, []);
 console.log('ui loop smoke ok');
 await browser.close(); srv.close();

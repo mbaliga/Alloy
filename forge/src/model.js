@@ -94,6 +94,25 @@ export const TYPES = {
       { k: 'top', kind: 'enum', opts: ['open', 'closed'], def: 'open' },
     ],
   },
+  enclosure: {
+    label: 'PCB enclosure', icon: '⬢', place: false, noCommon: true, occt: true,
+    desc: 'Parametric enclosure generated from the pcb block (components, keep-outs, cut-outs). Needs the OCCT kernel. Builds a shell body and a rear cap body, with a B-rep scorecard.',
+    fields: [
+      { k: 'name', kind: 'text', def: '' },
+      { k: 'body', kind: 'text', def: 'Shell', tip: 'Body name of the enclosure shell' },
+      { k: 'capBody', kind: 'text', def: 'Cap', tip: 'Body name of the rear cap (blank = no separate cap body)' },
+      { k: 'style', kind: 'enum', opts: ['monolith', 'bullet', 'cell'], def: 'monolith', tip: 'monolith = straight body; bullet = tapered snout; cell = monolith with a Voronoi cell texture' },
+      { k: 'wall', kind: 'num', def: '1.6', tip: 'Minimum wall (mm)' },
+      { k: 'clearance', kind: 'num', def: '0.3', tip: 'Printed-fit clearance around every internal part (mm)' },
+      { k: 'cap', kind: 'enum', opts: ['plug-screws', 'none'], def: 'plug-screws', tip: 'Rear cap with a plug and screws, or an open rear' },
+      { k: 'fastener', kind: 'enum', opts: ['M2', 'M2.5', 'M3'], def: 'M2', show: (f) => f.cap !== 'none', tip: 'Sets pilot hole, clearance hole and countersink sizes' },
+      { k: 'textureDensity', kind: 'num', def: '1', show: (f) => f.style === 'cell', tip: 'Cell count multiplier (1 = the template default)' },
+      { k: 'textureDepth', kind: 'num', def: '0.7', show: (f) => f.style === 'cell', tip: 'Recess depth of the cells (mm)' },
+      { k: 'textureGap', kind: 'num', def: '1.1', show: (f) => f.style === 'cell', tip: 'Land between cells (mm)' },
+      { k: 'textureSeed', kind: 'num', def: '11', show: (f) => f.style === 'cell', tip: 'Random seed of the cell layout' },
+      { k: 'spec', kind: 'json', def: {}, tip: 'Frame and station tables: yBottom, xFront, xRear, stations {monolith, bullet}, cap, texture, print' },
+    ],
+  },
   import: {
     label: 'Import', icon: '⬡', place: true,
     desc: 'An imported STEP/STL mesh asset',
@@ -152,20 +171,51 @@ export function defaultFeature(type, over = {}) {
   const T = TYPES[type];
   if (!T) throw new Error('unknown feature type ' + type);
   const f = { id: newId(), type, suppressed: false, locked: false };
-  for (const fd of fieldsFor(type)) f[fd.k] = Array.isArray(fd.def) ? [...fd.def] : fd.def;
+  for (const fd of fieldsFor(type)) f[fd.k] = fd.kind === 'json' ? clone(fd.def) : Array.isArray(fd.def) ? [...fd.def] : fd.def;
   if (T.defOp) f.op = T.defOp;
   if (!f.name) f.name = T.label;
   return Object.assign(f, over);
 }
 
+export const KERNELS = ['manifold', 'occt'];
+export const DOC_VERSION = 3;
+
+/**
+ * The PCB block (document v3): what the enclosure template reads. Coordinates are millimetres in the template frame
+ * (x = length with the front at -x, y = up, z = width).
+ *   components[]  { name, kind:'box'|'cylinder', box:[x0,x1,y0,y1,z0,z1] | cyl:{axis,a0,a1,c:[u,v],r}, role, clearance:'tight'|'normal'|'loose',
+ *                   sensitive, emitter:{direction:[x,y,z], beamR, reach}, insert:'rear'|'bottom'|null, cradle:{t,rear,downTo,upTo,zExtra},
+ *                   edgeSlot:{y:[y0,y1],depth}, wall:{extra,minY}|null, exposed:{dir,label}, paddle:{shrink,label}, locked }
+ *   cutouts[]     { name, shape:'box', box } | { name, shape:'cylinder', axis, center:[x,y,z], r, length }
+ *   supports[]    { name, box }   solid ribs/blocks added to the cradles
+ *   keep[]        { name, source:<asset id>, part:{bbox}, boxes:[[x0,x1,y0,y1,z0,z1]] }  regions kept from an imported original solid
+ *   board         { outline:[[x,z]...], thickness }  informational
+ */
+export function emptyPcb() { return { name: '', board: null, components: [], cutouts: [], supports: [], keep: [] }; }
+
 export function emptyProject() {
   return {
-    v: 2, name: 'Untitled', params: [], features: [], assets: {}, bodies: {},
-    settings: { detail: 48, density: 1.24, printVolume: [180, 180, 180] },
+    v: DOC_VERSION, name: 'Untitled', params: [], features: [], assets: {}, bodies: {}, pcb: emptyPcb(),
+    settings: { detail: 48, density: 1.24, printVolume: [180, 180, 180], kernel: 'manifold' },
   };
 }
 
 export const clone = (p) => JSON.parse(JSON.stringify(p));
+
+/** Bring any saved project (v1, v2, v3) up to the current document version. Never mutates its input. */
+export function migrate(p) {
+  const out = Object.assign(emptyProject(), clone(p || {}));
+  out.settings = Object.assign({ detail: 48, density: 1.24, printVolume: [180, 180, 180], kernel: 'manifold' }, out.settings || {});
+  if (!KERNELS.includes(out.settings.kernel)) out.settings.kernel = 'manifold';
+  out.pcb = Object.assign(emptyPcb(), out.pcb || {});
+  out.bodies = out.bodies || {};
+  out.assets = out.assets || {};
+  out.v = DOC_VERSION;
+  return out;
+}
+
+export const usesOcct = (P) => P?.settings?.kernel === 'occt';
+export const needsOcct = (P) => (P.features || []).some((f) => !f.suppressed && TYPES[f.type]?.occt);
 
 // ───────────────────────── Enclosure wizard ─────────────────────────
 
@@ -246,10 +296,24 @@ export function normalizeFeatureFields(f) {
     } else if (fd.kind === 'enum') {
       v = String(v ?? '');
       if (!fd.opts.includes(v)) throw new Error(`${f.type}.${fd.k} must be one of ${fd.opts.map((o) => `"${o}"`).join(', ')}`);
+    } else if (fd.kind === 'json') {
+      if (v == null || typeof v !== 'object' || Array.isArray(v)) throw new Error(`${f.type}.${fd.k} must be an object`);
+      v = clone(v);
     } else if (fd.kind === 'text') v = String(v ?? '');
     out[fd.k] = v;
   }
   return out;
+}
+
+export function validateComponent(c) {
+  const num = (v) => typeof v === 'number' && Number.isFinite(v);
+  if (c.kind === 'cylinder') {
+    const y = c.cyl;
+    if (!y || !['x', 'y', 'z'].includes(y.axis || 'x') || ![y.a0, y.a1, y.r].every(num) || !Array.isArray(y.c) || !y.c.every(num)) throw new Error(`pcb component "${c.name}": cylinder needs cyl {axis,a0,a1,c:[u,v],r} as numbers`);
+  } else {
+    if (c.kind && c.kind !== 'box') throw new Error(`pcb component "${c.name}": kind must be box or cylinder`);
+    if (!Array.isArray(c.box) || c.box.length !== 6 || !c.box.every(num)) throw new Error(`pcb component "${c.name}": box must be [x0,x1,y0,y1,z0,z1] numbers`);
+  }
 }
 
 export const bodyLocked = (P, b) => !!(P.bodies && P.bodies[b] && P.bodies[b].locked);
@@ -331,11 +395,32 @@ export function applyOps(project, ops) {
         log.push(`↕ "${f.name}"`); break;
       }
       case 'set_setting': {
+        if (op.key === 'kernel') {
+          if (!KERNELS.includes(op.value)) throw new Error(`kernel must be one of ${KERNELS.join(', ')}`);
+          P.settings.kernel = op.value; log.push(`~ kernel = ${op.value}`); break;
+        }
         if (!['detail', 'density'].includes(op.key)) throw new Error(`unknown setting "${op.key}"`);
         const v = Number(op.value);
         if (!Number.isFinite(v)) throw new Error('setting value must be a number');
         P.settings[op.key] = op.key === 'detail' ? Math.max(8, Math.min(160, Math.round(v))) : v;
         log.push(`~ ${op.key} = ${P.settings[op.key]}`); break;
+      }
+      case 'set_pcb_component': {
+        const c = op.component || {};
+        if (!/^[A-Za-z_][\w -]*$/.test(c.name || '')) throw new Error('pcb component needs a name');
+        validateComponent(c);
+        P.pcb = Object.assign(emptyPcb(), P.pcb || {});
+        const i = P.pcb.components.findIndex((x) => x.name === c.name);
+        if (i >= 0 && P.pcb.components[i].locked) throw new Error(`pcb component "${c.name}" is locked by the user`);
+        if (i >= 0) { P.pcb.components[i] = c; log.push(`~ pcb component "${c.name}"`); } else { P.pcb.components.push(c); log.push(`+ pcb component "${c.name}"`); }
+        break;
+      }
+      case 'remove_pcb_component': {
+        P.pcb = Object.assign(emptyPcb(), P.pcb || {});
+        const i = P.pcb.components.findIndex((x) => x.name === op.name);
+        if (i < 0) throw new Error(`no pcb component "${op.name}"`);
+        if (P.pcb.components[i].locked) throw new Error(`pcb component "${op.name}" is locked by the user`);
+        P.pcb.components.splice(i, 1); log.push(`− pcb component "${op.name}"`); break;
       }
       default: throw new Error(`unknown op "${op.op}"`);
     }
@@ -356,5 +441,5 @@ export function projectForAI(P) {
     if (featureLocked(P, f)) o.locked = true;
     return o;
   });
-  return { name: P.name, params: P.params.map((p) => (p.locked ? { ...p, locked: true } : { name: p.name, expr: p.expr })), bodies: P.bodies || {}, features, settings: P.settings, assets: Object.fromEntries(Object.entries(P.assets || {}).map(([k, a]) => [k, { name: a.name, tris: a.tris, bbox: a.bbox }])) };
+  return { name: P.name, pcb: (P.pcb && (P.pcb.components || []).length) ? P.pcb : undefined, params: P.params.map((p) => (p.locked ? { ...p, locked: true } : { name: p.name, expr: p.expr })), bodies: P.bodies || {}, features, settings: P.settings, assets: Object.fromEntries(Object.entries(P.assets || {}).map(([k, a]) => [k, { name: a.name, tris: a.tris, bbox: a.bbox }])) };
 }
