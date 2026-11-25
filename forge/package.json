@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node test_kernel.mjs",
+    "test:ui": "node test_ui_loop.mjs",
+    "vendor:loop": "node tools/vendor-loop-engine.mjs",
+    "test": "node test_kernel.mjs && node --test test_loop.mjs",
     "serve": "cd dist && python3 -m http.server 8765"
   },
   "author": "Madhav Baliga",

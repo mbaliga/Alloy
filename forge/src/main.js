@@ -5,6 +5,7 @@ import { TYPES, fieldsFor, defaultFeature, emptyProject, wizardProject, WIZARD_D
 import { build } from './kernel.js';
 import { createView } from './view.js';
 import { toSTL, toOBJ, toSTEP, importFile, zipOne } from './io.js';
+import { mountLoopPane } from './loop-pane.js';
 import { assist, resolveField, PROVIDERS, needsKey, hostedSample } from './ai.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -40,7 +41,7 @@ const S = {
   pane: 'tree', gizmo: 'translate', snap: true, theme: store.get('theme') || 'dark',
   cfg: { provider: 'anthropic', base: '', model: PROVIDERS.anthropic.model, key: '' }, chat: [], busy: false,
 };
-let wasm, view, rebuildT = 0, previewT = 0;
+let wasm, view, loopPane, rebuildT = 0, previewT = 0;
 
 // ───────────────────────── project lifecycle ─────────────────────────
 const snapshot = () => JSON.stringify(S.project);
@@ -110,6 +111,7 @@ function renderPanes() {
   document.querySelectorAll('[data-pane]').forEach((b) => b.classList.toggle('on', b.dataset.pane === S.pane));
   document.querySelectorAll('.pane').forEach((p) => { p.hidden = p.id !== 'p-' + S.pane; });
   renderObjects(); renderTree(); renderParams();
+  if (loopPane) loopPane.refresh();
 }
 
 function renderObjects() {
@@ -393,10 +395,11 @@ function setMode(m) {
 }
 
 // ───────────────────────── sheets ─────────────────────────
+const PANES = ['objects', 'tree', 'params', 'loop'];
 function showSheet(name) {
   const mobile = matchMedia('(max-width:899px)').matches;
-  if (['objects', 'tree', 'params'].includes(name)) { S.pane = name; renderPanes(); }
-  const showLeft = ['objects', 'tree', 'params'].includes(name);
+  if (PANES.includes(name)) { S.pane = name; renderPanes(); }
+  const showLeft = PANES.includes(name);
   if (mobile) {
     $('#left').classList.toggle('show', showLeft);
     $('#inspsec').classList.toggle('show', name === 'insp');
@@ -608,6 +611,7 @@ async function boot() {
   const addSel = $('#addf'); Object.entries(TYPES).forEach(([k, T]) => addSel.append(h('option', { value: k }, `${T.icon} ${T.label}`)));
 
   setTheme(S.theme);
+  loopPane = mountLoopPane({ h, $, root: $('#p-loop'), getProject: () => S.project, getCfg: () => S.cfg, getWasm: () => wasm, commit, undo, say, blip, needsKey, openSettings });
   renderTop(); rebuild(); showSheet(matchMedia('(max-width:899px)').matches ? 'none' : 'tree');
   window.__af = { S, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta };
   document.body.classList.add('ready');
