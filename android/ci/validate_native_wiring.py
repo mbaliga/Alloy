@@ -86,7 +86,7 @@ def main() -> None:
     activity_path = ROOT / "app/src/main/java/com/mbaliga/alloy/MainActivity.java"
     gradle_path = ROOT / "app/build.gradle"
     cmake_entry_path = ROOT / "app/CMakeLists.txt"
-    workflow_path = ROOT / ".github/workflows/alloy-native-build.yml"
+    workflow_path = ROOT.parent / ".github/workflows/alloy-native-build.yml"
     smoke_path = ROOT / "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java"
     safety_path = ROOT / "app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java"
     prebuilts_path = ROOT / "ci/validate_native_prebuilts.py"

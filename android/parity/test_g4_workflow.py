@@ -15,14 +15,14 @@ class G4WorkflowTests(unittest.TestCase):
         self.assertEqual("Bambu Lab P1S 0.4 nozzle", PRINTER_PROFILES["p1s"]["printer"])
 
     def test_template_audit_consumes_exported_machine_profile(self):
-        workflow = (ROOT / ".github/workflows/path-b-g4-a1mini-profile-audit.yml").read_text(
+        workflow = (ROOT.parent / ".github/workflows/path-b-g4-a1mini-profile-audit.yml").read_text(
             encoding="utf-8"
         )
         self.assertIn("path-b-g4-evidence/resolved/machine.json", workflow)
         self.assertNotIn("path-b-g4-evidence/resolved/resolved-printer.json", workflow)
 
     def test_matrix_workflow_keeps_audit_as_pre_gate_for_all_printers(self):
-        workflow = (ROOT / ".github/workflows/bambu-profile-compatibility.yml").read_text(
+        workflow = (ROOT.parent / ".github/workflows/bambu-profile-compatibility.yml").read_text(
             encoding="utf-8"
         )
         self.assertIn("printer: [a1-mini, a1, p1s]", workflow)
@@ -42,7 +42,7 @@ class G4WorkflowTests(unittest.TestCase):
         self.assertIn("static compatibility pre-gate; it is not runtime parity", workflow)
 
     def test_profile_source_checkouts_are_pinned_retried_and_upload_failure_logs(self):
-        workflow = (ROOT / ".github/workflows/bambu-profile-compatibility.yml").read_text(
+        workflow = (ROOT.parent / ".github/workflows/bambu-profile-compatibility.yml").read_text(
             encoding="utf-8"
         )
         self.assertIn("ci/checkout_pinned_snapshot.py", workflow)

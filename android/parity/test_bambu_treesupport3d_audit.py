@@ -16,7 +16,7 @@ from ci import audit_bambu_treesupport3d as audit
 class BambuTreeSupportAuditTests(unittest.TestCase):
     def test_ci_audit_is_pinned_to_the_same_source_contract(self):
         repository = Path(__file__).resolve().parents[1]
-        workflow = (repository / ".github/workflows/path-b-g5-bambu-treesupport3d-audit.yml").read_text(
+        workflow = (repository.parent / ".github/workflows/path-b-g5-bambu-treesupport3d-audit.yml").read_text(
             encoding="utf-8"
         )
         self.assertIn(f"BAMBU_TAG: {audit.PINNED_TAG}", workflow)

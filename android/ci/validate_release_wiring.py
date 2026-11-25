@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github/workflows/android-release-candidate.yml"
+WORKFLOW = ROOT.parent / ".github/workflows/android-release-candidate.yml"
 RELEASE_DOC = ROOT / "docs/RELEASE.md"
 APP_BUILD = ROOT / "app/build.gradle"
 SIGNING_SCRIPT = ROOT / "ci/sign_android_release.sh"

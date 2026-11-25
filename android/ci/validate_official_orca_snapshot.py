@@ -22,6 +22,9 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+# In the monorepo the slicer is android/ and .gitmodules sits at the repository root, with paths prefixed by android/.
+REPO_ROOT = ROOT.parent
+SLICER_DIR = "android/"
 MODULE_NAME = "orca-official"
 MODULE_PATH = "third_party/orca-official"
 OFFICIAL_URL = "https://github.com/OrcaSlicer/OrcaSlicer.git"
@@ -54,13 +57,13 @@ def normalize_url(value: str) -> str:
 
 
 def require_gitlink(name: str, path: str, url: str, revision: str) -> None:
-    module_file = ROOT / ".gitmodules"
+    module_file = REPO_ROOT / ".gitmodules"
     if not module_file.is_file():
         raise ValueError(".gitmodules is missing")
-    configured_path = run_git(ROOT, "config", "-f", ".gitmodules", "--get", f"submodule.{name}.path")
-    configured_url = run_git(ROOT, "config", "-f", ".gitmodules", "--get", f"submodule.{name}.url")
-    if configured_path != path:
-        raise ValueError(f"submodule {name} path is {configured_path!r}, expected {path!r}")
+    configured_path = run_git(REPO_ROOT, "config", "-f", ".gitmodules", "--get", f"submodule.{name}.path")
+    configured_url = run_git(REPO_ROOT, "config", "-f", ".gitmodules", "--get", f"submodule.{name}.url")
+    if configured_path != f"{SLICER_DIR}{path}":
+        raise ValueError(f"submodule {name} path is {configured_path!r}, expected {SLICER_DIR + path!r}")
     if normalize_url(configured_url) != normalize_url(url):
         raise ValueError(f"submodule {name} URL is {configured_url!r}, expected {url!r}")
 

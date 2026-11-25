@@ -5,7 +5,7 @@ import re
 import unittest
 
 
-WORKFLOW = Path(__file__).parents[1] / ".github/workflows/desktop-orca-reference.yml"
+WORKFLOW = Path(__file__).parents[2] / ".github/workflows/desktop-orca-reference.yml"
 
 
 class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
@@ -34,13 +34,14 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
     def test_current_pull_request_and_fixture_changes_trigger_reference_slices(self):
         text = WORKFLOW.read_text(encoding="utf-8")
         pull_request = text.split("  pull_request:", 1)[1].split("  workflow_dispatch:", 1)[0]
-        self.assertIn("codex/fix-native-test-status", pull_request)
-        self.assertIn("parity/test_generate_fixtures.py", pull_request)
-        self.assertIn("parity/compare_gcode.py", pull_request)
-        self.assertIn("parity/test_compare_gcode.py", pull_request)
-        self.assertIn("ci/compare_g3_artifacts.py", pull_request)
-        self.assertIn("ci/validate_g3_reference_transform.py", pull_request)
-        self.assertIn("app/src/main/assets/models/**", pull_request)
+        # no branch filter: pull requests into any branch (stacked PRs included) run the reference slices
+        self.assertNotIn("branches:", pull_request)
+        self.assertIn("android/parity/test_generate_fixtures.py", pull_request)
+        self.assertIn("android/parity/compare_gcode.py", pull_request)
+        self.assertIn("android/parity/test_compare_gcode.py", pull_request)
+        self.assertIn("android/ci/compare_g3_artifacts.py", pull_request)
+        self.assertIn("android/ci/validate_g3_reference_transform.py", pull_request)
+        self.assertIn("android/app/src/main/assets/models/**", pull_request)
 
     def test_export_3mf_uses_filename_relative_to_output_directory(self):
         text = WORKFLOW.read_text(encoding="utf-8")
@@ -62,16 +63,16 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
         strict = strict.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[0]
         diagnostic = text.split("- name: Slice hook-neutralized counterfactual fixtures", 1)[1]
         diagnostic = diagnostic.split("- name: Record authoritative baseline manifest", 1)[0]
-        self.assertIn('MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"', strict)
+        self.assertIn('MACHINE="$GITHUB_WORKSPACE/android/runtime/profiles/machine.json"', strict)
         self.assertIn('--load-settings "$MACHINE;$PROCESS"', strict)
         self.assertIn("continue-on-error: true", diagnostic)
         self.assertIn("neutralize_bambu_motion_hooks.py", diagnostic)
         self.assertIn("prepare_orca_cli_process_profile.py", strict)
         self.assertNotIn("--neutralize-motion-hooks", strict)
         self.assertIn("--neutralize-motion-hooks", diagnostic)
-        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"', strict)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/android/runtime/profiles/g3-project-process.json"', strict)
         self.assertIn(
-            'PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"',
+            'PROCESS="$GITHUB_WORKSPACE/android/runtime/profiles/g3-project-process-hook-neutralized.json"',
             diagnostic,
         )
         self.assertIn("--load-settings \"$MACHINE;$PROCESS\"", diagnostic)
@@ -104,9 +105,9 @@ class DesktopOrcaReferenceWorkflowTests(unittest.TestCase):
     def test_both_orca_slices_use_project_settings_compatibility_wrapper(self):
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertEqual(text.count('ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"'), 2)
-        self.assertEqual(text.count('COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"'), 2)
-        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"', text)
-        self.assertIn('PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"', text)
+        self.assertEqual(text.count('COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/android/runtime/profiles/process.json"'), 2)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/android/runtime/profiles/g3-project-process.json"', text)
+        self.assertIn('PROCESS="$GITHUB_WORKSPACE/android/runtime/profiles/g3-project-process-hook-neutralized.json"', text)
 
 
 if __name__ == "__main__":
