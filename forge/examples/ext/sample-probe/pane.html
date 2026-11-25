@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  body{margin:0;padding:10px;font:13px system-ui,sans-serif;color:var(--ink,#dfe7ea);background:transparent}
+  button{font:600 10px ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;min-height:40px;border-radius:12px;border:1px solid currentColor;background:none;color:var(--acc,#8ff0c4);margin-right:6px}
+  #out{margin-top:10px;font:11px ui-monospace,monospace;color:var(--dim,#9aa8ad)}
+</style>
+<button id="scan">Scan</button><button id="clear">Clear</button>
+<div id="out">Press Scan to colour the model by height.</div>
+<script>
+  const out = document.getElementById('out');
+  for (const id of ['scan', 'clear']) document.getElementById(id).onclick = async () => {
+    try { out.textContent = (await alloy.call(id)).text; } catch (e) { out.textContent = 'Error: ' + e.message; }
+  };
+  alloy.on('theme', (t) => document.documentElement.style.setProperty('--ink', t.ink));
+</script>
