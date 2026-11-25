@@ -10,6 +10,7 @@ Alloy is a family of three tools on one shared core: **Alloy Forge** (web parame
 - `docs/STYLE.md` — house style canon. UI work is checked against it.
 - `docs/EXTENSIONS_SPEC.md` — plugins/extensions (one system, two tiers), the extension host (X0), the analysis framework (A0) and the five analysis packages (A1–A5).
 - `docs/CONSOLIDATION.md` — how the slicer branches were consolidated: inventory, decisions, what was archived and where.
+- `docs/EXTENSION_API.md` — reference for package authors, generated from `forge/src/ext/api-spec.js` (`npm run docs:api`; a test fails if it is stale).
 - `forge/` — Alloy Forge web app (see `forge/README.md`; third-party notices in `forge/THIRD_PARTY.md`).
 - `android/` — Alloy Slicer Android app (see `android/README.md`; slicer docs in `android/docs/`, gate evidence in `android/docs/GATE_STATUS.md`; third-party notices in `android/THIRD_PARTY.md`).
 - `slicer-ports/` — iOS and Ubuntu Touch companions (see their docs under `slicer-ports/docs/`).

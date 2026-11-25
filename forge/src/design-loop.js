@@ -66,7 +66,7 @@ function summariseChecks(res) {
 export function runDesignLoop(o) {
   const env = {
     callModel: o.callModel || defaultCallModel, build: o.build || kernelBuild, wasm: o.wasm, occt: o.occt || null,
-    minWall: o.minWall ?? 1.2, maxRounds: Math.max(1, o.maxRounds ?? 4), prices: o.prices || null,
+    ext: o.ext || null, minWall: o.minWall ?? 1.2, maxRounds: Math.max(1, o.maxRounds ?? 4), prices: o.prices || null,
   };
   const params = { goal: o.goal || 'Improve this enclosure.', styleBrief: o.styleBrief || '', threshold: o.threshold ?? DEFAULT_THRESHOLD, hint: o.hint || 'none' };
   const S = { base: clone(o.project), current: clone(o.project), rounds: [], lastBuild: null, best: null, exported: null, feedback: null, tokens: 0, cost: 0 };
@@ -129,10 +129,18 @@ export function runDesignLoop(o) {
       }
       disposeBuild();
       // one build entry for both kernels: Manifold is synchronous, OCCT runs in its worker (await handles both)
-      const buildWith = (P) => {
-        if (!usesOcct(P)) return env.build(P, env.wasm);
-        if (!env.occt) throw new Error('the OCCT kernel is not available in this run');
-        return env.occt.build(P);
+      // `env.ext` (optional) resolves package feature types into built-in features first; the saved design is never changed.
+      const buildWith = async (P) => {
+        const prep = env.ext ? await env.ext.prepare(P) : null;
+        const PP = prep ? prep.project : P;
+        let b;
+        if (!usesOcct(P)) b = env.build(PP, env.wasm);
+        else {
+          if (!env.occt) throw new Error('the OCCT kernel is not available in this run');
+          b = await env.occt.build(PP);
+        }
+        S.lastPrep = prep;
+        return prep ? env.ext.mergeStatus(b, prep, P) : b;
       };
       let built;
       try { built = await buildWith(next); } catch (e) { error = error || `build failed: ${e.message}`; next = base; built = await buildWith(base); }
@@ -145,7 +153,8 @@ export function runDesignLoop(o) {
       const rd = round();
       const P = S.current;
       // B-rep checks (exact booleans/distances, the enclosure scorecard) when the build came from the OCCT kernel; mesh checks otherwise
-      const res = S.lastBuild.kernel === 'occt' ? await S.lastBuild.check({ minWall: env.minWall }) : runChecks(P, S.lastBuild, { minWall: env.minWall });
+      let res = S.lastBuild.kernel === 'occt' ? await S.lastBuild.check({ minWall: env.minWall }) : runChecks(S.lastPrep?.project || P, S.lastBuild, { minWall: env.minWall });
+      if (env.ext) res = env.ext.mergeChecks(res, await env.ext.checkRows(P, { build: S.lastBuild }));
       if (rd.opsError) { // surface a rejected round as a hard failure so the gateway iterates
         res.checks.unshift({ id: 'ops_valid', label: 'Proposed ops were valid and respected locks', severity: 'hard', pass: false, detail: rd.opsError });
         res.passed = false; res.failed.unshift('ops_valid');

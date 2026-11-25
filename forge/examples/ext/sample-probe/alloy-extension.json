@@ -1,0 +1,15 @@
+{
+  "id": "xyz.mdhv.sample-probe",
+  "name": "Sample: height probe",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "An extension. A pane that scans the bodies and an overlay that colours their vertices by height.",
+  "main": "main.js",
+  "permissions": ["doc.read", "geometry.read", "ui.pane", "scene.overlay"],
+  "contributes": {
+    "panes": [{ "id": "probe", "label": "Height probe", "file": "pane.html" }],
+    "overlays": [{ "id": "height", "label": "Vertex height" }]
+  }
+}

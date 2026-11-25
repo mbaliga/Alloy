@@ -76,12 +76,19 @@ A package is a `.alloyext` file (zip) with `alloy-extension.json` at its root.
 
 ### X0 done
 
-- [ ] Manifest schema, loader, registry, Worker host and RPC; iframe panes
-- [ ] API v1 with permission checks, each permission covered by a test that a package without it is refused
-- [ ] Extensions settings UI, install/remove, per-project enable
-- [ ] Removal test: a project using a package's feature type and check opens, builds and saves without it, and is restored when it is reinstalled
-- [ ] Two sample packages: a plugin (a "rib" feature type + a check) and an extension (a pane + an overlay)
-- [ ] `docs/EXTENSION_API.md` for authors, generated from the API types where possible
+Status: built (PR for milestone X0). Deviations and deferred items are listed under each line.
+
+- [x] Manifest schema, loader, registry, Worker host and RPC; iframe panes
+  - Integrity covers the manifest and every file (so widening permissions is detected). It is a hash, not a signature.
+  - Panes are HTML files inside the package (`contributes.panes[].file`), not URLs: a pane has no network, so there is nothing to fetch.
+- [x] API v1 with permission checks, each permission covered by a test that a package without it is refused
+  - Added `geometry.list` (a package needs to know which bodies exist) and `ui.pane.open` / `ui.pane.post` / `ui.pane.onCall` in place of a single `ui.pane(id, url)`.
+  - `geometry.voxelize` is a CPU reference (4M voxels default, 8M hard cap); the GPU voxelizer arrives with A2 behind the same call.
+  - `agent.tool` and `loop.step` register and can be called through the resolver (`agentTools`, `callAgentTool`, `loopSteps`, `callLoopStep`), but the in-app AI (op-JSON, no tool loop yet), the MCP server (F6) and the fixed design-loop graph do not call them yet.
+- [x] Extensions settings UI, install/remove, per-project enable
+- [x] Removal test: a project using a package's feature type and check opens, builds and saves without it, and is restored when it is reinstalled
+- [x] Two sample packages: a plugin (a "rib" feature type + a check) and an extension (a pane + an overlay)
+- [x] `docs/EXTENSION_API.md` for authors, generated from the API types where possible (from `src/ext/api-spec.js`)
 
 ## 3. Analysis framework (milestone A0, inside the host)
 

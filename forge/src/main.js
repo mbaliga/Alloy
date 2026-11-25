@@ -2,7 +2,7 @@ import Module from 'manifold-3d';
 import wasmBin from '../node_modules/manifold-3d/manifold.wasm';
 import { makeScope, checkSyntax } from './expr.js';
 import { selectionActions, renderSelBar, openCtxMenu } from './selbar.js';
-import { TYPES, fieldsFor, defaultFeature, emptyProject, wizardProject, WIZARD_DEFAULTS, applyOps, clone, featureLocked, bodyLocked, migrate, usesOcct } from './model.js';
+import { TYPES, fieldsFor, defaultFeature, emptyProject, wizardProject, WIZARD_DEFAULTS, applyOps, clone, featureLocked, bodyLocked, migrate, usesOcct, typeDef, extTypes } from './model.js';
 import { build } from './kernel.js';
 import { createView } from './view.js';
 import { toSTL, toOBJ, toSTEP, importFile, importAssembly, zipOne } from './io.js';
@@ -12,6 +12,12 @@ import { pcbEnclosureProject } from '../templates/pcb-enclosure/index.js';
 import { renderPcbSection, renderCheckPane, KSTATE } from './pcb-ui.js';
 import { mountLoopPane } from './loop-pane.js';
 import { assist, resolveField, PROVIDERS, needsKey, hostedSample } from './ai.js';
+import { ExtRegistry, idbStore, memoryStore, enabledIn, projectEntry } from './ext/registry.js';
+import { ExtHost, ExtError, browserWorkerFactory } from './ext/host.js';
+import { ExtApi } from './ext/api.js';
+import { createResolver, hasExtFeatures } from './ext/resolve.js';
+import { createPaneHost } from './ext/panes.js';
+import { mountExtensions } from './ext/ui.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const h = (tag, attrs = {}, ...kids) => {
@@ -48,6 +54,8 @@ const S = {
   cfg: { provider: 'anthropic', base: '', model: PROVIDERS.anthropic.model, key: '' }, chat: [], busy: false,
 };
 let wasm, view, loopPane, rebuildT = 0, previewT = 0;
+let registry, extHost, resolver, panes, extUi; // extension host (src/ext): packages, Workers, resolver, pane bridge, UI
+const typeOf = (f) => typeDef(f.type) || { label: String(f.type).split('/').pop(), icon: '◇', desc: 'Needs an extension that is not installed. The feature is kept exactly as it is.', missing: true };
 
 // ───────────────────────── project lifecycle ─────────────────────────
 const snapshot = () => JSON.stringify(S.project);
@@ -88,19 +96,27 @@ function applyResult(res) {
   view.setResult(S.result, meta());
   if (first) { view.fit(); S.fitted = true; }
   renderPanes(); renderInspector(); renderStats(); updateGizmo(); renderKState(); refreshBar();
+  const wsig = (res.extWarnings || []).map((w) => w.message).join('|');
+  if (wsig && wsig !== S.warnSig) say('⚠ ' + res.extWarnings.map((w) => w.message).join(' '));
+  S.warnSig = wsig;
   const j = JSON.stringify(S.project);
   store.set('project', j.length < 4e6 ? j : JSON.stringify({ ...S.project, assets: {} }));
   runCard(false);
 }
 async function rebuild() {
   const tok = ++buildTok;
-  if (!usesOcct(S.project)) { applyResult(runBuild(S.project)); return; }
+  // Package feature types are expanded into built-in features first; the kernel builds a derived project and the saved one is untouched.
+  let prep = { project: S.project, derived: false, warnings: [], children: {}, errors: {} };
+  if (resolver && hasExtFeatures(S.project)) { prep = await resolver.prepare(S.project); if (tok !== buildTok) return; }
+  S.prep = prep;
+  const fin = (res) => applyResult(prep.derived ? resolver.mergeStatus(res, prep, S.project) : res);
+  if (!usesOcct(S.project)) { fin(runBuild(prep.project)); return; }
   renderKState();
   let res;
-  try { res = await getOcct().build(S.project); }
+  try { res = await getOcct().build(prep.project); }
   catch (e) { console.error(e); res = { bodies: [], refs: [], status: {}, params: {}, dispose() {}, fatal: 'OCCT kernel: ' + String(e.message || e) }; }
   if (tok !== buildTok) { res.dispose && res.dispose(); return; } // a newer edit superseded this build
-  applyResult(res);
+  fin(res);
 }
 // Checks: exact B-rep scorecard on the OCCT path (runs in the worker), mesh estimates on Manifold.
 async function runCard(force) {
@@ -109,7 +125,8 @@ async function runCard(force) {
   const tok = ++S.cardTok;
   S.card = { busy: true }; if (S.pane === 'check') renderCheck();
   try {
-    const res = R.kernel === 'occt' ? await R.check({}) : runChecks(S.project, R);
+    let res = R.kernel === 'occt' ? await R.check({}) : runChecks(S.prep?.project || S.project, R);
+    if (resolver) res = resolver.mergeChecks(res, await resolver.checkRows(S.project, { build: R })); // rows from extensions
     if (tok !== S.cardTok) return;
     S.card = { res };
   } catch (e) { if (tok !== S.cardTok) return; S.card = { error: String(e.message || e) }; }
@@ -117,7 +134,7 @@ async function runCard(force) {
 }
 function renderCheck() { renderCheckPane($('#p-check'), { h, S, runCheck: runCard }); }
 function preview(p) {
-  if (usesOcct(p)) return; // no live drag preview on the B-rep kernel: the build runs in a worker and lands on release
+  if (usesOcct(p) || hasExtFeatures(p)) return; // no live drag preview on the B-rep kernel or with extension features: the build runs in a worker and lands on release
   clearTimeout(previewT);
   previewT = setTimeout(() => { const r = runBuild(p); view.setResult(r, meta()); if (S._prev) S._prev.dispose(); S._prev = r; }, 16);
 }
@@ -158,7 +175,16 @@ function renderPanes() {
   document.querySelectorAll('.pane').forEach((p) => { p.hidden = p.id !== 'p-' + S.pane; });
   renderObjects(); renderTree(); renderParams(); renderCheck();
   if (loopPane) loopPane.refresh();
+  if (extUi) { extUi.refreshTabs(); if (S.pane === 'ext') extUi.renderExtPane($('#p-ext')); refreshAddMenu(); }
 }
+// "Add feature" menu: built-ins plus the feature types of the packages switched on in this project
+function refreshAddMenu() {
+  const sel = $('#addf'); if (!sel) return;
+  sel.querySelectorAll('option[data-ext]').forEach((o) => o.remove());
+  for (const [k, T] of Object.entries(extTypes())) if (enabledIn(S.project, T.ext)) sel.append(h('option', { value: k, 'data-ext': T.ext }, `${T.icon} ${T.label} · ${registry.get(T.ext)?.manifest.name || T.ext}`));
+}
+// Only the user changes which extensions are on: a typed op with actor 'user', one undoable step
+function setExtension(op) { const r = applyOps(S.project, [op], { actor: 'user' }); commit(r.project); }
 
 function renderObjects() {
   const box = $('#p-objects'); box.textContent = '';
@@ -186,13 +212,14 @@ function renderTree() {
   const box = $('#p-tree'); box.textContent = '';
   S.project.features.forEach((f) => {
     const st = S.result?.status?.[f.id] || {};
-    const T = TYPES[f.type];
+    const T = typeOf(f);
     const lk = featureLocked(S.project, f);
     box.append(h('div', { class: 'row' + (S.sel === f.id ? ' sel' : '') + (f.suppressed ? ' off' : '') + (lk ? ' locked' : ''),
       onclick: () => { S.sel = f.id; S.selBody = f.body !== '*' ? f.body : null; blip(740); refreshSel(); showSheet('insp'); } },
       h('span', { class: 'ico' }, T.icon),
       h('span', { class: 'nm' }, f.name || T.label),
       h('span', { class: 'tag' + (f.op === 'cut' ? ' cut' : f.op === 'ref' ? ' ref' : '') }, f.type === 'split' ? 'split' : f.type === 'transform' ? f.mode : f.op === 'add' ? f.body : `${f.op} ${f.body === '*' ? '*' : ''}`.trim()),
+      st.skipped && st.warning ? h('span', { class: 'tag cut', title: st.warning }, 'needs ' + (projectEntry(S.project, f.ext)?.name || f.ext || 'extension')) : null,
       st.ok === false ? h('span', { class: 'err', title: st.error }, '!') : null,
       h('button', { class: 'g' + (f.locked ? ' on lk' : ''), title: f.locked ? 'Unlock' : 'Lock', onclick: (e) => { e.stopPropagation(); const p = clone(S.project); const g = p.features.find((x) => x.id === f.id); g.locked = !g.locked; commit(p); blip(g.locked ? 300 : 500); } }, f.locked ? '⊠' : '□'),
       h('button', { class: 'g', title: f.suppressed ? 'Enable' : 'Suppress', onclick: (e) => { e.stopPropagation(); if (lk) return say('Unlock it first.'); const p = clone(S.project); const g = p.features.find((x) => x.id === f.id); g.suppressed = !g.suppressed; commit(p); blip(360); } }, f.suppressed ? '○' : '●')));
@@ -270,7 +297,7 @@ function renderInspector() {
   if (!f && S.selBody) return renderBodyInspector(box);
   if (!f) { box.append(h('div', { class: 'empty' }, 'Select a feature or body')); return; }
   const scope = makeScope(S.project.params);
-  const T = TYPES[f.type];
+  const T = typeOf(f);
   const lk = featureLocked(S.project, f);
   const set = (k, v) => { const np = clone(S.project); np.features.find((x) => x.id === f.id)[k] = v; commit(np); };
   const resolved = (e) => { try { return isPlain(e) || e === '' ? '' : '= ' + +scope.ev(e).toFixed(3); } catch (_) { return '= ?'; } };
@@ -304,6 +331,7 @@ function renderInspector() {
   box.append(h('div', { class: 'hint' }, 'Fields take numbers, expressions or plain words.'));
   const st = S.result?.status?.[f.id];
   if (st && st.ok === false) box.append(h('div', { class: 'errbox' }, st.error));
+  if (st && st.warning) box.append(h('div', { class: 'errbox warn' }, st.warning));
   function move(d) { const np = clone(S.project); const i = np.features.findIndex((x) => x.id === f.id); const j = i + d; if (j < 0 || j >= np.features.length) return; [np.features[i], np.features[j]] = [np.features[j], np.features[i]]; commit(np); blip(600); }
   function dup() { const np = clone(S.project); const i = np.features.findIndex((x) => x.id === f.id); const g = clone(f); g.id = defaultFeature('box').id; g.name = f.name + ' copy'; g.locked = false; np.features.splice(i + 1, 0, g); S.sel = g.id; commit(np); blip(800); }
   function del() { const np = clone(S.project); np.features = np.features.filter((x) => x.id !== f.id); S.sel = null; commit(np); blip(200, 0.08); }
@@ -381,7 +409,7 @@ const selCtx = () => ({ S, commit, refreshSel, refreshBar, setGizmo, setBodyMeta
   ev: (e) => makeScope(S.project.params).ev(e) });
 function selLabel() {
   const f = selFeature();
-  if (f) return `${TYPES[f.type]?.label || f.type} / ${f.name}`;
+  if (f) return `${typeOf(f).label} / ${f.name}`;
   if (S.selBody) return `Body / ${S.selBody}`;
   return S.clip ? 'Clipboard' : '';
 }
@@ -528,7 +556,7 @@ function setMode(m) {
 }
 
 // ───────────────────────── sheets ─────────────────────────
-const PANES = ['objects', 'tree', 'params', 'check', 'loop'];
+const PANES = ['objects', 'tree', 'params', 'check', 'loop', 'ext'];
 function showSheet(name) {
   const mobile = matchMedia('(max-width:899px)').matches;
   if (PANES.includes(name)) { S.pane = name; renderPanes(); }
@@ -685,12 +713,12 @@ async function sendPrompt() {
   S.busy = false; document.body.classList.remove('thinking');
 }
 
-function setTheme(t) { S.theme = t; document.body.classList.toggle('light', t === 'light'); view.setTheme(t); store.set('theme', t); }
+function setTheme(t) { S.theme = t; document.body.classList.toggle('light', t === 'light'); view.setTheme(t); store.set('theme', t); if (panes) setTimeout(() => panes.theme(), 0); }
 
 // ───────────────────────── boot ─────────────────────────
 async function boot() {
   wasm = await Module({ wasmBinary: wasmBin }); wasm.setup();
-  view = createView($('#vp'), { onPick, onContext });
+  view = createView($('#vp'), { onPick, onContext, onProbe: (p) => extUi && extUi.showProbe(p) });
   let proj = null;
   try { const saved = store.get('project'); proj = saved ? JSON.parse(saved) : null; } catch (_) {}
   S.project = proj && proj.features ? migrate(proj) : wizardProject({ name: 'Enclosure' });
@@ -769,10 +797,35 @@ async function boot() {
   });
   const addSel = $('#addf'); Object.entries(TYPES).forEach(([k, T]) => addSel.append(h('option', { value: k }, `${T.icon} ${T.label}`)));
 
+  // ───── extension host
+  registry = new ExtRegistry({ store: typeof indexedDB !== 'undefined' ? idbStore() : memoryStore() });
+  await registry.init().catch((e) => console.error('extensions:', e));
+  const userStore = { get: (k) => { try { return JSON.parse(localStorage.getItem('af.ext.' + k)); } catch (_) { return undefined; } }, set: (k, v) => { try { localStorage.setItem('af.ext.' + k, JSON.stringify(v)); } catch (_) {} } };
+  const api = new ExtApi({
+    getProject: () => S.project, getBuild: () => S.result, isEnabled: (id) => enabledIn(S.project, id), userStore,
+    commitOps: async (ops, { extId }) => { const r = applyOps(S.project, ops, { actor: 'ext', extId }); commit(r.project); return { log: r.log }; },
+    brep: async (name) => {
+      if (S.result?.kernel !== 'occt') throw new ExtError('E_UNAVAILABLE', 'B-rep access needs the OCCT kernel (switch the kernel in the header)');
+      return new Uint8Array(await (await S.result.stepBlob([name])).arrayBuffer());
+    },
+    onOverlay: (e, i, o) => extUi.setOverlay(e, i, o), onPane: (m) => extUi.onPane(m),
+    getRunner: () => { const r = extUi.runner.get(); return r.url ? r : null },
+    gpuInfo: async () => {
+      if (!navigator.gpu) return { available: false };
+      try { const a = await navigator.gpu.requestAdapter(); if (!a) return { available: false }; const i = a.info || {}; return { available: true, adapter: [i.vendor, i.architecture, i.device].filter(Boolean).join(' ') || 'unknown', limits: { maxBufferSize: a.limits.maxBufferSize, maxStorageBufferBindingSize: a.limits.maxStorageBufferBindingSize } }; } catch (_) { return { available: false }; }
+    },
+  });
+  extHost = new ExtHost({ createWorker: browserWorkerFactory, api });
+  resolver = createResolver({ registry, host: extHost });
+  const themeNow = () => { const cs = getComputedStyle(document.body); return { ink: cs.getPropertyValue('--ink').trim(), dim: cs.getPropertyValue('--dim').trim(), acc: cs.getPropertyValue('--acc').trim(), dark: S.theme !== 'light' }; };
+  panes = createPaneHost({ host: extHost, getPkg: (id) => registry.get(id), getTheme: themeNow });
+  extUi = mountExtensions({ h, $, tip: tipToggle, S, registry, host: extHost, resolver, panes, view, say, blip, setExtension, rebuild: scheduleRebuild, showSheet, renderPanes, refreshAddMenu });
+  registry.subscribe(() => { resolver.clear(); });
+
   setTheme(S.theme);
-  loopPane = mountLoopPane({ h, $, root: $('#p-loop'), getProject: () => S.project, getCfg: () => S.cfg, getWasm: () => wasm, getOcct, commit, undo, say, blip, needsKey, openSettings });
+  loopPane = mountLoopPane({ h, $, root: $('#p-loop'), getProject: () => S.project, getCfg: () => S.cfg, getWasm: () => wasm, getOcct, getExt: () => resolver, commit, undo, say, blip, needsKey, openSettings });
   renderTop(); renderKState(); rebuild(); showSheet(matchMedia('(max-width:899px)').matches ? 'none' : 'tree');
-  window.__af = { S, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta, getOcct, runCard };
+  window.__af = { S, ext: { registry, host: extHost, resolver, panes, ui: extUi }, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta, getOcct, runCard };
   document.body.classList.add('ready');
 }
 boot().catch((e) => { console.error(e); document.body.append(h('pre', { class: 'fatal' }, 'Failed to start: ' + e.message)); });

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' blob: 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%274%27 y=%278%27 width=%2724%27 height=%2716%27 rx=%275%27 fill=%27%238ff0c4%27/%3E%3C/svg%3E">
 <title>Alloy Forge — parametric tools</title>
 <style>
@@ -186,7 +187,7 @@ body.thinking #send{animation:pulse .9s infinite alternate}
 #tabs button{font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--dim);padding:8px 14px}
 #tabs button.on{color:var(--acc)}
 @media(max-width:899px){
- header{gap:8px}.brand{letter-spacing:.14em}.brand em{display:none}#pname{width:34vw}
+ header{gap:8px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}header::-webkit-scrollbar{display:none}header>*{flex-shrink:0}.brand{letter-spacing:.14em}.brand em{display:none}#pname{width:34vw}
  .sec.show{display:block;left:10px;right:10px;bottom:132px;max-height:46vh;z-index:8}
  #bottom{bottom:44px}
  #tools{bottom:auto;top:46px;left:10px;right:10px;flex-direction:row;overflow-x:auto;gap:2px;padding-bottom:2px}
@@ -195,6 +196,23 @@ body.thinking #send{animation:pulse .9s infinite alternate}
  .hb.opt{display:none}
  #pickbar{top:88px}
 }
+/* extensions (docs/STYLE.md: glass, mono labels, state = word + shape, phone sheets) */
+.tier{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--glass2);color:var(--dim)}
+.tier.extension{color:var(--warn)}.tier.plugin{color:var(--acc)}
+.xpkg{padding:10px 12px;margin:8px 0;border-radius:16px;background:var(--glass2)}.xpkg.missing{opacity:.75}
+.xhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.xhead b{font-size:13px}.xact{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.xsub{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:4px;overflow-wrap:anywhere}.xline{margin:10px 0 4px;font-size:13px}.xdesc{font-size:12px;color:var(--dim);margin:4px 0}.xdesc.dim{color:var(--faint)}
+.xperms{margin:4px 0 0;padding-left:18px;font-size:12px}.xperms code{font-family:var(--mono);font-size:10.5px;color:var(--acc)}
+.xperm-chips{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:6px}
+.xrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}.xrow input{flex:1;min-width:160px}
+.chip.on{color:var(--acc)}.xlog pre{font-size:10px;white-space:pre-wrap;color:var(--dim);margin:4px 0 0}.xlog summary{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);cursor:pointer;margin-top:6px}
+.extframe{width:100%;height:220px;border:0;border-radius:14px;background:var(--glass2);display:block}.extpane{margin:8px 0}.extslot{margin-top:4px}
+#legend{position:fixed;left:12px;bottom:76px;z-index:6;width:min(280px,calc(100vw - 24px));padding:10px 12px;border-radius:18px;display:flex;flex-direction:column;gap:10px}
+#legend[hidden],#probe[hidden]{display:none}.lg.off{opacity:.55}.lgh{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.lgh .g{margin-left:0}.lgh b{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+.lgbar{height:10px;border-radius:6px;margin:6px 0 2px}.lgt{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--dim)}
+#probe{position:fixed;left:50%;transform:translateX(-50%);top:92px;z-index:9;padding:8px 14px;border-radius:999px;font-family:var(--mono);font-size:11px;white-space:nowrap;max-width:calc(100vw - 20px);overflow:hidden;text-overflow:ellipsis}
+@media(max-width:899px){dialog.sheet{margin:auto 0 0;width:100%;max-width:none;border-radius:24px 24px 0 0;max-height:88vh}#legend{bottom:132px;left:10px}#probe{top:128px}.extframe{height:260px}.xpkg .chip,#extdlg .chip{min-height:40px}}
+dialog.sheet::backdrop{background:rgba(5,8,10,.55)}
 dialog{background:rgba(16,22,26,.96);color:var(--ink);border:0;border-radius:24px;padding:22px 22px 18px;width:min(560px,calc(100vw - 20px));max-height:90vh;overflow:auto}
 dialog::backdrop{background:rgba(5,8,10,.55);backdrop-filter:blur(3px)}
 dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:600;color:var(--acc)}
@@ -235,8 +253,8 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 
 <div id="vig"></div>
 <section class="sec glass" id="left">
-  <div class="ptabs"><button data-pane="objects">Objects</button><button data-pane="tree">Features</button><button data-pane="params">Params</button><button data-pane="check">Check</button><button data-pane="loop">Loop</button></div>
-  <div class="pane" id="p-objects"></div><div class="pane" id="p-tree"></div><div class="pane" id="p-params"></div><div class="pane" id="p-check"></div><div class="pane" id="p-loop"></div>
+  <div class="ptabs"><button data-pane="objects">Objects</button><button data-pane="tree">Features</button><button data-pane="params">Params</button><button data-pane="check">Check</button><button data-pane="loop">Loop</button><button data-pane="ext" id="t-ext" hidden>Ext</button></div>
+  <div class="pane" id="p-objects"></div><div class="pane" id="p-tree"></div><div class="pane" id="p-params"></div><div class="pane" id="p-check"></div><div class="pane" id="p-loop"></div><div class="pane" id="p-ext"></div>
 </section>
 <section class="sec glass" id="inspsec"><h3>Inspector</h3><div id="insp"></div></section>
 
@@ -258,7 +276,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
   <div id="reply" class="glass" hidden></div>
   <div id="promptbar" class="glass"><span id="spark">✦</span><input id="ask" placeholder="Ask for a change…" autocomplete="off" enterkeyhint="send"><button id="send" title="Send">↑</button></div>
 </div>
-<nav id="tabs"><button data-sec="objects">Objects</button><button data-sec="tree">Features</button><button data-sec="params">Params</button><button data-sec="check">Check</button><button data-sec="loop">Loop</button><button data-sec="insp">Inspect</button><button onclick="document.getElementById('new').click()">New</button></nav>
+<nav id="tabs"><button data-sec="objects">Objects</button><button data-sec="tree">Features</button><button data-sec="params">Params</button><button data-sec="check">Check</button><button data-sec="loop">Loop</button><button data-sec="ext" id="n-ext" hidden>Ext</button><button data-sec="insp">Inspect</button><button onclick="document.getElementById('new').click()">New</button></nav>
 
 <dialog id="wizard"><h2>New enclosure</h2><div id="wbody"></div><div class="dact"><button class="btn ghost" id="wclose">Cancel</button><button class="btn" id="wgo">Generate</button></div></dialog>
 
@@ -273,9 +291,13 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
     <label><span class="l">Material density g/cm³</span><input id="s-density" type="number" step="0.01"></label>
     <label><span class="l">Print volume X,Y,Z mm</span><input id="s-pv"></label>
     <label class="chk"><input type="checkbox" id="s-sound"><span class="l">Menu sounds</span></label>
+    <button class="chip" id="s-ext" type="button">Extensions…</button>
   </div>
   <div class="dact"><button class="btn" id="sclose">Done</button></div>
 </dialog>
+<dialog id="extdlg" class="sheet"><h2>Settings / Extensions</h2><div id="extbody"></div><div class="dact"><button class="btn" id="extclose">Done</button></div></dialog>
+<dialog id="extconsent" class="sheet"><h2>Install package</h2><div id="extc-body"></div><div class="dact"><button class="btn ghost" id="extc-no">Cancel</button><button class="btn" id="extc-ok">Install</button></div></dialog>
+<div id="legend" class="glass" hidden></div><div id="probe" class="glass" hidden role="status"></div>
 <script src="app.js"></script>
 </body>
 </html>
