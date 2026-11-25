@@ -22,6 +22,10 @@ env:
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
 
+defaults:
+  run:
+    working-directory: android
+
 jobs:
   release-candidate:
     runs-on: ubuntu-24.04
@@ -138,7 +142,7 @@ jobs:
           python3 ci/patch_slicebeam_stage1_no_step.py slicebeam
 
       - name: Build pinned native dependencies from source
-        working-directory: slicebeam
+        working-directory: android/slicebeam
         shell: bash
         run: |
           set -euxo pipefail
@@ -193,17 +197,17 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-android-release-candidate
-          path: app/build/outputs/apk/release
+          path: android/app/build/outputs/apk/release
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-android-release-instrumentation
-          path: app/build/outputs/apk/androidTest/release
+          path: android/app/build/outputs/apk/androidTest/release
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-android-release-bundle
-          path: app/build/outputs/bundle/release
+          path: android/app/build/outputs/bundle/release
           if-no-files-found: error

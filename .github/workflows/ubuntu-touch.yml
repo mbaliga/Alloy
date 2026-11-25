@@ -8,11 +8,11 @@ name: Alloy Ubuntu Touch (preparation and inspection companion)
 
 on:
   push:
-    branches: [main, 'claude/**', 'codex/**']
+    branches: [main]
     tags: ['ut-v*']
-    paths: ['ubuntu-touch/**', 'ios/AlloyCore/Tests/AlloyCoreTests/Fixtures/**', 'app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ubuntu-touch.yml']
+    paths: ['slicer-ports/ubuntu-touch/**', 'slicer-ports/ios/AlloyCore/Tests/AlloyCoreTests/Fixtures/**', 'android/app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'android/app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ubuntu-touch.yml']
   pull_request:
-    paths: ['ubuntu-touch/**', 'ios/AlloyCore/Tests/AlloyCoreTests/Fixtures/**', 'app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ubuntu-touch.yml']
+    paths: ['slicer-ports/ubuntu-touch/**', 'slicer-ports/ios/AlloyCore/Tests/AlloyCoreTests/Fixtures/**', 'android/app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'android/app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ubuntu-touch.yml']
   workflow_dispatch:
 
 permissions:
@@ -35,13 +35,13 @@ jobs:
       - name: Build and test (Release)
         run: |
           set -eu
-          cmake -S ubuntu-touch/core -B build/core -DCMAKE_BUILD_TYPE=Release
+          cmake -S slicer-ports/ubuntu-touch/core -B build/core -DCMAKE_BUILD_TYPE=Release
           cmake --build build/core -j"$(nproc)"
           ctest --test-dir build/core --output-on-failure
       - name: Build and test (Debug, AddressSanitizer + UBSan)
         run: |
           set -eu
-          cmake -S ubuntu-touch/core -B build/san -DCMAKE_BUILD_TYPE=Debug \
+          cmake -S slicer-ports/ubuntu-touch/core -B build/san -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
           cmake --build build/san -j"$(nproc)"
           ctest --test-dir build/san --output-on-failure
@@ -53,9 +53,9 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Regenerate with the real Java sources (JDK 17 and python3 are preinstalled)
-        run: sh ios/parity/regen.sh
+        run: sh slicer-ports/ios/parity/regen.sh
       - name: Goldens must be unchanged, so the C++ and Swift ports test against current Java
-        run: git diff --exit-code -- ios/AlloyCore/Tests/AlloyCoreTests/Fixtures
+        run: git diff --exit-code -- slicer-ports/ios/AlloyCore/Tests/AlloyCoreTests/Fixtures
 
   ui-smoke:
     name: Qt 5.15 UI smoke test (offscreen) and click layout check
@@ -70,11 +70,11 @@ jobs:
             qml-module-qtquick2 qml-module-qtquick-controls2 qml-module-qtquick-layouts \
             qml-module-qtquick-window2 qml-module-qtquick-templates2 qml-module-qttest
       - name: qmllint (syntax)
-        run: qmllint ubuntu-touch/qml/*.qml
+        run: qmllint slicer-ports/ubuntu-touch/qml/*.qml
       - name: Build app and smoke test
         run: |
           set -eu
-          cmake -S ubuntu-touch -B build/ut -DALLOY_BUILD_UI_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/.
+          cmake -S slicer-ports/ubuntu-touch -B build/ut -DALLOY_BUILD_UI_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/.
           cmake --build build/ut -j"$(nproc)"
       - name: Run the smoke test (software scene graph, offscreen)
         env:
@@ -88,7 +88,7 @@ jobs:
           # Absolute --prefix instead of DESTDIR + the configure-time prefix /. : cmake 4.2.3 on the ubuntu-26.04
           # runner failed with "file INSTALL given no DESTINATION" on the latter (not reproducible with 3.28/4.2.3 pip builds).
           cmake --install build/ut --prefix "$PWD/stage"
-          python3 ubuntu-touch/tools/check_click_layout.py stage --arch amd64
+          python3 slicer-ports/ubuntu-touch/tools/check_click_layout.py stage --arch amd64
       - name: Upload screenshots (diagnostic; quota-limited so never fails the job)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -112,10 +112,10 @@ jobs:
       - name: Install Clickable (pinned)
         run: python3 -m pip install --user "clickable-ut==${CLICKABLE_VERSION}" && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Build the click
-        working-directory: ubuntu-touch
+        working-directory: slicer-ports/ubuntu-touch
         run: clickable build --arch ${{ matrix.arch }} --non-interactive --skip-review --output "$GITHUB_WORKSPACE/click-out"
       - name: Review the click (click-review; informational until the owner has seen a green run)
-        working-directory: ubuntu-touch
+        working-directory: slicer-ports/ubuntu-touch
         continue-on-error: true
         run: clickable review --arch ${{ matrix.arch }} --non-interactive
       - name: List output
@@ -147,4 +147,4 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" click-out/*.click --draft --repo "$GITHUB_REPOSITORY" \
             --title "Alloy for Ubuntu Touch $GITHUB_REF_NAME" \
-            --notes "Preparation and inspection companion, not a slicer. Not verified on a device; see ubuntu-touch/OWNER_VERIFY.md."
+            --notes "Preparation and inspection companion, not a slicer. Not verified on a device; see slicer-ports/ubuntu-touch/OWNER_VERIFY.md."

@@ -1,14 +1,9 @@
 name: G1 OrcaSlicer-Mobile source build
 
+# Manual only. This lane failed on its source line before the consolidation (see docs/SLICER_ROADMAP.md, G1/G2),
+# so it is kept for diagnosis but does not run on push or pull request. Run it from the Actions tab.
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - '.github/workflows/g1-orca-mobile-source-build.yml'
-      - 'ci/**'
-      - 'docs/UPSTREAM_EVALUATION.md'
   workflow_dispatch:
-
 permissions:
   contents: read
 
@@ -21,6 +16,10 @@ env:
   ORCA_MOBILE_SHA: d996a9cadb65b354997f2d5d8734b46bb9ea4efd
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   source-build:
@@ -78,7 +77,7 @@ jobs:
         run: |
           set -euxo pipefail
           cd upstream
-          python3 "$GITHUB_WORKSPACE/ci/patch_orca_mobile_bootstrap.py" \
+          python3 "$GITHUB_WORKSPACE/android/ci/patch_orca_mobile_bootstrap.py" \
             scripts/build_all_deps_android.sh \
             "$ANDROID_SDK_ROOT" \
             "$ANDROID_NDK_ROOT"
@@ -128,7 +127,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: g1-source-build-evidence
-          path: g1-evidence
+          path: android/g1-evidence
           if-no-files-found: error
 
       - name: Upload built APK
@@ -136,5 +135,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: orcaslicer-mobile-g1-apk
-          path: upstream/app/build/outputs/apk/debug/*.apk
+          path: android/upstream/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

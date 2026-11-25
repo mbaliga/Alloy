@@ -1,22 +1,9 @@
 name: Path B G1 SliceBeam source build
 
+# Manual only. This lane failed on its source line before the consolidation (see docs/SLICER_ROADMAP.md, G1/G2),
+# so it is kept for diagnosis but does not run on push or pull request. Run it from the Actions tab.
 on:
-  push:
-    branches: [stage1-gates-prep]
-    paths:
-      - '.github/workflows/path-b-g1-slicebeam-source-build.yml'
-      - 'ci/patch_orca_mobile_bootstrap.py'
-      - 'ci/patch_slicebeam_stage1_no_step.py'
-      - 'ci/build_gmp_mpfr_android.sh'
-  pull_request:
-    branches: [stage1-foundation]
-    paths:
-      - '.github/workflows/path-b-g1-slicebeam-source-build.yml'
-      - 'ci/patch_orca_mobile_bootstrap.py'
-      - 'ci/patch_slicebeam_stage1_no_step.py'
-      - 'ci/build_gmp_mpfr_android.sh'
   workflow_dispatch:
-
 permissions:
   contents: read
 
@@ -31,6 +18,10 @@ env:
   ORCA_MOBILE_SHA: d996a9cadb65b354997f2d5d8734b46bb9ea4efd
   ANDROID_API: '35'
   NDK_VERSION: 23.1.7779620
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   source-build:
@@ -95,16 +86,16 @@ jobs:
           python3 ci/patch_slicebeam_stage1_no_step.py slicebeam
 
       - name: Build missing SliceBeam native dependencies from source
-        working-directory: slicebeam
+        working-directory: android/slicebeam
         shell: bash
         run: |
           set -euxo pipefail
           bash build_all_deps_android.sh
-          bash "$GITHUB_WORKSPACE/ci/build_gmp_mpfr_android.sh" app/src/main arm64-v8a 26
+          bash "$GITHUB_WORKSPACE/android/ci/build_gmp_mpfr_android.sh" app/src/main arm64-v8a 26
           python3 check-native-prebuilts.py arm64-v8a
 
       - name: Build SliceBeam native debug APK
-        working-directory: slicebeam
+        working-directory: android/slicebeam
         shell: bash
         run: |
           set -euxo pipefail
@@ -130,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: path-b-g1-slicebeam-source-build
-          path: path-b-g1-evidence
+          path: android/path-b-g1-evidence
           if-no-files-found: error
 
       - name: Upload SliceBeam APK
@@ -138,5 +129,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: path-b-slicebeam-debug-apk
-          path: slicebeam/app/build/outputs/apk/debug/*.apk
+          path: android/slicebeam/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

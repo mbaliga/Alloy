@@ -4,23 +4,24 @@ on:
   push:
     branches: [main]
     paths:
-      - 'app/build.gradle'
-      - 'app/CMakeLists.txt'
-      - 'app/CMakeLists.native.txt'
-      - 'app/cmake/official-orca/FindOpenCV.cmake'
-      - 'third_party/orca-official/**'
-      - 'app/src/main/jni/**'
-      - 'app/src/main/jniImports/**'
-      - 'app/src/main/jniLibs/**'
-      - 'app/src/main/occt/**'
-      - '.gitmodules'
-      - 'third_party/orca-deps-libnoise'
-      - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
-      - 'app/src/main/java/com/mbaliga/alloy/NativeEngine.java'
-      - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
-      - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
-      - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
-      - 'app/src/main/java/com/mbaliga/alloy/PrinterCapabilityCatalog.java'
+      - 'android/app/build.gradle'
+      - 'android/app/CMakeLists.txt'
+      - 'android/app/CMakeLists.native.txt'
+      - 'android/app/cmake/official-orca/FindOpenCV.cmake'
+      - 'android/third_party/orca-official/**'
+      - 'android/app/src/main/jni/**'
+      - 'android/app/src/main/jniImports/**'
+      - 'android/app/src/main/jniLibs/**'
+      - 'android/app/src/main/occt/**'
+      - 'android/.gitmodules'
+      - 'android/third_party/orca-deps-libnoise'
+      - 'android/third_party/licenses/LIBNOISE_LGPL-2.1.txt'
+      - 'android/app/src/main/java/com/mbaliga/alloy/NativeEngine.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/Slicer.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/PrinterCapabilityCatalog.java'
+      - '.github/workflows/alloy-native-build.yml'
       # The native job executes the complete instrumentation suite. Any test
       # change can therefore invalidate its result, not only the native smoke
       # class itself.
@@ -82,23 +83,23 @@ on:
       - '.github/workflows/alloy-native-build.yml'
   pull_request:
     paths:
-      - 'app/build.gradle'
-      - 'app/CMakeLists.txt'
-      - 'app/CMakeLists.native.txt'
-      - 'app/cmake/official-orca/FindOpenCV.cmake'
-      - 'third_party/orca-official/**'
-      - 'app/src/main/jni/**'
-      - 'app/src/main/jniImports/**'
-      - 'app/src/main/jniLibs/**'
-      - 'app/src/main/occt/**'
-      - '.gitmodules'
-      - 'third_party/orca-deps-libnoise'
-      - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
-      - 'app/src/main/java/com/mbaliga/alloy/NativeEngine.java'
-      - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
-      - 'app/src/main/java/com/mbaliga/alloy/Slicer.java'
-      - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
-      - 'app/src/main/java/com/mbaliga/alloy/PrinterCapabilityCatalog.java'
+      - 'android/app/build.gradle'
+      - 'android/app/CMakeLists.txt'
+      - 'android/app/CMakeLists.native.txt'
+      - 'android/app/cmake/official-orca/FindOpenCV.cmake'
+      - 'android/third_party/orca-official/**'
+      - 'android/app/src/main/jni/**'
+      - 'android/app/src/main/jniImports/**'
+      - 'android/app/src/main/jniLibs/**'
+      - 'android/app/src/main/occt/**'
+      - 'android/.gitmodules'
+      - 'android/third_party/orca-deps-libnoise'
+      - 'android/third_party/licenses/LIBNOISE_LGPL-2.1.txt'
+      - 'android/app/src/main/java/com/mbaliga/alloy/NativeEngine.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/Slicer.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/PrinterCapabilityCatalog.java'
       # Keep pull-request evidence aligned with the entire suite as well.
       - 'app/src/androidTest/**'
       - 'app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java'
@@ -183,6 +184,10 @@ env:
   NDK_VERSION: 23.1.7779620
   OPENCV_VERSION: 4.6.0
   OPENCV_SHA256: 1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   native-build:
@@ -302,7 +307,7 @@ jobs:
             -DANDROID_ABI=arm64-v8a \
             -DANDROID_PLATFORM=android-23 \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/opencv-install-arm64" \
+            -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/android/opencv-install-arm64" \
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_LIST=core,highgui,imgcodecs,imgproc,world \
             -DBUILD_opencv_world=ON \
@@ -333,7 +338,7 @@ jobs:
             -DBUILD_JPEG=ON
           cmake --build opencv-build-arm64 --target opencv_world --parallel 2
           cmake --install opencv-build-arm64
-          echo "ALLOY_OPENCV_ANDROID_ROOT=${GITHUB_WORKSPACE}/opencv-install-arm64/sdk/native" >> "$GITHUB_ENV"
+          echo "ALLOY_OPENCV_ANDROID_ROOT=${GITHUB_WORKSPACE}/android/opencv-install-arm64/sdk/native" >> "$GITHUB_ENV"
       - name: Clone pinned SliceBeam source for dependency bootstrap
         shell: bash
         run: |
@@ -352,7 +357,7 @@ jobs:
           python3 ci/patch_orca_mobile_bootstrap.py slicebeam/build_all_deps_android.sh "$ANDROID_SDK_ROOT" "$ANDROID_NDK_ROOT" --boost-locale
           python3 ci/patch_slicebeam_stage1_no_step.py slicebeam
       - name: Build native dependencies from source
-        working-directory: slicebeam
+        working-directory: android/slicebeam
         shell: bash
         run: |
           set -euxo pipefail
@@ -424,7 +429,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: native-engine-build-diagnostic
-          path: native-engine-build-tail.log
+          path: android/native-engine-build-tail.log
           if-no-files-found: error
           retention-days: 7
       - name: Compile native instrumentation smoke test
@@ -435,14 +440,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: alloy-native-release-ci-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
       - name: Upload native instrumentation APK before emulator validation
         uses: actions/upload-artifact@v4
         with:
           name: alloy-native-instrumentation-apk
-          path: app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
+          path: android/app/build/outputs/apk/androidTest/release/app-release-androidTest.apk
           if-no-files-found: error
           retention-days: 7
       # Use hosted KVM where available; some runner pools do not expose it.
@@ -456,6 +461,15 @@ jobs:
             echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
             sudo udevadm control --reload-rules
             sudo udevadm trigger --name-match=kvm
+            # The trigger is asynchronous: on the 20261116 runner image the readability test below ran before the rule
+            # applied, the lane fell back to "no acceleration", and the emulator then refused to start (3 x 30 min timeouts).
+            sudo udevadm settle || true
+            for _ in 1 2 3 4 5; do
+              if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then break; fi
+              sleep 2
+            done
+            # Last resort when udev did not apply the rule in time: open the device node itself (it exists on this runner).
+            if ! { [ -r /dev/kvm ] && [ -w /dev/kvm ]; }; then sudo chmod a+rw /dev/kvm || true; fi
           fi
           if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
             echo "disable-hw-accel=false" >> "$GITHUB_OUTPUT"
@@ -471,6 +485,7 @@ jobs:
         id: native_instrumentation
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 35
           target: google_apis
           arch: x86_64
@@ -496,6 +511,7 @@ jobs:
         if: always() && !cancelled()
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 35
           target: google_apis
           arch: x86_64
@@ -524,13 +540,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: alloy-bambu-template-probe-diagnostic
-          path: path-b-template-probe-parity
+          path: android/path-b-template-probe-parity
           if-no-files-found: warn
           retention-days: 14
       - name: Export native G3 evidence through API-35 ARM translation
         if: always() && !cancelled()
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 35
           target: google_apis
           arch: x86_64
@@ -576,36 +593,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: alloy-bambu-template-rendering-probe
-          path: path-b-template-probe
+          path: android/path-b-template-probe
           if-no-files-found: warn
           retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always() && !cancelled()
         with:
           name: alloy-native-g3-evidence
-          path: path-b-g3-evidence
+          path: android/path-b-g3-evidence
           if-no-files-found: error
-      - name: Compare native G3 output with exact-PR-head Orca reference
-        if: always() && !cancelled() && github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
-          ALLOY_RUN_ID: ${{ github.run_id }}
-          ALLOY_RUN_ATTEMPT: ${{ github.run_attempt }}
-        run: |
-          python3 ci/compare_g3_artifacts.py \
-            --native-dir path-b-g3-evidence \
-            --report-dir path-b-g3-parity
-      - name: Upload native G3 semantic comparison report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: alloy-native-desktop-g3-parity
-          path: path-b-g3-parity
-          if-no-files-found: warn
-          retention-days: 14
       # This counterfactual uses a separately sliced desktop reference with
       # profile motion hooks cleared and the normal hook-neutral native output.
       # It is deliberately non-gating and cannot replace strict G3.
@@ -631,7 +627,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: alloy-hook-neutralized-g3-counterfactual
-          path: path-b-hook-neutralized-g3-diagnostic
+          path: android/path-b-hook-neutralized-g3-diagnostic
           if-no-files-found: warn
           retention-days: 14
       # A native test failure is the moment its JUnit XML is most valuable.
@@ -642,9 +638,9 @@ jobs:
         with:
           name: alloy-native-instrumentation-report
           path: |
-            app/build/reports/androidTests/connected/release
-            app/build/outputs/androidTest-results/connected/release
-            native-instrumentation-diagnostics
+            android/app/build/reports/androidTests/connected/release
+            android/app/build/outputs/androidTest-results/connected/release
+            android/native-instrumentation-diagnostics
           if-no-files-found: warn
           retention-days: 14
       # This is a hash-bound inventory, never a source-lineage or legal PASS.
@@ -667,7 +663,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: alloy-native-build-provenance-inventory
-          path: path-native-provenance
+          path: android/path-native-provenance
           if-no-files-found: warn
           retention-days: 30
       # Collect narrowly scoped physical-pilot evidence after native runtime
@@ -697,6 +693,7 @@ jobs:
         id: pilot_evidence
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 35
           target: google_apis
           arch: x86_64
@@ -718,5 +715,42 @@ jobs:
         if: always() && !cancelled() && steps.native_instrumentation.outcome == 'success' && steps.pilot_apk.outcome == 'success'
         with:
           name: alloy-a1-mini-physical-pilot-ci
-          path: path-a1-mini-pilot
+          path: android/path-a1-mini-pilot
           if-no-files-found: error
+
+  # D3 (docs/CONSOLIDATION.md): the strict G3 parity gate is its own job. It stays strict (no continue-on-error, no loosened
+  # tolerance) and it fails today, which is the recorded NO-GO for printing (docs/SLICER_ROADMAP.md). Keeping it out of the
+  # native-build job means that job reports what it can honestly vouch for (the engine builds, the instrumentation and the
+  # pilot run) and this job reports parity. Do not make it a required check until G3 passes.
+  g3-parity-gate:
+    name: Strict G3 parity gate (separate job, NO-GO while red)
+    needs: native-build
+    if: always() && !cancelled() && github.event_name == 'pull_request' && needs.native-build.result != 'skipped'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: alloy-native-g3-evidence
+          path: android/path-b-g3-evidence
+      - name: Compare native G3 output with exact-PR-head Orca reference
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ALLOY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ALLOY_PR_MERGE_SHA: ${{ github.sha }}
+          ALLOY_RUN_ID: ${{ github.run_id }}
+          ALLOY_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 ci/compare_g3_artifacts.py \
+            --native-dir path-b-g3-evidence \
+            --report-dir path-b-g3-parity
+      - name: Upload native G3 semantic comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alloy-native-desktop-g3-parity
+          path: android/path-b-g3-parity
+          if-no-files-found: warn
+          retention-days: 14

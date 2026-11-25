@@ -129,14 +129,14 @@ class NativeDependencyWiringTests(unittest.TestCase):
             ".github/workflows/alloy-native-build.yml",
             ".github/workflows/android-release-candidate.yml",
         ):
-            text = (ROOT / workflow).read_text(encoding="utf-8")
+            text = (ROOT.parent / workflow).read_text(encoding="utf-8")
             self.assertIn("ci/build_gmp_mpfr_android.sh app/src/main arm64-v8a 26", text)
             self.assertIn("ci/validate_native_dependency_inputs.py arm64-v8a", text)
             self.assertIn("ci/validate_native_prebuilts.py arm64-v8a --source-built", text)
             self.assertNotIn("check-native-prebuilts.py arm64-v8a", text)
 
     def test_native_workflow_uses_bootable_api35_arm_translation_host(self) -> None:
-        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        workflow = (ROOT.parent / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn("Run native release instrumentation through API-35 ARM translation", workflow)
         self.assertIn("Export native G3 evidence through API-35 ARM translation", workflow)
         # The broad suite, standalone template probe, G3 export, and isolated
@@ -157,7 +157,7 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertIn("arm64-v8a JNI library", workflow)
 
     def test_native_runs_for_distinct_pr_heads_do_not_queue_behind_stale_emulators(self) -> None:
-        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        workflow = (ROOT.parent / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn(
             "group: alloy-native-${{ github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}",
             workflow,
@@ -165,7 +165,7 @@ class NativeDependencyWiringTests(unittest.TestCase):
         self.assertIn("cancel-in-progress: false", workflow)
 
     def test_native_pr_g3_evidence_is_compared_with_exact_head_reference(self) -> None:
-        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        workflow = (ROOT.parent / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         self.assertIn("actions: read", workflow)
         self.assertIn("Compare native G3 output with exact-PR-head Orca reference", workflow)
         self.assertIn("ALLOY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}", workflow)
@@ -181,7 +181,12 @@ class NativeDependencyWiringTests(unittest.TestCase):
         pilot = workflow.index("Build isolated A1 Mini physical-pilot APK pair")
         self.assertLess(native_upload, compare_step)
         self.assertLess(compare_step, report_upload)
-        self.assertLess(report_upload, pilot)
+        # D3 (docs/CONSOLIDATION.md): the strict comparison is its own job, downstream of the build that produced the evidence
+        # (so the pilot step, which stays in the build job, comes before it in the file)
+        self.assertLess(pilot, compare_step)
+        self.assertIn("  g3-parity-gate:\n", workflow)
+        self.assertIn("    needs: native-build\n", workflow[workflow.index("  g3-parity-gate:"):])
+        self.assertNotIn("continue-on-error", workflow[workflow.index("  g3-parity-gate:"):])
         runtime_step = workflow[
             workflow.index("Run native release instrumentation through API-35 ARM translation"):
             workflow.index("Initialize standalone Bambu template probe evidence")
@@ -226,7 +231,7 @@ class NativeDependencyWiringTests(unittest.TestCase):
     def test_native_target_uses_pinned_libnoise_not_the_handwritten_stub(self) -> None:
         cmake = (ROOT / "app/CMakeLists.native.txt").read_text(encoding="utf-8")
         fuzzy = (ROOT / "app/src/main/jni/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp").read_text(encoding="utf-8")
-        workflow = (ROOT / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
+        workflow = (ROOT.parent / ".github/workflows/alloy-native-build.yml").read_text(encoding="utf-8")
         gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
         self.assertIn("ORCA_LIBNOISE_SOURCE_DIR", cmake)
         self.assertIn('add_subdirectory("${ORCA_LIBNOISE_SOURCE_DIR}"', cmake)
@@ -250,7 +255,7 @@ class NativeDependencyWiringTests(unittest.TestCase):
             ".github/workflows/alloy-native-build.yml",
             ".github/workflows/android-release-candidate.yml",
         ):
-            text = (ROOT / workflow).read_text(encoding="utf-8")
+            text = (ROOT.parent / workflow).read_text(encoding="utf-8")
             self.assertIn("ci/normalize_occt_headers.py app/src/main/occt", text)
 
 

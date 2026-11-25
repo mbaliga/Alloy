@@ -6,7 +6,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 TREE_SUPPORT_CPP = REPOSITORY / "app/src/main/jni/libslic3r/Support/TreeSupport.cpp"
 TREE_SUPPORT_HPP = REPOSITORY / "app/src/main/jni/libslic3r/Support/TreeSupport.hpp"
 SMOKE_TEST = REPOSITORY / "app/src/androidTest/java/com/mbaliga/alloy/NativeEngineSmokeTest.java"
-PARITY_WORKFLOW = REPOSITORY / ".github/workflows/parity-tools.yml"
+PARITY_WORKFLOW = REPOSITORY.parent / ".github/workflows/parity-tools.yml"
 
 
 class TreeSupportFloatingPruningContractTests(unittest.TestCase):

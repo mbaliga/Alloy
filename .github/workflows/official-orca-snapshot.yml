@@ -2,40 +2,44 @@ name: Official Orca source snapshot
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
     paths:
-      - '.gitmodules'
-      - 'third_party/orca-official'
-      - 'third_party/orca-deps-libnoise'
-      - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
-      - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
-      - 'app/cmake/official-orca/**'
-      - 'ci/test_official_orca_libnoise_adapter.py'
-      - 'ci/fixtures/official-orca-libnoise-adapter/**'
-      - 'ci/validate_official_orca_snapshot.py'
-      - 'ci/audit_official_orca_port_surface.py'
-      - 'ci/test_official_orca_port_surface.py'
+      - 'android/.gitmodules'
+      - 'android/third_party/orca-official'
+      - 'android/third_party/orca-deps-libnoise'
+      - 'android/third_party/licenses/LIBNOISE_LGPL-2.1.txt'
+      - 'android/third_party/ORCA_OFFICIAL_SNAPSHOT.md'
+      - 'android/app/cmake/official-orca/**'
+      - 'android/ci/test_official_orca_libnoise_adapter.py'
+      - 'android/ci/fixtures/official-orca-libnoise-adapter/**'
+      - 'android/ci/validate_official_orca_snapshot.py'
+      - 'android/ci/audit_official_orca_port_surface.py'
+      - 'android/ci/test_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
-      - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
+      - 'android/docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
   pull_request:
     paths:
-      - '.gitmodules'
-      - 'third_party/orca-official'
-      - 'third_party/orca-deps-libnoise'
-      - 'third_party/licenses/LIBNOISE_LGPL-2.1.txt'
-      - 'third_party/ORCA_OFFICIAL_SNAPSHOT.md'
-      - 'app/cmake/official-orca/**'
-      - 'ci/test_official_orca_libnoise_adapter.py'
-      - 'ci/fixtures/official-orca-libnoise-adapter/**'
-      - 'ci/validate_official_orca_snapshot.py'
-      - 'ci/audit_official_orca_port_surface.py'
-      - 'ci/test_official_orca_port_surface.py'
+      - 'android/.gitmodules'
+      - 'android/third_party/orca-official'
+      - 'android/third_party/orca-deps-libnoise'
+      - 'android/third_party/licenses/LIBNOISE_LGPL-2.1.txt'
+      - 'android/third_party/ORCA_OFFICIAL_SNAPSHOT.md'
+      - 'android/app/cmake/official-orca/**'
+      - 'android/ci/test_official_orca_libnoise_adapter.py'
+      - 'android/ci/fixtures/official-orca-libnoise-adapter/**'
+      - 'android/ci/validate_official_orca_snapshot.py'
+      - 'android/ci/audit_official_orca_port_surface.py'
+      - 'android/ci/test_official_orca_port_surface.py'
       - '.github/workflows/official-orca-snapshot.yml'
-      - 'docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
+      - 'android/docs/OFFICIAL_ORCA_G2_PORT_PLAN.md'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   verify:
@@ -72,6 +76,6 @@ jobs:
         with:
           name: official-orca-port-surface
           path: |
-            official-orca-port-surface
-            official-orca-source-manifest.json
+            android/official-orca-port-surface
+            android/official-orca-source-manifest.json
           if-no-files-found: error

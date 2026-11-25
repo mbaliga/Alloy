@@ -73,16 +73,16 @@ def validate_pr_trigger_deduplication(workflow: Path, text: str) -> None:
 
 def main() -> None:
     validate_handy_visibility()
-    ordinary = ROOT / ".github/workflows/android-v1.yml"
-    native = ROOT / ".github/workflows/alloy-native-build.yml"
-    release = ROOT / ".github/workflows/android-release-candidate.yml"
+    ordinary = ROOT.parent / ".github/workflows/android-v1.yml"
+    native = ROOT.parent / ".github/workflows/alloy-native-build.yml"
+    release = ROOT.parent / ".github/workflows/android-release-candidate.yml"
 
     setup_java_workflows = (
         ordinary,
         native,
         release,
-        ROOT / ".github/workflows/g1-orca-mobile-source-build.yml",
-        ROOT / ".github/workflows/path-b-g1-slicebeam-source-build.yml",
+        ROOT.parent / ".github/workflows/g1-orca-mobile-source-build.yml",
+        ROOT.parent / ".github/workflows/path-b-g1-slicebeam-source-build.yml",
     )
     for workflow in setup_java_workflows:
         workflow_text = workflow.read_text(encoding="utf-8")

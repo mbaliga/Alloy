@@ -3,9 +3,53 @@ name: Alloy Android v1
 on:
   push:
     branches: [main]
-    paths: ['app/**', 'ci/run_android_acceptance_with_diagnostics.sh', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_release_wiring.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/export_a1mini_material_profiles.py', 'ci/export_a1_p1s_material_profiles.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'parity/test_android_acceptance_diagnostics.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths:
+      - 'android/app/**'
+      - 'android/ci/run_android_acceptance_with_diagnostics.sh'
+      - 'android/ci/validate_android_wiring.py'
+      - 'android/ci/validate_android_workflows.py'
+      - 'android/ci/validate_release_wiring.py'
+      - 'android/ci/validate_profile_assets.py'
+      - 'android/ci/validate_capability_catalog.py'
+      - 'android/ci/validate_learning_assets.py'
+      - 'android/ci/verify_profile_snapshot.py'
+      - 'android/ci/export_a1mini_material_profiles.py'
+      - 'android/ci/export_a1_p1s_material_profiles.py'
+      - 'android/ci/validate_model_assets.py'
+      - 'android/ci/validate_3mf_contract.py'
+      - 'android/ci/validate_native_wiring.py'
+      - 'android/ci/validate_native_jni_contract.py'
+      - 'android/ci/validate_transport_wiring.py'
+      - 'android/parity/test_android_acceptance_diagnostics.py'
+      - 'android/docs/LEARNING_ASSET_MANIFEST.md'
+      - 'android/build.gradle'
+      - 'android/settings.gradle'
+      - 'android/gradle.properties'
+      - '.github/workflows/android-v1.yml'
   pull_request:
-    paths: ['app/**', 'ci/run_android_acceptance_with_diagnostics.sh', 'ci/validate_android_wiring.py', 'ci/validate_android_workflows.py', 'ci/validate_release_wiring.py', 'ci/validate_profile_assets.py', 'ci/validate_capability_catalog.py', 'ci/validate_learning_assets.py', 'ci/verify_profile_snapshot.py', 'ci/export_a1mini_material_profiles.py', 'ci/export_a1_p1s_material_profiles.py', 'ci/validate_model_assets.py', 'ci/validate_3mf_contract.py', 'ci/validate_native_wiring.py', 'ci/validate_native_jni_contract.py', 'ci/validate_transport_wiring.py', 'parity/test_android_acceptance_diagnostics.py', 'docs/LEARNING_ASSET_MANIFEST.md', 'build.gradle', 'settings.gradle', 'gradle.properties', '.github/workflows/android-v1.yml']
+    paths:
+      - 'android/app/**'
+      - 'android/ci/run_android_acceptance_with_diagnostics.sh'
+      - 'android/ci/validate_android_wiring.py'
+      - 'android/ci/validate_android_workflows.py'
+      - 'android/ci/validate_release_wiring.py'
+      - 'android/ci/validate_profile_assets.py'
+      - 'android/ci/validate_capability_catalog.py'
+      - 'android/ci/validate_learning_assets.py'
+      - 'android/ci/verify_profile_snapshot.py'
+      - 'android/ci/export_a1mini_material_profiles.py'
+      - 'android/ci/export_a1_p1s_material_profiles.py'
+      - 'android/ci/validate_model_assets.py'
+      - 'android/ci/validate_3mf_contract.py'
+      - 'android/ci/validate_native_wiring.py'
+      - 'android/ci/validate_native_jni_contract.py'
+      - 'android/ci/validate_transport_wiring.py'
+      - 'android/parity/test_android_acceptance_diagnostics.py'
+      - 'android/docs/LEARNING_ASSET_MANIFEST.md'
+      - 'android/build.gradle'
+      - 'android/settings.gradle'
+      - 'android/gradle.properties'
+      - '.github/workflows/android-v1.yml'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +61,10 @@ env:
   BAMBU_PROFILE_REPO: https://github.com/bambulab/BambuStudio.git
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
   BAMBU_MATERIAL_PROFILE_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   verify:
@@ -114,6 +162,7 @@ jobs:
       - name: Run Android pipeline acceptance tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 35
           arch: x86_64
           profile: pixel_6
@@ -131,12 +180,12 @@ jobs:
         with:
           name: alloy-android-acceptance-diagnostics
           path: |
-            app/build/reports/androidTests/connected/
-            app/build/outputs/androidTest-results/connected/
+            android/app/build/reports/androidTests/connected/
+            android/app/build/outputs/androidTest-results/connected/
           if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: alloy-v1-release-ci-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 

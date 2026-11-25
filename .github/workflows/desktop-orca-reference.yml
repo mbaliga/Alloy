@@ -2,53 +2,52 @@ name: Desktop Orca A1 Mini reference slices
 
 on:
   push:
-    branches: [stage1-runtime-parity]
+    branches: [main]
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
-      - 'parity/export_resolved_orca_profiles.py'
-      - 'parity/test_export_resolved_orca_profiles.py'
-      - 'parity/generate_fixtures.py'
-      - 'parity/test_generate_fixtures.py'
-      - 'parity/compare_gcode.py'
-      - 'parity/test_compare_gcode.py'
-      - 'ci/neutralize_bambu_motion_hooks.py'
-      - 'ci/prepare_orca_cli_process_profile.py'
-      - 'ci/compare_hook_neutralized_g3.py'
-      - 'ci/compare_g3_artifacts.py'
-      - 'ci/validate_g3_reference_transform.py'
-      - 'parity/test_hook_neutralized_profile.py'
-      - 'parity/test_hook_neutralized_g3.py'
-      - 'parity/test_hook_neutralized_workflow_contract.py'
-      - 'app/src/main/assets/models/**'
-      - 'parity/test_desktop_orca_reference_workflow.py'
-      - 'parity/test_prepare_orca_cli_process_profile.py'
-      - 'parity/g3-bambu-filament-overlay.json'
-      - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
-      - 'parity/verify_gcode_3mf.py'
+      - 'android/parity/export_resolved_orca_profiles.py'
+      - 'android/parity/test_export_resolved_orca_profiles.py'
+      - 'android/parity/generate_fixtures.py'
+      - 'android/parity/test_generate_fixtures.py'
+      - 'android/parity/compare_gcode.py'
+      - 'android/parity/test_compare_gcode.py'
+      - 'android/ci/neutralize_bambu_motion_hooks.py'
+      - 'android/ci/prepare_orca_cli_process_profile.py'
+      - 'android/ci/compare_hook_neutralized_g3.py'
+      - 'android/ci/compare_g3_artifacts.py'
+      - 'android/ci/validate_g3_reference_transform.py'
+      - 'android/parity/test_hook_neutralized_profile.py'
+      - 'android/parity/test_hook_neutralized_g3.py'
+      - 'android/parity/test_hook_neutralized_workflow_contract.py'
+      - 'android/app/src/main/assets/models/**'
+      - 'android/parity/test_desktop_orca_reference_workflow.py'
+      - 'android/parity/test_prepare_orca_cli_process_profile.py'
+      - 'android/parity/g3-bambu-filament-overlay.json'
+      - 'android/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
+      - 'android/parity/verify_gcode_3mf.py'
   pull_request:
-    branches: [stage1-gates-prep, codex/fix-native-test-status]
     paths:
       - '.github/workflows/desktop-orca-reference.yml'
-      - 'parity/export_resolved_orca_profiles.py'
-      - 'parity/test_export_resolved_orca_profiles.py'
-      - 'parity/generate_fixtures.py'
-      - 'parity/test_generate_fixtures.py'
-      - 'parity/compare_gcode.py'
-      - 'parity/test_compare_gcode.py'
-      - 'ci/neutralize_bambu_motion_hooks.py'
-      - 'ci/prepare_orca_cli_process_profile.py'
-      - 'ci/compare_hook_neutralized_g3.py'
-      - 'ci/compare_g3_artifacts.py'
-      - 'ci/validate_g3_reference_transform.py'
-      - 'parity/test_hook_neutralized_profile.py'
-      - 'parity/test_hook_neutralized_g3.py'
-      - 'parity/test_hook_neutralized_workflow_contract.py'
-      - 'app/src/main/assets/models/**'
-      - 'parity/test_desktop_orca_reference_workflow.py'
-      - 'parity/test_prepare_orca_cli_process_profile.py'
-      - 'parity/g3-bambu-filament-overlay.json'
-      - 'app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
-      - 'parity/verify_gcode_3mf.py'
+      - 'android/parity/export_resolved_orca_profiles.py'
+      - 'android/parity/test_export_resolved_orca_profiles.py'
+      - 'android/parity/generate_fixtures.py'
+      - 'android/parity/test_generate_fixtures.py'
+      - 'android/parity/compare_gcode.py'
+      - 'android/parity/test_compare_gcode.py'
+      - 'android/ci/neutralize_bambu_motion_hooks.py'
+      - 'android/ci/prepare_orca_cli_process_profile.py'
+      - 'android/ci/compare_hook_neutralized_g3.py'
+      - 'android/ci/compare_g3_artifacts.py'
+      - 'android/ci/validate_g3_reference_transform.py'
+      - 'android/parity/test_hook_neutralized_profile.py'
+      - 'android/parity/test_hook_neutralized_g3.py'
+      - 'android/parity/test_hook_neutralized_workflow_contract.py'
+      - 'android/app/src/main/assets/models/**'
+      - 'android/parity/test_desktop_orca_reference_workflow.py'
+      - 'android/parity/test_prepare_orca_cli_process_profile.py'
+      - 'android/parity/g3-bambu-filament-overlay.json'
+      - 'android/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json'
+      - 'android/parity/verify_gcode_3mf.py'
   workflow_dispatch:
 
 permissions:
@@ -59,6 +58,10 @@ env:
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
   ORCA_VERSION: 2.4.2
   ORCA_APPIMAGE_URL: https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.4.2/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.4.2.AppImage
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   reference-slices:
@@ -116,7 +119,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
+          ORCA="$GITHUB_WORKSPACE/android/runtime/orca/squashfs-root/AppRun"
           mkdir -p runtime/evidence
           "$ORCA" --help > runtime/evidence/orca-help.txt 2>&1 || true
           head -n 120 runtime/evidence/orca-help.txt || true
@@ -126,21 +129,21 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
-          MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"
+          ORCA="$GITHUB_WORKSPACE/android/runtime/orca/squashfs-root/AppRun"
+          MACHINE="$GITHUB_WORKSPACE/android/runtime/profiles/machine.json"
           # Keep the exact Bambu project settings as the source of truth.
           # Normalize its "from: project" provenance only for Orca CLI; all
           # print-setting values remain unchanged.
-          PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
-          COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"
-          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process.json"
+          PROJECT_SETTINGS="$GITHUB_WORKSPACE/android/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/android/runtime/profiles/process.json"
+          PROCESS="$GITHUB_WORKSPACE/android/runtime/profiles/g3-project-process.json"
           python3 ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS"
-          FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
+          FILAMENT="$GITHUB_WORKSPACE/android/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference
 
           for stl in runtime/fixtures/*.stl; do
             name="$(basename "$stl" .stl)"
-            out="$GITHUB_WORKSPACE/runtime/orca-reference/$name"
+            out="$GITHUB_WORKSPACE/android/runtime/orca-reference/$name"
             mkdir -p "$out"
             "$ORCA" \
               --debug 2 \
@@ -151,7 +154,7 @@ jobs:
               --allow-newer-file \
               --outputdir "$out" \
               --export-3mf "$name.gcode.3mf" \
-              "$GITHUB_WORKSPACE/$stl" \
+              "$GITHUB_WORKSPACE/android/$stl" \
               > "$out/orca.log" 2>&1
 
             python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
@@ -165,14 +168,14 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
-          python3 parity/export_resolved_orca_profiles.py "$GITHUB_WORKSPACE/orca-profiles" runtime/multimodel-profiles --printer a1 --printer p1s
+          ORCA="$GITHUB_WORKSPACE/android/runtime/orca/squashfs-root/AppRun"
+          python3 parity/export_resolved_orca_profiles.py "$GITHUB_WORKSPACE/android/orca-profiles" runtime/multimodel-profiles --printer a1 --printer p1s
           mkdir -p runtime/orca-reference-multimodel
           : > runtime/evidence/multimodel-reference-errors.txt
           reference_failure=0
           for printer in a1 p1s; do
-            profile_dir="$GITHUB_WORKSPACE/runtime/multimodel-profiles/$printer"
-            out_root="$GITHUB_WORKSPACE/runtime/orca-reference-multimodel/$printer"
+            profile_dir="$GITHUB_WORKSPACE/android/runtime/multimodel-profiles/$printer"
+            out_root="$GITHUB_WORKSPACE/android/runtime/orca-reference-multimodel/$printer"
             mkdir -p "$out_root"
             verified_count=0
             for stl in runtime/fixtures/*.stl; do
@@ -188,7 +191,7 @@ jobs:
                 --allow-newer-file \
                 --outputdir "$out" \
                 --export-3mf "$name.gcode.3mf" \
-                "$GITHUB_WORKSPACE/$stl" \
+                "$GITHUB_WORKSPACE/android/$stl" \
                 > "$out/orca.log" 2>&1; then
                 echo "Slice failed: $printer / $name" | tee -a runtime/evidence/multimodel-reference-errors.txt
                 continue
@@ -237,20 +240,20 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          ORCA="$GITHUB_WORKSPACE/runtime/orca/squashfs-root/AppRun"
-          SOURCE_MACHINE="$GITHUB_WORKSPACE/runtime/profiles/machine.json"
-          NEUTRAL_DIR="$GITHUB_WORKSPACE/runtime/profiles/hook-neutralized"
+          ORCA="$GITHUB_WORKSPACE/android/runtime/orca/squashfs-root/AppRun"
+          SOURCE_MACHINE="$GITHUB_WORKSPACE/android/runtime/profiles/machine.json"
+          NEUTRAL_DIR="$GITHUB_WORKSPACE/android/runtime/profiles/hook-neutralized"
           python3 ci/neutralize_bambu_motion_hooks.py "$SOURCE_MACHINE" "$NEUTRAL_DIR"
           MACHINE="$NEUTRAL_DIR/machine-hooks-neutralized.json"
-          PROJECT_SETTINGS="$GITHUB_WORKSPACE/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
-          COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/runtime/profiles/process.json"
-          PROCESS="$GITHUB_WORKSPACE/runtime/profiles/g3-project-process-hook-neutralized.json"
+          PROJECT_SETTINGS="$GITHUB_WORKSPACE/android/app/src/androidTest/assets/profiles/g3-bambu-a1mini-project-settings.json"
+          COMPATIBILITY_PROFILE="$GITHUB_WORKSPACE/android/runtime/profiles/process.json"
+          PROCESS="$GITHUB_WORKSPACE/android/runtime/profiles/g3-project-process-hook-neutralized.json"
           python3 ci/prepare_orca_cli_process_profile.py "$PROJECT_SETTINGS" "$COMPATIBILITY_PROFILE" "$PROCESS" --neutralize-motion-hooks
-          FILAMENT="$GITHUB_WORKSPACE/parity/g3-bambu-filament-overlay.json"
+          FILAMENT="$GITHUB_WORKSPACE/android/parity/g3-bambu-filament-overlay.json"
           mkdir -p runtime/orca-reference-hook-neutralized
           for stl in runtime/fixtures/*.stl; do
             name="$(basename "$stl" .stl)"
-            out="$GITHUB_WORKSPACE/runtime/orca-reference-hook-neutralized/$name"
+            out="$GITHUB_WORKSPACE/android/runtime/orca-reference-hook-neutralized/$name"
             mkdir -p "$out"
             "$ORCA" \
               --debug 2 \
@@ -261,7 +264,7 @@ jobs:
               --allow-newer-file \
               --outputdir "$out" \
               --export-3mf "$name.gcode.3mf" \
-              "$GITHUB_WORKSPACE/$stl" \
+              "$GITHUB_WORKSPACE/android/$stl" \
               > "$out/orca.log" 2>&1
             python3 parity/verify_gcode_3mf.py "$out/$name.gcode.3mf"
           done
@@ -294,13 +297,13 @@ jobs:
         with:
           name: a1mini-orca-2.4.2-reference-slices
           path: |
-            runtime/orca-reference
-            runtime/orca-reference-hook-neutralized
-            runtime/orca-reference-multimodel
-            runtime/multimodel-profiles
-            runtime/profiles
-            runtime/profiles/hook-neutralized
-            runtime/fixtures/SHA256SUMS
-            runtime/orca/SHA256SUMS
-            runtime/evidence
+            android/runtime/orca-reference
+            android/runtime/orca-reference-hook-neutralized
+            android/runtime/orca-reference-multimodel
+            android/runtime/multimodel-profiles
+            android/runtime/profiles
+            android/runtime/profiles/hook-neutralized
+            android/runtime/fixtures/SHA256SUMS
+            android/runtime/orca/SHA256SUMS
+            android/runtime/evidence
           if-no-files-found: error

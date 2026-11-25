@@ -1,0 +1,52 @@
+name: Forge
+
+# Alloy Forge (forge/): headless tests and the production build. The browser smoke tests (npm run test:ui,
+# test:ext-ui) need Playwright and a browser and are run by hand; see forge/README.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'forge/**'
+      - '.github/workflows/forge.yml'
+  pull_request:
+    paths:
+      - 'forge/**'
+      - '.github/workflows/forge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forge-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: forge
+
+jobs:
+  test-and-build:
+    name: npm test and npm run build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: forge/package-lock.json
+      - name: Install (node_modules is not committed)
+        run: npm ci
+      - name: Headless tests (kernel, design loop, selection actions, OCCT)
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: The build produced the app and the OCCT kernel files
+        run: |
+          set -eu
+          for f in dist/index.html dist/app.js dist/occt-worker.js dist/occt/replicad_single.wasm dist/occt-import-js.wasm; do
+            test -s "$f" || { echo "missing build output: $f"; exit 1; }
+          done
+          ls -l dist | head -20

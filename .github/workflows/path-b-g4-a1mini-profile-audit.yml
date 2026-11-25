@@ -2,17 +2,16 @@ name: Path B G4 A1 Mini profile audit
 
 on:
   pull_request:
-    branches: [stage1-gates-prep]
     paths:
       - '.github/workflows/path-b-g4-a1mini-profile-audit.yml'
-      - 'parity/audit_path_b_a1mini_profile.py'
-      - 'parity/audit_bambu_a1mini_templates.py'
-      - 'parity/build_path_b_prusa_config.py'
-      - 'parity/export_resolved_orca_profiles.py'
-      - 'ci/validate_g4_scope.py'
-      - 'parity/a1mini_g4_scope.json'
-      - 'app/src/main/assets/profiles/**'
-      - 'ci/validate_profile_assets.py'
+      - 'android/parity/audit_path_b_a1mini_profile.py'
+      - 'android/parity/audit_bambu_a1mini_templates.py'
+      - 'android/parity/build_path_b_prusa_config.py'
+      - 'android/parity/export_resolved_orca_profiles.py'
+      - 'android/ci/validate_g4_scope.py'
+      - 'android/parity/a1mini_g4_scope.json'
+      - 'android/app/src/main/assets/profiles/**'
+      - 'android/ci/validate_profile_assets.py'
   workflow_dispatch:
 
 permissions:
@@ -23,6 +22,10 @@ env:
   ORCA_PROFILE_SHA: 07b81cfdc9e3933ee7cd8539d32bcf937f9d99b4
   SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
   SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   profile-audit:
@@ -94,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: path-b-g4-a1mini-profile-audit
-          path: path-b-g4-evidence
+          path: android/path-b-g4-evidence
           if-no-files-found: error
 
       - name: Enforce critical-field compatibility

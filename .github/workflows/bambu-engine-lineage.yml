@@ -2,17 +2,16 @@ name: Bambu Studio engine lineage diagnostic
 
 on:
   push:
-    branches: [codex/alloy-phone-first-mvp]
-    paths:
-      - '.github/workflows/bambu-engine-lineage.yml'
-      - 'app/src/main/jni/**'
-      - 'ci/identify_orca_engine.py'
-  pull_request:
     branches: [main]
     paths:
       - '.github/workflows/bambu-engine-lineage.yml'
-      - 'app/src/main/jni/**'
-      - 'ci/identify_orca_engine.py'
+      - 'android/app/src/main/jni/**'
+      - 'android/ci/identify_orca_engine.py'
+  pull_request:
+    paths:
+      - '.github/workflows/bambu-engine-lineage.yml'
+      - 'android/app/src/main/jni/**'
+      - 'android/ci/identify_orca_engine.py'
   workflow_dispatch:
 
 permissions:
@@ -22,6 +21,10 @@ env:
   ORCA_MOBILE_REPO: https://github.com/CodeMasterCody3D/OrcaSlicer-Mobile.git
   ORCA_MOBILE_SHA: d996a9cadb65b354997f2d5d8734b46bb9ea4efd
   BAMBU_STUDIO_REPO: https://github.com/bambulab/BambuStudio.git
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   diagnostic:
@@ -64,5 +67,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bambu-studio-engine-lineage-diagnostic
-          path: bambu-evidence
+          path: android/bambu-evidence
           if-no-files-found: error

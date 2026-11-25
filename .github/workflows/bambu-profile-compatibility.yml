@@ -4,16 +4,16 @@ on:
   pull_request:
     paths:
       - '.github/workflows/bambu-profile-compatibility.yml'
-      - 'parity/audit_path_b_a1mini_profile.py'
-      - 'parity/test_g4_workflow.py'
-      - 'parity/test_checkout_pinned_snapshot.py'
-      - 'ci/checkout_pinned_snapshot.py'
-      - 'ci/verify_profile_snapshot.py'
-      - 'ci/validate_profile_assets.py'
-      - 'app/src/main/assets/profiles/**'
-      - 'app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
-      - 'app/src/main/java/com/mbaliga/alloy/NativeSettings.java'
-      - 'app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
+      - 'android/parity/audit_path_b_a1mini_profile.py'
+      - 'android/parity/test_g4_workflow.py'
+      - 'android/parity/test_checkout_pinned_snapshot.py'
+      - 'android/ci/checkout_pinned_snapshot.py'
+      - 'android/ci/verify_profile_snapshot.py'
+      - 'android/ci/validate_profile_assets.py'
+      - 'android/app/src/main/assets/profiles/**'
+      - 'android/app/src/main/java/com/mbaliga/alloy/NativeSlicerEngine.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/NativeSettings.java'
+      - 'android/app/src/main/java/com/mbaliga/alloy/ProfileCatalog.java'
   workflow_dispatch:
 
 permissions:
@@ -24,6 +24,10 @@ env:
   BAMBU_PROFILE_SHA: da8b44ee34dd349f2ae0df3f1cbae366df482354
   SLICEBEAM_REPO: https://github.com/utkabobr/SliceBeam.git
   SLICEBEAM_SHA: 12b370ce305acc2caa59b7e4e78e04069db2f7e3
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   profile-audit:
@@ -75,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: profile-compatibility-${{ matrix.printer }}
-          path: profile-compatibility-evidence
+          path: android/profile-compatibility-evidence
           if-no-files-found: error
           retention-days: 14
 

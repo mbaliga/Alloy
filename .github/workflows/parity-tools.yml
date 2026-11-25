@@ -2,34 +2,38 @@ name: Parity tooling checks
 
 on:
   push:
-    branches: [stage1-gates-prep, 'codex/alloy-phone-first-mvp']
+    branches: [main]
     paths:
-      - 'parity/**'
-      - 'ci/compare_hook_neutralized_g3.py'
-      - 'ci/neutralize_bambu_motion_hooks.py'
-      - 'ci/validate_release_readiness.py'
-      - 'ci/validate_release_wiring.py'
-      - 'ci/validate_g3_reference_transform.py'
-      - 'app/src/androidTest/assets/profiles/g3-travel-obstacle-transform.json'
-      - 'release/production-readiness.template.json'
-      - 'docs/RELEASE.md'
+      - 'android/parity/**'
+      - 'android/ci/compare_hook_neutralized_g3.py'
+      - 'android/ci/neutralize_bambu_motion_hooks.py'
+      - 'android/ci/validate_release_readiness.py'
+      - 'android/ci/validate_release_wiring.py'
+      - 'android/ci/validate_g3_reference_transform.py'
+      - 'android/app/src/androidTest/assets/profiles/g3-travel-obstacle-transform.json'
+      - 'android/release/production-readiness.template.json'
+      - 'android/docs/RELEASE.md'
       - '.github/workflows/parity-tools.yml'
   pull_request:
     paths:
-      - 'parity/**'
-      - 'ci/compare_hook_neutralized_g3.py'
-      - 'ci/neutralize_bambu_motion_hooks.py'
-      - 'ci/validate_release_readiness.py'
-      - 'ci/validate_release_wiring.py'
-      - 'ci/validate_g3_reference_transform.py'
-      - 'app/src/androidTest/assets/profiles/g3-travel-obstacle-transform.json'
-      - 'release/production-readiness.template.json'
-      - 'docs/RELEASE.md'
+      - 'android/parity/**'
+      - 'android/ci/compare_hook_neutralized_g3.py'
+      - 'android/ci/neutralize_bambu_motion_hooks.py'
+      - 'android/ci/validate_release_readiness.py'
+      - 'android/ci/validate_release_wiring.py'
+      - 'android/ci/validate_g3_reference_transform.py'
+      - 'android/app/src/androidTest/assets/profiles/g3-travel-obstacle-transform.json'
+      - 'android/release/production-readiness.template.json'
+      - 'android/docs/RELEASE.md'
       - '.github/workflows/parity-tools.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   python-tools:
@@ -55,37 +59,37 @@ jobs:
             parity/test_hook_neutralized_workflow_contract.py
 
       - name: Run profile resolver tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_profile_resolver.py
 
       - name: Run G-code comparator tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_compare_gcode.py
 
       - name: Run desktop Orca workflow contract tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_desktop_orca_reference_workflow.py
 
       - name: Run capability catalog gate tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_capability_catalog.py
 
       - name: Run G3 profile identity tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_g3_profile.py
 
       - name: Run A1 Mini template policy tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_bambu_a1mini_templates.py
 
       - name: Run Stage 1 scope-patch tests
-        working-directory: parity
+        working-directory: android/parity
         run: |
           python3 -m unittest -v test_stage1_scope_patch.py test_orca_mobile_bootstrap_patch.py
 
@@ -114,5 +118,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: parity-generated-fixtures
-          path: parity/generated-fixtures
+          path: android/parity/generated-fixtures
           if-no-files-found: error

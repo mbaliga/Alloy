@@ -74,7 +74,7 @@ def patch_script(text: str, sdk_root: str, ndk_root: str, boost_locale: bool = F
             text,
             'cd Boost-for-Android\n# Note: Boost-for-Android requires specific configurations for NDK versions.\n',
             'cd Boost-for-Android\n'
-            'python3 "$GITHUB_WORKSPACE/ci/patch_boost_android_locale.py" build-android.sh\n'
+            'python3 "$GITHUB_WORKSPACE/android/ci/patch_boost_android_locale.py" build-android.sh\n'
             '# Note: Boost-for-Android requires specific configurations for NDK versions.\n',
         )
         text = replace_once(

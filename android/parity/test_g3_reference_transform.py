@@ -65,7 +65,7 @@ class G3ReferenceTransformTests(unittest.TestCase):
         self.assertIn("validate_reference_3mf(", comparator)
         self.assertIn("validate_reference_geometry(", comparator)
         self.assertIn("orca-reference\" / \"travel_obstacle\"", comparator)
-        workflow = (ROOT / ".github/workflows/parity-tools.yml").read_text(encoding="utf-8")
+        workflow = (ROOT.parent / ".github/workflows/parity-tools.yml").read_text(encoding="utf-8")
         self.assertIn("parity/test_g3_reference_transform.py", workflow)
         production_sources = ROOT / "app/src/main/java"
         for source in production_sources.rglob("*.java"):

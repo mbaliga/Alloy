@@ -82,6 +82,8 @@ def run_git(path: Path, *args: str) -> str | None:
 
 def _workflow_pins(root: Path) -> dict[str, str]:
     path = root / WORKFLOW_PATH
+    if not path.is_file() and (root.parent / WORKFLOW_PATH).is_file():
+        path = root.parent / WORKFLOW_PATH  # monorepo layout: workflows live at the repository root
     text = path.read_text(encoding="utf-8")
     match = re.search(r"(?ms)^env:\s*\n(.*?)(?=^jobs:)", text)
     if not match:

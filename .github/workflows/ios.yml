@@ -8,11 +8,11 @@ name: Alloy iOS (preparation and inspection companion)
 
 on:
   push:
-    branches: [main, 'claude/**', 'codex/**']
+    branches: [main]
     tags: ['ios-v*']
-    paths: ['ios/**', 'app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ios.yml']
+    paths: ['slicer-ports/ios/**', 'android/app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'android/app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ios.yml']
   pull_request:
-    paths: ['ios/**', 'app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ios.yml']
+    paths: ['slicer-ports/ios/**', 'android/app/src/main/java/com/mbaliga/alloy/GcodeSafetyValidator.java', 'android/app/src/main/java/com/mbaliga/alloy/PlateArrangementPlanner.java', '.github/workflows/ios.yml']
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: swift test
-        working-directory: ios/AlloyCore
+        working-directory: slicer-ports/ios/AlloyCore
         run: swift test
 
   parity-vs-java:
@@ -43,9 +43,9 @@ jobs:
       - name: JDK 17 and python3 are preinstalled on ubuntu-latest
         run: java -version && python3 --version
       - name: Regenerate with the real Java sources
-        run: sh ios/parity/regen.sh
+        run: sh slicer-ports/ios/parity/regen.sh
       - name: Goldens must be unchanged (Java source and Swift fixtures agree)
-        run: git diff --exit-code -- ios/AlloyCore/Tests/AlloyCoreTests/Fixtures
+        run: git diff --exit-code -- slicer-ports/ios/AlloyCore/Tests/AlloyCoreTests/Fixtures
 
   app-macos:
     name: Build and test (macOS, iOS Simulator SDK, unsigned)
@@ -57,15 +57,15 @@ jobs:
       - name: Toolchain versions
         run: xcodebuild -version && swift --version
       - name: AlloyCore tests on macOS
-        working-directory: ios/AlloyCore
+        working-directory: slicer-ports/ios/AlloyCore
         run: swift test
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate Xcode project
-        working-directory: ios/AlloyApp
+        working-directory: slicer-ports/ios/AlloyApp
         run: xcodegen generate
       - name: Build for iOS Simulator (unsigned)
-        working-directory: ios/AlloyApp
+        working-directory: slicer-ports/ios/AlloyApp
         run: |
           xcodebuild build -project Alloy.xcodeproj -scheme Alloy \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
@@ -73,7 +73,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
       - name: Zip simulator app
         if: startsWith(github.ref, 'refs/tags/ios-v')
-        run: cd ios/AlloyApp/build/Build/Products/Debug-iphonesimulator && ditto -c -k --keepParent Alloy.app "$GITHUB_WORKSPACE/Alloy-simulator.zip"
+        run: cd slicer-ports/ios/AlloyApp/build/Build/Products/Debug-iphonesimulator && ditto -c -k --keepParent Alloy.app "$GITHUB_WORKSPACE/Alloy-simulator.zip"
       - name: Upload simulator build (tags only; artifact quota is limited)
         if: startsWith(github.ref, 'refs/tags/ios-v')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -116,7 +116,7 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           echo "$APPLE_PROFILE_BASE64" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/alloy.mobileprovision"
       - name: Generate project, archive, export
-        working-directory: ios/AlloyApp
+        working-directory: slicer-ports/ios/AlloyApp
         run: |
           set -eu
           xcodegen generate

@@ -1,14 +1,9 @@
 name: Path B G5 Bambu TreeSupport3D audit
 
+# Manual only. G5 audit: reports route status PORT_REQUIRED and exits 2 by design while the Bambu TreeSupport3D port does not exist (docs/SLICER_ROADMAP.md).
+# It runs the same audit, but not on every push or pull request, because a result that is red by design would hide real failures.
+# Run it from the Actions tab; its evidence artifact is the record.
 on:
-  pull_request:
-    branches: [stage1-gates-prep]
-    paths:
-      - '.github/workflows/path-b-g5-bambu-treesupport3d-audit.yml'
-      - 'ci/audit_bambu_treesupport3d.py'
-      - 'app/src/main/jni/libslic3r/Support/**'
-      - 'docs/NATIVE_ENGINE_INTEGRATION.md'
-      - 'THIRD_PARTY_NOTICES.md'
   workflow_dispatch:
 
 permissions:
@@ -18,6 +13,10 @@ env:
   BAMBU_REPO: https://github.com/bambulab/BambuStudio.git
   BAMBU_TAG: v02.08.02.61
   BAMBU_SHA: 926a7192574bcb9b3a732e1ec59a46d79cb45466
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   treesupport3d-audit:
@@ -55,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: path-b-g5-bambu-treesupport3d-audit
-          path: path-b-g5-evidence
+          path: android/path-b-g5-evidence
           if-no-files-found: error
 
       - name: Keep the open port gate explicit

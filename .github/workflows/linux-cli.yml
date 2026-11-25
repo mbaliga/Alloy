@@ -2,34 +2,38 @@ name: Alloy Linux CLI contract
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
     paths:
-      - 'tools/alloy_linux.py'
-      - 'tools/alloy_linux_gui.py'
-      - 'tools/test_alloy_linux.py'
-      - 'tools/bambu_lan_probe.py'
-      - 'tools/test_bambu_lan_probe.py'
-      - 'tools/requirements.txt'
-      - 'app/src/main/assets/models/**'
-      - 'docs/LINUX_DESKTOP.md'
-      - 'docs/LINUX_ALTERNATIVES.md'
+      - 'android/tools/alloy_linux.py'
+      - 'android/tools/alloy_linux_gui.py'
+      - 'android/tools/test_alloy_linux.py'
+      - 'android/tools/bambu_lan_probe.py'
+      - 'android/tools/test_bambu_lan_probe.py'
+      - 'android/tools/requirements.txt'
+      - 'android/app/src/main/assets/models/**'
+      - 'android/docs/LINUX_DESKTOP.md'
+      - 'android/docs/LINUX_ALTERNATIVES.md'
       - '.github/workflows/linux-cli.yml'
   pull_request:
     paths:
-      - 'tools/alloy_linux.py'
-      - 'tools/alloy_linux_gui.py'
-      - 'tools/test_alloy_linux.py'
-      - 'tools/bambu_lan_probe.py'
-      - 'tools/test_bambu_lan_probe.py'
-      - 'tools/requirements.txt'
-      - 'app/src/main/assets/models/**'
-      - 'docs/LINUX_DESKTOP.md'
-      - 'docs/LINUX_ALTERNATIVES.md'
+      - 'android/tools/alloy_linux.py'
+      - 'android/tools/alloy_linux_gui.py'
+      - 'android/tools/test_alloy_linux.py'
+      - 'android/tools/bambu_lan_probe.py'
+      - 'android/tools/test_bambu_lan_probe.py'
+      - 'android/tools/requirements.txt'
+      - 'android/app/src/main/assets/models/**'
+      - 'android/docs/LINUX_DESKTOP.md'
+      - 'android/docs/LINUX_ALTERNATIVES.md'
       - '.github/workflows/linux-cli.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: android
 
 jobs:
   contract:
