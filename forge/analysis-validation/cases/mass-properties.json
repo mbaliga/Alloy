@@ -1,0 +1,78 @@
+{
+  "analysis": "xyz.mdhv.sample-mass/mass-properties",
+  "package": "examples/ext/sample-mass",
+  "cases": [
+    {
+      "id": "cube-20-pla", "title": "20 mm cube, PLA",
+      "reference": "analytic: V = a^3 = 8000 mm3; m = rho V = 1240 kg/m3 x 8e-6 m3 = 9.92 g; CoG at the cube centre",
+      "setup": { "features": [{ "type": "box", "body": "Part", "size": [20, 20, 20], "anchor": "center" }], "materials": { "Part": "pla" } },
+      "expectValidity": "validated",
+      "expect": [
+        { "metric": "total_volume", "value": 8, "unit": "cm³", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "value": 9.92, "unit": "g", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "where": [0, 0, 0], "unit": "mm", "tol": { "abs": 1e-4 } }
+      ]
+    },
+    {
+      "id": "box-offset-petg", "title": "40 x 20 x 10 mm box off the origin, PETG",
+      "reference": "analytic: V = 8000 mm3; m = 1250 kg/m3 x 8e-6 m3 = 10 g; CoG = placement + half the size = (10, 5, 5)",
+      "setup": { "features": [{ "type": "box", "body": "Part", "size": [40, 20, 10], "anchor": "bottom", "pos": [10, 5, 0] }], "materials": { "Part": "petg" } },
+      "expect": [
+        { "metric": "total_mass", "value": 10, "unit": "g", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "where": [10, 5, 5], "unit": "mm", "tol": { "abs": 1e-4 } }
+      ]
+    },
+    {
+      "id": "l-bracket-abs", "title": "L bracket of two boxes, ABS",
+      "reference": "analytic composite: 30x10x10 (V=3000, c=15,5,5) + 10x10x20 (V=2000, c=5,5,20) -> V=5000 mm3, CoG=(11, 5, 11); m = 1040 kg/m3 x 5e-6 m3 = 5.2 g",
+      "setup": { "features": [
+        { "type": "box", "body": "Part", "size": [30, 10, 10], "anchor": "min", "pos": [0, 0, 0] },
+        { "type": "box", "body": "Part", "size": [10, 10, 20], "anchor": "min", "pos": [0, 0, 10] }
+      ], "materials": { "Part": "abs" } },
+      "expect": [
+        { "metric": "total_volume", "value": 5, "unit": "cm³", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "value": 5.2, "unit": "g", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "where": [11, 5, 11], "unit": "mm", "tol": { "abs": 1e-3 } }
+      ]
+    },
+    {
+      "id": "two-bodies-mixed", "title": "Two cubes of different materials",
+      "reference": "analytic: PLA 10 mm cube 1.24 g + aluminium 6061 10 mm cube 2.7 g = 3.94 g; CoG is the mass-weighted mean of the cube centres (0,0,0) and (30,0,0): x = 30 x 2.7 / 3.94",
+      "setup": { "features": [
+        { "type": "box", "body": "Plastic", "size": [10, 10, 10], "anchor": "center" },
+        { "type": "box", "body": "Metal", "size": [10, 10, 10], "anchor": "center", "pos": [30, 0, 0] }
+      ], "materials": { "Plastic": "pla", "Metal": "al6061" } },
+      "expect": [
+        { "metric": "mass_Plastic", "value": 1.24, "unit": "g", "tol": { "rel": 1e-6 } },
+        { "metric": "mass_Metal", "value": 2.7, "unit": "g", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "value": 3.94, "unit": "g", "tol": { "rel": 1e-6 } },
+        { "metric": "total_mass", "where": [20.558375, 0, 0], "unit": "mm", "tol": { "abs": 1e-3 } }
+      ]
+    },
+    {
+      "id": "cylinder-30x20", "title": "Cylinder 20 mm diameter, 30 mm tall (tessellated), PLA",
+      "reference": "analytic for the true cylinder: V = pi r^2 h = 9424.78 mm3. The kernel's cylinder is a 48-sided prism (area ratio 0.99715, 0.29 % low), so the tolerance is 0.5 %; CoG is exact by symmetry",
+      "setup": { "features": [{ "type": "cylinder", "body": "Part", "d": 20, "h": 30, "anchor": "bottom" }], "materials": { "Part": "pla" } },
+      "expect": [
+        { "metric": "total_volume", "value": 9.42478, "unit": "cm³", "tol": { "rel": 0.005 } },
+        { "metric": "total_mass", "where": [0, 0, 15], "unit": "mm", "tol": { "abs": 1e-3 } }
+      ]
+    },
+    {
+      "id": "sphere-20", "title": "Sphere 20 mm diameter (tessellated), PLA",
+      "reference": "analytic for the true sphere: V = 4/3 pi r^3 = 4188.79 mm3. The kernel's 48-segment sphere is about 1.2 % low, so the tolerance is 2 %; CoG at the centre by symmetry",
+      "setup": { "features": [{ "type": "sphere", "body": "Part", "d": 20 }], "materials": { "Part": "pla" } },
+      "expect": [
+        { "metric": "total_volume", "value": 4.18879, "unit": "cm³", "tol": { "rel": 0.02 } },
+        { "metric": "total_mass", "where": [0, 0, 0], "unit": "mm", "tol": { "abs": 1e-2 } }
+      ]
+    },
+    {
+      "id": "unassigned-material", "title": "No material assigned: PLA is assumed and the result says so",
+      "reference": "rule (docs/EXTENSIONS_SPEC.md 3.1): a missing material is assumed to be PLA and the result carries a warning; V = 1000 mm3 so m = 1.24 g",
+      "setup": { "features": [{ "type": "box", "body": "Part", "size": [10, 10, 10], "anchor": "center" }], "materials": {} },
+      "expectWarnings": ["Body \"Part\" has no material; PLA is assumed"],
+      "expect": [{ "metric": "total_mass", "value": 1.24, "unit": "g", "tol": { "rel": 1e-6 } }]
+    }
+  ]
+}

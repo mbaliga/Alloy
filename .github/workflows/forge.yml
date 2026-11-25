@@ -41,6 +41,8 @@ jobs:
         run: npm ci
       - name: Headless tests (kernel, design loop, selection actions, OCCT)
         run: npm test
+      - name: Analysis validation suite (a missed tolerance fails the build)
+        run: npm run test:analysis
       - name: Production build
         run: npm run build
       - name: The build produced the app and the OCCT kernel files

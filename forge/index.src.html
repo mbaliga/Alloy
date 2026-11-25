@@ -204,14 +204,19 @@ body.thinking #send{animation:pulse .9s infinite alternate}
 .xsub{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:4px;overflow-wrap:anywhere}.xline{margin:10px 0 4px;font-size:13px}.xdesc{font-size:12px;color:var(--dim);margin:4px 0}.xdesc.dim{color:var(--faint)}
 .xperms{margin:4px 0 0;padding-left:18px;font-size:12px}.xperms code{font-family:var(--mono);font-size:10.5px;color:var(--acc)}
 .xperm-chips{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:6px}
+.asec{margin-bottom:14px}.asec select,.asec input{max-width:100%}.pbar{height:6px;border-radius:6px;background:var(--glass2);overflow:hidden;margin:8px 0}.pbar-fill{height:100%;background:var(--acc);transition:width .2s}
+.vbadge{margin-left:8px;padding:2px 8px;border-radius:10px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.vbadge.validated{border-style:solid}.vbadge.estimate{border-style:dashed}.vbadge.experimental{border-style:dotted}
+.errbox.warn{background:rgba(255,200,90,.12);color:var(--ink)}.crow input{width:84px}.matgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:8px 0}.matf{display:grid;gap:2px}.matf .lb{font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--faint)}
 .xrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}.xrow input{flex:1;min-width:160px}
 .chip.on{color:var(--acc)}.xlog pre{font-size:10px;white-space:pre-wrap;color:var(--dim);margin:4px 0 0}.xlog summary{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);cursor:pointer;margin-top:6px}
 .extframe{width:100%;height:220px;border:0;border-radius:14px;background:var(--glass2);display:block}.extpane{margin:8px 0}.extslot{margin-top:4px}
 #legend{position:fixed;left:12px;bottom:76px;z-index:6;width:min(280px,calc(100vw - 24px));padding:10px 12px;border-radius:18px;display:flex;flex-direction:column;gap:10px}
 #legend[hidden],#probe[hidden]{display:none}.lg.off{opacity:.55}.lgh{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.lgh .g{margin-left:0}.lgh b{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+.lgslice{display:flex;align-items:center;gap:8px;margin-top:6px}.lgslice input[type=range]{flex:1;accent-color:#8ff0c4;padding:0}.lgslice select{width:auto;padding:6px 8px}
 .lgbar{height:10px;border-radius:6px;margin:6px 0 2px}.lgt{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--dim)}
 #probe{position:fixed;left:50%;transform:translateX(-50%);top:92px;z-index:9;padding:8px 14px;border-radius:999px;font-family:var(--mono);font-size:11px;white-space:nowrap;max-width:calc(100vw - 20px);overflow:hidden;text-overflow:ellipsis}
-@media(max-width:899px){dialog.sheet{margin:auto 0 0;width:100%;max-width:none;border-radius:24px 24px 0 0;max-height:88vh}#legend{bottom:132px;left:10px}#probe{top:128px}.extframe{height:260px}.xpkg .chip,#extdlg .chip{min-height:40px}}
+@media(min-width:900px){#legend{left:auto;right:16px}}
+@media(max-width:899px){dialog.sheet{margin:auto 0 0;width:100%;max-width:none;border-radius:24px 24px 0 0;max-height:88vh}#legend{bottom:132px;left:10px}#probe{top:128px}.extframe{height:260px}.xpkg .chip,#extdlg .chip,#p-analyze .chip,#p-analyze button.g,#p-analyze select,#p-analyze input,#p-analyze summary{min-height:40px}#p-analyze button.g{min-width:40px}}
 dialog.sheet::backdrop{background:rgba(5,8,10,.55)}
 dialog{background:rgba(16,22,26,.96);color:var(--ink);border:0;border-radius:24px;padding:22px 22px 18px;width:min(560px,calc(100vw - 20px));max-height:90vh;overflow:auto}
 dialog::backdrop{background:rgba(5,8,10,.55);backdrop-filter:blur(3px)}
@@ -253,8 +258,8 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 
 <div id="vig"></div>
 <section class="sec glass" id="left">
-  <div class="ptabs"><button data-pane="objects">Objects</button><button data-pane="tree">Features</button><button data-pane="params">Params</button><button data-pane="check">Check</button><button data-pane="loop">Loop</button><button data-pane="ext" id="t-ext" hidden>Ext</button></div>
-  <div class="pane" id="p-objects"></div><div class="pane" id="p-tree"></div><div class="pane" id="p-params"></div><div class="pane" id="p-check"></div><div class="pane" id="p-loop"></div><div class="pane" id="p-ext"></div>
+  <div class="ptabs"><button data-pane="objects">Objects</button><button data-pane="tree">Features</button><button data-pane="params">Params</button><button data-pane="check">Check</button><button data-pane="loop">Loop</button><button data-pane="ext" id="t-ext" hidden>Ext</button><button data-pane="analyze" id="t-an" hidden>Analyze</button></div>
+  <div class="pane" id="p-objects"></div><div class="pane" id="p-tree"></div><div class="pane" id="p-params"></div><div class="pane" id="p-check"></div><div class="pane" id="p-loop"></div><div class="pane" id="p-ext"></div><div class="pane" id="p-analyze"></div>
 </section>
 <section class="sec glass" id="inspsec"><h3>Inspector</h3><div id="insp"></div></section>
 
@@ -276,7 +281,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
   <div id="reply" class="glass" hidden></div>
   <div id="promptbar" class="glass"><span id="spark">✦</span><input id="ask" placeholder="Ask for a change…" autocomplete="off" enterkeyhint="send"><button id="send" title="Send">↑</button></div>
 </div>
-<nav id="tabs"><button data-sec="objects">Objects</button><button data-sec="tree">Features</button><button data-sec="params">Params</button><button data-sec="check">Check</button><button data-sec="loop">Loop</button><button data-sec="ext" id="n-ext" hidden>Ext</button><button data-sec="insp">Inspect</button><button onclick="document.getElementById('new').click()">New</button></nav>
+<nav id="tabs"><button data-sec="objects">Objects</button><button data-sec="tree">Features</button><button data-sec="params">Params</button><button data-sec="check">Check</button><button data-sec="loop">Loop</button><button data-sec="ext" id="n-ext" hidden>Ext</button><button data-sec="analyze" id="n-an" hidden>Analyze</button><button data-sec="insp">Inspect</button><button onclick="document.getElementById('new').click()">New</button></nav>
 
 <dialog id="wizard"><h2>New enclosure</h2><div id="wbody"></div><div class="dact"><button class="btn ghost" id="wclose">Cancel</button><button class="btn" id="wgo">Generate</button></div></dialog>
 

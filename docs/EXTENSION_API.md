@@ -396,6 +396,21 @@ What is a hard boundary, and what is not:
 - **Integrity is not authenticity** (see Integrity above). There is no signing or marketplace yet.
 - **No telemetry**: nothing in the host reports anything anywhere.
 
+## Analyses (milestone A0)
+
+An analysis is declared in `contributes.analyses` (`id`, `label`, `description`, `validity`, `fields`, `checks`) and registered with `forge.analysis.register(id, { run(input, ctx) })` (permission `doc.read`; a package that reads geometry also asks for `geometry.read`). The host runs it in the package's Worker on the Analyze pane's Run, or when the user runs the checks, and the design loop.
+
+`input`: `bodies[]` (`name`, `positions` Float32Array in mm, `indices` Uint32Array, `bbox`, `volume_mm3`), `setup` (`bodies[]` with `material.props` in SI and `material.quality`, `assumed`; `conditions`: `ambient` {`temperature_K`, `airspeed_ms`, `gravity`}, `heat[]` (W, target pcb or body), `mounts[]` (contact with `conductance_W_m2K`, or fixed; body, face, optional `box` in mm), `loads[]` (force N, pressure Pa, acceleration m/s²), `totalHeat_W`, `warnings`) and `project` (the document without assets). Everything physical is SI; geometry is millimetres in the document frame. `ctx.progress(0..1)` reports progress and `ctx.signal` aborts (check it between chunks of work).
+
+Return `{ summary, fields, warnings, validity }`. The host fills `id`, `version` and `inputsHash`, validates the shape (finite numbers, units, one value per vertex for a surface field, grid sizes) and rejects a malformed result.
+
+- `summary`: `{ metric, value, unit, where?: [x, y, z] }[]`. Checks compare against a metric by name.
+- `fields`: `surface` (`body`, one Float32 per vertex of that body's mesh), `voxel` (`grid` {`origin`, `h`, `dims`}, i fastest then j then k, at most 8 000 000 cells) or `vector` (validated, not drawn yet). The host draws surface and voxel fields with its colour map, legend, unit, voxel size and grid limit, a slice slider for voxel fields, and a tap probe.
+- `validity`: `estimate`, `validated` or `experimental` (the default when you leave it out). **`experimental` results are shown but never decide a pass or fail.** Only claim `validated` when every case in `analysis-validation/cases/` for your analysis passes within its tolerance.
+- `contributes.analyses[].checks`: `{ id, label, metric, op, limit, unit }` with `op` one of `<=`, `<`, `>=`, `>`. The user can change a limit (stored in the project as `analysis.conditions.limits["<ext>:<analysis>:<check>"]`, in the metric's unit). A check whose analysis has not run is an advisory "not run" row, never a pass.
+
+Results are cached in the browser by a hash of the package version, the setup and the geometry, and are never saved in the project. The loop spends at most `analysisSeconds` (default 120) on analyses; rows past the budget say "skipped". The critic sees summary rows only. The sample `examples/ext/sample-mass` is a worked example, and `npm run test:analysis` runs the validation suite.
+
 ## Limits
 
 Package: 24 MB zipped, 256 files, 12 MB per file, 32 MB expanded, zip64 and encryption refused. Values stored through `storage`: 256 KB. `doc.applyOps`: 200 ops per call. Overlays: 2 000 000 points. `net.fetch` / `compute.remote.fetch` responses: 20 MB. `geometry.voxelize`: 4 000 000 voxels by default, 8 000 000 hard.
@@ -406,7 +421,7 @@ Package: 24 MB zipped, 256 files, 12 MB per file, 32 MB expanded, zip64 and encr
 node tools/pack-ext.mjs examples/ext/sample-rib dist/ext-samples/sample-rib.alloyext
 ```
 
-Open Settings > Extensions, choose the file (or paste a URL, or pick a sample), read the install prompt, install, and switch it on for the project. Two samples ship in `examples/ext/`: `sample-rib` (a plugin: a Rib feature type and a check) and `sample-probe` (an extension: a pane and an overlay).
+Open Settings > Extensions, choose the file (or paste a URL, or pick a sample), read the install prompt, install, and switch it on for the project. Three samples ship in `examples/ext/`: `sample-rib` (a plugin: a Rib feature type and a check), `sample-probe` (an extension: a pane and an overlay) and `sample-mass` (a plugin with two analyses).
 
 ## When a package is removed
 

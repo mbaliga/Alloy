@@ -128,11 +128,15 @@ Each analysis can expose checks with thresholds, for example "max component temp
 
 ### A0 done
 
-- [ ] Materials file with sources; material assignment UI
-- [ ] Loads/conditions editor in the Analyze pane, saved in the doc
-- [ ] Result model, overlay renderer (surface map, slice, legend, probe), report export
-- [ ] Check + loop integration with `validity` gating
-- [ ] Validation harness and table output
+Status: built on branch `forge-a0-analysis-framework` (PR open, not merged). Met items are ticked; deviations and additions are stated.
+
+- [x] Materials file with sources; material assignment UI. `forge/analysis/materials.json` (schema 1): 11 materials, nine properties each, every value has a quality label (`datasheet`, `handbook`, `estimate`, `measured`, `n/a`), source ids that resolve to citations with a checked date, and a range where sources disagree. **Values are typical, not measured; many are `estimate`; the Incropera-based values are recalled, not re-checked against the book.** Users add their own (`set_material`). A body with no material is assumed PLA and every result says so. The assignment is a select per body in the Analyze pane (`set_body_material`, lock-checked), not in the Objects pane.
+- [x] Loads/conditions editor in the Analyze pane, saved in the doc (`project.analysis`, document version unchanged). Heat sources by PCB part or body, ambient (°C, air speed, gravity direction), mounts (contact conductance or fixed) and loads (force, pressure, acceleration in g with the quasi-static assumption shown). Deviation: mounts and loads address a body face by **direction** (`+x`…`-z`) with an optional box in mm; there is no per-face picking in the viewport yet.
+- [x] Result model, overlay renderer (surface map, slice, legend, probe), report export. Surface fields colour the body mesh per vertex; voxel fields draw as a slice plane with an axis select and a slider; the legend shows unit, gradient, ticks, voxel size and the 8 M cell limit; the probe reads the value under the pointer. Reports export as one zip (PNG of the viewport, JSON, markdown with validity, assumptions, units and sources). **Vector fields are validated but not drawn.** Additions to the contract: a surface field names its `body`; a check's limit is stored in the unit of its metric.
+- [x] Check + loop integration with `validity` gating. Declared analysis checks join the scorecard; `experimental` rows are advisory and never gate; a missing or over-budget result is an advisory "not run" or "skipped" row, never a silent pass; the loop has an `analysisSeconds` cap (default 120) and the critic gets summary rows only. Analysis checks run only when the user runs the checks or in the loop.
+- [x] Validation harness and table output. `npm run test:analysis` (`forge/analysis-validation/`): every case has a reference, one explicit tolerance and runs through the real runner and a package Worker; a miss exits 1; an analysis returning `validated` must pass all its cases. The sample package has 31 checks across 8 cases.
+
+Not part of A0: a real solver (A1 onwards), GPU, the Runner. The sample package (`examples/ext/sample-mass`) exists to exercise the framework end to end.
 
 ## 4. The five analysis packages
 

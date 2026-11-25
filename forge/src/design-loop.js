@@ -66,10 +66,10 @@ function summariseChecks(res) {
 export function runDesignLoop(o) {
   const env = {
     callModel: o.callModel || defaultCallModel, build: o.build || kernelBuild, wasm: o.wasm, occt: o.occt || null,
-    ext: o.ext || null, minWall: o.minWall ?? 1.2, maxRounds: Math.max(1, o.maxRounds ?? 4), prices: o.prices || null,
+    ext: o.ext || null, analysisSeconds: o.analysisSeconds ?? 120, minWall: o.minWall ?? 1.2, maxRounds: Math.max(1, o.maxRounds ?? 4), prices: o.prices || null,
   };
   const params = { goal: o.goal || 'Improve this enclosure.', styleBrief: o.styleBrief || '', threshold: o.threshold ?? DEFAULT_THRESHOLD, hint: o.hint || 'none' };
-  const S = { base: clone(o.project), current: clone(o.project), rounds: [], lastBuild: null, best: null, exported: null, feedback: null, tokens: 0, cost: 0 };
+  const S = { analysisBudget: { left: o.analysisSeconds ?? 120 }, base: clone(o.project), current: clone(o.project), rounds: [], lastBuild: null, best: null, exported: null, feedback: null, tokens: 0, cost: 0 };
   const round = () => S.rounds[S.rounds.length - 1];
   const tick = () => o.onRound && o.onRound(S.rounds);
   const disposeBuild = () => { try { S.lastBuild?.dispose(); } catch (_) { /* already freed */ } S.lastBuild = null; };
@@ -154,7 +154,12 @@ export function runDesignLoop(o) {
       const P = S.current;
       // B-rep checks (exact booleans/distances, the enclosure scorecard) when the build came from the OCCT kernel; mesh checks otherwise
       let res = S.lastBuild.kernel === 'occt' ? await S.lastBuild.check({ minWall: env.minWall }) : runChecks(S.lastPrep?.project || P, S.lastBuild, { minWall: env.minWall });
-      if (env.ext) res = env.ext.mergeChecks(res, await env.ext.checkRows(P, { build: S.lastBuild }));
+      // analyses spend a shared time budget (analysisSeconds); when it is used up their rows say so instead of passing silently
+      if (env.ext) {
+        res = env.ext.mergeChecks(res, await env.ext.checkRows(P, { build: S.lastBuild, runAnalyses: true, budget: S.analysisBudget, signal: ctx.signal }));
+        const sums = await env.ext.analysisSummaries(P, S.lastBuild); // the critic gets summary rows, never fields
+        if (sums.length) res = { ...res, metrics: { ...(res.metrics || {}), analysis: sums } };
+      }
       if (rd.opsError) { // surface a rejected round as a hard failure so the gateway iterates
         res.checks.unshift({ id: 'ops_valid', label: 'Proposed ops were valid and respected locks', severity: 'hard', pass: false, detail: rd.opsError });
         res.passed = false; res.failed.unshift('ops_valid');
@@ -237,7 +242,7 @@ export function runDesignLoop(o) {
     const bestEffort = S.best?.project || (S.current !== S.base ? S.current : null);
     const out = {
       state, ok, reason: run.terminalReason?.detail || result?.stoppedBecause || '', category: run.terminalReason?.category,
-      rounds: S.rounds.filter((r) => !r.overBudget), usage: { steps: live.steps, tokens: live.tokens, cost: r2(live.cost * 1e4) / 1e4, estimated: live.estimated, limits },
+      rounds: S.rounds.filter((r) => !r.overBudget), usage: { steps: live.steps, tokens: live.tokens, cost: r2(live.cost * 1e4) / 1e4, estimated: live.estimated, analysisSeconds: r2(Math.max(0, env.analysisSeconds - S.analysisBudget.left)), limits: { ...limits, analysisSeconds: env.analysisSeconds } },
       project: S.exported, bestEffort: S.exported ? null : bestEffort ? clone(bestEffort) : null,
       score: S.best?.score ?? last?.score ?? null, checks: last?.checks || [], hint: params.hint, run, ledger: handle.ledger,
     };

@@ -1,0 +1,1107 @@
+{
+ "$comment": "Material properties for the analysis framework (docs/EXTENSIONS_SPEC.md section 3.1). SI units. Every property has a quality (datasheet, handbook, estimate, n/a) and the sources it comes from; \"checked\" on a source is the date it was last read against the value. Typical values, not measurements of your material: override per material in the Analyze pane.",
+ "schema": 1,
+ "units": {
+  "k": "W/(m·K)",
+  "rho": "kg/m³",
+  "cp": "J/(kg·K)",
+  "emissivity": "1",
+  "E": "Pa",
+  "nu": "1",
+  "yield_strength": "Pa",
+  "tensile_strength": "Pa",
+  "interlayer_factor": "1"
+ },
+ "sources": {
+  "harvard-pla": {
+   "citation": "Harvard SEAS 3D Printing Lab, PLA material data sheet",
+   "url": "https://3dp.seas.harvard.edu/files/2023/01/PLAMDS.pdf",
+   "checked": "2026-11-25"
+  },
+  "polymaker-pla": {
+   "citation": "Polymaker PolyLite PLA technical data sheet V5.4 (printed-part values)",
+   "url": "https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite-PLA_TDS_EN_V5.4.pdf",
+   "checked": "2026-11-25"
+  },
+  "makeitfrom-pla": {
+   "citation": "MakeItFrom, Polylactic Acid (PLA) properties",
+   "url": "https://www.makeitfrom.com/material-properties/Polylactic-Acid-PLA-Polylactide",
+   "checked": "2026-11-25"
+  },
+  "makeitfrom-petg-asa": {
+   "citation": "MakeItFrom, PETG vs ASA comparison",
+   "url": "https://www.makeitfrom.com/compare/Glycol-Modified-Polyethylene-Terephthalate-PETG-PET-G/Acrylonitrile-Styrene-Acrylate-ASA",
+   "checked": "2026-11-25"
+  },
+  "xometry-petg": {
+   "citation": "Xometry PETG / PETG FDM datasheets (vendor values differ)",
+   "url": "https://xometry.asia/wp-content/uploads/2021/03/1773385866-PETG-FDM-Datasheet.pdf",
+   "checked": "2026-11-25"
+  },
+  "xometry-asa": {
+   "citation": "Xometry ASA datasheet",
+   "url": "https://xometry.asia/wp-content/uploads/2025/07/1773847657-ASA-Datasheet.pdf",
+   "checked": "2026-11-25"
+  },
+  "polymaker-asa": {
+   "citation": "Polymaker PolyLite ASA technical data sheet V5.1",
+   "url": "https://cdn.shopify.com/s/files/1/0603/6609/files/PolyLite_ASA_TDS_V5.1.pdf",
+   "checked": "2026-11-25"
+  },
+  "polymaker-table": {
+   "citation": "Polymaker, technical data at a glance (filament densities)",
+   "url": "https://wiki.polymaker.com/polymaker-products/polymaker-filaments/technical-data-at-a-glance",
+   "checked": "2026-11-25"
+  },
+  "asm-6061": {
+   "citation": "ASM / MatWeb typical values for aluminium 6061-T6 (secondhand copy of the data sheet)",
+   "url": "https://www.aerospacemetals.com/wp-content/uploads/2023/06/Aluminum-6061-T6-6061-T651.pdf",
+   "checked": "2026-11-25"
+  },
+  "wiki-fr4": {
+   "citation": "Wikipedia, FR-4 (example laminate values)",
+   "url": "https://en.wikipedia.org/wiki/FR-4",
+   "checked": "2026-11-25"
+  },
+  "isola-fr408": {
+   "citation": "Isola FR408 laminate data sheet (Poisson ratio)",
+   "url": "https://www.isola-group.com/wp-content/uploads/data-sheets/fr408.pdf",
+   "checked": "2026-11-25"
+  },
+  "jlcpcb-fr4": {
+   "citation": "JLCPCB, PCB thermal conductivity guide",
+   "url": "https://jlcpcb.com/blog/pcb-thermal-conductivity-guide",
+   "checked": "2026-11-25"
+  },
+  "springer-fr4": {
+   "citation": "Springer, J. Mater. Sci.: Mater. Electron. (2017), FR-4 modulus range",
+   "url": "https://link.springer.com/10.1007/s10854-017-8449-2",
+   "checked": "2026-11-25"
+  },
+  "incropera": {
+   "citation": "Incropera, DeWitt, Bergman, Lavine, Fundamentals of Heat and Mass Transfer, 7th ed., Appendix A (Table A.1 pure copper; Table A.4 air at 1 atm, 300 K). Recalled, not re-checked in this repository.",
+   "url": null
+  },
+  "estimate": {
+   "citation": "Engineering estimate from typical published ranges for this material class. Not checked against a datasheet. Replace with your own material data.",
+   "url": null
+  },
+  "user": {
+   "citation": "Entered by the user for this project",
+   "url": null
+  }
+ },
+ "materials": [
+  {
+   "id": "pla",
+   "name": "PLA",
+   "class": "fdm-polymer",
+   "notes": "Printed (FDM) PLA. Properties vary by grade, filament and print settings; use your datasheet for anything that matters.",
+   "properties": {
+    "k": {
+     "value": 0.13,
+     "quality": "datasheet",
+     "sources": [
+      "harvard-pla",
+      "makeitfrom-pla"
+     ]
+    },
+    "rho": {
+     "value": 1240,
+     "quality": "datasheet",
+     "sources": [
+      "harvard-pla",
+      "polymaker-pla"
+     ],
+     "range": [
+      1170,
+      1250
+     ]
+    },
+    "cp": {
+     "value": 1800,
+     "quality": "datasheet",
+     "sources": [
+      "harvard-pla"
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 3000000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "harvard-pla",
+      "polymaker-pla",
+      "makeitfrom-pla"
+     ],
+     "range": [
+      1900000000.0,
+      3500000000.0
+     ],
+     "note": "Printed XY value; sources disagree (1.9 to 3.5 GPa)."
+    },
+    "nu": {
+     "value": 0.36,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 50000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      40000000.0,
+      65000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 55000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      45000000.0,
+      65000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.6,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.4,
+      0.8
+     ],
+     "note": "Strength across layers (Z) as a fraction of in-layer strength."
+    }
+   }
+  },
+  {
+   "id": "petg",
+   "name": "PETG",
+   "class": "fdm-polymer",
+   "notes": "Printed PETG. Sources disagree widely on conductivity and modulus.",
+   "properties": {
+    "k": {
+     "value": 0.2,
+     "quality": "datasheet",
+     "sources": [
+      "makeitfrom-petg-asa",
+      "xometry-petg"
+     ],
+     "range": [
+      0.16,
+      0.29
+     ]
+    },
+    "rho": {
+     "value": 1250,
+     "quality": "datasheet",
+     "sources": [
+      "xometry-petg"
+     ],
+     "range": [
+      1180,
+      1290
+     ]
+    },
+    "cp": {
+     "value": 1200,
+     "quality": "datasheet",
+     "sources": [
+      "makeitfrom-petg-asa",
+      "xometry-petg"
+     ],
+     "range": [
+      1100,
+      1200
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 2100000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "makeitfrom-petg-asa",
+      "xometry-petg"
+     ],
+     "range": [
+      1100000000.0,
+      2200000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.4,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 45000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      35000000.0,
+      55000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 50000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      40000000.0,
+      60000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.7,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.5,
+      0.85
+     ]
+    }
+   }
+  },
+  {
+   "id": "asa",
+   "name": "ASA",
+   "class": "fdm-polymer",
+   "notes": "Printed ASA.",
+   "properties": {
+    "k": {
+     "value": 0.17,
+     "quality": "datasheet",
+     "sources": [
+      "makeitfrom-petg-asa",
+      "xometry-asa"
+     ],
+     "range": [
+      0.164,
+      0.18
+     ]
+    },
+    "rho": {
+     "value": 1075,
+     "quality": "datasheet",
+     "sources": [
+      "polymaker-asa",
+      "xometry-asa"
+     ],
+     "range": [
+      1070,
+      1080
+     ]
+    },
+    "cp": {
+     "value": 1300,
+     "quality": "datasheet",
+     "sources": [
+      "makeitfrom-petg-asa"
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 2100000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "polymaker-asa",
+      "xometry-asa"
+     ],
+     "range": [
+      2050000000.0,
+      2160000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.38,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 40000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      30000000.0,
+      50000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 42000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      32000000.0,
+      52000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.7,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.5,
+      0.85
+     ]
+    }
+   }
+  },
+  {
+   "id": "abs",
+   "name": "ABS",
+   "class": "fdm-polymer",
+   "notes": "Printed ABS. Mostly estimates: the sources found mixed grades.",
+   "properties": {
+    "k": {
+     "value": 0.17,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.15,
+      0.19
+     ]
+    },
+    "rho": {
+     "value": 1040,
+     "quality": "datasheet",
+     "sources": [
+      "polymaker-table"
+     ],
+     "range": [
+      1030,
+      1060
+     ]
+    },
+    "cp": {
+     "value": 1400,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1300,
+      1500
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 2100000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1800000000.0,
+      2400000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.35,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 40000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      30000000.0,
+      50000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 42000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      30000000.0,
+      50000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.7,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.5,
+      0.85
+     ]
+    }
+   }
+  },
+  {
+   "id": "pa12",
+   "name": "PA12 (nylon 12)",
+   "class": "fdm-polymer",
+   "notes": "Printed PA12, dry. Absorbs moisture: stiffness and strength fall when wet.",
+   "properties": {
+    "k": {
+     "value": 0.23,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.2,
+      0.3
+     ]
+    },
+    "rho": {
+     "value": 1010,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1000,
+      1030
+     ]
+    },
+    "cp": {
+     "value": 1700,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1600,
+      2000
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 1500000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1200000000.0,
+      1800000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.4,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 45000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      35000000.0,
+      50000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 48000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      38000000.0,
+      55000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.7,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.5,
+      0.85
+     ]
+    }
+   }
+  },
+  {
+   "id": "pa-gf",
+   "name": "PA-GF (glass-filled nylon)",
+   "class": "fdm-polymer",
+   "notes": "Printed glass-fibre-filled polyamide. Strongly anisotropic; the in-layer values are used and the interlayer factor is low.",
+   "properties": {
+    "k": {
+     "value": 0.3,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.25,
+      0.4
+     ]
+    },
+    "rho": {
+     "value": 1300,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1200,
+      1400
+     ]
+    },
+    "cp": {
+     "value": 1500,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1300,
+      1700
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 6000000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      4000000000.0,
+      8000000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.38,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 80000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      60000000.0,
+      100000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 85000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      65000000.0,
+      110000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.5,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.3,
+      0.65
+     ]
+    }
+   }
+  },
+  {
+   "id": "pc",
+   "name": "PC (polycarbonate)",
+   "class": "fdm-polymer",
+   "notes": "Printed polycarbonate.",
+   "properties": {
+    "k": {
+     "value": 0.2,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.19,
+      0.22
+     ]
+    },
+    "rho": {
+     "value": 1190,
+     "quality": "datasheet",
+     "sources": [
+      "polymaker-table"
+     ],
+     "range": [
+      1180,
+      1210
+     ]
+    },
+    "cp": {
+     "value": 1200,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1150,
+      1250
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 2300000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      2000000000.0,
+      2600000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.37,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 60000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      50000000.0,
+      70000000.0
+     ]
+    },
+    "tensile_strength": {
+     "value": 65000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      55000000.0,
+      72000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 0.6,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.4,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "al6061",
+   "name": "Aluminium 6061-T6",
+   "class": "metal",
+   "notes": "Wrought alloy. Emissivity depends hard on finish: mill finish about 0.09, anodised up to about 0.8.",
+   "properties": {
+    "k": {
+     "value": 167,
+     "quality": "datasheet",
+     "sources": [
+      "asm-6061"
+     ],
+     "range": [
+      151,
+      202
+     ]
+    },
+    "rho": {
+     "value": 2700,
+     "quality": "handbook",
+     "sources": [
+      "asm-6061"
+     ]
+    },
+    "cp": {
+     "value": 896,
+     "quality": "datasheet",
+     "sources": [
+      "asm-6061"
+     ]
+    },
+    "emissivity": {
+     "value": 0.09,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.04,
+      0.85
+     ]
+    },
+    "E": {
+     "value": 68900000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "asm-6061"
+     ]
+    },
+    "nu": {
+     "value": 0.33,
+     "quality": "handbook",
+     "sources": [
+      "asm-6061"
+     ]
+    },
+    "yield_strength": {
+     "value": 276000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "asm-6061"
+     ],
+     "range": [
+      240000000.0,
+      276000000.0
+     ],
+     "note": "Typical 276 MPa; 240 MPa is the specified minimum for T6."
+    },
+    "tensile_strength": {
+     "value": 310000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "asm-6061"
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   }
+  },
+  {
+   "id": "fr4",
+   "name": "FR-4 (PCB laminate)",
+   "class": "laminate",
+   "notes": "Glass-epoxy laminate; values differ by manufacturer and glass content. Conductivity is through-plane; in-plane is higher.",
+   "properties": {
+    "k": {
+     "value": 0.29,
+     "quality": "datasheet",
+     "sources": [
+      "wiki-fr4",
+      "jlcpcb-fr4"
+     ],
+     "range": [
+      0.2,
+      0.343
+     ]
+    },
+    "rho": {
+     "value": 1850,
+     "quality": "datasheet",
+     "sources": [
+      "wiki-fr4"
+     ]
+    },
+    "cp": {
+     "value": 1100,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      900,
+      1300
+     ]
+    },
+    "emissivity": {
+     "value": 0.9,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 24000000000.0,
+     "quality": "datasheet",
+     "sources": [
+      "wiki-fr4",
+      "springer-fr4"
+     ],
+     "range": [
+      11000000000.0,
+      31000000000.0
+     ],
+     "note": "Lengthwise datasheet value; crosswise about 21 GPa."
+    },
+    "nu": {
+     "value": 0.14,
+     "quality": "datasheet",
+     "sources": [
+      "wiki-fr4",
+      "isola-fr408"
+     ],
+     "range": [
+      0.118,
+      0.162
+     ]
+    },
+    "yield_strength": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    },
+    "tensile_strength": {
+     "value": 300000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      200000000.0,
+      400000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   }
+  },
+  {
+   "id": "copper",
+   "name": "Copper",
+   "class": "metal",
+   "notes": "Pure copper (annealed strength values). Emissivity: polished about 0.03, oxidised up to about 0.8.",
+   "properties": {
+    "k": {
+     "value": 401,
+     "quality": "handbook",
+     "sources": [
+      "incropera"
+     ]
+    },
+    "rho": {
+     "value": 8933,
+     "quality": "handbook",
+     "sources": [
+      "incropera"
+     ]
+    },
+    "cp": {
+     "value": 385,
+     "quality": "handbook",
+     "sources": [
+      "incropera"
+     ]
+    },
+    "emissivity": {
+     "value": 0.05,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      0.03,
+      0.8
+     ]
+    },
+    "E": {
+     "value": 120000000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      110000000000.0,
+      130000000000.0
+     ]
+    },
+    "nu": {
+     "value": 0.34,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "yield_strength": {
+     "value": 70000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      50000000.0,
+      330000000.0
+     ],
+     "note": "Annealed. Cold-worked copper is several times stronger."
+    },
+    "tensile_strength": {
+     "value": 220000000.0,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      210000000.0,
+      400000000.0
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   }
+  },
+  {
+   "id": "air",
+   "name": "Air (1 atm, 300 K)",
+   "class": "fluid",
+   "notes": "Still air at 1 atm and 300 K. Properties change with temperature; a solver that needs that must say so.",
+   "properties": {
+    "k": {
+     "value": 0.0263,
+     "quality": "handbook",
+     "sources": [
+      "incropera"
+     ]
+    },
+    "rho": {
+     "value": 1.161,
+     "quality": "handbook",
+     "sources": [
+      "incropera"
+     ]
+    },
+    "cp": {
+     "value": 1007,
+     "quality": "handbook",
+     "sources": [
+      "incropera"
+     ]
+    },
+    "emissivity": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    },
+    "E": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    },
+    "nu": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    },
+    "yield_strength": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    },
+    "tensile_strength": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    },
+    "interlayer_factor": {
+     "value": null,
+     "quality": "n/a",
+     "sources": []
+    }
+   }
+  }
+ ]
+}

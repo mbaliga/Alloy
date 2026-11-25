@@ -18,6 +18,9 @@ import { ExtApi } from './ext/api.js';
 import { createResolver, hasExtFeatures } from './ext/resolve.js';
 import { createPaneHost } from './ext/panes.js';
 import { mountExtensions } from './ext/ui.js';
+import { createAnalysisRunner } from './analysis/runner.js';
+import { mountAnalyze } from './analysis/ui.js';
+import { createResultCache, idbStore as idbResultStore, memoryStore as memResultStore } from './analysis/cache.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const h = (tag, attrs = {}, ...kids) => {
@@ -54,7 +57,7 @@ const S = {
   cfg: { provider: 'anthropic', base: '', model: PROVIDERS.anthropic.model, key: '' }, chat: [], busy: false,
 };
 let wasm, view, loopPane, rebuildT = 0, previewT = 0;
-let registry, extHost, resolver, panes, extUi; // extension host (src/ext): packages, Workers, resolver, pane bridge, UI
+let registry, extHost, resolver, panes, extUi, analysisRunner, analyzeUi; // extension host (src/ext): packages, Workers, resolver, pane bridge, UI
 const typeOf = (f) => typeDef(f.type) || { label: String(f.type).split('/').pop(), icon: '◇', desc: 'Needs an extension that is not installed. The feature is kept exactly as it is.', missing: true };
 
 // ───────────────────────── project lifecycle ─────────────────────────
@@ -91,7 +94,7 @@ function renderKState() {
 }
 function applyResult(res) {
   if (S.result) S.result.dispose();
-  S.result = res;
+  S.result = res; if (analyzeUi) analyzeUi.invalidate();
   const first = !S.fitted && S.result.bodies.length;
   view.setResult(S.result, meta());
   if (first) { view.fit(); S.fitted = true; }
@@ -126,7 +129,7 @@ async function runCard(force) {
   S.card = { busy: true }; if (S.pane === 'check') renderCheck();
   try {
     let res = R.kernel === 'occt' ? await R.check({}) : runChecks(S.prep?.project || S.project, R);
-    if (resolver) res = resolver.mergeChecks(res, await resolver.checkRows(S.project, { build: R })); // rows from extensions
+    if (resolver) res = resolver.mergeChecks(res, await resolver.checkRows(S.project, { build: R, runAnalyses: !!force, budget: { left: 60 } })); // rows from extensions; analyses only run when the user asks (60 s)
     if (tok !== S.cardTok) return;
     S.card = { res };
   } catch (e) { if (tok !== S.cardTok) return; S.card = { error: String(e.message || e) }; }
@@ -176,6 +179,7 @@ function renderPanes() {
   renderObjects(); renderTree(); renderParams(); renderCheck();
   if (loopPane) loopPane.refresh();
   if (extUi) { extUi.refreshTabs(); if (S.pane === 'ext') extUi.renderExtPane($('#p-ext')); refreshAddMenu(); }
+  if (analyzeUi) { analyzeUi.refreshTabs(); if (S.pane === 'analyze') analyzeUi.render($('#p-analyze')); }
 }
 // "Add feature" menu: built-ins plus the feature types of the packages switched on in this project
 function refreshAddMenu() {
@@ -556,7 +560,7 @@ function setMode(m) {
 }
 
 // ───────────────────────── sheets ─────────────────────────
-const PANES = ['objects', 'tree', 'params', 'check', 'loop', 'ext'];
+const PANES = ['objects', 'tree', 'params', 'check', 'loop', 'ext', 'analyze'];
 function showSheet(name) {
   const mobile = matchMedia('(max-width:899px)').matches;
   if (PANES.includes(name)) { S.pane = name; renderPanes(); }
@@ -816,16 +820,19 @@ async function boot() {
     },
   });
   extHost = new ExtHost({ createWorker: browserWorkerFactory, api });
-  resolver = createResolver({ registry, host: extHost });
+  analysisRunner = createAnalysisRunner({ registry, host: extHost, cache: createResultCache({ store: typeof indexedDB !== 'undefined' ? idbResultStore() : memResultStore() }) });
+  resolver = createResolver({ registry, host: extHost, analysis: analysisRunner });
   const themeNow = () => { const cs = getComputedStyle(document.body); return { ink: cs.getPropertyValue('--ink').trim(), dim: cs.getPropertyValue('--dim').trim(), acc: cs.getPropertyValue('--acc').trim(), dark: S.theme !== 'light' }; };
   panes = createPaneHost({ host: extHost, getPkg: (id) => registry.get(id), getTheme: themeNow });
   extUi = mountExtensions({ h, $, tip: tipToggle, S, registry, host: extHost, resolver, panes, view, say, blip, setExtension, rebuild: scheduleRebuild, showSheet, renderPanes, refreshAddMenu });
+  analyzeUi = mountAnalyze({ h, $, S, tip: tipToggle, say, blip, runner: analysisRunner, extUi, snapshot: () => view.snapshot(), download,
+    commitOps: (ops) => { try { commit(applyOps(S.project, ops, { actor: 'user' }).project); return true; } catch (e) { say(String(e.message || e)); blip(200, 0.08); return false; } } });
   registry.subscribe(() => { resolver.clear(); });
 
   setTheme(S.theme);
   loopPane = mountLoopPane({ h, $, root: $('#p-loop'), getProject: () => S.project, getCfg: () => S.cfg, getWasm: () => wasm, getOcct, getExt: () => resolver, commit, undo, say, blip, needsKey, openSettings });
   renderTop(); renderKState(); rebuild(); showSheet(matchMedia('(max-width:899px)').matches ? 'none' : 'tree');
-  window.__af = { S, ext: { registry, host: extHost, resolver, panes, ui: extUi }, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta, getOcct, runCard };
+  window.__af = { analyze: analyzeUi, S, ext: { registry, host: extHost, resolver, panes, ui: extUi }, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta, getOcct, runCard };
   document.body.classList.add('ready');
 }
 boot().catch((e) => { console.error(e); document.body.append(h('pre', { class: 'fatal' }, 'Failed to start: ' + e.message)); });

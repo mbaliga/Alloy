@@ -4,10 +4,10 @@
 import { loadPackage } from './loader.js';
 import { describeInstall } from './manifest.js';
 import { enabledIn, projectEntry } from './registry.js';
-import { rangeOf, legendTicks, cssGradient } from './overlay.js';
+import { rangeOf, legendTicks, cssGradient, gridText, sliceCount } from './overlay.js';
 
 const RUNNER_KEY = 'af.runner';
-const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext']];
+const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext']];
 
 export function mountExtensions(env) {
   const { h, $, tip, S, registry, host, resolver, panes, view, say, blip, setExtension, rebuild, showSheet } = env;
@@ -158,8 +158,17 @@ export function mountExtensions(env) {
         h('div', { class: 'lgh' }, h('b', {}, ov.label), h('span', { class: 'tag' }, ov.validity), h('span', { class: 'tag' }, o.name),
           h('button', { class: 'g', title: hid ? 'Show overlay' : 'Hide overlay', onclick: () => { hid ? hiddenOverlays.delete(o.key) : hiddenOverlays.add(o.key); applyOverlays(); } }, hid ? '○' : '●'),
           h('button', { class: 'g', title: 'Remove overlay', onclick: () => { overlays.delete(o.key); applyOverlays(); } }, '✕')));
-      if (ov.kind === 'points') {
-        row.append(h('div', { class: 'lgbar', style: `background:${cssGradient()}` }), h('div', { class: 'lgt' }, legendTicks(o.range).map((t) => h('span', {}, String(t)))), h('div', { class: 'tag' }, `${ov.unit ? 'unit ' + ov.unit + ' · ' : ''}${ov.values.length} points · tap a point to read it`));
+      if (ov.kind === 'points' || ov.kind === 'surface' || ov.kind === 'slice') {
+        row.append(h('div', { class: 'lgbar', style: `background:${cssGradient()}` }), h('div', { class: 'lgt' }, legendTicks(o.range).map((t) => h('span', {}, String(t)))));
+        const what = ov.kind === 'points' ? `${ov.values.length} points · tap a point to read it` : ov.kind === 'surface' ? `one value per vertex on ${ov.body} · tap the surface to read it` : `${gridText(ov.field.grid)} · tap the slice to read it`;
+        row.append(h('div', { class: 'tag' }, `${ov.unit ? 'unit ' + ov.unit + ' · ' : ''}${what}`));
+        if (ov.kind === 'slice' && ov.onSlice) {
+          const n = sliceCount(ov.field, ov.axis);
+          row.append(h('div', { class: 'lgslice' },
+            h('select', { 'aria-label': 'Slice axis', onchange: (e) => ov.onSlice(e.target.value, 0.5) }, ['x', 'y', 'z'].map((a) => h('option', { value: a, selected: a === ov.axis }, a.toUpperCase()))),
+            h('input', { type: 'range', min: 0, max: n - 1, value: ov.index, 'aria-label': 'Slice position', oninput: (e) => ov.onSlice(ov.axis, +e.target.value / Math.max(1, n - 1)) }),
+            h('span', { class: 'tag' }, `${ov.index + 1} / ${n}`)));
+        }
       } else row.append(h('div', { class: 'tag' }, `box ${ov.min.map((v) => +v.toFixed(1)).join(',')} to ${ov.max.map((v) => +v.toFixed(1)).join(',')} mm`));
       lg.append(row);
     }

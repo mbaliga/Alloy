@@ -19,7 +19,7 @@ fs.copyFileSync('index.src.html', 'dist/index.html');
 // sample extension packages (own work, PolyForm Noncommercial) so Settings > Extensions can install them same-origin
 const { packDir } = await import('./tools/pack-ext.mjs');
 fs.mkdirSync('dist/ext-samples', { recursive: true });
-for (const d of ['sample-rib', 'sample-probe']) fs.writeFileSync(`dist/ext-samples/${d}.alloyext`, await packDir(`examples/ext/${d}`));
+for (const d of ['sample-rib', 'sample-probe', 'sample-mass']) fs.writeFileSync(`dist/ext-samples/${d}.alloyext`, await packDir(`examples/ext/${d}`));
 for (const f of ['occt-import-js.js', 'occt-import-js.wasm']) fs.copyFileSync('node_modules/occt-import-js/dist/' + f, 'dist/' + f);
 fs.copyFileSync('node_modules/occt-import-js/dist/license.occt-import-js.txt', 'dist/LICENSE.occt-import-js.txt');
 const walk = (d) => fs.readdirSync(d).flatMap((f) => (fs.statSync(d + '/' + f).isDirectory() ? walk(d + '/' + f) : [d + '/' + f]));

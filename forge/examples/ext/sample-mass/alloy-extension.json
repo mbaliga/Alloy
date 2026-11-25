@@ -1,0 +1,27 @@
+{
+  "id": "xyz.mdhv.sample-mass",
+  "name": "Sample: mass properties",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "A plugin with two analyses. Mass and centre of mass from the mesh and each body's material (validated against analytic cases), and a voxel density section (experimental, to show how experimental results are treated).",
+  "main": "main.js",
+  "permissions": ["doc.read", "geometry.read"],
+  "contributes": {
+    "analyses": [
+      {
+        "id": "mass-properties", "label": "Mass and centre of mass", "validity": "validated",
+        "description": "Volume by the divergence theorem over the closed surface mesh, mass from each body's material density, centre of mass from the tetrahedron centroids.",
+        "fields": ["distance_from_cog"],
+        "checks": [{ "id": "total-mass", "label": "Total mass ≤ limit", "metric": "total_mass", "op": "<=", "limit": 80, "unit": "g" }]
+      },
+      {
+        "id": "section-density", "label": "Density section (voxel)", "validity": "experimental",
+        "description": "Fills each body into a voxel grid and stores its material density per voxel. Demonstrates a voxel field and slice overlay. Marked experimental on purpose.",
+        "fields": ["density"],
+        "checks": [{ "id": "max-density", "label": "Max density ≤ limit (demo of an experimental check)", "metric": "max_density", "op": "<=", "limit": 1000, "unit": "kg/m³" }]
+      }
+    ]
+  }
+}
