@@ -200,3 +200,10 @@ Approved defaults applied: D1 `android/` stays AGPL-3.0 and the rest PolyForm No
 - **Overlaps listed and a shared-package plan written** in `docs/ALLOY_FAMILY.md` ("Where Forge and the Slicer overlap", "Plan: what moves into shared packages"). Nothing moved. One new decision for the owner: **D7**, the licence of the shared data package (the Slicer is AGPL, Forge is noncommercial).
 - Findings worth knowing: `alloy.config.json` exists in neither app; the 180 mm A1 mini volume is written in at least ten places; Forge's default PLA density (1.24) already differs from the Slicer profile (1.26); the two viewports do not match although `STYLE.md` calls them shared.
 
+## 11. Phase 4 record: docs
+
+- Root `README.md` rewritten for the whole family (three tools with honest status, layout, how to run, licences by directory, principles).
+- `CLAUDE.md` paths updated (`android/`, `slicer-ports/`, the two roadmaps, this record) with Slicer-specific working rules.
+- `docs/FORGE_ROADMAP.md` marked honestly. F1 is built for the enclosure path with the owner's deferred items listed. Three findings beyond that list, for the owner to confirm: fillet, chamfer, shell and loft are kernel helpers, **not user-facing feature types** (no fillet by selector, draft, sweep, revolve, mirror-body); the volume-parity test tolerance is 3 %, not the 0.5 % in the roadmap; the F2 schema (`requirements`, `components`, `stylePack`) is not what exists (a `pcb` block stands in).
+- `docs/SLICER_ROADMAP.md` added from the stage1 gate docs: G1 open, G2 FAIL/NO-GO for the primary candidate, G3 FAIL/NO-GO, G4 runtime fidelity not shown, G5 open; the engine route is undecided and the shipping engine is the tree G2 rejected. Seven document disagreements are listed there.
+

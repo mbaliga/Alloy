@@ -5,7 +5,7 @@ Alloy is one family of three tools on one shared core: draw it, forge it, slice 
 | Product | What it is | Platform | Release | Status |
 |---|---|---|---|---|
 | **Alloy Forge** | Parametric 3D CAD for enclosures and small products, AI-native, BYOK | Web (static, self-hostable) | 1 | Working beta in `forge/` (PR #17) |
-| **Alloy Slicer** | A real slicer on the phone; sending to the printer is included | Native Android (Kotlin/Compose + NDK slicer engine) | 2 | Architecture gate (see root README) |
+| **Alloy Slicer** | A real slicer on the phone; sending to the printer is included | Native Android (Java and Android Views, an Alloy-owned OpenGL ES viewport, an NDK slicer engine) | 2 | Built in `android/`; **not qualified to print** (strict G3 parity fails, NO-GO). See `docs/SLICER_ROADMAP.md` |
 | **Alloy Draft** | Precision 2D drafting and vector design, Figma-easy, AutoCAD-precise | Web, mobile-first | 3 | Spec in `docs/DRAFT_SPEC.md` |
 
 ## Positioning
