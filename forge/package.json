@@ -1,0 +1,22 @@
+{
+  "name": "alloy-forge",
+  "version": "0.2.0",
+  "description": "Alloy Forge \u2014 browser parametric CAD for enclosures and small products, AI-native with BYOK",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test:ui": "node test_ui_loop.mjs",
+    "vendor:loop": "node tools/vendor-loop-engine.mjs",
+    "test": "node test_kernel.mjs && node --test test_loop.mjs",
+    "serve": "cd dist && python3 -m http.server 8765"
+  },
+  "author": "Madhav Baliga",
+  "license": "SEE LICENSE IN ../LICENSE",
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "manifold-3d": "^3.5.5",
+    "occt-import-js": "^0.0.23",
+    "three": "^0.187.0"
+  },
+  "private": true
+}

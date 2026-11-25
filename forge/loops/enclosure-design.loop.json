@@ -1,0 +1,581 @@
+{
+  "loopId": "forge.enclosure-design",
+  "semanticVersion": "1.0.0",
+  "objective": "Design or revise an enclosure: a model proposes typed ops, Forge applies and builds them, deterministic checks verify, an optional critic scores against a style brief, and the loop repeats until every hard check passes and the score clears the threshold. A person approves before the result is applied.",
+  "documentationRef": null,
+  "inputSchema": {
+    "location": "INLINE",
+    "inlineSchema": {
+      "type": "object",
+      "required": [
+        "goal"
+      ],
+      "properties": {
+        "goal": {
+          "type": "string"
+        },
+        "styleBrief": {
+          "type": "string"
+        },
+        "threshold": {
+          "type": "number"
+        },
+        "hint": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "location": "INLINE",
+    "inlineSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "object"
+        },
+        "checks": {
+          "type": "array"
+        }
+      }
+    }
+  },
+  "startNodeId": "start",
+  "terminalNodeIds": [
+    "end"
+  ],
+  "nodes": [
+    {
+      "nodeId": "start",
+      "category": "DETERMINISTIC_TRANSFORMATION",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-start"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "Start marker.",
+      "config": {
+        "name": "Start",
+        "passthrough": true
+      },
+      "presentation": {
+        "x": 40,
+        "y": 150
+      }
+    },
+    {
+      "nodeId": "designer",
+      "category": "MODEL_INFERENCE",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-designer"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "Proposes typed ops against the current project, addressing the last round's findings.",
+      "config": {
+        "name": "Designer",
+        "role": "designer",
+        "systemPrompt": "You are the designer in an iterate-until-the-checks-pass loop. Goal: ${goal}. Direction for this attempt: ${hint}. Style brief: ${styleBrief}. Return the usual JSON object of typed ops. Fix every failed check and finding from the previous round before anything else. Never touch locked features, parameters or bodies."
+      },
+      "presentation": {
+        "x": 150,
+        "y": 120
+      }
+    },
+    {
+      "nodeId": "build",
+      "category": "DETERMINISTIC_TRANSFORMATION",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-build"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "Applies the proposed ops through applyOps (validated, locks enforced) and builds the result with the kernel.",
+      "config": {
+        "name": "Build",
+        "role": "builder"
+      },
+      "presentation": {
+        "x": 340,
+        "y": 120
+      }
+    },
+    {
+      "nodeId": "check",
+      "category": "VERIFIER",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-check"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": true,
+        "verifierIds": [
+          "v-hard-checks"
+        ]
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "Deterministic hard checks: failing features, body/reference interference, minimum wall thickness, fit in the print volume.",
+      "config": {
+        "name": "Check",
+        "role": "checker"
+      },
+      "presentation": {
+        "x": 530,
+        "y": 120
+      }
+    },
+    {
+      "nodeId": "critic",
+      "category": "MODEL_INFERENCE",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-critic"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "Optional: scores the design 0-10 against the style brief. Skipped when there is no brief or a hard check failed.",
+      "config": {
+        "name": "Critic",
+        "role": "critic",
+        "systemPrompt": "Score the design from 0 to 10 against the style brief: ${styleBrief}. The pass threshold is ${threshold}. Reply with JSON only: {\"score\": number, \"notes\": [short strings]}."
+      },
+      "presentation": {
+        "x": 720,
+        "y": 120
+      }
+    },
+    {
+      "nodeId": "approve",
+      "category": "HUMAN_DECISION",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-approve"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "A person approves the design before it is applied to the project.",
+      "config": {
+        "name": "Approve",
+        "role": "approver"
+      },
+      "presentation": {
+        "x": 720,
+        "y": 270
+      }
+    },
+    {
+      "nodeId": "export",
+      "category": "ARTIFACT_IMPORT_EXPORT",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-export"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "MODIFY_DRAFT",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "IDEMPOTENT_WITH_KEY",
+      "compensation": {
+        "compensable": true,
+        "compensationDescription": "Undo in the editor restores the previous project."
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "REVERSIBLE_LOCAL",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "Applies the approved design to the project as one undoable change.",
+      "idempotencyKeyStrategy": "loopRunId+nodeId",
+      "config": {
+        "name": "Export",
+        "role": "exporter"
+      },
+      "presentation": {
+        "x": 530,
+        "y": 270
+      }
+    },
+    {
+      "nodeId": "end",
+      "category": "DETERMINISTIC_TRANSFORMATION",
+      "inputPorts": [],
+      "outputPorts": [],
+      "implementation": {
+        "kind": "TYPED_SLOT",
+        "slotId": "forge-end"
+      },
+      "requestedCapabilities": [],
+      "authorityClass": "PROPOSE",
+      "preferredExecutionTargets": [],
+      "permittedExecutionTargets": [
+        "LOCAL_ANDROID"
+      ],
+      "timeoutPolicy": {
+        "timeoutSeconds": null,
+        "onTimeout": "FAIL_SAFE"
+      },
+      "retryPolicy": {
+        "maxRetries": 0,
+        "backoff": "NONE"
+      },
+      "idempotencyMode": "PURE",
+      "compensation": {
+        "compensable": false,
+        "nonCompensabilityAcknowledged": true
+      },
+      "verificationRequirements": {
+        "requiredForSuccess": false,
+        "verifierIds": []
+      },
+      "sideEffectClass": "NONE",
+      "onFailureTerminalState": "FAILED_SAFE",
+      "explanation": "End marker.",
+      "config": {
+        "name": "End",
+        "passthrough": true
+      },
+      "presentation": {
+        "x": 340,
+        "y": 285
+      }
+    }
+  ],
+  "edges": [
+    {
+      "edgeId": "e1",
+      "fromNodeId": "start",
+      "toNodeId": "designer",
+      "label": null,
+      "gatewayId": null
+    },
+    {
+      "edgeId": "e2",
+      "fromNodeId": "designer",
+      "toNodeId": "build",
+      "label": "ops",
+      "gatewayId": null
+    },
+    {
+      "edgeId": "e3",
+      "fromNodeId": "build",
+      "toNodeId": "check",
+      "label": null,
+      "gatewayId": null
+    },
+    {
+      "edgeId": "e4",
+      "fromNodeId": "check",
+      "toNodeId": "critic",
+      "label": null,
+      "gatewayId": null
+    },
+    {
+      "edgeId": "e5",
+      "fromNodeId": "critic",
+      "toNodeId": "approve",
+      "label": "finish",
+      "gatewayId": "g-quality"
+    },
+    {
+      "edgeId": "e6",
+      "fromNodeId": "critic",
+      "toNodeId": "designer",
+      "label": "iterate",
+      "gatewayId": "g-quality"
+    },
+    {
+      "edgeId": "e7",
+      "fromNodeId": "approve",
+      "toNodeId": "export",
+      "label": "approved",
+      "gatewayId": "g-approval"
+    },
+    {
+      "edgeId": "e8",
+      "fromNodeId": "approve",
+      "toNodeId": "designer",
+      "label": "rework",
+      "gatewayId": "g-approval"
+    },
+    {
+      "edgeId": "e9",
+      "fromNodeId": "export",
+      "toNodeId": "end",
+      "label": null,
+      "gatewayId": null
+    }
+  ],
+  "gateways": [
+    {
+      "gatewayId": "g-quality",
+      "exhaustive": false,
+      "outcomes": [
+        {
+          "label": "finish",
+          "conditionExpression": "hardPassed && (skipped || score >= threshold)",
+          "priority": 1,
+          "targetNodeId": "approve"
+        }
+      ],
+      "defaultOrTerminalFailurePath": {
+        "label": "iterate",
+        "conditionExpression": null,
+        "priority": null,
+        "targetNodeId": "designer"
+      }
+    },
+    {
+      "gatewayId": "g-approval",
+      "exhaustive": false,
+      "outcomes": [
+        {
+          "label": "approved",
+          "conditionExpression": "decision == \"approved\"",
+          "priority": 1,
+          "targetNodeId": "export"
+        }
+      ],
+      "defaultOrTerminalFailurePath": {
+        "label": "rework",
+        "conditionExpression": null,
+        "priority": null,
+        "targetNodeId": "designer"
+      }
+    }
+  ],
+  "budgets": {
+    "steps": 26,
+    "wallClockSeconds": 900,
+    "tokens": 200000,
+    "cost": {
+      "amount": 2,
+      "currency": "USD"
+    },
+    "toolCalls": 0
+  },
+  "bindingSlots": [
+    {
+      "slotId": "designer-model",
+      "kind": "MODEL",
+      "required": true
+    },
+    {
+      "slotId": "critic-model",
+      "kind": "MODEL",
+      "required": false
+    }
+  ],
+  "requiredCapabilities": [],
+  "executionTargetConstraints": {
+    "permittedTargetTypes": [
+      "LOCAL_ANDROID"
+    ],
+    "preferredTargetTypes": [
+      "LOCAL_ANDROID"
+    ],
+    "requiresAlwaysOnLocal": false
+  },
+  "distributionConstraints": {},
+  "minEngineVersion": "1.0.0",
+  "maxEngineVersion": null,
+  "verificationPolicy": {
+    "requireVerificationForSuccess": true,
+    "verifiers": [
+      {
+        "verifierId": "v-hard-checks",
+        "appliesToNodeIds": [
+          "check"
+        ],
+        "requiredForSuccess": true
+      }
+    ]
+  },
+  "terminalStateMapping": {
+    "unverifiedSuccessAllowed": false,
+    "nodeFailureEscalations": [
+      {
+        "nodeId": "designer",
+        "onFailure": "FAILED_SAFE"
+      },
+      {
+        "nodeId": "build",
+        "onFailure": "FAILED_SAFE"
+      },
+      {
+        "nodeId": "check",
+        "onFailure": "FAILED_SAFE"
+      }
+    ]
+  },
+  "provenance": {
+    "sourceLocation": "alloy/forge/loops/enclosure-design.loop.json",
+    "projectRevision": "n/a",
+    "initiatingPrincipal": "user:local"
+  },
+  "licenseRef": {
+    "licenseFileRef": "../../LICENSE"
+  }
+}
