@@ -1,4 +1,4 @@
-// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 8141a7ec70ee4269d234d20a7ec3988d906c0c22. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
+// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 7a6ea4bf461aef0a94b812e550349755dd967d18. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
 /* Semantic digest of a LoopDefinition — semantic-digest.v1.json / canonicalization.v1.json (fb-loop-canon-1).
    Steps: drop every key in exclusionListV1 at any depth (presentation, layout, x, y, notes); sort object keys by
    UTF-16 code unit; NFC-normalise strings; no insignificant whitespace; SHA-256 of the UTF-8 bytes as

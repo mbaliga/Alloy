@@ -1,4 +1,4 @@
-// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 8141a7ec70ee4269d234d20a7ec3988d906c0c22. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
+// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 7a6ea4bf461aef0a94b812e550349755dd967d18. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
 /* A small JSON Schema (draft 2020-12 subset) validator, enough for loop-definition.v2 and loop-run schemas.
    Supported: $ref (local '#/…' and '#'), type (string or array), enum, const, required, properties,
    additionalProperties (boolean or schema), items, minItems, minLength, minimum, pattern, oneOf, anyOf, allOf, not,
