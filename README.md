@@ -1,6 +1,14 @@
 # Alloy
 
-Alloy is a native Android 3D-print slicer project, initially targeting the Bambu Lab A1 Mini.
+Alloy is a family of tools on one shared core. This file is rewritten for the whole family in the docs phase of the consolidation (docs/CONSOLIDATION.md); until then:
+
+- **Alloy Forge** (web parametric CAD): [`forge/`](forge/)
+- **Alloy Slicer** (native Android slicer): [`android/`](android/), see [android/README.md](android/README.md)
+- Plans and specs: [`docs/`](docs/), starting with [docs/ALLOY_FAMILY.md](docs/ALLOY_FAMILY.md)
+
+**Licences differ by directory.** The repository root, `forge/` and `docs/` are PolyForm Noncommercial 1.0.0 (`LICENSE`). `android/` is GNU AGPL-3.0 (`android/LICENSE`) because the slicer links AGPL engine code.
+
+Alloy Slicer is a native Android 3D-print slicer, initially targeting the Bambu Lab A1 Mini.
 
 The product is phone-first and is intended to scale to foldables, tablets, and Android desktop/windowed sessions. It will use the open-source OrcaSlicer/PrusaSlicer engine lineage rather than attempting to port Bambu Studio's wxWidgets desktop UI.
 
