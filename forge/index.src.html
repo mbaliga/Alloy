@@ -40,6 +40,12 @@ header>*{pointer-events:auto}
 #expm[hidden]{display:none}
 #expm button{text-align:left;padding:8px 10px;border-radius:10px;color:var(--ink)}
 #expm button:hover{background:var(--glass2);color:var(--acc)}
+#kernel,#tmpl{flex:none;appearance:none;background:none;border:0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.09em;font-size:10.5px;color:var(--dim);cursor:pointer;padding:8px 6px}
+#kernel{width:92px}#tmpl{width:88px}#kernel option,#tmpl option{color:#111;text-transform:none}
+#kstate{flex:none;font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.06em;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.kbusy #kstate{color:var(--acc)}
+.crow{flex-wrap:wrap;gap:2px 8px}.crow .nm{flex:1}.crow .tag{flex-basis:100%;margin-left:24px;text-transform:none;letter-spacing:.02em;white-space:normal}
+.okv{color:#8ff0c4}
 #addf{flex:none;appearance:none;background:none;border:0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.09em;font-size:10.5px;color:var(--dim);cursor:pointer;padding:8px 6px;width:74px}
 #addf option{color:#111;text-transform:none}
 
@@ -83,8 +89,8 @@ header>*{pointer-events:auto}
  #inspsec{right:16px;top:56px;width:324px;max-height:calc(100vh - 250px)}
  #tabs{display:none!important}
 }
-.ptabs{display:flex;gap:16px;margin:0 0 10px 2px}
-.ptabs button{font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em;font-size:10px;color:var(--faint);padding:2px 0}
+.ptabs{display:flex;gap:11px;margin:0 0 10px 2px}
+.ptabs button{font-family:var(--mono);text-transform:uppercase;letter-spacing:.09em;font-size:10px;color:var(--faint);padding:2px 0}
 .ptabs button.on{color:var(--acc)}
 .dot{width:10px;height:10px;border-radius:50% 50% 50% 18%;display:inline-block;flex:none}
 .g{color:var(--faint);font-size:11px;width:20px;font-family:var(--mono)}.g:hover{color:var(--ink)}.g.on{color:var(--acc)}.g.lk{color:var(--warn)}
@@ -204,8 +210,11 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
   <span class="sp"></span>
   <button class="hb" id="undo" title="Undo">↶</button><button class="hb" id="redo" title="Redo">↷</button>
   <button class="hb opt" id="new">New</button>
+  <select id="tmpl" title="New from template"><option value="">▤ Template</option><option value="pcb-enclosure">PCB enclosure</option></select>
+  <select id="kernel" title="Geometry kernel: Manifold (fast mesh) or OCCT (true B-rep)"><option value="manifold">Manifold</option><option value="occt">OCCT B-rep</option></select><span id="kstate" aria-live="polite"></span>
   <select id="addf" title="Add feature"><option value="">＋ Add</option></select>
   <button class="hb opt" id="imp">Import</button>
+  <button class="hb opt" id="impasm" title="Import a STEP assembly and tag its solids as PCB parts">PCB STEP</button>
   <span class="menu"><button class="hb" id="exp">Export</button><div id="expm" class="glass" hidden></div></span>
   <button class="hb" id="theme" title="Light / dark">◐</button><button class="hb" id="gear" title="Settings and API key">⚙</button>
   <input type="file" id="file" accept=".stp,.step,.stl,.json" hidden>
@@ -213,8 +222,8 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 
 <div id="vig"></div>
 <section class="sec glass" id="left">
-  <div class="ptabs"><button data-pane="objects">Objects</button><button data-pane="tree">Features</button><button data-pane="params">Params</button><button data-pane="loop">Loop</button></div>
-  <div class="pane" id="p-objects"></div><div class="pane" id="p-tree"></div><div class="pane" id="p-params"></div><div class="pane" id="p-loop"></div>
+  <div class="ptabs"><button data-pane="objects">Objects</button><button data-pane="tree">Features</button><button data-pane="params">Params</button><button data-pane="check">Check</button><button data-pane="loop">Loop</button></div>
+  <div class="pane" id="p-objects"></div><div class="pane" id="p-tree"></div><div class="pane" id="p-params"></div><div class="pane" id="p-check"></div><div class="pane" id="p-loop"></div>
 </section>
 <section class="sec glass" id="inspsec"><h3>Inspector</h3><div id="insp"></div></section>
 
@@ -234,7 +243,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
   <div id="reply" class="glass" hidden></div>
   <div id="promptbar" class="glass"><span id="spark">✦</span><input id="ask" placeholder="Ask for a change…" autocomplete="off" enterkeyhint="send"><button id="send" title="Send">↑</button></div>
 </div>
-<nav id="tabs"><button data-sec="objects">Objects</button><button data-sec="tree">Features</button><button data-sec="params">Params</button><button data-sec="loop">Loop</button><button data-sec="insp">Inspect</button><button onclick="document.getElementById('new').click()">New</button></nav>
+<nav id="tabs"><button data-sec="objects">Objects</button><button data-sec="tree">Features</button><button data-sec="params">Params</button><button data-sec="check">Check</button><button data-sec="loop">Loop</button><button data-sec="insp">Inspect</button><button onclick="document.getElementById('new').click()">New</button></nav>
 
 <dialog id="wizard"><h2>New enclosure</h2><div id="wbody"></div><div class="dact"><button class="btn ghost" id="wclose">Cancel</button><button class="btn" id="wgo">Generate</button></div></dialog>
 

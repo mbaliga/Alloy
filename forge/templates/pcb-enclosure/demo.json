@@ -1,0 +1,404 @@
+{
+  "name": "Demo sensor tag enclosure",
+  "pcb": {
+    "name": "Demo sensor tag (invented board, generic dimensions)",
+    "board": {
+      "outline": [
+        [
+          -19,
+          -10.5
+        ],
+        [
+          8,
+          -10.5
+        ],
+        [
+          8,
+          10.5
+        ],
+        [
+          -19,
+          10.5
+        ]
+      ],
+      "thickness": 1.6
+    },
+    "components": [
+      {
+        "name": "led",
+        "kind": "cylinder",
+        "role": "component",
+        "cyl": {
+          "axis": "x",
+          "a0": -34,
+          "a1": -22,
+          "c": [
+            13,
+            0
+          ],
+          "r": 2.6
+        },
+        "insert": "rear",
+        "sensitive": true,
+        "emitter": {
+          "direction": [
+            -1,
+            0,
+            0
+          ],
+          "beamR": 2.0,
+          "reach": 8
+        },
+        "cradle": {
+          "t": 1.2,
+          "rear": true,
+          "upTo": 24
+        },
+        "wall": {
+          "extra": 1.0
+        }
+      },
+      {
+        "name": "battery",
+        "kind": "box",
+        "role": "component",
+        "box": [
+          -20,
+          12,
+          9.8,
+          16,
+          -8.5,
+          8.5
+        ],
+        "insert": "rear",
+        "cradle": {
+          "t": 1.2,
+          "rear": true
+        },
+        "wall": {
+          "extra": 1.0
+        }
+      },
+      {
+        "name": "pcb",
+        "kind": "box",
+        "role": "board",
+        "box": [
+          -19,
+          8,
+          4.6,
+          9.2,
+          -10.5,
+          10.5
+        ],
+        "insert": "rear",
+        "cradle": {
+          "t": 1.2,
+          "rear": true,
+          "downTo": -6,
+          "zExtra": 0.5
+        },
+        "edgeSlot": {
+          "y": [
+            5.9,
+            7.5
+          ],
+          "depth": 0.5
+        },
+        "wall": {
+          "extra": 1.0
+        }
+      },
+      {
+        "name": "button",
+        "kind": "box",
+        "role": "component",
+        "box": [
+          -27,
+          -22,
+          -8,
+          8,
+          -5,
+          5
+        ],
+        "insert": "bottom",
+        "cradle": {
+          "t": 1.2,
+          "downTo": -6
+        },
+        "wall": {
+          "extra": 0.8,
+          "minY": 2.5
+        },
+        "paddle": {
+          "shrink": [
+            0.3,
+            0.5
+          ],
+          "label": "button paddle slot",
+          "upTo": -0.1
+        }
+      },
+      {
+        "name": "pads",
+        "kind": "box",
+        "role": "component",
+        "box": [
+          -14,
+          -10,
+          0,
+          2,
+          -7,
+          7
+        ],
+        "insert": "bottom",
+        "cradle": {
+          "t": 1.2,
+          "downTo": -6
+        },
+        "exposed": {
+          "dir": "-y",
+          "label": "charging pads"
+        }
+      }
+    ],
+    "cutouts": [
+      {
+        "name": "harness",
+        "shape": "box",
+        "box": [
+          -22,
+          -18,
+          1.0,
+          3.5,
+          -3,
+          3
+        ]
+      },
+      {
+        "name": "aperture",
+        "shape": "cylinder",
+        "axis": "x",
+        "center": [
+          "front+2",
+          13,
+          0
+        ],
+        "r": 2.3,
+        "length": 8
+      }
+    ],
+    "supports": [
+      {
+        "name": "cap screw block",
+        "box": [
+          "rear-6.5",
+          "rear+5",
+          -6,
+          3.4,
+          -30,
+          30
+        ]
+      }
+    ],
+    "keep": []
+  },
+  "enclosure": {
+    "name": "PCB enclosure",
+    "body": "Shell",
+    "capBody": "Cap",
+    "style": "monolith",
+    "wall": "1.6",
+    "clearance": "0.3",
+    "cap": "plug-screws",
+    "fastener": "M2",
+    "textureDensity": "1",
+    "textureDepth": "0.7",
+    "textureGap": "1.1",
+    "textureSeed": "11"
+  },
+  "spec": {
+    "yBottom": 0,
+    "xFront": -37,
+    "stations": {
+      "monolith": [
+        [
+          -37,
+          11.0,
+          12.6,
+          0.8,
+          19.8,
+          2.2,
+          2.0
+        ],
+        [
+          -35.5,
+          12.4,
+          14.2,
+          0,
+          21,
+          2.6,
+          1.4
+        ],
+        [
+          -14,
+          12.4,
+          14.2,
+          0,
+          21,
+          2.6,
+          1.4
+        ],
+        [
+          -8,
+          12.0,
+          14.2,
+          0,
+          21,
+          2.6,
+          1.4
+        ],
+        [
+          "rear-1.2",
+          12.0,
+          13.4,
+          0,
+          21,
+          2.6,
+          2.0
+        ],
+        [
+          "rear",
+          11.2,
+          12.6,
+          0.8,
+          20.2,
+          2.2,
+          2.2
+        ]
+      ],
+      "bullet": [
+        [
+          -37,
+          5.5,
+          6.0,
+          7.0,
+          19,
+          3.0,
+          3.0
+        ],
+        [
+          -34.5,
+          9.0,
+          10.4,
+          3.0,
+          20,
+          3.0,
+          2.4
+        ],
+        [
+          -26,
+          12.4,
+          14.2,
+          0,
+          21,
+          2.6,
+          1.4
+        ],
+        [
+          -14,
+          12.4,
+          14.2,
+          0,
+          21,
+          2.6,
+          1.4
+        ],
+        [
+          -8,
+          12.0,
+          14.2,
+          0,
+          21,
+          2.6,
+          1.4
+        ],
+        [
+          "rear-1.2",
+          12.0,
+          13.4,
+          0,
+          21,
+          2.6,
+          2.0
+        ],
+        [
+          "rear",
+          11.2,
+          12.6,
+          0.8,
+          20.2,
+          2.2,
+          2.2
+        ]
+      ]
+    },
+    "cap": {
+      "thickness": 1.8,
+      "plugDepth": 1.6,
+      "plugShrink": 0.15,
+      "plugComponents": [
+        "battery",
+        "pcb"
+      ],
+      "relief": {
+        "x": [
+          -1.7,
+          -0.2
+        ],
+        "y": [
+          6,
+          15
+        ],
+        "z": [
+          -6,
+          6
+        ]
+      },
+      "edgeFillet": 0.8,
+      "screwPositions": [
+        [
+          1.7,
+          -7
+        ],
+        [
+          1.7,
+          7
+        ]
+      ],
+      "pilotLen": 9
+    },
+    "texture": {
+      "window": [
+        -33,
+        0,
+        3,
+        18
+      ],
+      "nx": 8,
+      "ny": 3,
+      "jitter": 0.28,
+      "round": 0.6,
+      "minArea": 4,
+      "keepClearHalfWidth": 10.9
+    },
+    "print": {
+      "up": [
+        -1,
+        0,
+        0
+      ]
+    },
+    "bedName": "A1 mini"
+  }
+}

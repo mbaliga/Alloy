@@ -125,6 +125,7 @@ export function build(project, wasm) {
         return A(assetManifold(wasm, f.asset, a).scale([s, s, s]));
       }
     }
+    if (TYPES[f.type]?.occt) throw new Error(`${f.type} needs the OCCT kernel — switch the kernel to OCCT (B-rep) in the header`);
     throw new Error('cannot build ' + f.type);
   }
 

@@ -1,10 +1,14 @@
 import Module from 'manifold-3d';
 import wasmBin from '../node_modules/manifold-3d/manifold.wasm';
 import { makeScope, checkSyntax } from './expr.js';
-import { TYPES, fieldsFor, defaultFeature, emptyProject, wizardProject, WIZARD_DEFAULTS, applyOps, clone, featureLocked, bodyLocked } from './model.js';
+import { TYPES, fieldsFor, defaultFeature, emptyProject, wizardProject, WIZARD_DEFAULTS, applyOps, clone, featureLocked, bodyLocked, migrate, usesOcct } from './model.js';
 import { build } from './kernel.js';
 import { createView } from './view.js';
-import { toSTL, toOBJ, toSTEP, importFile, zipOne } from './io.js';
+import { toSTL, toOBJ, toSTEP, importFile, importAssembly, zipOne } from './io.js';
+import { runChecks } from './checks.js';
+import { createOcctClient } from './occt/client.js';
+import { pcbEnclosureProject } from '../templates/pcb-enclosure/index.js';
+import { renderPcbSection, renderCheckPane, KSTATE } from './pcb-ui.js';
 import { mountLoopPane } from './loop-pane.js';
 import { assist, resolveField, PROVIDERS, needsKey, hostedSample } from './ai.js';
 
@@ -39,6 +43,7 @@ function blip(f = 660, d = 0.04) {
 const S = {
   project: null, sel: null, selBody: null, solo: null, result: null, undo: [], redo: [], pick: null, measure: [], mode: 'orbit',
   pane: 'tree', gizmo: 'translate', snap: true, theme: store.get('theme') || 'dark',
+  card: null, cardTok: 0, kstate: 'idle',
   cfg: { provider: 'anthropic', base: '', model: PROVIDERS.anthropic.model, key: '' }, chat: [], busy: false,
 };
 let wasm, view, loopPane, rebuildT = 0, previewT = 0;
@@ -61,17 +66,57 @@ function runBuild(p) {
   try { return build(p, wasm); }
   catch (e) { console.error(e); return { bodies: [], refs: [], status: {}, params: {}, dispose() {}, fatal: String(e.message || e) }; }
 }
-function rebuild() {
+// The OCCT kernel (B-rep) lives in a Web Worker and is only loaded when a document uses it.
+let occt = null, buildTok = 0;
+function getOcct() {
+  if (!occt) occt = createOcctClient({ workerUrl: 'occt-worker.js', onState: (st, detail) => { S.kstate = st; S.kdetail = detail; renderKState(); } });
+  return occt;
+}
+function renderKState() {
+  const el = $('#kstate'); if (!el) return;
+  const on = usesOcct(S.project);
+  el.textContent = on ? (S.kstate === 'error' && S.kdetail ? 'kernel error: ' + S.kdetail : KSTATE[S.kstate] || '') : '';
+  el.title = on ? 'The OCCT B-rep kernel runs in a background worker. The 22 MB Open CASCADE wasm loads once, on first use.' : '';
+  document.body.classList.toggle('kbusy', on && (S.kstate === 'loading' || S.kstate === 'building'));
+  $('#kernel').value = on ? 'occt' : 'manifold';
+}
+function applyResult(res) {
   if (S.result) S.result.dispose();
-  S.result = runBuild(S.project);
+  S.result = res;
   const first = !S.fitted && S.result.bodies.length;
   view.setResult(S.result, meta());
   if (first) { view.fit(); S.fitted = true; }
-  renderPanes(); renderInspector(); renderStats(); updateGizmo();
+  renderPanes(); renderInspector(); renderStats(); updateGizmo(); renderKState();
   const j = JSON.stringify(S.project);
   store.set('project', j.length < 4e6 ? j : JSON.stringify({ ...S.project, assets: {} }));
+  runCard(false);
 }
+async function rebuild() {
+  const tok = ++buildTok;
+  if (!usesOcct(S.project)) { applyResult(runBuild(S.project)); return; }
+  renderKState();
+  let res;
+  try { res = await getOcct().build(S.project); }
+  catch (e) { console.error(e); res = { bodies: [], refs: [], status: {}, params: {}, dispose() {}, fatal: 'OCCT kernel: ' + String(e.message || e) }; }
+  if (tok !== buildTok) { res.dispose && res.dispose(); return; } // a newer edit superseded this build
+  applyResult(res);
+}
+// Checks: exact B-rep scorecard on the OCCT path (runs in the worker), mesh estimates on Manifold.
+async function runCard(force) {
+  const R = S.result; if (!R) return;
+  if (!usesOcct(S.project) && !force) { S.card = null; if (S.pane === 'check') renderCheck(); return; }
+  const tok = ++S.cardTok;
+  S.card = { busy: true }; if (S.pane === 'check') renderCheck();
+  try {
+    const res = R.kernel === 'occt' ? await R.check({}) : runChecks(S.project, R);
+    if (tok !== S.cardTok) return;
+    S.card = { res };
+  } catch (e) { if (tok !== S.cardTok) return; S.card = { error: String(e.message || e) }; }
+  renderCheck();
+}
+function renderCheck() { renderCheckPane($('#p-check'), { h, S, runCheck: runCard }); }
 function preview(p) {
+  if (usesOcct(p)) return; // no live drag preview on the B-rep kernel: the build runs in a worker and lands on release
   clearTimeout(previewT);
   previewT = setTimeout(() => { const r = runBuild(p); view.setResult(r, meta()); if (S._prev) S._prev.dispose(); S._prev = r; }, 16);
 }
@@ -110,7 +155,7 @@ function renderTop() {
 function renderPanes() {
   document.querySelectorAll('[data-pane]').forEach((b) => b.classList.toggle('on', b.dataset.pane === S.pane));
   document.querySelectorAll('.pane').forEach((p) => { p.hidden = p.id !== 'p-' + S.pane; });
-  renderObjects(); renderTree(); renderParams();
+  renderObjects(); renderTree(); renderParams(); renderCheck();
   if (loopPane) loopPane.refresh();
 }
 
@@ -133,6 +178,7 @@ function renderObjects() {
   R.bodies.forEach((b) => box.append(row(b, false)));
   R.refs.forEach((b) => box.append(row(b, true)));
   if (!R.bodies.length && !R.refs.length) box.append(h('div', { class: 'empty' }, 'No bodies yet'));
+  renderPcbSection(box, { h, S, commit, blip, say });
 }
 
 function renderTree() {
@@ -312,9 +358,10 @@ function renderStats() {
   const R = S.result, box = $('#stats'); if (!R) return;
   box.textContent = '';
   const pv = S.project.settings.printVolume, dens = S.project.settings.density;
-  const fits = (bb) => bb.min[0] >= -pv[0] / 2 && bb.max[0] <= pv[0] / 2 && bb.min[1] >= -pv[1] / 2 && bb.max[1] <= pv[1] / 2 && bb.min[2] >= -1e-3 && bb.max[2] <= pv[2];
+  const fits0 = (bb) => bb.min[0] >= -pv[0] / 2 && bb.max[0] <= pv[0] / 2 && bb.min[1] >= -pv[1] / 2 && bb.max[1] <= pv[1] / 2 && bb.min[2] >= -1e-3 && bb.max[2] <= pv[2];
   for (const b of R.bodies) {
     const sz = b.bbox.max.map((v, i) => v - b.bbox.min[i]);
+    const fits = (bb) => b.noPlate || fits0(bb);
     box.append(h('div', { class: 'stat' + (S.selBody === b.name ? ' cur' : '') }, h('i', { style: `background:${b.color}` }), h('b', {}, b.name),
       h('span', {}, `${sz.map((v) => v.toFixed(1)).join(' × ')}`),
       h('span', {}, `${(b.volume / 1000 * dens).toFixed(1)} g`),
@@ -395,7 +442,7 @@ function setMode(m) {
 }
 
 // ───────────────────────── sheets ─────────────────────────
-const PANES = ['objects', 'tree', 'params', 'loop'];
+const PANES = ['objects', 'tree', 'params', 'check', 'loop'];
 function showSheet(name) {
   const mobile = matchMedia('(max-width:899px)').matches;
   if (PANES.includes(name)) { S.pane = name; renderPanes(); }
@@ -471,13 +518,30 @@ function doExport(kind, body) {
   if (!bodies.length) return say('Nothing to export yet.');
   if (kind === 'stl') download(toSTL(bodies), `${slug()}${body ? '_' + body : ''}.stl`);
   if (kind === 'obj') download(toOBJ(bodies), `${slug()}.obj`);
-  if (kind === 'step') download(toSTEP(bodies, slug()), `${slug()}.stp`);
+  if (kind === 'step') {
+    if (S.result.kernel === 'occt') { // true B-rep STEP from the OCCT kernel (not the faceted writer)
+      S.result.stepBlob(body ? [body] : undefined).then((b) => download(b, `${slug()}.stp`)).catch((e) => say('✕ STEP export: ' + e.message));
+      return;
+    }
+    download(toSTEP(bodies, slug()), `${slug()}.stp`);
+  }
   if (kind === 'json') download(new Blob([JSON.stringify(S.project, null, 1)], { type: 'application/json' }), `${slug()}.alloy.json`);
+}
+async function doImportAssembly(file) {
+  if (!file) return;
+  say('Reading ' + file.name + '…');
+  try {
+    const a = await importAssembly(file, '');
+    const id = 'asm' + Date.now().toString(36);
+    const np = clone(S.project); np.assets[id] = a;
+    commit(np); say(`Read ${a.name}: ${a.parts.length} solids. Tag them in Objects, then generate keep-outs.`); showSheet('objects');
+  } catch (e) { say(String(e.message || e)); }
 }
 async function doImport(file) {
   if (!file) return;
+  if (S.asmPending) { S.asmPending = false; return doImportAssembly(file); }
   if (file.name.endsWith('.json')) {
-    try { const p = JSON.parse(await file.text()); if (!p.features) throw new Error('not an Alloy Forge project'); S.fitted = false; commit(Object.assign(emptyProject(), p)); S.sel = null; } catch (e) { say('Could not open: ' + e.message); }
+    try { const p = JSON.parse(await file.text()); if (!p.features) throw new Error('not an Alloy Forge project'); S.fitted = false; commit(migrate(p)); S.sel = null; } catch (e) { say('Could not open: ' + e.message); }
     return;
   }
   say('Reading ' + file.name + '…');
@@ -516,6 +580,7 @@ async function sendPrompt() {
       selection: { selected_feature: f ? f.id : null, selected_body: S.selBody, picked: S.pick ? { point: S.pick.point.map(r2), normal_axis: axisOf(S.pick.normal), body: S.pick.body } : null },
       tryApply: (ops) => {
         const r = applyOps(S.project, ops);
+        if (usesOcct(r.project)) return r; // the B-rep build is async in a worker; the result is checked after it is applied
         const res = build(r.project, wasm);
         const newBad = Object.entries(res.status).filter(([k, v]) => v.ok === false && !pre.includes(k));
         const msg = newBad.map(([k, v]) => `"${r.project.features.find((x) => x.id === k)?.name}": ${v.error}`).join('; ');
@@ -542,7 +607,7 @@ async function boot() {
   view = createView($('#vp'), { onPick });
   let proj = null;
   try { const saved = store.get('project'); proj = saved ? JSON.parse(saved) : null; } catch (_) {}
-  S.project = proj && proj.features ? Object.assign(emptyProject(), proj) : wizardProject({ name: 'Enclosure' });
+  S.project = proj && proj.features ? migrate(proj) : wizardProject({ name: 'Enclosure' });
   S.project.bodies = S.project.bodies || {};
   let saw = false;
   try { const c = JSON.parse(store.get('cfg') || 'null'); if (c) { S.cfg = { ...S.cfg, ...c }; saw = true; } } catch (_) {}
@@ -555,7 +620,13 @@ async function boot() {
   $('#theme').onclick = () => { setTheme(S.theme === 'light' ? 'dark' : 'light'); blip(620); };
   $('#s-model').addEventListener('input', (e) => { e.target.dataset.touched = '1'; });
   $('#file').addEventListener('change', (e) => { doImport(e.target.files[0]); e.target.value = ''; });
-  $('#imp').onclick = () => $('#file').click();
+  $('#imp').onclick = () => { S.asmPending = false; $('#file').click(); };
+  $('#impasm').onclick = () => { S.asmPending = true; $('#file').click(); };
+  $('#kernel').onchange = (e) => { const np = clone(S.project); np.settings.kernel = e.target.value; commit(np); blip(640); };
+  $('#tmpl').onchange = (e) => {
+    const t = e.target.value; e.target.value = ''; if (!t) return;
+    if (t === 'pcb-enclosure') { const p = pcbEnclosureProject(); S.fitted = false; S.sel = null; S.selBody = null; commit(p); showSheet('check'); blip(980); say('PCB enclosure template: an invented demo board on the OCCT kernel. The first build loads the B-rep kernel (once).'); }
+  };
   $('#addf').addEventListener('change', (e) => {
     const t = e.target.value; e.target.value = ''; if (!t) return;
     const bodies = S.result?.bodies.map((b) => b.name) || [];
@@ -611,9 +682,9 @@ async function boot() {
   const addSel = $('#addf'); Object.entries(TYPES).forEach(([k, T]) => addSel.append(h('option', { value: k }, `${T.icon} ${T.label}`)));
 
   setTheme(S.theme);
-  loopPane = mountLoopPane({ h, $, root: $('#p-loop'), getProject: () => S.project, getCfg: () => S.cfg, getWasm: () => wasm, commit, undo, say, blip, needsKey, openSettings });
-  renderTop(); rebuild(); showSheet(matchMedia('(max-width:899px)').matches ? 'none' : 'tree');
-  window.__af = { S, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta };
+  loopPane = mountLoopPane({ h, $, root: $('#p-loop'), getProject: () => S.project, getCfg: () => S.cfg, getWasm: () => wasm, getOcct, commit, undo, say, blip, needsKey, openSettings });
+  renderTop(); renderKState(); rebuild(); showSheet(matchMedia('(max-width:899px)').matches ? 'none' : 'tree');
+  window.__af = { S, rebuild, applyOps, commit, build: () => build(S.project, wasm), view, doExport, toSTEP, writeDelta, getOcct, runCard };
   document.body.classList.add('ready');
 }
 boot().catch((e) => { console.error(e); document.body.append(h('pre', { class: 'fatal' }, 'Failed to start: ' + e.message)); });
