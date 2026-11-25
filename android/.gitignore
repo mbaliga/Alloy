@@ -13,3 +13,10 @@ resolved-effective.json
 resolved-stock.json
 resolved-support.json
 result.json
+
+# Owner-supplied models and reference meshes are never committed (public repository; see docs/CONSOLIDATION.md, D2).
+# A private visual-review build supplies them locally.
+app/src/debug/assets/models/redmagic-*
+app/src/debug/assets/models/a1-mini-v5-owner.3mf
+app/src/debug/assets/models/catalog-private.json
+app/src/debug/assets/visuals/

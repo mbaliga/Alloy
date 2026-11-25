@@ -31,3 +31,7 @@ extrusion, arrays, X/Y mirroring and native OCCT booleans.
 The latest local review APK was exercised on an API-35 ARM64 emulator. Its
 SHA-256 is recorded in `docs/GATE_STATUS.md`; it is CI-signed for local review,
 not a production-distribution signature.
+
+## Owner-supplied assets are not in the repository
+
+The Redmagic keyboard-case files, the owner A1 Mini v5 3MF, `catalog-private.json` and the A1 mini reference mesh were committed by mistake to a public repository and have been removed from history (consolidation, D2). They are gitignored. To build the private visual-review variant, place them under `app/src/debug/assets/` on your machine (paths as above) and pass `-PalloyIncludeSuppliedReferenceVisuals=true`. Ordinary and production builds never include them, and `ci/validate_release_wiring.py` no longer requires them to be present.

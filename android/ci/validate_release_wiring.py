@@ -138,9 +138,12 @@ def main() -> None:
         ROOT / "app/src/debug/assets/visuals/a1-mini-reference.mesh",
         ROOT / "app/src/debug/assets/models/a1-mini-v5-owner.3mf",
     )
+    # The owner-supplied visual-review assets are NOT in the repository (they were removed from the public history: see
+    # docs/CONSOLIDATION.md, D2). A private visual-review build supplies them next to app/src/debug/assets/. They are not
+    # required here; the build guards above still keep them out of production releases.
     missing_visuals = [str(path) for path in visual_assets if not path.is_file()]
     if missing_visuals:
-        raise SystemExit(f"release visual study assets are missing: {missing_visuals}")
+        print("note: owner-supplied visual-review assets are not in this checkout (expected; supplied privately)")
     for token in ("RECOVERY_REQUIRED", "must not automatically retry", "offline recovery"):
         if token not in release_doc:
             raise SystemExit(f"{RELEASE_DOC}: missing interruption recovery gate: {token}")
