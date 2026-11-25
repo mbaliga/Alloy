@@ -1,7 +1,7 @@
 [submodule "orca-official"]
-	path = third_party/orca-official
+	path = android/third_party/orca-official
 	url = https://github.com/OrcaSlicer/OrcaSlicer.git
 	branch = main
 [submodule "orca-deps-libnoise"]
-	path = third_party/orca-deps-libnoise
+	path = android/third_party/orca-deps-libnoise
 	url = https://github.com/SoftFever/Orca-deps-libnoise.git
