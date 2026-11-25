@@ -207,3 +207,19 @@ Approved defaults applied: D1 `android/` stays AGPL-3.0 and the rest PolyForm No
 - `docs/FORGE_ROADMAP.md` marked honestly. F1 is built for the enclosure path with the owner's deferred items listed. Three findings beyond that list, for the owner to confirm: fillet, chamfer, shell and loft are kernel helpers, **not user-facing feature types** (no fillet by selector, draft, sweep, revolve, mirror-body); the volume-parity test tolerance is 3 %, not the 0.5 % in the roadmap; the F2 schema (`requirements`, `components`, `stylePack`) is not what exists (a `pcb` block stands in).
 - `docs/SLICER_ROADMAP.md` added from the stage1 gate docs: G1 open, G2 FAIL/NO-GO for the primary candidate, G3 FAIL/NO-GO, G4 runtime fidelity not shown, G5 open; the engine route is undecided and the shipping engine is the tree G2 rejected. Seven document disagreements are listed there.
 
+## 12. Phase 5 record: CI
+
+**Result on the final head of the Phase 5 PR (`0577b2f`):** Forge, Android v1 (with its emulator acceptance), the optional native engine build (engine compiled, API-35 emulator instrumentation, Bambu template render, G3 evidence export, five-fixture pilot), Official Orca OpenCV, Official Orca snapshot, parity tooling, profile compatibility, Bambu lineage, desktop Orca reference slices, Path B G4 audit, Linux CLI, iOS and Ubuntu Touch are **green**. The one red job is **`g3-parity-gate`, by design (D3)**: it reproduces the recorded NO-GO (cube time 14.37 %, overhang 17.77 %, thin wall 13.23 %, travel obstacle 9.49 % against a 2 % tolerance; filament 2.03 to 2.67 %). It is not a required check and must not become one until G3 passes.
+
+**What was done**
+- `forge.yml` (new): `npm ci`, `npm test`, `npm run build`, plus a check that the build produced the app and the OCCT files.
+- The slicer's lanes moved to `.github/workflows/` (GitHub only runs workflows from the root) and were converted mechanically; the iOS and Ubuntu Touch lanes likewise. Validators and contract tests that read the lane files now look at the root; contract tests were updated to the new layout, not weakened.
+- **Lanes that are manual-only** (`workflow_dispatch`), because their red result is the recorded status rather than a defect: G1 OrcaSlicer-Mobile source build, G2 orca-engine provenance, Path B G1 SliceBeam build, Path B G2 PrusaSlicer provenance (G2 FAIL / NO-GO), Path B G5 TreeSupport3D audit (`PORT_REQUIRED`, exit 2). `android-release-candidate` runs on `v*` tags and manually.
+
+**What the first runs found (all fixed, none in the engine or a test):**
+1. The Ubuntu Touch lane had three references without a trailing slash that my path rewrite missed.
+2. `patch_orca_mobile_bootstrap.py` injects `$GITHUB_WORKSPACE/ci/...` into the generated dependency-build script; it needed `android/ci/...`. This broke the native dependency build within minutes.
+3. The native lane's emulator steps timed out three times (3 x 30 min): `/dev/kvm` existed but the lane tested readability right after an asynchronous `udevadm trigger`, fell back to no acceleration, and the emulator refuses to run without it. Not caused by the move; the step now waits for udev and retries. (Runner image `20261116`.)
+
+**Not covered:** `android-release-candidate` (tags only), the manual-only lanes, and physical-device evidence. A green native lane is not a qualified print.
+
