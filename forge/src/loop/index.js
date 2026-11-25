@@ -1,4 +1,4 @@
-// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 8141a7ec70ee4269d234d20a7ec3988d906c0c22. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
+// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 7a6ea4bf461aef0a94b812e550349755dd967d18. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
 /* loop-engine — dependency-free ES-module port of Fonebrew's loop engine (domain/loop). See README.md. */
 export * from './states.js';
 export * from './params.js';

@@ -1,4 +1,4 @@
-// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 8141a7ec70ee4269d234d20a7ec3988d906c0c22. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
+// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 7a6ea4bf461aef0a94b812e550349755dd967d18. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
 /* LoopConfig — the editable contents of the canonical refine loop (objective, proposer, critic, iterations), mapped
    to and from a LoopDefinition v2. Port of Kotlin LoopConfig / LoopConfigBpmn (which maps to a BPMN graph; here the
    target is the v2 definition and the carrier is JSON, BPMN XML being deferred — see README).

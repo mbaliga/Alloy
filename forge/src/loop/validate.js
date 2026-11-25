@@ -1,4 +1,4 @@
-// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 8141a7ec70ee4269d234d20a7ec3988d906c0c22. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
+// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 7a6ea4bf461aef0a94b812e550349755dd967d18. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
 /* Static validation of a LoopDefinition v2 (LOOP_ENGINEERING_SPEC_V2.1 §7, §19).
    Layer 1: JSON Schema (schemas/loop-definition.v2.schema.json) through ./jsonschema.js.
    Layer 2: the semantic rules JSON Schema cannot express, each with its stable code from

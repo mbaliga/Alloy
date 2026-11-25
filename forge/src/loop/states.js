@@ -1,4 +1,4 @@
-// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 8141a7ec70ee4269d234d20a7ec3988d906c0c22. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
+// Vendored from mbaliga/Shared-Libraries-asoc web/loop-engine @ 7a6ea4bf461aef0a94b812e550349755dd967d18. Do not edit here: change the engine there and re-run tools/vendor-loop-engine.mjs.
 /* Run state machine — LOOP_ENGINEERING_SPEC_V2.1 §9 (17 states: 9 non-terminal, 8 terminal).
    Port of contracts/kotlin/LoopRuntimeContracts.kt `RunState` + `TerminalReasonCategory`. The transition table is
    reduced to (from, to) pairs exactly as the Kotlin contract does. */
