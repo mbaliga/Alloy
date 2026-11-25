@@ -1,15 +1,9 @@
 name: Path B G2 PrusaSlicer provenance
 
+# Manual only. G2 lineage gate for the Path B (PrusaSlicer) candidate: its 'Enforce provenance threshold' step fails by design while G2 is FAIL / NO-GO (docs/SLICER_ROADMAP.md).
+# It runs the same audit, but not on every push or pull request, because a result that is red by design would hide real failures.
+# Run it from the Actions tab; its evidence artifact is the record.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/path-b-g2-prusa-provenance.yml'
-      - 'android/ci/identify_slicebeam_prusa_engine.py'
-  pull_request:
-    paths:
-      - '.github/workflows/path-b-g2-prusa-provenance.yml'
-      - 'android/ci/identify_slicebeam_prusa_engine.py'
   workflow_dispatch:
 
 permissions:

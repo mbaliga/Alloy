@@ -74,7 +74,7 @@ jobs:
       - name: Build app and smoke test
         run: |
           set -eu
-          cmake -S ubuntu-touch -B build/ut -DALLOY_BUILD_UI_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/.
+          cmake -S slicer-ports/ubuntu-touch -B build/ut -DALLOY_BUILD_UI_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/.
           cmake --build build/ut -j"$(nproc)"
       - name: Run the smoke test (software scene graph, offscreen)
         env:
@@ -112,10 +112,10 @@ jobs:
       - name: Install Clickable (pinned)
         run: python3 -m pip install --user "clickable-ut==${CLICKABLE_VERSION}" && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Build the click
-        working-directory: ubuntu-touch
+        working-directory: slicer-ports/ubuntu-touch
         run: clickable build --arch ${{ matrix.arch }} --non-interactive --skip-review --output "$GITHUB_WORKSPACE/click-out"
       - name: Review the click (click-review; informational until the owner has seen a green run)
-        working-directory: ubuntu-touch
+        working-directory: slicer-ports/ubuntu-touch
         continue-on-error: true
         run: clickable review --arch ${{ matrix.arch }} --non-interactive
       - name: List output
