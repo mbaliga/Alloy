@@ -7,10 +7,11 @@ Alloy is a family of three tools on one shared core: **Alloy Forge** (web parame
 - `docs/FORGE_ROADMAP.md` — Forge milestones F0–F7 with acceptance criteria.
 - `docs/DRAFT_SPEC.md` — Draft scope and v1 cut.
 - `docs/STYLE.md` — house style canon. UI work is checked against it.
+- `docs/EXTENSIONS_SPEC.md` — plugins/extensions (one system, two tiers), the extension host (X0), the analysis framework (A0) and the five analysis packages (A1–A5).
 - `forge/` — current Forge web app (see `forge/README.md`).
 
 ## How to work
-- One milestone (or one Draft v1 item) per session, one branch, one PR. Use the milestone's "Done" list as the definition of done and say in the PR which items are met.
+- One milestone (or one Draft v1 item, or one X0/A0/A1–A5 step) per session, one branch, one PR. Use the milestone's "Done" list as the definition of done and say in the PR which items are met.
 - Keep `npm test` green; add tests for new kernel features, checks and ops. Prefer headless tests (Node) over browser tests; add a Playwright smoke test for UI flows.
 - The AI never edits geometry directly: every change goes through typed ops on the design document, validated, built and undoable. Locks are enforced in the ops layer.
 - No telemetry, no backend calls besides the model endpoint the user configures. API keys stay in the browser or the customer's server environment.
