@@ -14,6 +14,16 @@ Browser-based parametric CAD for electronics enclosures and small product design
 - **Inspect**: pick points, one-tap holes and bosses, measure, section view, mass and build-volume check.
 - **Alloy rendering**: matte bodies, fog, a grid that blooms under the model and fades out, build-volume box, bodies turn grey when off the plate, light and dark themes.
 
+## Extensions
+
+Forge has one package format (`.alloyext`) and one host. **What a package asks for decides its tier**: a *plugin* (feature types, checks, importers/exporters, AI tools; no DOM) or an *extension* (its own pane, viewport overlays, GPU, a runner, a network host). Settings > Extensions: choose a file, a URL or a bundled sample, read the consent prompt (tier and every permission in words), install, and switch it on per project. Each package runs in its own Web Worker; every call it makes goes through a permission check in the host, and geometry changes are typed ops (`applyOps`: validated, lock-checked, undoable) like the AI's. Packages never produce geometry: a feature type returns built-in feature specs and the kernel builds them.
+
+Removing a package never breaks a project. Its features stay in the file untouched, marked "needs <name>" and skipped in builds with a visible warning; its checks show as "needs <name>" rows that do not gate; reinstalling restores everything. Check rows with `validity: "experimental"` are shown but never decide the verdict.
+
+- Authors: [docs/EXTENSION_API.md](../docs/EXTENSION_API.md) (generated from `src/ext/api-spec.js`, so it cannot drift), manifest schema in `src/ext/manifest.js`, two samples in `examples/ext/` (`sample-rib`: a plugin, `sample-probe`: an extension), `node tools/pack-ext.mjs <dir> <out.alloyext>`.
+- Design and scope: [docs/EXTENSIONS_SPEC.md](../docs/EXTENSIONS_SPEC.md) (this is milestone X0).
+- Integrity is tamper-evidence (a SHA-256 over the files and the manifest), not a signature. The Worker sandbox is defence in depth, not a hard boundary; see "Security model" in EXTENSION_API.md.
+
 ## Selection actions
 
 Whatever mode you are in (Select, Pick or Measure), selecting a feature or body brings up a bar above the prompt with the actions that apply to it. Right-click on the model, or long-press on a phone, opens the same list as a menu.
@@ -48,7 +58,7 @@ start > designer (model: typed ops) > build (applyOps + kernel) > check (verifie
 - **Locks** are enforced in the ops layer (`applyOps`) and checked again before anything is applied; a locked item is never changed by the loop.
 - The model only returns typed ops. Nothing leaves the browser except the call to the model endpoint you configured.
 
-Tests: `npm test` runs the kernel tests, `test_loop.mjs` and `test_occt.mjs` (OCCT: template styles, scorecards, STEP round trip, document v3, tagging, loop on the B-rep path) (mocked model, real kernel: iteration, gateway routing, budgets, locks, critic, approval, cancel, variants, checks). `npm run test:ui` (needs Playwright and a browser, see the file header) is a browser smoke test of the pane with a mocked model endpoint.
+Tests: `npm test` runs the kernel tests, `test_loop.mjs`, `test_ext.mjs` (the extension host: manifest, zip and integrity, a permission matrix over every API call, real Workers, ops and locks, the removal and reinstall round trip) and `test_occt.mjs` (OCCT: template styles, scorecards, STEP round trip, document v3, tagging, loop on the B-rep path) (mocked model, real kernel: iteration, gateway routing, budgets, locks, critic, approval, cancel, variants, checks). `npm run test:ui` (needs Playwright and a browser, see the file header) is a browser smoke test of the pane with a mocked model endpoint; `npm run test:ext-ui` is the browser smoke test of the extension UI (install, consent, package feature and check, removal and restore, sandboxed pane, overlay legend and probe, phone sheet).
 
 `src/loop/` is vendored from `mbaliga/Shared-Libraries-asoc` `web/loop-engine` (source commit recorded in each file's header and in `src/loop/VENDORED.md`). Do not edit it here; `npm run vendor:loop -- <checkout>` re-vendors. The engine hashes the loop definition with `crypto.subtle`, which browsers expose on https and localhost only.
 

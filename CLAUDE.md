@@ -8,6 +8,7 @@ Alloy is a family of three tools on one shared core: **Alloy Forge** (web parame
 - `docs/DRAFT_SPEC.md` — Draft scope and v1 cut.
 - `docs/STYLE.md` — house style canon. UI work is checked against it.
 - `docs/EXTENSIONS_SPEC.md` — plugins/extensions (one system, two tiers), the extension host (X0), the analysis framework (A0) and the five analysis packages (A1–A5).
+- `docs/EXTENSION_API.md` — reference for package authors, generated from `forge/src/ext/api-spec.js` (`npm run docs:api`; a test fails if it is stale).
 - `forge/` — current Forge web app (see `forge/README.md`).
 
 ## How to work
