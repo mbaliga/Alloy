@@ -36,9 +36,40 @@ packages/kernel/   kernel interface, manifold + occt backends
 packages/mcp/      MCP server + CLI loop runner
 forge/             Forge web app
 draft/             Draft web app
-android/           Alloy Slicer (existing Android plan)
+android/           Alloy Slicer (native Android app, in the repository since the consolidation)
+slicer-ports/      iOS and Ubuntu Touch companions (preparation and inspection only)
 docs/              this plan, specs, style canon
 ```
+
+## Where Forge and the Slicer overlap (checked in the code, 2026-11-25)
+
+The Slicer (`android/`, Java + NDK, AGPL-3.0) and Forge (`forge/`, JavaScript, PolyForm Noncommercial) share ideas and facts, not code. These are the overlaps, with what is actually duplicated today:
+
+| Area | Forge today | Slicer today | Same thing? |
+|---|---|---|---|
+| **OCCT / STEP import** | `occt-import-js` (wasm) reads STEP assemblies into meshes (`src/io.js`: millimetres, bounding-box-ratio deflection 0.001, angular 0.3). `replicad` + Open CASCADE wasm is the B-rep kernel (`src/occt/`). | A native Open CASCADE build (`app/src/main/occt/`, arm64 `.so` and headers) behind `NativeStepImporter` and `OCCTLoader`; the importer feeds the same mesh workspace as STL/OBJ/3MF. | Same upstream library, two builds (wasm and NDK), two sets of tessellation settings that nobody keeps in step. Neither has a STEP conformance corpus of its own. |
+| **A1 mini build volume and profiles** | `settings.printVolume` defaults to `[180,180,180]` in five places (`model.js` twice, `checks.js`, `occt/session.js` twice). Overhang defaults to 45 degrees in `occt/checks.js`; min wall 1.2 mm. | Profile JSON `printer: { id: "bambu.a1-mini", bed_x_mm, bed_y_mm, build_z_mm: 180, nozzle_mm: 0.4 }` and `process.support_threshold_degrees`; the same 180 is also hard-coded in `GlesViewportSurface`, `BatchSliceJobController`, `MainActivity` and `parity/a1mini_g4_scope.json`. | The same machine described in at least ten places, and one value has already drifted: Forge's default PLA density is 1.24 g/cm³, the Slicer's A1 mini profile says `filament_density` 1.26. Nothing ties Forge's "fits the printer" and "overhang" checks to the profile the Slicer will actually slice with. |
+| **Viewport style** | three.js (`src/view.js`): matte bodies, fog, a grid that blooms under the model, dashed build-volume box, bodies grey out of volume. Dark ground `0x0e1215` (default) and light `0xeef1f3`; accent mint. | OpenGL ES (`GlesViewportSurface`): clear colour `0.965, 0.958, 0.94` (warm off-white), a black PEI-style bed with a 30 mm grid, a filament palette. | `docs/STYLE.md` calls the viewport "shared", but the two do not match (dark vs warm light default, different bed). The shared thing today is a description, not values. |
+| **Theme and white-label tokens** | CSS custom properties in `index.src.html` (`--ink`, `--acc`, `--glass`, ...) plus a second copy in `view.js` `THEMES`. | `res/values/colors.xml` holds one colour (`splash_black`); everything else is literals in Java (`StudioPreviewRenderer` scenes, viewport). | **`alloy.config.json` does not exist in either app.** It is specified in this document (name, logo, theme tokens, providers, extensions, flags) and nothing reads it. |
+| Also spotted | STL/OBJ/3MF import and export (`io.js`); BYOK model adapters (`ai.js`); filament density (`settings.density`); the bed as a concept. | `MeshModel`, `ModelStore`, `ProjectArchive`; `ByokVisualizationProvider` with Keystore storage; filament density in each profile; `PlateArrangementPlanner`. | Parallel implementations of small things. Not worth sharing code; worth sharing test files and constants. |
+
+## Plan: what moves into shared packages (not started, nothing moves in this PR)
+
+The Slicer is Java and C++, the web apps are JavaScript, and the Slicer is AGPL. So the sharing is **data first, code second**, and only in the direction web to web.
+
+| Step | Package | Content | Who consumes it | Done when |
+|---|---|---|---|---|
+| S1 | `packages/tokens/` (JSON, language-neutral) | `machines.json` (id, bed X/Y, build Z, nozzle, support threshold), `theme.json` (the dark and light UI tokens and the viewport tokens), and the `alloy.config.json` JSON Schema | Forge (reads at build time, removes the five hard-coded 180s, the density default and the duplicated theme), Draft later, the Slicer through a script | Forge has no literal bed size or theme colour outside the tokens; `android/ci/validate_machine_tokens.py` fails if a profile's `printer` block disagrees with `machines.json`; Android colours are generated from `theme.json` by a script, not hand-edited |
+| S2 | `packages/conformance/step/` | A small STEP corpus (the assemblies the Forge UI test already imports, plus one with units and colours) with expected part counts and bounding boxes | Forge test (occt-import-js) and Slicer instrumentation test (native OCCT) | Both importers pass the same corpus; deflection settings are written down once |
+| S3 | `packages/core/` (web only) | `expr`, the design document and ops, checks, io, the extension host (`forge/src/ext`), AI adapters | Forge, Draft (when it starts, milestone F0) | Forge imports it with no behaviour change; the existing suites stay green |
+| S4 | `packages/kernel/` | Kernel interface, Manifold and OCCT backends | Forge, Draft | As S3 |
+| S5 | `alloy.config.json` loader | The reader for the S1 schema: name, wordmark, theme, default models, bundled extensions, flags | Forge (milestone F7) | A white-label build changes only the config file |
+
+**Not shared, on purpose:** the slicing engine and its AGPL code, the native OCCT binaries, and the two viewport implementations (three.js and OpenGL ES). They share the tokens and the spec, not code.
+
+**Decision needed (new, D7): the licence of `packages/tokens/`.** The Slicer is AGPL-3.0 and Forge is PolyForm Noncommercial, which restricts use; the Slicer cannot take a noncommercial-only licensed file into an AGPL build without conflict. Proposal: publish the tokens and the conformance corpus under a permissive licence (for example CC0 or MIT) while the code in `packages/core` and `packages/kernel` stays PolyForm Noncommercial. Needs the owner's call before S1.
+
+**Order and risk.** S1 first: it removes real duplication, touches no engine code and can be reversed by deleting a directory. S2 next because it finds out whether the two OCCT builds actually agree. S3 and S4 wait for Draft (F0), since that is when a second web consumer exists. The risk to watch is drift: every step above ships with a test that fails when the copies disagree.
 
 ## Editions (licences, not products)
 
