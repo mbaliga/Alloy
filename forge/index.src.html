@@ -155,6 +155,19 @@ select option{color:#111}
 #pickbar[hidden]{display:none}
 #pickbar button{color:var(--acc)}.dim{color:var(--dim)}
 
+#selbar{display:flex;align-items:center;gap:2px;padding:4px 6px 4px 14px;border-radius:999px;align-self:center;max-width:100%;overflow-x:auto;scrollbar-width:none}
+#selbar[hidden]{display:none}#selbar::-webkit-scrollbar{display:none}
+#selbar .slabel{flex-shrink:0;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);white-space:nowrap;margin-right:8px;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.sb{flex-shrink:0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--dim);padding:9px 7px;border-radius:999px;white-space:nowrap;min-height:34px}
+.sb:hover:not(:disabled){color:var(--ink);background:var(--glass2)}.sb.on{color:var(--acc)}.sb.danger:hover:not(:disabled){color:var(--bad)}.sb:disabled{opacity:.35}
+.sb.x{color:var(--faint);padding:9px 10px}
+#ctxmenu{position:fixed;z-index:20;min-width:190px;padding:6px;border-radius:16px;display:flex;flex-direction:column}
+#ctxmenu[hidden]{display:none}
+#ctxmenu button{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:9px 12px;border-radius:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--ink);min-height:38px}
+#ctxmenu button:hover:not(:disabled){background:var(--glass2);color:var(--acc)}#ctxmenu button.danger:hover:not(:disabled){color:var(--bad)}#ctxmenu button:disabled{opacity:.35}
+#ctxmenu kbd{font-family:var(--mono);font-size:10px;color:var(--faint)}
+@media(max-width:1399px){#selbar .slabel{display:none}#selbar{padding-left:8px}}
+@media(max-width:899px){#ctxmenu button kbd{display:none}}
 #bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:min(680px,calc(100vw - 24px));z-index:6;display:flex;flex-direction:column;gap:8px}
 #reply{padding:10px 14px;border-radius:18px;max-height:34vh;overflow:auto}
 #reply[hidden]{display:none}
@@ -228,6 +241,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 <section class="sec glass" id="inspsec"><h3>Inspector</h3><div id="insp"></div></section>
 
 <div id="pickbar" class="glass" hidden></div>
+<div id="ctxmenu" class="glass" hidden></div>
 
 <div id="tools">
   <div class="tr"><button class="tb on" data-mode="orbit">Select</button><button class="tb" data-mode="pick">Pick</button><button class="tb" data-mode="measure">Measure</button><span class="sl">/</span><button class="tb" data-gz="translate" title="Move gizmo (G)">Move</button><button class="tb" data-gz="rotate" title="Rotate gizmo (R)">Rotate</button><button class="tb" data-gz="snap" title="Snap 0.5 mm / 15°">Snap</button></div>
@@ -240,6 +254,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 <div id="stats"></div>
 
 <div id="bottom">
+  <div id="selbar" class="glass" hidden></div>
   <div id="reply" class="glass" hidden></div>
   <div id="promptbar" class="glass"><span id="spark">✦</span><input id="ask" placeholder="Ask for a change…" autocomplete="off" enterkeyhint="send"><button id="send" title="Send">↑</button></div>
 </div>

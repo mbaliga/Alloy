@@ -42,10 +42,15 @@ Each milestone is one Claude Code session, one branch, one PR. "Done" means ever
 - **Done:** Claude Code can build, check and export an enclosure through the MCP server alone; changing the board STEP re-runs the loop and reports what moved.
 
 ## F6 · Extensions, style packs, templates
+- Full design in `docs/EXTENSIONS_SPEC.md`: one package system with two tiers (plugin, extension), host and API v1 (milestone X0), analysis framework (A0).
 - Extension manifest (id, version, kinds, permissions), sandboxed host, install from a file or URL, enable/disable per project.
 - Style pack format: proportions, radius scale, edge treatment, parting-line rules, surface patterns (vents, grip textures), colour/material presets, critic rubric with reference renders.
 - Enclosure templates: clamshell, slide lid, snap-fit two-part, screw-boss four-corner, rail-mount housing (generic mounting interface).
 - **Done:** a style pack and a template ship as extensions, change the loop's output measurably, and can be removed without breaking a saved project.
+
+## A · Analysis track (after X0/A0, see `docs/EXTENSIONS_SPEC.md` §4)
+- A1 thermal estimate (plugin) > A2 voxel core + thermal 3D > A3 structural > A4 Alloy Runner (Elmer/OpenFOAM on the customer's machine) > A5 airflow (forced, then natural convection).
+- **Done** per step: its validation cases pass within the stated tolerances, results carry an honest `validity`, and its checks join the scorecard and the design loop.
 
 ## F7 · White-label and deployment
 - `alloy.config.json` drives name, wordmark, theme tokens, default providers/models, bundled extensions, feature flags.

@@ -14,6 +14,23 @@ Browser-based parametric CAD for electronics enclosures and small product design
 - **Inspect**: pick points, one-tap holes and bosses, measure, section view, mass and build-volume check.
 - **Alloy rendering**: matte bodies, fog, a grid that blooms under the model and fades out, build-volume box, bodies turn grey when off the plate, light and dark themes.
 
+## Selection actions
+
+Whatever mode you are in (Select, Pick or Measure), selecting a feature or body brings up a bar above the prompt with the actions that apply to it. Right-click on the model, or long-press on a phone, opens the same list as a menu.
+
+| Action | Key | Feature | Body |
+|---|---|---|---|
+| Move / Rotate | G / R | drags the feature's position or rotation | dragging adds a move or rotate step at the end of the body's history, or extends the last one |
+| Duplicate | ⌘D | copy 5 mm along x | copy placed beside it, on the plate and clear of other bodies |
+| Copy / Paste | ⌘C / ⌘V | pastes into the selected body | pastes as a new body |
+| Hide | H | suppress | hide |
+| Isolate | I | | solo |
+| Lock | L | lock | lock |
+| Frame | F | frames its body | frames the body |
+| Delete | ⌫ | remove | remove the body's features (not for bodies made by a split) |
+
+Every action is one undoable step. Locked items keep Hide, Lock and Frame, nothing else.
+
 ## Design loop
 
 The Loop pane (next to Objects / Features / Params) runs `loops/enclosure-design.loop.json`, a Loop Definition v2 graph executed by the vendored loop engine:

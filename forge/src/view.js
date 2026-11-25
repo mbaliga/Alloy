@@ -151,8 +151,9 @@ export function createView(el, cb) {
 
   function fogFor(dist) { const r = bounds.getSize(new THREE.Vector3()).length(); scene.fog.near = dist + r * 0.4; scene.fog.far = dist + r * 4 + 300; }
 
-  function fit() {
-    const c = bounds.getCenter(new THREE.Vector3()), s = bounds.getSize(new THREE.Vector3());
+  function fit(box) {
+    const B = box ? new THREE.Box3(new THREE.Vector3(...box.min), new THREE.Vector3(...box.max)) : bounds;
+    const c = B.getCenter(new THREE.Vector3()), s = B.getSize(new THREE.Vector3());
     const r = Math.max(s.length() / 2, 10);
     const dir = new THREE.Vector3().subVectors(cam.position, controls.target).normalize();
     if (dir.lengthSq() < 0.5) dir.set(0.5, -0.7, 0.55).normalize();
@@ -195,15 +196,31 @@ export function createView(el, cb) {
   // ── picking (ignored while the gizmo is being used)
   const ray = new THREE.Raycaster();
   let down = null;
-  renderer.domElement.addEventListener('pointerdown', (e) => { down = gizmo.axis ? null : [e.clientX, e.clientY, performance.now()]; });
-  renderer.domElement.addEventListener('pointerup', (e) => {
-    if (!down || gizmo.dragging || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5 || performance.now() - down[2] > 450) { down = null; return; }
-    down = null;
+  let press = 0;
+  function hitAt(x, y, shift) {
     const r = renderer.domElement.getBoundingClientRect();
-    const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    const ndc = new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, cam);
     const hits = ray.intersectObjects(pickables, false).filter((h) => !clipOn || clip.distanceToPoint(h.point) <= 0);
-    if (cb.onPick) cb.onPick(hits.length ? { point: hits[0].point.toArray(), normal: hits[0].face.normal.toArray(), body: hits[0].object.userData.body, shift: e.shiftKey } : null);
+    return hits.length ? { point: hits[0].point.toArray(), normal: hits[0].face.normal.toArray(), body: hits[0].object.userData.body, shift: !!shift } : null;
+  }
+  renderer.domElement.addEventListener('pointerdown', (e) => {
+    down = gizmo.axis ? null : [e.clientX, e.clientY, performance.now()];
+    clearTimeout(press);
+    // long-press (touch / pen) opens the same context menu as a right-click
+    if (down && e.pointerType !== 'mouse') press = setTimeout(() => { if (down && cb.onContext) { const d = down; down = null; cb.onContext(hitAt(d[0], d[1]), d[0], d[1]); } }, 520);
+  });
+  renderer.domElement.addEventListener('pointermove', (e) => { if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) clearTimeout(press); });
+  renderer.domElement.addEventListener('contextmenu', (e) => {
+    e.preventDefault(); clearTimeout(press); down = null;
+    if (cb.onContext && !gizmo.dragging) cb.onContext(hitAt(e.clientX, e.clientY), e.clientX, e.clientY);
+  });
+  renderer.domElement.addEventListener('pointerup', (e) => {
+    clearTimeout(press);
+    if (e.button === 2) { down = null; return; }
+    if (!down || gizmo.dragging || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5 || performance.now() - down[2] > 450) { down = null; return; }
+    down = null;
+    if (cb.onPick) cb.onPick(hitAt(e.clientX, e.clientY, e.shiftKey));
   });
 
   function setMarks(points) {

@@ -25,7 +25,7 @@ Workflow chain: **Draft** (sketch) → **Forge** (solid, checked enclosure) → 
 | Tool registry | One set of typed tools (read, apply ops, build, check, render, export) used by the in-app agent, the MCP server and the CLI loop runner. |
 | MCP server | stdio for local agents (Claude Code, Claude Desktop, Cursor), Streamable HTTP for self-hosted teams. |
 | BYOK model adapters | Anthropic, OpenAI-compatible (OpenRouter, Ollama, LM Studio), hosted Claude in artifacts. Per-role model choice, per-run spend caps. Keys never leave the browser or the customer's server. |
-| Extensions | Manifest + declared permissions, sandboxed (workers/iframes, no network by default). Kinds: feature types, checks, style packs, templates, component libraries, importers/exporters, agent skills, UI panels. |
+| Extensions | One package system, two tiers: **plugins** (scripted, API only) and **extensions** (own engine/UI: solvers, overlays, panes, a remote runner). Manifest + declared permissions, sandboxed (workers/iframes, no network by default). See `docs/EXTENSIONS_SPEC.md`. |
 | White-label config | `alloy.config.json`: product name, logo, theme tokens, default providers and models, bundled extensions, feature flags. |
 
 Proposed layout once Draft starts (milestone F0 in the Forge roadmap):
