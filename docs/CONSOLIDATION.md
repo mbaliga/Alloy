@@ -1,6 +1,6 @@
 # Alloy consolidation: Phase 1 inventory
 
-Status: **DRAFT for owner approval.** Nothing has been merged, pushed to another branch, closed, tagged or deleted. Phases 2 to 6 wait for approval of §6 (dispositions) and §2 (decisions).
+Status: **Phase 1 approved by the owner on 2026-11-25 with the default for every decision in §2** (D1 to D6). Phases 2 to 6 are recorded in §9 onward as they land. Each phase has its own branch and PR; the PRs are stacked (each is based on the previous phase's branch).
 
 Inventory taken 2026-11-25 against `origin` as fetched that day: 33 branch tips (plus this branch) and 11 open PRs (#1, 2, 4, 5, 6, 8, 9, 12, 13, 14, 16).
 
@@ -168,3 +168,28 @@ Considered and **not** worth porting: alloy-v1's raster launcher icon and splash
 ## 8. Method
 
 `git fetch --all`; per-tip `git rev-list --count`, `git merge-base --is-ancestor` across all pairs, `git cherry` against brave-goldberg for patch-equivalence, and for each tip a content diff against the canon limited to files the tip changed since its fork, to separate "older version of canon work" from "work the canon lacks". Tree weight from `git ls-tree -r -l`. Licences from each tip's `LICENSE` and `THIRD_PARTY_NOTICES.md`. CI status from GitHub Actions runs on each exact tip SHA (first 100 runs per branch). Local test runs as in §3.1 and §3.4.
+
+## 9. Phase 2 record: slicer onto main
+
+Approved defaults applied: D1 `android/` stays AGPL-3.0 and the rest PolyForm Noncommercial; D2 owner models removed from history; D3 the G3 gate is split in the CI phase; D4 ports under `slicer-ports/`; D5 no LFS; D6 `COMMERCIAL-LICENSE.md` skipped.
+
+**What landed (branch `claude/consolidation-phase-2-slicer`):**
+
+1. `git filter-repo` on a copy of the canon line removed the nine owner-supplied files from every commit (814 commits rewritten; no blob of them remains in the filtered history). The canon tip `6e8fc0b` became `5a2d05e` in the filtered copy. This is the only history rewrite, and it is on the copy; nothing on `main` is rewritten.
+2. One commit moves the whole slicer under `android/` (a pure rename, similarity 100%, `52,800` files; the two submodules are re-declared in a root `.gitmodules`).
+3. A merge commit (`--no-ff`, not squashed) brings that line into main's history with its 800+ commits. One conflict: `README.md` (kept main's).
+4. Root reconcile: `forge/node_modules/` and `forge/dist/` untracked (2,268 files, about 135 MB), root `.gitignore`, `android/THIRD_PARTY.md`, README pointers and the licence split.
+5. Ports as separate commits: P1a iOS (`slicer-ports/ios`), P1b Ubuntu Touch (`slicer-ports/ubuntu-touch`, core unit and Java-parity tests re-run here after the move: pass), P1c port docs and the two (inert) lane files.
+6. The owner models are gitignored, documented and no longer required by `ci/validate_release_wiring.py`.
+7. Current main (#22, #23) merged in.
+
+**Ported or not:**
+
+| Item | Result |
+|---|---|
+| P1 iOS / Ubuntu Touch | ported (above) |
+| P2 AMS Lite catalog notes | **not ported: superseded.** The canon already has newer, more specific wording (grade-specific TPU 95A HF status, a pinned PVA source). `codex/luna-caption-followup` has the older form. |
+| P3 "approximate time" wording | **not ported: superseded.** The canon's `PrintPlanEstimate.formatTime` already labels the time source ("slicer estimate; actual time may vary"). |
+| P4 `COMMERCIAL-LICENSE.md` | skipped (D6) |
+
+**Checks run after the move (no Android SDK here):** `tools/` 26/26; `ci/` 5/5 modules; `parity/` 225/232 (the 7 need the `orca-official` submodule, as before); validators `validate_model_assets`, `validate_android_wiring`, `validate_android_workflows`, `validate_native_wiring`, `validate_learning_assets`, `validate_capability_catalog`, `validate_profile_assets`, `validate_release_wiring` pass; Forge `npm test` 46/46 after merging main. The slicer workflows still need adapting to the new paths; they are inert under `android/.github/` until the CI phase.
