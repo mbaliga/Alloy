@@ -1,6 +1,6 @@
 # Alloy consolidation: Phase 1 inventory
 
-Status: **Phase 1 approved by the owner on 2026-11-25 with the default for every decision in §2** (D1 to D6). Phases 2 to 6 are recorded in §9 onward as they land. Each phase has its own branch and PR; the PRs are stacked (each is based on the previous phase's branch).
+Status: **Phase 1 approved by the owner on 2026-11-25 with the default for every decision in §2** (D1 to D6). Phases 2 to 5 are built and each has a PR (#25 to #28, stacked: each is based on the previous phase's branch, starting from #21). **Nothing has been merged into `main` yet, and Phase 6 (close-out) has not been run**: the merges were denied by the permission classifier and tag creation and branch deletion are blocked by this environment's proxy. §13 is the closing summary and §14 the runbook to finish it.
 
 Inventory taken 2026-11-25 against `origin` as fetched that day: 33 branch tips (plus this branch) and 11 open PRs (#1, 2, 4, 5, 6, 8, 9, 12, 13, 14, 16).
 
@@ -222,4 +222,70 @@ Approved defaults applied: D1 `android/` stays AGPL-3.0 and the rest PolyForm No
 3. The native lane's emulator steps timed out three times (3 x 30 min): `/dev/kvm` existed but the lane tested readability right after an asynchronous `udevadm trigger`, fell back to no acceleration, and the emulator refuses to run without it. Not caused by the move; the step now waits for udev and retries. (Runner image `20261116`.)
 
 **Not covered:** `android-release-candidate` (tags only), the manual-only lanes, and physical-device evidence. A green native lane is not a qualified print.
+
+## 13. Closing summary (2026-11-25)
+
+**Landed on branches, not yet on `main`** (merge in this order; each PR's base is the one before):
+
+| Order | PR | Phase |
+|---|---|---|
+| 1 | #21 | Phase 1: this inventory |
+| 2 | #25 | Phase 2: slicer onto main under `android/` (filtered, history kept, `--no-ff`), ports under `slicer-ports/`, root reconcile |
+| 3 | #26 | Phase 3: loop engine re-vendored at `7a6ea4b`, overlap list and shared-package plan |
+| 4 | #27 | Phase 4: README, CLAUDE.md, honest FORGE_ROADMAP, SLICER_ROADMAP |
+| 5 | #28 | Phase 5: Forge workflow, the slicer's lanes at the root, G3 gate split out |
+| 6 | this PR | Phase 6: this summary and the runbook |
+
+PR #24 (Forge extension host, milestone X0) is separate and independent; it will need a merge of `main` into its branch because #27 edits `CLAUDE.md` too.
+
+**State when everything is merged:** `main` builds; Forge `npm test` (46 tests, 76 with #24) and `npm run build` are green in CI; every slicer lane is green except `g3-parity-gate`, which is red by design and reproduces the recorded NO-GO; five gate-audit lanes are manual-only.
+
+**Archived (by SHA, because the tags could not be created here):** see §14. Twelve tips carry no owner files and get `archive/<branch>` tags. The fifteen D2 carriers (every `codex/*` app tip and `claude/brave-goldberg-uccywx`) get **no tag**, by the D2 decision; their tip SHAs are in section 6. Their content is in the merged line or was found superseded (P2, P3) or ported (P1).
+
+**Still open**
+- **Merges, tags, PR closing, branch deletion** (§14).
+- **Owner decisions:** D7 (the licence of the shared data package); whether the Slicer's AGPL situation should change; whether the F1 findings (fillet/chamfer/shell/loft are not user-facing feature types; 3 % volume tolerance; F2 schema) are what you want recorded.
+- **The Slicer is not qualified to print.** G1 open, G2 FAIL/NO-GO, G3 FAIL/NO-GO, G4 runtime fidelity not shown, G5 open; the engine route is undecided and the shipping engine is the tree G2 rejected (docs/SLICER_ROADMAP.md, S1 to S8).
+- **The owner-supplied models** are gone from the new history but remain public through the old branches and PR refs until those are deleted, and the blobs stay fetchable by SHA until GitHub Support purges them.
+- The extension track A0 to A5 waits for #24 on `main`.
+- Documentation disagreements listed in docs/SLICER_ROADMAP.md section 6.
+
+## 14. Phase 6 runbook (not run)
+
+**1. Merge #21, #25, #26, #27, #28, then this PR, with merge commits (not squash), in that order.** After #21 merges, retarget #25 to `main`; repeat down the stack. Do not force-push `main`.
+
+**2. Archive tags** (from a clone with push rights to tags; none of these tips carry owner files):
+
+```
+git tag archive/codex/alloy-v1 aa482f7b154060c6c573c3132be98dd2a4cd669e
+git tag archive/codex/alloy-phone-first-ui 926b25859732c2400d790f2ad86365f0279ef2b4
+git tag archive/claude/multi-platform-porting-plan-nnvjug 0f6bd9f7fba17f8fc98bb7cf80d392fd5f65c6d5
+git tag archive/stage1-foundation 76d812c33219389cfa3d6d9840104f09993d4cd5
+git tag archive/stage1-gates-prep 4a08926aadc9a6f7e396c5a19386a1f9d6ed2cb2
+git tag archive/stage1-path-b-g4-prep 09873af77817bcf401b7da9dcb6906d00bdebe4a
+git tag archive/stage1-path-b-g1-lean aa38a3f31e54ad9839f36110b31a0416dd5c0827
+git tag archive/stage1-path-b-prusa-runtime 259885405e224a8c38a4fe058554dded5afddbc2
+git tag archive/stage1-runtime-parity 0e7d7881b77a4efcfac0473bf0086338ec34dc49
+git tag archive/claude/great-fermat-e7alky b3188ee54191c029dfe78e97fa3a80c6a59839f5
+git tag archive/claude/github-storage-cleanup-7848fg efa7efcd0fcf2c47f392e5c4a658d154feb29d18
+git tag archive/claude/asystemofcells-redesign-s6yv4c 130e12950082ade5014afd03676efb491e99a8e2
+git push origin --tags
+```
+
+**3. Close with a comment, each pointing at the consolidation (the comment text, then the PRs):**
+
+> Superseded by the repository consolidation (see docs/CONSOLIDATION.md and PR #25). The branch is archived as `archive/<branch>`; its content is either in `main` under `android/` or recorded there as superseded.
+
+| Close | PRs |
+|---|---|
+| Path B stage1 line | #1, #2, #4, #5, #6 |
+| Porting plan (content ported in #25) | #8 |
+| Licence (identical to #15 on main; `COMMERCIAL-LICENSE.md` skipped, D6) | #9 |
+| Slicer canon and its base (now in `main` through #25) | #12, #13 |
+| Smaller app line | #14 |
+| iOS and Ubuntu Touch ports (ported in #25) | #16 |
+
+**4. Delete branches.** Already merged into `main` (no tag needed): `forge-web-editor`, `forge-loop-engine`, `forge-occt-kernel`, `alloy-family-plan`, `codex/local-alloy-main-2026-10-22`. Archived (after step 2): the twelve in step 2. The D2 carriers (no tag): `claude/brave-goldberg-uccywx`, `codex/a1mini-filament-route-matrix`, `codex/alloy-phone-first-mvp`, `codex/fix-native-test-status`, `codex/g2-android-evidence-update`, `codex/integrate-material-on-native-fix`, `codex/learning-faq-coverage`, `codex/local-a1mini-filament-route-matrix-2026-10-22`, `codex/local-alloy-phone-first-ui-2026-10-22`, `codex/luna-bbl-counterfactual`, `codex/luna-caption-followup`, `codex/luna-estimate-breakdown`, `codex/luna-next-mvp`, `codex/native-probe-follow-up`, `codex/tree-support-pruning-pr12`. Delete these only after #25 is on `main`, since #25 is the filtered copy of that line.
+
+**5. Optionally ask GitHub Support to purge** the cached refs and blobs of the owner-supplied models.
 
