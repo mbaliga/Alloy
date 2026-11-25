@@ -1,6 +1,7 @@
 import Module from 'manifold-3d';
 import wasmBin from '../node_modules/manifold-3d/manifold.wasm';
 import { makeScope, checkSyntax } from './expr.js';
+import { selectionActions, renderSelBar, openCtxMenu } from './selbar.js';
 import { TYPES, fieldsFor, defaultFeature, emptyProject, wizardProject, WIZARD_DEFAULTS, applyOps, clone, featureLocked, bodyLocked, migrate, usesOcct } from './model.js';
 import { build } from './kernel.js';
 import { createView } from './view.js';
@@ -42,7 +43,7 @@ function blip(f = 660, d = 0.04) {
 
 const S = {
   project: null, sel: null, selBody: null, solo: null, result: null, undo: [], redo: [], pick: null, measure: [], mode: 'orbit',
-  pane: 'tree', gizmo: 'translate', snap: true, theme: store.get('theme') || 'dark',
+  clip: null, pane: 'tree', gizmo: 'translate', snap: true, theme: store.get('theme') || 'dark',
   card: null, cardTok: 0, kstate: 'idle',
   cfg: { provider: 'anthropic', base: '', model: PROVIDERS.anthropic.model, key: '' }, chat: [], busy: false,
 };
@@ -86,7 +87,7 @@ function applyResult(res) {
   const first = !S.fitted && S.result.bodies.length;
   view.setResult(S.result, meta());
   if (first) { view.fit(); S.fitted = true; }
-  renderPanes(); renderInspector(); renderStats(); updateGizmo(); renderKState();
+  renderPanes(); renderInspector(); renderStats(); updateGizmo(); renderKState(); refreshBar();
   const j = JSON.stringify(S.project);
   store.set('project', j.length < 4e6 ? j : JSON.stringify({ ...S.project, assets: {} }));
   runCard(false);
@@ -373,30 +374,115 @@ function renderStats() {
 }
 
 // ───────────────────────── selection + gizmo ─────────────────────────
-function refreshSel() { renderPanes(); renderInspector(); renderStats(); view.setResult(S.result, meta()); updateGizmo(); }
+function refreshSel() { renderPanes(); renderInspector(); renderStats(); view.setResult(S.result, meta()); updateGizmo(); refreshBar(); }
+
+// ───────────────────────── universal actions (every mode) ─────────────────────────
+const selCtx = () => ({ S, commit, refreshSel, refreshBar, setGizmo, setBodyMeta, view, say, blip, writeDelta, doExport,
+  ev: (e) => makeScope(S.project.params).ev(e) });
+function selLabel() {
+  const f = selFeature();
+  if (f) return `${TYPES[f.type]?.label || f.type} / ${f.name}`;
+  if (S.selBody) return `Body / ${S.selBody}`;
+  return S.clip ? 'Clipboard' : '';
+}
+function refreshBar() {
+  const box = $('#selbar'); if (!box || !S.project) return;
+  renderSelBar(box, selectionActions(selCtx()), selLabel(), h, () => { S.sel = null; S.selBody = null; refreshSel(); blip(480); });
+}
+function runAction(id) {
+  const a = selectionActions(selCtx()).find((x) => x.id === id);
+  if (!a || a.disabled) return false;
+  a.run(); return true;
+}
+function onContext(hit, x, y) {
+  // right-click / long-press: select what is under the pointer (keeping a selected feature of that body), then show the actions
+  if (hit) { const f = selFeature(); if (!(f && f.body === hit.body) && S.selBody !== hit.body) { S.sel = null; S.selBody = hit.body; refreshSel(); } }
+  else if (!S.clip) { S.sel = null; S.selBody = null; refreshSel(); }
+  openCtxMenu($('#ctxmenu'), selectionActions(selCtx()), x, y, h); S.ctxAt = performance.now(); blip(700);
+}
 
 function updateGizmo() {
   const f = selFeature();
   document.querySelectorAll('[data-gz]').forEach((b) => b.classList.toggle('on', b.dataset.gz === S.gizmo || (b.dataset.gz === 'snap' && S.snap)));
-  if (!f || S.gizmo === 'off' || featureLocked(S.project, f) || f.suppressed || !Array.isArray(f.pos) || S.mode !== 'orbit') return view.detachGizmo();
+  // The gizmo works in every mode: Pick and Measure still take clicks, the gizmo takes drags.
+  if (S.gizmo === 'off') return view.detachGizmo();
+  if (f) {
+    if (featureLocked(S.project, f) || f.suppressed) return view.detachGizmo();
+    if (f.type === 'transform' && (f.mode === 'move' || f.mode === 'rotate')) return transformGizmo(f);
+    if (!Array.isArray(f.pos)) return view.detachGizmo();
+    return featureGizmo(f);
+  }
+  if (S.selBody) return bodyGizmo(S.selBody);
+  view.detachGizmo();
+}
+const snapOpts = () => (S.snap ? { t: 0.5, r: 15 } : null);
+const gizmoCbs = (apply) => ({
+  change: (v) => preview(apply(v, clone(S.project))),
+  end: (v) => { clearTimeout(previewT); commit(apply(v, clone(S.project))); blip(820); },
+});
+const bboxCentre = (bb) => bb.max.map((v, i) => r3((v + bb.min[i]) / 2));
+const findBody = (name) => [...(S.result?.bodies || []), ...(S.result?.refs || [])].find((b) => b.name === name);
+function featureGizmo(f) {
   const hasRot = Array.isArray(f.rot);
   const mode = S.gizmo === 'rotate' && hasRot ? 'rotate' : 'translate';
   let pos0, rot0;
   try { const sc = makeScope(S.project.params); pos0 = f.pos.map(sc.ev); rot0 = hasRot ? f.rot.map(sc.ev) : [0, 0, 0]; } catch (_) { return view.detachGizmo(); }
-  const apply = (v, p) => {
+  view.attachGizmo(pos0, rot0, mode, snapOpts(), gizmoCbs((v, p) => {
     const g = p.features.find((x) => x.id === f.id);
     if (mode === 'translate') g.pos = f.pos.map((e, i) => writeDelta(e, pos0[i], v.pos[i]));
     else g.rot = f.rot.map((e, i) => writeDelta(e, rot0[i], v.rot[i]));
     return p;
-  };
-  view.attachGizmo(pos0, rot0, mode, S.snap ? { t: 0.5, r: 15 } : null, {
-    change: (v) => preview(apply(v, clone(S.project))),
-    end: (v) => { clearTimeout(previewT); commit(apply(v, clone(S.project))); blip(820); },
-  });
+  }));
+}
+// A selected move/rotate transform: drag its offset or angles directly.
+function transformGizmo(f) {
+  const b = findBody(f.body); if (!b) return view.detachGizmo();
+  let sc; try { sc = makeScope(S.project.params); } catch (_) { return view.detachGizmo(); }
+  if (f.mode === 'move') {
+    if (S.gizmo === 'rotate') return view.detachGizmo();
+    let off0; try { off0 = f.offset.map(sc.ev); } catch (_) { return view.detachGizmo(); }
+    const c0 = bboxCentre(b.bbox);
+    return view.attachGizmo(c0, [0, 0, 0], 'translate', snapOpts(), gizmoCbs((v, p) => {
+      p.features.find((x) => x.id === f.id).offset = f.offset.map((e, i) => writeDelta(e, off0[i], off0[i] + v.pos[i] - c0[i])); return p;
+    }));
+  }
+  if (S.gizmo !== 'rotate') return view.detachGizmo();
+  let ctr, ang0; try { ctr = f.center.map(sc.ev); ang0 = f.angles.map(sc.ev); } catch (_) { return view.detachGizmo(); }
+  view.attachGizmo(ctr, ang0, 'rotate', snapOpts(), gizmoCbs((v, p) => {
+    p.features.find((x) => x.id === f.id).angles = f.angles.map((e, i) => writeDelta(e, ang0[i], v.rot[i])); return p;
+  }));
+}
+// A selected body: dragging writes a move (or rotate) transform at the end of that body's history,
+// reusing the last one if it is already the body's final step. Nothing is added until you drag.
+function bodyGizmo(name) {
+  const b = findBody(name);
+  if (!b || b.ghost || bodyLocked(S.project, name)) return view.detachGizmo();
+  const mode = S.gizmo === 'rotate' ? 'rotate' : 'translate';
+  const c0 = bboxCentre(b.bbox);
+  const sc = makeScope(S.project.params);
+  const newId = defaultFeature('box').id;
+  view.attachGizmo(c0, [0, 0, 0], mode, snapOpts(), gizmoCbs((v, p) => {
+    const mine = p.features.filter((x) => x.body === name && !x.suppressed);
+    const last = mine[mine.length - 1];
+    const sameCentre = (t) => { try { return t.center.map(sc.ev).every((x, i) => Math.abs(x - c0[i]) < 1e-3); } catch (_) { return false; } };
+    if (mode === 'translate') {
+      const d = v.pos.map((x, i) => x - c0[i]);
+      if (last && last.type === 'transform' && last.mode === 'move' && !last.locked) {
+        try { last.offset = last.offset.map((e, i) => { const x = sc.ev(e); return writeDelta(e, x, x + d[i]); }); return p; } catch (_) {}
+      }
+      p.features.push(defaultFeature('transform', { id: newId, name: 'Move ' + name, body: name, mode: 'move', offset: d.map((x) => String(r3(x))) }));
+    } else {
+      if (last && last.type === 'transform' && last.mode === 'rotate' && !last.locked && sameCentre(last)) {
+        try { last.angles = last.angles.map((e, i) => { const x = sc.ev(e); return writeDelta(e, x, x + v.rot[i]); }); return p; } catch (_) {}
+      }
+      p.features.push(defaultFeature('transform', { id: newId, name: 'Rotate ' + name, body: name, mode: 'rotate', center: c0.map(String), angles: v.rot.map((x) => String(r3(x))) }));
+    }
+    return p;
+  }));
 }
 function setGizmo(m) {
   if (m === 'snap') S.snap = !S.snap; else S.gizmo = S.gizmo === m ? 'off' : m;
-  updateGizmo(); blip(600);
+  updateGizmo(); refreshBar(); blip(600);
 }
 
 function axisOf(n) { const a = n.map(Math.abs), i = a.indexOf(Math.max(...a)); return (n[i] >= 0 ? '+' : '-') + 'xyz'[i]; }
@@ -438,7 +524,7 @@ function onPick(e) {
 function setMode(m) {
   S.mode = m; S.measure = []; S.pick = null; view.setMarks([]);
   document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
-  renderPick(); updateGizmo(); blip(560);
+  renderPick(); updateGizmo(); refreshBar(); blip(560);
 }
 
 // ───────────────────────── sheets ─────────────────────────
@@ -604,7 +690,7 @@ function setTheme(t) { S.theme = t; document.body.classList.toggle('light', t ==
 // ───────────────────────── boot ─────────────────────────
 async function boot() {
   wasm = await Module({ wasmBinary: wasmBin }); wasm.setup();
-  view = createView($('#vp'), { onPick });
+  view = createView($('#vp'), { onPick, onContext });
   let proj = null;
   try { const saved = store.get('project'); proj = saved ? JSON.parse(saved) : null; } catch (_) {}
   S.project = proj && proj.features ? migrate(proj) : wizardProject({ name: 'Enclosure' });
@@ -645,7 +731,9 @@ async function boot() {
     exp.append(h('button', { onclick: () => { exp.hidden = true; $('#file').click(); } }, 'Open project…'));
     exp.hidden = !exp.hidden;
   };
-  document.addEventListener('click', () => { exp.hidden = true; });
+  // the click that ends a long-press must not close the menu it just opened
+  document.addEventListener('click', () => { exp.hidden = true; if (performance.now() - (S.ctxAt || 0) > 600) $('#ctxmenu').hidden = true; });
+  addEventListener('wheel', () => { $('#ctxmenu').hidden = true; }, { passive: true });
   $('#ask').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendPrompt(); });
   $('#send').onclick = sendPrompt;
   document.querySelectorAll('[data-view]').forEach((b) => b.onclick = () => { view.setView(b.dataset.view); blip(620); });
@@ -666,18 +754,18 @@ async function boot() {
   document.querySelectorAll('#tabs button[data-sec]').forEach((b) => b.onclick = () => { const was = b.classList.contains('on'); showSheet(was ? 'none' : b.dataset.sec); blip(740); });
   addEventListener('keydown', (e) => {
     if (e.target.matches('input,select,textarea')) return;
-    const mod = e.ctrlKey || e.metaKey;
-    if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
-    if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+    if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+    if (mod && (k === 'c' || k === 'v' || k === 'd')) { if (runAction({ c: 'copy', v: 'paste', d: 'dup' }[k])) e.preventDefault(); return; }
     if (mod) return;
-    const f = selFeature();
-    if (e.key === 'g' || e.key === 'w') setGizmo('translate');
-    else if (e.key === 'r' || e.key === 'e') setGizmo('rotate');
-    else if (e.key === 'Escape') { S.sel = null; S.selBody = null; refreshSel(); }
-    else if ((e.key === 'Delete' || e.key === 'Backspace') && f && !featureLocked(S.project, f)) { const np = clone(S.project); np.features = np.features.filter((x) => x.id !== f.id); S.sel = null; commit(np); }
-    else if (e.key === 'l') { if (f) { const np = clone(S.project); const g = np.features.find((x) => x.id === f.id); g.locked = !g.locked; commit(np); } else if (S.selBody) setBodyMeta(S.selBody, { locked: !bodyLocked(S.project, S.selBody) }); }
-    else if (e.key === 'h' && S.selBody) setBodyMeta(S.selBody, { hidden: !(S.project.bodies[S.selBody] || {}).hidden });
-    else if (e.key === 'f') view.fit();
+    if (e.key === 'Escape') { $('#ctxmenu').hidden = true; S.sel = null; S.selBody = null; refreshSel(); return; }
+    const map = { g: 'move', w: 'move', r: 'rotate', e: 'rotate', delete: 'del', backspace: 'del', l: 'lock', h: 'hide', i: 'solo', f: 'frame' };
+    const id = map[k];
+    if (id && runAction(id)) { e.preventDefault(); return; }
+    if (k === 'g' || k === 'w') setGizmo('translate');
+    else if (k === 'r' || k === 'e') setGizmo('rotate');
+    else if (k === 'f') view.fit();
   });
   const addSel = $('#addf'); Object.entries(TYPES).forEach(([k, T]) => addSel.append(h('option', { value: k }, `${T.icon} ${T.label}`)));
 
