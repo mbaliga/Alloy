@@ -1,0 +1,15 @@
+{
+    "name": "@APP_ID@",
+    "description": "Prepare and inspect 3D-print files (not a slicer)",
+    "architecture": "@CLICK_ARCH@",
+    "title": "Alloy",
+    "hooks": {
+        "alloy": {
+            "apparmor": "alloy.apparmor",
+            "desktop": "alloy.desktop"
+        }
+    },
+    "version": "@APP_VERSION@",
+    "maintainer": "@APP_MAINTAINER@",
+    "framework": "@CLICK_FRAMEWORK@"
+}

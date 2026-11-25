@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/">
+    <file>qml/Main.qml</file>
+    <file>qml/HonestyBanner.qml</file>
+    <file>qml/FilePicker.qml</file>
+    <file>qml/ContentHubImporter.qml</file>
+    <file>qml/ModelsPage.qml</file>
+    <file>qml/PlatePage.qml</file>
+    <file>qml/GcodePage.qml</file>
+    <file>qml/AboutPage.qml</file>
+  </qresource>
+</RCC>

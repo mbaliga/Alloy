@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "evidence_id": "a1-mini-no-support-pla-<date>-<operator>",
+  "verified_at": "<UTC ISO-8601 timestamp>",
+  "reviewer": "<operator>",
+  "device_scope": "Bambu Lab A1 Mini / N1 / firmware <version> / 0.4 mm nozzle / PLA Basic / no supports",
+  "apk_sha256": "<release APK SHA-256>",
+  "instrumentation_sha256": "<matching instrumentation APK SHA-256>",
+  "signer_sha256": "<shared signer SHA-256>",
+  "profile_sha256": "<pinned profile asset SHA-256>",
+  "attestation": "I reviewed the linked printer telemetry, physical measurements and photos for every fixture. No credential or secret is included in this record.",
+  "fixtures": {
+    "box-20mm": { "result": "PENDING", "artifact_sha256": "<gcode.3mf SHA-256>", "checks": { "native_smoke": "PENDING", "package_preflight": "PENDING", "first_layer": "PENDING", "dimensions": "PENDING", "surface_quality": "PENDING", "no_collision": "PENDING", "completion": "PENDING" } },
+    "mounting-block": { "result": "PENDING", "artifact_sha256": "<gcode.3mf SHA-256>", "checks": { "native_smoke": "PENDING", "package_preflight": "PENDING", "first_layer": "PENDING", "dimensions": "PENDING", "surface_quality": "PENDING", "no_collision": "PENDING", "completion": "PENDING" } },
+    "thin-wall-frame": { "result": "PENDING", "artifact_sha256": "<gcode.3mf SHA-256>", "checks": { "native_smoke": "PENDING", "package_preflight": "PENDING", "first_layer": "PENDING", "dimensions": "PENDING", "surface_quality": "PENDING", "no_collision": "PENDING", "completion": "PENDING" } },
+    "travel-obstacle": { "result": "PENDING", "artifact_sha256": "<gcode.3mf SHA-256>", "checks": { "native_smoke": "PENDING", "package_preflight": "PENDING", "first_layer": "PENDING", "dimensions": "PENDING", "surface_quality": "PENDING", "no_collision": "PENDING", "completion": "PENDING" } },
+    "box-and-lid": { "result": "PENDING", "artifact_sha256": "<gcode.3mf SHA-256>", "checks": { "native_smoke": "PENDING", "package_preflight": "PENDING", "first_layer": "PENDING", "dimensions": "PENDING", "surface_quality": "PENDING", "no_collision": "PENDING", "completion": "PENDING" } }
+  }
+}

@@ -1,0 +1,9 @@
+# Build output and dependencies are never committed (CLAUDE.md). Each app also has its own .gitignore.
+node_modules/
+dist/
+__pycache__/
+*.py[cod]
+.gradle/
+build/
+local.properties
+.DS_Store
