@@ -152,7 +152,21 @@ export const TYPES = {
   },
 };
 
+// Feature types contributed by extension packages. Key: "<packageId>/<typeId>". They are recipes: the package's `expand`
+// returns built-in feature specs and the kernel builds those (see src/ext/resolve.js); a package never produces geometry.
+const EXT_TYPES = {};
+export const isExtType = (type) => typeof type === 'string' && type.includes('/');
+export function registerExtTypes(extId, defs) {
+  unregisterExtTypes(extId);
+  for (const d of defs || []) EXT_TYPES[`${extId}/${d.id}`] = { label: d.label, icon: d.icon || '◇', desc: d.desc || '', ext: extId, local: d.id, fields: d.fields.map((f) => ({ ...f, def: f.def ?? (f.kind === 'vec3' ? V3(0, 0, 0) : f.kind === 'num' ? '0' : f.kind === 'enum' ? (f.opts || [''])[0] : '') })) };
+}
+export function unregisterExtTypes(extId) { for (const k of Object.keys(EXT_TYPES)) if (EXT_TYPES[k].ext === extId) delete EXT_TYPES[k]; }
+export const extTypes = () => ({ ...EXT_TYPES });
+/** Definition of any feature type, built in or from a package. null when the type is unknown (package not installed). */
+export const typeDef = (type) => TYPES[type] || EXT_TYPES[type] || null;
+
 export function fieldsFor(type) {
+  if (EXT_TYPES[type]) return COMMON_HEAD.concat(EXT_TYPES[type].fields);
   const T = TYPES[type];
   if (!T) return [];
   if (T.noCommon) return T.fields;
@@ -168,9 +182,10 @@ let uid = 1;
 export function newId() { return 'f' + (uid++).toString(36) + Math.floor(Math.random() * 1296).toString(36); }
 
 export function defaultFeature(type, over = {}) {
-  const T = TYPES[type];
+  const T = typeDef(type);
   if (!T) throw new Error('unknown feature type ' + type);
   const f = { id: newId(), type, suppressed: false, locked: false };
+  if (T.ext) f.ext = T.ext;
   for (const fd of fieldsFor(type)) f[fd.k] = fd.kind === 'json' ? clone(fd.def) : Array.isArray(fd.def) ? [...fd.def] : fd.def;
   if (T.defOp) f.op = T.defOp;
   if (!f.name) f.name = T.label;
@@ -197,6 +212,7 @@ export function emptyProject() {
   return {
     v: DOC_VERSION, name: 'Untitled', params: [], features: [], assets: {}, bodies: {}, pcb: emptyPcb(),
     settings: { detail: 48, density: 1.24, printVolume: [180, 180, 180], kernel: 'manifold' },
+    extensions: [], ext: {},
   };
 }
 
@@ -210,6 +226,8 @@ export function migrate(p) {
   out.pcb = Object.assign(emptyPcb(), out.pcb || {});
   out.bodies = out.bodies || {};
   out.assets = out.assets || {};
+  if (!Array.isArray(out.extensions)) out.extensions = [];
+  if (!out.ext || typeof out.ext !== 'object' || Array.isArray(out.ext)) out.ext = {};
   out.v = DOC_VERSION;
   return out;
 }
@@ -330,8 +348,13 @@ function findFeature(P, ref) {
   return P.features.find((x) => x.id === ref) || P.features.find((x) => x.name === ref);
 }
 
-/** Apply ops to a CLONE of the project. Returns {project, log}. Throws on invalid ops. */
-export function applyOps(project, ops) {
+/**
+ * Apply ops to a CLONE of the project. Returns {project, log}. Throws on invalid ops.
+ * opts.actor: who is asking. 'ai' (the default, the most restricted), 'user' or 'ext' (opts.extId = the package). Only the user
+ * can change which extensions are installed or enabled; a package can only write its own `ext[<id>]` storage; the AI neither.
+ */
+export function applyOps(project, ops, opts = {}) {
+  const actor = opts.actor || 'ai';
   const P = clone(project);
   const log = [];
   for (const op of ops) {
@@ -354,13 +377,13 @@ export function applyOps(project, ops) {
       }
       case 'add_feature': {
         const spec = op.feature || {};
-        if (!TYPES[spec.type]) throw new Error(`unknown feature type "${spec.type}"`);
+        if (!typeDef(spec.type)) throw new Error(isExtType(spec.type) ? `feature type "${spec.type}" needs an extension that is not installed` : `unknown feature type "${spec.type}"`);
         const f = defaultFeature(spec.type);
         const fields = normalizeFeatureFields({ ...spec, type: spec.type });
         Object.assign(f, fields);
         if (spec.suppressed) f.suppressed = true;
         guardBody(P, f.body, f.op);
-        if (!fields.name) f.name = TYPES[spec.type].label;
+        if (!fields.name) f.name = typeDef(spec.type).label;
         const idx = Number.isInteger(op.index) ? Math.max(0, Math.min(P.features.length, op.index)) : P.features.length;
         P.features.splice(idx, 0, f);
         log.push(`+ ${f.type} "${f.name}"`);
@@ -421,6 +444,25 @@ export function applyOps(project, ops) {
         if (i < 0) throw new Error(`no pcb component "${op.name}"`);
         if (P.pcb.components[i].locked) throw new Error(`pcb component "${op.name}" is locked by the user`);
         P.pcb.components.splice(i, 1); log.push(`− pcb component "${op.name}"`); break;
+      }
+      case 'ext_set': {
+        if (actor === 'ai') throw new Error('ext_set is not available to the AI');
+        if (actor === 'ext' && op.id !== opts.extId) throw new Error(`a package may only write its own storage ("${opts.extId}")`);
+        if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(op.id || '')) throw new Error('ext_set needs an extension id');
+        if (!/^[A-Za-z0-9_.-]{1,64}$/.test(op.key || '')) throw new Error('ext_set needs a key');
+        P.ext = P.ext || {}; P.ext[op.id] = P.ext[op.id] || {};
+        if (op.value === undefined) delete P.ext[op.id][op.key]; else P.ext[op.id][op.key] = JSON.parse(JSON.stringify(op.value));
+        log.push(`~ ${op.id} data "${op.key}"`); break;
+      }
+      case 'set_extension': {
+        if (actor !== 'user') throw new Error('only the user can install, enable or disable extensions');
+        if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(op.id || '')) throw new Error('set_extension needs an extension id');
+        P.extensions = P.extensions || [];
+        const i = P.extensions.findIndex((x) => x.id === op.id);
+        if (op.remove) { if (i >= 0) P.extensions.splice(i, 1); log.push(`− extension ${op.id}`); break; }
+        const e = { ...(i >= 0 ? P.extensions[i] : { id: op.id, enabled: true }), ...Object.fromEntries(['version', 'name', 'enabled', 'settings', 'checks'].filter((k) => k in op).map((k) => [k, op[k]])) };
+        if (i >= 0) P.extensions[i] = e; else P.extensions.push(e);
+        log.push(`~ extension ${op.id}${'enabled' in op ? (op.enabled ? ' on' : ' off') : ''}`); break;
       }
       default: throw new Error(`unknown op "${op.op}"`);
     }

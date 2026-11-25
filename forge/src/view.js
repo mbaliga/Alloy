@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { colorsFor, nearestPoint } from './ext/overlay.js';
 
 const THEMES = {
   dark: { bg: 0x0e1215, line: [0.62, 0.72, 0.78], glow: [0.56, 0.94, 0.77], edge: 0x05080a, vol: 0x6f8590, grey: '#5d666c' },
@@ -63,6 +64,8 @@ export function createView(el, cb) {
   const volGroup = new THREE.Group(); scene.add(volGroup);
   const modelGroup = new THREE.Group(); scene.add(modelGroup);
   const markGroup = new THREE.Group(); scene.add(markGroup);
+  const overlayGroup = new THREE.Group(); scene.add(overlayGroup);
+  let overlayList = [];
   const clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
   let clipOn = false, edgesOn = true, bounds = new THREE.Box3(new THREE.Vector3(-30, -30, 0), new THREE.Vector3(30, 30, 20));
   let pickables = [], printVol = [180, 180, 180], last = null, meta = {};
@@ -220,6 +223,8 @@ export function createView(el, cb) {
     if (e.button === 2) { down = null; return; }
     if (!down || gizmo.dragging || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5 || performance.now() - down[2] > 450) { down = null; return; }
     down = null;
+    // a tap on an overlay point reads its value (probe) instead of selecting what is behind it
+    if (overlayList.length && cb.onProbe) { const pr = probe(e.clientX, e.clientY); if (pr) { cb.onProbe(pr); return; } }
     if (cb.onPick) cb.onPick(hitAt(e.clientX, e.clientY, e.shiftKey));
   });
 
@@ -236,6 +241,31 @@ export function createView(el, cb) {
     }
   }
 
+  // ── overlays from extensions: colour-mapped points and boxes. Colour is paired with a legend and a probe (see ext/overlay.js).
+  function setOverlays(list) {
+    clear(overlayGroup); overlayList = list.filter((o) => o.ov.kind === 'points');
+    for (const { ov, range } of list) {
+      if (ov.kind === 'points') {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(ov.positions), 3));
+        g.setAttribute('color', new THREE.BufferAttribute(colorsFor(ov, range), 3));
+        const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 6, sizeAttenuation: false, vertexColors: true }));
+        pts.renderOrder = 8; overlayGroup.add(pts);
+      } else if (ov.kind === 'box') {
+        const sz = ov.max.map((v, i) => v - ov.min[i]), c = ov.max.map((v, i) => (v + ov.min[i]) / 2);
+        const l = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...sz)), new THREE.LineDashedMaterial({ color: 0x8ff0c4, dashSize: 2, gapSize: 2 }));
+        l.computeLineDistances(); l.position.set(...c); l.renderOrder = 8; overlayGroup.add(l);
+      }
+    }
+  }
+  function probe(x, y) {
+    const r = renderer.domElement.getBoundingClientRect(), v = new THREE.Vector3();
+    const project = (px, py, pz) => { v.set(px, py, pz).project(cam); if (v.z > 1 || v.z < -1) return null; return { x: ((v.x + 1) / 2) * r.width + r.left, y: ((1 - v.y) / 2) * r.height + r.top, depth: v.z }; };
+    let best = null;
+    for (const { ov, range } of overlayList) { const n = nearestPoint(ov, project, x, y); if (n && (!best || n.distance < best.distance)) best = { ...n, label: ov.label, unit: ov.unit, validity: ov.validity, range }; }
+    return best;
+  }
+
   function resize() {
     const w = el.clientWidth || 1, h = el.clientHeight || 1;
     renderer.setSize(w, h, false); renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%';
@@ -247,5 +277,5 @@ export function createView(el, cb) {
   setTheme('dark');
   (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, cam); })();
 
-  return { setResult, fit, setView, setOrtho, setSection, setEdges, setMarks, setTheme, getBounds, attachGizmo, detachGizmo, isDragging: () => gizmo.dragging, snapshot: () => { renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } };
+  return { setResult, setOverlays, probe, fit, setView, setOrtho, setSection, setEdges, setMarks, setTheme, getBounds, attachGizmo, detachGizmo, isDragging: () => gizmo.dragging, snapshot: () => { renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } };
 }

@@ -147,7 +147,7 @@ export function mountLoopPane(host) {
     const f = st.form;
     const prices = f.inPerM !== '' || f.outPerM !== '' ? { inPerM: Number(f.inPerM) || 0, outPerM: Number(f.outPerM) || 0 } : null;
     return {
-      project: host.getProject(), cfg: host.getCfg(), wasm: host.getWasm(), occt: host.getOcct ? host.getOcct() : null, goal: f.goal.trim() || 'Improve this enclosure so it passes every check.', styleBrief: f.styleBrief,
+      project: host.getProject(), cfg: host.getCfg(), wasm: host.getWasm(), occt: host.getOcct ? host.getOcct() : null, ext: host.getExt ? host.getExt() : null, goal: f.goal.trim() || 'Improve this enclosure so it passes every check.', styleBrief: f.styleBrief,
       threshold: f.threshold === '' ? DEFAULT_THRESHOLD : f.threshold, maxRounds: f.maxRounds || 4, maxTokens: f.maxTokens || undefined, maxCost: f.maxCost === '' ? undefined : f.maxCost, prices, minWall: f.minWall === '' || f.minWall == null ? undefined : f.minWall,
     };
   }

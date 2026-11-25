@@ -1,0 +1,26 @@
+{
+  "id": "xyz.mdhv.sample-rib",
+  "name": "Sample: rib",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "A plugin. Adds a Rib feature type and a check that ribs are thick enough to print.",
+  "main": "main.js",
+  "permissions": ["doc.read", "checks"],
+  "contributes": {
+    "featureTypes": [
+      {
+        "id": "rib", "label": "Rib", "icon": "▮", "desc": "A thin stiffening wall on a flat face",
+        "fields": [
+          { "k": "length", "kind": "num", "def": "20", "tip": "Length along the rib axis" },
+          { "k": "height", "kind": "num", "def": "8", "tip": "Height above the start point" },
+          { "k": "thickness", "kind": "num", "def": "1.6", "tip": "Wall thickness of the rib" },
+          { "k": "axis", "kind": "enum", "opts": ["x", "y"], "def": "x", "tip": "Direction the rib runs" },
+          { "k": "pos", "kind": "vec3", "def": ["0", "0", "0"], "tip": "Centre of the rib's base (mm)" }
+        ]
+      }
+    ],
+    "checks": [{ "id": "rib-thickness", "label": "Ribs at least 1.2 mm thick" }]
+  }
+}
