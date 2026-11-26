@@ -57,15 +57,16 @@ function hFace({ orient, hotter, L, Ts, Tf, airspeed = 0 }) {
     const Nf = Math.max(nuForcedPlate(airspeed * L / p.nu, p.Pr), 0);
     Nu = Math.cbrt(Nu * Nu * Nu + Nf * Nf * Nf);
   }
-  return { h: Nu * p.k / L, Ra, Nu, outside };
+  return { h: Nu * p.k / L, Ra, Nu, outside, Tm };
 }
 
 // ───────────────────────── dense linear solve (the network has fewer than 40 nodes) ─────────────────────────
 function solveLinear(A, b) {
   const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  const scale = Math.max(1e-300, ...A.map((r) => Math.max(...r.map(Math.abs))));
   for (let c = 0; c < n; c++) {
     let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
-    if (Math.abs(M[p][c]) < 1e-18) throw new Error('the thermal network is singular (a node has no path to ambient)');
+    if (Math.abs(M[p][c]) < 1e-12 * scale) throw new Error('the thermal network is singular (a node has no path to ambient)');
     [M[c], M[p]] = [M[p], M[c]];
     for (let r = c + 1; r < n; r++) { const f = M[r][c] / M[c][c]; if (f) for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
   }
@@ -145,7 +146,7 @@ function enclosure(input, warnings) {
   for (const m of mounts) {
     const fc = faces.find((x) => x.face === m.face); if (!fc) continue;
     let A = fc.Ao;
-    if (m.box) { const o = [0, 1, 2].filter((k) => k !== fc.ax), ext = (k) => Math.max(0, Math.min(m.box[2 * k + 1], bb.hi[k]) - Math.max(m.box[2 * k], bb.lo[k])) * mm; A = Math.min(fc.Ao, ext(o[0]) * ext(o[1])); }
+    if (m.box) { const o = [0, 1, 2].filter((k) => k !== fc.ax), ext = (k) => Math.max(0, Math.min(Math.max(m.box[2 * k], m.box[2 * k + 1]), bb.hi[k]) - Math.max(Math.min(m.box[2 * k], m.box[2 * k + 1]), bb.lo[k])) * mm; A = Math.min(fc.Ao, ext(o[0]) * ext(o[1])); }
     fc.mount += A; fc.mountG = (fc.mountG || 0) + m.conductance_W_m2K * A;
   }
   return { S, cond, bodies, Tamb, gravity, wind, bb, mm, gAx, t, wallK, wallEps, Lm, tm, inner, faces };
@@ -165,14 +166,13 @@ function thermalModel(input, opts = {}) {
   const nodes = [];
   const board = boardC ? (() => {
     const d = boxDims(boardC.box), thin = d.indexOf(Math.min(...d)), o = [0, 1, 2].filter((k) => k !== thin);
-    return { name: boardC.name || 'pcb', t: d[thin] * mm, A: d[o[0]] * d[o[1]] * mm * mm, orient: thin === gAx ? 'horizontal' : 'side', L: thin === gAx ? (d[o[0]] * d[o[1]] * mm * mm) / (2 * (d[o[0]] + d[o[1]]) * mm) : d[gAx] * mm };
+    return { thin, name: boardC.name || 'pcb', t: d[thin] * mm, A: d[o[0]] * d[o[1]] * mm * mm, orient: thin === gAx ? 'horizontal' : 'side', L: thin === gAx ? (d[o[0]] * d[o[1]] * mm * mm) / (2 * (d[o[0]] + d[o[1]]) * mm) : d[gAx] * mm };
   })() : null;
   const cs = comps.map((c) => {
     const b = compBox(c), d = boxDims(b).map((x) => x * mm), fp = Math.min(d[0] * d[1], d[0] * d[2], d[1] * d[2]);
     const area = 2 * (d[0] * d[1] + d[0] * d[2] + d[1] * d[2]);
     return { name: c.name, d, fp, ext: Math.max(area - fp, fp), Lc: Math.max(d[gAx], 1e-3), Q: 0, cyl: c.kind === 'cylinder' };
   });
-  if (board) for (const c of cs) { if (!(c.Q > 0)) { c.Gcb = fr4.k * Math.max((c.d[0] + 2 * board.t) * (c.d[1] + 2 * board.t), c.fp) / board.t; continue; } const a = (c.d[0] + 2 * board.t) * (c.d[1] + 2 * board.t); c.Gcb = fr4.k * Math.max(a, c.fp) / board.t; warnings.push(`Component "${c.name}" to board: ${(1 / c.Gcb).toFixed(0)} K/W, estimated from the board thickness with 45° spreading through FR-4. A datasheet junction-to-board value is more reliable; this is the least certain number here.`); }
   let Qair = 0, Qtotal = 0;
   for (const h of cond.heat || []) {
     Qtotal += h.power_W;
@@ -182,6 +182,15 @@ function thermalModel(input, opts = {}) {
       else { Qair += h.power_W; warnings.push(`Heat source "${h.id}" is on PCB part "${h.target.pcb}", which is not a component or board in the document; its heat goes into the internal air.`); }
     } else { Qair += h.power_W; warnings.push(`Heat source "${h.id}" is on body "${h.target.body}"; the model puts that heat into the internal air.`); }
   }
+  // component to board: conduction through the board thickness, spreading at 45 degrees; the footprint axes are the two perpendicular to the board normal
+  if (board) {
+    const o = [0, 1, 2].filter((k) => k !== board.thin);
+    for (const c of cs) {
+      const a = (c.d[o[0]] + 2 * board.t) * (c.d[o[1]] + 2 * board.t);
+      c.Gcb = fr4.k * Math.max(a, c.d[o[0]] * c.d[o[1]]) / board.t;
+      if (c.Q > 0) warnings.push(`Component "${c.name}" to board: ${(1 / c.Gcb).toFixed(0)} K/W, estimated from the board thickness with 45° spreading through FR-4 (copper planes and thermal vias are ignored). A datasheet junction-to-board value is more reliable; this is the least certain number here.`);
+    }
+  }
   if (!(Qtotal > 0)) warnings.push('No heat sources are set (Analyze > Conditions); every temperature equals ambient.');
   if (comps.length && !board) warnings.push('The document has components but no board; components lose heat to the air only.');
 
@@ -189,7 +198,9 @@ function thermalModel(input, opts = {}) {
   const vents = (opts.vents || []).filter((v) => v.area_mm2 > 0);
   const zMid = (bb.lo[2] + bb.hi[2]) / 2, ventAx = gAx; // stack height is measured along the gravity axis
   const sgn = gravity[0] === '-' ? 1 : -1; // height above the bottom, in mm, along "up"
-  const ventHeight = (z) => (sgn > 0 ? z - bb.lo[ventAx] : bb.hi[ventAx] - z);
+  const rawHeight = (z) => (sgn > 0 ? z - bb.lo[ventAx] : bb.hi[ventAx] - z);
+  const ventHeight = (z) => Math.min(Math.max(rawHeight(z), 0), bb.size[ventAx]);
+  if (vents.some((v) => rawHeight(v.z_mm) < -0.5 || rawHeight(v.z_mm) > bb.size[ventAx] + 0.5)) warnings.push(`A vent is outside the box along the vertical axis (${'xyz'[ventAx]} from ${bb.lo[ventAx].toFixed(1)} to ${bb.hi[ventAx].toFixed(1)} mm); its height is clamped to the box.`);
   void zMid;
 
   // fixed-point iteration: h depends on temperatures
@@ -198,7 +209,9 @@ function thermalModel(input, opts = {}) {
   const Aw_in = faces.reduce((a, f) => a + f.Ai, 0);
   let converged = false, iter = 0, ventQ = 0, Vdot = 0, outside = false, ventNote = null;
   const hOutArr = new Array(6).fill(0), hInArr = new Array(6).fill(0);
-  let edges = [], Q = [];
+  let edges = [], Q = [], filmMin = Infinity, filmMax = -Infinity;
+  // grey-body exchange between a part (emissivity 0.9, area A) and inner wall k: h_r from the two surface temperatures, wall emissivity from its material, view factor by wall area
+  const radG = (A, Tp, Tw, f) => { const eff = 1 / (1 / 0.9 + (A / Aw_in) * (1 / wallEps - 1)); return hRadiation(1, Tp, Tw) * eff * A * (f.Ai / Aw_in); };
   const ventGeom = () => {
     if (!vents.length) return null;
     const lo = vents.filter((v) => ventHeight(v.z_mm) < (bb.size[ventAx]) / 2), hi = vents.filter((v) => ventHeight(v.z_mm) >= (bb.size[ventAx]) / 2);
@@ -223,9 +236,10 @@ function thermalModel(input, opts = {}) {
     // inner convection and wall conduction, outer convection + radiation
     faces.forEach((f, i) => {
       const Tin = T[iW + i], Tout = T[iS + i];
-      const hi = hFace({ orient: f.orient, hotter: Tin > Ta, L: f.Lin, Ts: Tin, Tf: Ta });
+      const inOrient = f.orient === 'up' ? 'down' : f.orient === 'down' ? 'up' : 'side'; // the inner skin faces the other way
+      const hi = hFace({ orient: inOrient, hotter: Tin > Ta, L: f.Lin, Ts: Tin, Tf: Ta });
       const ho = hFace({ orient: f.orient, hotter: Tout > Tamb, L: f.Lout, Ts: Tout, Tf: Tamb, airspeed: wind });
-      outside = outside || hi.outside || ho.outside;
+      outside = outside || hi.outside || ho.outside; filmMin = Math.min(filmMin, hi.Tm, ho.Tm); filmMax = Math.max(filmMax, hi.Tm, ho.Tm);
       hInArr[i] = hi.h; hOutArr[i] = ho.h;
       edges.push([iA, iW + i, hi.h * f.Ai]);
       edges.push([iW + i, iS + i, wallK * f.Ao / tm]);
@@ -238,21 +252,20 @@ function thermalModel(input, opts = {}) {
       const up = hFace({ orient: o ? 'up' : 'side', hotter: T[iB] > Ta, L: board.L, Ts: T[iB], Tf: Ta }), dn = hFace({ orient: o ? 'down' : 'side', hotter: T[iB] > Ta, L: board.L, Ts: T[iB], Tf: Ta });
       outside = outside || up.outside || dn.outside;
       edges.push([iB, iA, (up.h + dn.h) * board.A]);
-      const hr = hRadiation(0.9, T[iB], Tamb);
-      faces.forEach((f, i) => edges.push([iB, iW + i, hr * 2 * board.A * (f.Ai / Aw_in) * 0.9]));
+      faces.forEach((f, i) => edges.push([iB, iW + i, radG(2 * board.A, T[iB], T[iW + i], f)]));
       Q[iB] += board.Q || 0;
     }
     cs.forEach((c, i) => {
       const hc = hFace({ orient: 'side', hotter: T[i] > Ta, L: c.Lc, Ts: T[i], Tf: Ta });
       outside = outside || hc.outside;
       edges.push([i, iA, hc.h * c.ext]);
-      const hr = hRadiation(0.9, T[i], Tamb);
-      faces.forEach((f, k) => edges.push([i, iW + k, hr * c.ext * (f.Ai / Aw_in) * 0.9]));
+      faces.forEach((f, k) => edges.push([i, iW + k, radG(c.ext, T[i], T[iW + k], f)]));
       if (board) { edges.push([i, iB, c.Gcb]); }
       Q[i] += c.Q;
     });
     Q[iA] += Qair;
     void pAir;
+    if (!edges.some((e) => e[1] < 0 && e[2] > 0)) throw new Error('there is no heat path to ambient: every outer face is insulated and there are no vents');
     const Tn = solveNetwork(N, edges, Q, Tamb);
     let dmax = 0; for (let k = 0; k < N; k++) dmax = Math.max(dmax, Math.abs(Tn[k] - T[k]));
     T = T.map((x, k) => x + 0.5 * (Tn[k] - x));
@@ -262,6 +275,8 @@ function thermalModel(input, opts = {}) {
   // energy balance: heat leaving through outer surfaces + vents equals heat in
   let Qout = ventQ * (T[iA] - Tamb);
   faces.forEach((f, i) => { const hr = hRadiation(wallEps, T[iS + i], Tamb); Qout += ((hOutArr[i] + hr) * Math.max(f.Ao - f.mount, 0) + (f.mountG || 0)) * (T[iS + i] - Tamb); });
+  if (filmMin < 250 || filmMax > 450) warnings.push(`A film temperature (${(filmMin - KEL).toFixed(0)} to ${(filmMax - KEL).toFixed(0)} °C) is outside the 250 to 450 K range of the air-property fits; treat the result as unreliable.`);
+  if (Math.max(...T) - KEL > 150) warnings.push(`The hottest node is ${(Math.max(...T) - KEL).toFixed(0)} °C, above what the plastics and parts in a hand-held device tolerate; the design needs a different heat path, not only this estimate.`);
   const C = (x) => x - KEL;
   const res = {
     warnings, converged, iterations: iter, outside, Tamb, Qtotal, Qout, ventQ, Vdot, faces, wall: { t, k: wallK, eps: wallEps },
@@ -272,7 +287,7 @@ function thermalModel(input, opts = {}) {
   res.summary = [
     { metric: 'internal_air_temp', value: C(res.air), unit: '°C' },
     ...(board ? [{ metric: 'board_temp', value: C(res.board), unit: '°C' }] : []),
-    ...cs.map((c, i) => ({ metric: `component_temp_${String(c.name).replace(/[^\w.-]+/g, '_').slice(0, 40)}`, value: C(T[i]), unit: '°C' })),
+    ...(() => { const used = new Set(); return cs.map((c, i) => { let id = `component_temp_${String(c.name).replace(/[^\w.-]+/g, '_').slice(0, 40)}`, n = 1; while (used.has(id)) id = `component_temp_${String(c.name).replace(/[^\w.-]+/g, '_').slice(0, 36)}_${++n}`; used.add(id); return { metric: id, value: C(T[i]), unit: '°C' }; }); })(),
     { metric: 'max_component_temp', value: C(Math.max(res.air, ...(board ? [res.board] : []), ...cs.map((c, i) => T[i]))), unit: '°C' },
     { metric: 'max_outer_surface_temp', value: C(Math.max(...res.wallOuter)), unit: '°C' },
     { metric: 'total_heat', value: Qtotal, unit: 'W' },
@@ -353,6 +368,7 @@ const safe = (s) => String(s).replace(/[^\w.-]+/g, '_').slice(0, 40);
 const ASSUMPTIONS = [
   'Steady state. One enclosure (all bodies together), treated as a hollow box with the wall thickness implied by its volume and surface area.',
   'One uniform internal air temperature; components and board are single nodes; component-to-board conduction uses the board thickness with 45° spreading (use a datasheet value for real parts).',
+  'Inside the box the board and components radiate to the inner walls as grey bodies (emissivity 0.9 for parts, the wall material\'s emissivity for the wall, view factors by wall area); the air is one mixed node.',
   'Air properties near 1 atm. Convection coefficients come from isothermal-plate correlations applied to each face of the box; ribs, curvature, standoffs and gaps are ignored.',
   'Vents act through stack flow only (discharge coefficient 0.6); wind-driven flow and internal fans are not modelled.',
 ];

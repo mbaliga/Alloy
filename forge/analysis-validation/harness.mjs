@@ -1,5 +1,5 @@
 // Validation harness for analyses (docs/EXTENSIONS_SPEC.md section 3.5).
-//   node analysis-validation/harness.mjs [--json out.json] [--md out.md] [--only <case-file-or-case-id>]
+//   node analysis-validation/harness.mjs [--json out.json] [--md out.md] [--only <part of a case file name>]
 //   npm run test:analysis
 // A case file names an analysis (and the package folder that provides it), then lists cases: a design (features and materials, built
 // through typed ops and the real kernel), and the expected values with an explicit tolerance and the reference they come from.

@@ -175,3 +175,34 @@ test('AI tools: set-vents stores them in the project (one undoable op), thermal-
     assert.ok(r.summary.find((x) => x.metric === 'vent_flow').value > 0); assert.equal(r.summary.find((x) => x.metric === 'vent_area_installed').value, 300);
   } finally { s.box.build.dispose(); }
 });
+
+// ───────── fixes from the independent review
+test('inner walls: the ceiling (cold face down) convects better than the floor (cold face up), and the outer faces the other way round', () => {
+  const r = core.thermalModel(inputOf(design({ watts: 2 })));
+  const top = r.faces.findIndex((f) => f.face === '+z'), bottom = r.faces.findIndex((f) => f.face === '-z');
+  assert.ok(r.hIn[top] > r.hIn[bottom] * 1.5, `inner ceiling ${r.hIn[top]} against floor ${r.hIn[bottom]}`);
+  assert.ok(r.hOut[top] > r.hOut[bottom] * 1.2, `outer top ${r.hOut[top]} against bottom ${r.hOut[bottom]}`);
+});
+
+test('board standing on its edge: the component footprint uses the axes perpendicular to the board normal', () => {
+  const P = design({ watts: 1 }); P.pcb.components = [{ name: 'board', kind: 'box', role: 'board', box: [-1.6, 0, -16, 16, 6, 24] }, { name: 'mcu', kind: 'box', role: 'component', box: [0, 2, -4, 4, 8, 16] }];
+  const r = core.thermalModel(inputOf(P));
+  const w = r.warnings.find((x) => /Component "mcu" to board/.test(x)); assert.ok(w);
+  const a = (8 + 2 * 1.6) * (8 + 2 * 1.6) * 1e-6, G = 0.3 * a / 1.6e-3; // footprint is y by z (8 by 8 mm), not x by y
+  assert.equal(+w.match(/: (\d+) K\/W/)[1], Math.round(1 / G));
+});
+
+test('robustness: no heat path is an error; a vent outside the box is clamped with a warning; a reversed mount box works; duplicate part names stay distinct', () => {
+  const sealed = design({ watts: 1, mounts: FACE_ALL.map((face, i) => ({ id: `m${i}`, kind: 'contact', body: 'Case', face, conductance_W_m2K: 0 })) });
+  assert.throws(() => core.thermalModel(inputOf(sealed)), /no heat path to ambient/);
+  const input = inputOf(design({ watts: 2 }));
+  const o = core.thermalModel(input, { vents: [{ area_mm2: 100, z_mm: -500 }, { area_mm2: 100, z_mm: 500 }] });
+  assert.ok(o.warnings.some((w) => /outside the box/.test(w))); assert.ok(o.Vdot > 0 && o.Vdot < 1e-3, `flow is bounded by the box height: ${o.Vdot}`);
+  const a = core.thermalModel(inputOf(design({ watts: 2, mounts: [{ id: 'm', kind: 'contact', body: 'Case', face: '-z', conductance_W_m2K: 100, box: [-10, 10, -5, 5, 0, 0] }] })));
+  const b = core.thermalModel(inputOf(design({ watts: 2, mounts: [{ id: 'm', kind: 'contact', body: 'Case', face: '-z', conductance_W_m2K: 100, box: [10, -10, 5, -5, 0, 0] }] })));
+  assert.equal(a.air, b.air);
+  const D = design({ watts: 1 }); D.pcb.components.push({ name: 'mcu', kind: 'box', role: 'component', box: [10, 14, -4, 4, 7.6, 9.6] });
+  const names = core.thermalModel(inputOf(D)).summary.map((x) => x.metric).filter((m) => m.startsWith('component_temp_'));
+  assert.equal(new Set(names).size, 2);
+});
+const FACE_ALL = ['+x', '-x', '+y', '-y', '+z', '-z'];

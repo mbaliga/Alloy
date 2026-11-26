@@ -28,8 +28,8 @@
       },
       {
         "id": "set-vents", "label": "Record the enclosure's vents",
-        "description": "Store the vents of the design for the thermal estimate. Each vent has its open area in mm² and the height (z, mm, document frame) of its centre.",
-        "schema": { "type": "object", "properties": { "vents": { "type": "array", "items": { "type": "object", "properties": { "area_mm2": { "type": "number" }, "z_mm": { "type": "number" }, "note": { "type": "string" } }, "required": ["area_mm2", "z_mm"] } } }, "required": ["vents"] }
+        "description": "Store the vents of the design for the thermal estimate. Each vent has its open area in mm² and the coordinate of its centre along the vertical (gravity) axis, in mm, document frame.",
+        "schema": { "type": "object", "properties": { "vents": { "type": "array", "items": { "type": "object", "properties": { "area_mm2": { "type": "number" }, "z_mm": { "type": "number", "description": "Position of the vent centre along the vertical axis (the axis gravity acts along), mm, document frame" }, "note": { "type": "string" } }, "required": ["area_mm2", "z_mm"] } } }, "required": ["vents"] }
       }
     ]
   }
