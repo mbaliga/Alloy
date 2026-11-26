@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
-import { colorsFor, nearestPoint } from './ext/overlay.js';
+import { colorsFor, nearestPoint, interpolateSurface, sampleVoxel, sliceImage, slicePlane } from './ext/overlay.js';
 
 const THEMES = {
   dark: { bg: 0x0e1215, line: [0.62, 0.72, 0.78], glow: [0.56, 0.94, 0.77], edge: 0x05080a, vol: 0x6f8590, grey: '#5d666c' },
@@ -224,7 +224,7 @@ export function createView(el, cb) {
     if (!down || gizmo.dragging || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5 || performance.now() - down[2] > 450) { down = null; return; }
     down = null;
     // a tap on an overlay point reads its value (probe) instead of selecting what is behind it
-    if (overlayList.length && cb.onProbe) { const pr = probe(e.clientX, e.clientY); if (pr) { cb.onProbe(pr); return; } }
+    if (overlayGroup.children.length && cb.onProbe) { const pr = probe(e.clientX, e.clientY); if (pr) { cb.onProbe(pr); return; } }
     if (cb.onPick) cb.onPick(hitAt(e.clientX, e.clientY, e.shiftKey));
   });
 
@@ -241,7 +241,8 @@ export function createView(el, cb) {
     }
   }
 
-  // ── overlays from extensions: colour-mapped points and boxes. Colour is paired with a legend and a probe (see ext/overlay.js).
+  // ── overlays: colour-mapped points and boxes (extensions), and analysis fields: a surface map on a body and a voxel slice plane.
+  // Colour is paired with a legend and a probe (see ext/overlay.js and the legend in the page); the probe prints the exact value.
   function setOverlays(list) {
     clear(overlayGroup); overlayList = list.filter((o) => o.ov.kind === 'points');
     for (const { ov, range } of list) {
@@ -255,11 +256,37 @@ export function createView(el, cb) {
         const sz = ov.max.map((v, i) => v - ov.min[i]), c = ov.max.map((v, i) => (v + ov.min[i]) / 2);
         const l = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...sz)), new THREE.LineDashedMaterial({ color: 0x8ff0c4, dashSize: 2, gapSize: 2 }));
         l.computeLineDistances(); l.position.set(...c); l.renderOrder = 8; overlayGroup.add(l);
+      } else if (ov.kind === 'surface') {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(ov.mesh.pos), 3));
+        g.setIndex(new THREE.BufferAttribute(Uint32Array.from(ov.mesh.idx), 1));
+        g.setAttribute('color', new THREE.BufferAttribute(colorsFor({ values: ov.values }, range), 3));
+        const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+        m.renderOrder = 7; m.userData.overlay = ov; overlayGroup.add(m);
+      } else if (ov.kind === 'slice') {
+        const { w, h, rgba } = sliceImage(ov.field, ov.axis, ov.index, range), pl = slicePlane(ov.field, ov.axis, ov.index);
+        const tex = new THREE.DataTexture(rgba, w, h, THREE.RGBAFormat); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.needsUpdate = true;
+        const ai = { x: 0, y: 1, z: 2 }, P = (u, v) => { const o = [0, 0, 0]; o[ai[pl.axis]] = pl.at; o[ai[pl.u.axis]] = u; o[ai[pl.v.axis]] = v; return o; };
+        const [u0, u1] = pl.u.range, [v0, v1] = pl.v.range, g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(Float32Array.from([...P(u0, v0), ...P(u1, v0), ...P(u1, v1), ...P(u0, v1)]), 3));
+        g.setAttribute('uv', new THREE.BufferAttribute(Float32Array.from([0, 0, 1, 0, 1, 1, 0, 1]), 2)); g.setIndex([0, 1, 2, 0, 2, 3]);
+        const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
+        m.renderOrder = 7; m.userData.overlay = ov; overlayGroup.add(m);
       }
     }
   }
   function probe(x, y) {
     const r = renderer.domElement.getBoundingClientRect(), v = new THREE.Vector3();
+    // a surface map or a slice: read the value at the ray hit (barycentric on the triangle, or the voxel cell)
+    const ndc = new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, cam);
+    const meshes = overlayGroup.children.filter((o) => o.isMesh);
+    for (const hit of ray.intersectObjects(meshes, false)) {
+      const ov = hit.object.userData.overlay; if (!ov) continue;
+      const p = hit.point.toArray();
+      const value = ov.kind === 'surface' ? interpolateSurface(ov.mesh.pos, ov.mesh.idx, ov.values, hit.faceIndex, p) : sampleVoxel(ov.field, p[0], p[1], p[2]);
+      if (value == null || !Number.isFinite(value)) continue;
+      return { value, position: p, label: ov.label, unit: ov.unit, validity: ov.validity, range: ov.range, distance: 0 };
+    }
     const project = (px, py, pz) => { v.set(px, py, pz).project(cam); if (v.z > 1 || v.z < -1) return null; return { x: ((v.x + 1) / 2) * r.width + r.left, y: ((1 - v.y) / 2) * r.height + r.top, depth: v.z }; };
     let best = null;
     for (const { ov, range } of overlayList) { const n = nearestPoint(ov, project, x, y); if (n && (!best || n.distance < best.distance)) best = { ...n, label: ov.label, unit: ov.unit, validity: ov.validity, range }; }

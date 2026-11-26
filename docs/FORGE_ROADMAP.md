@@ -100,7 +100,7 @@ Each milestone is one Claude Code session, one branch, one PR. "Done" means ever
 - **Done:** a style pack and a template ship as extensions, change the loop's output measurably, and can be removed without breaking a saved project.
 
 ## A · Analysis track (after X0/A0, see `docs/EXTENSIONS_SPEC.md` §4)
-**Status: not started.** X0 is an open PR (#24); A0 and A1 to A5 each start only after the step before them is on main.
+**Status:** X0 is on main. **A0 (analysis framework) is built and in an open PR** (`forge-a0-analysis-framework`): materials with sources, loads and conditions, result model with `validity`, surface/slice overlays, report export, check and loop integration, validation harness (31 of 31 checks on the sample package). A1 to A5 each start only after the step before them is on main.
 
 - A1 thermal estimate (plugin) > A2 voxel core + thermal 3D > A3 structural > A4 Alloy Runner (Elmer/OpenFOAM on the customer's machine) > A5 airflow (forced, then natural convection).
 - **Done** per step: its validation cases pass within the stated tolerances, results carry an honest `validity`, and its checks join the scorecard and the design loop.

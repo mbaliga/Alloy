@@ -18,7 +18,7 @@ const stripAssets = (P) => ({ ...JSON.parse(JSON.stringify({ ...P, assets: {} })
 const bodySummary = (b) => [...(b?.bodies || []).map((x) => ({ name: x.name, ref: false, bbox: x.bbox, volume_mm3: x.volume || 0, tris: x.tris || 0 })), ...(b?.refs || []).map((x) => ({ name: x.name, ref: true, bbox: x.bbox, volume_mm3: 0, tris: x.tris || 0 }))];
 export const hasExtFeatures = (P) => (P.features || []).some((f) => isExtType(f.type));
 
-export function createResolver({ registry, host }) {
+export function createResolver({ registry, host, analysis = null }) {
   const cache = new Map();
 
   function valuesFor(P, f) {
@@ -96,7 +96,7 @@ export function createResolver({ registry, host }) {
    * Package checks as rows for the scorecard. `P` is the project (for which packages are on); the checks themselves read the design
    * through the API. validity 'experimental' rows are advisory: shown, never gating.
    */
-  async function checkRows(P, { signal, build } = {}) {
+  async function checkRows(P, { signal, build, runAnalyses = false, budget } = {}) {
     const rows = [];
     const input = { project: stripAssets(P), bodies: bodySummary(build) };
     for (const { ext, pkg, item } of registry.contributions('checks')) {
@@ -111,6 +111,8 @@ export function createResolver({ registry, host }) {
         rows.push({ ...base, severity: 'hard', pass: false, detail: `check could not run: ${String(e.message || e)}`, items: [], validity: 'estimate' });
       }
     }
+    // declared analysis checks (thresholds on analysis results); validity decides whether a row can fail the design
+    if (analysis) rows.push(...await analysis.rows(P, build, { run: runAnalyses, signal, budget }));
     // checks the project recorded but whose package is gone or off: visible, not gating
     for (const e of P.extensions || []) {
       if (e.enabled === false) continue;
@@ -141,6 +143,9 @@ export function createResolver({ registry, host }) {
     return host.invoke(pkg, 'loopStep', id, args ?? {}, { timeoutMs: 20000, ...o });
   };
 
+  /** Summary rows (never fields) of the analysis results that match the current design: what the critic is shown. */
+  const analysisSummaries = (P, build) => (analysis ? analysis.summaries(P, build) : Promise.resolve([]));
+
   const clear = () => cache.clear();
-  return { prepare, mergeStatus, checkRows, mergeChecks, agentTools, callAgentTool, loopSteps, callLoopStep, clear, sha: sha256Hex };
+  return { prepare, mergeStatus, checkRows, mergeChecks, agentTools, callAgentTool, loopSteps, callLoopStep, analysisSummaries, clear, sha: sha256Hex };
 }

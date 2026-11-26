@@ -1,5 +1,7 @@
 // Project model: feature schema registry, defaults, enclosure wizard, op application (used by UI undo and AI edits).
 import { checkSyntax } from './expr.js';
+import { allMaterials, validateMaterial, isBuiltin } from './analysis/materials.js';
+import { defaultConditions, validateConditions } from './analysis/conditions.js';
 
 const V3 = (a, b, c) => [String(a), String(b), String(c)];
 
@@ -208,11 +210,14 @@ export const DOC_VERSION = 3;
  */
 export function emptyPcb() { return { name: '', board: null, components: [], cutouts: [], supports: [], keep: [] }; }
 
+/** Analysis setup stored in the document (docs/EXTENSIONS_SPEC.md section 3): custom materials and the loads and conditions. Results are never stored. */
+export function emptyAnalysis() { return { materials: [], conditions: defaultConditions() }; }
+
 export function emptyProject() {
   return {
     v: DOC_VERSION, name: 'Untitled', params: [], features: [], assets: {}, bodies: {}, pcb: emptyPcb(),
     settings: { detail: 48, density: 1.24, printVolume: [180, 180, 180], kernel: 'manifold' },
-    extensions: [], ext: {},
+    extensions: [], ext: {}, analysis: emptyAnalysis(),
   };
 }
 
@@ -228,6 +233,9 @@ export function migrate(p) {
   out.assets = out.assets || {};
   if (!Array.isArray(out.extensions)) out.extensions = [];
   if (!out.ext || typeof out.ext !== 'object' || Array.isArray(out.ext)) out.ext = {};
+  const an = out.analysis && typeof out.analysis === 'object' && !Array.isArray(out.analysis) ? out.analysis : {};
+  out.analysis = { materials: Array.isArray(an.materials) ? an.materials : [], conditions: Object.assign(defaultConditions(), an.conditions || {}) };
+  out.analysis.conditions.ambient = Object.assign(defaultConditions().ambient, out.analysis.conditions.ambient || {});
   out.v = DOC_VERSION;
   return out;
 }
@@ -454,6 +462,45 @@ export function applyOps(project, ops, opts = {}) {
         if (op.value === undefined) delete P.ext[op.id][op.key]; else P.ext[op.id][op.key] = JSON.parse(JSON.stringify(op.value));
         log.push(`~ ${op.id} data "${op.key}"`); break;
       }
+      case 'set_body_material': {
+        const names = new Set([...Object.keys(P.bodies || {}), ...P.features.filter((f) => f.body && f.body !== '*' && f.op !== 'ref').map((f) => f.body)]);
+        if (!names.has(op.body)) throw new Error(`no body "${op.body}"`);
+        guardBody(P, op.body, 'add');
+        P.bodies = P.bodies || {}; P.bodies[op.body] = P.bodies[op.body] || {};
+        if (op.material === null || op.material === undefined) { delete P.bodies[op.body].material; log.push(`~ ${op.body}: material cleared`); break; }
+        if (!allMaterials(P).has(op.material)) throw new Error(`no material "${op.material}" (built-in or in this project)`);
+        P.bodies[op.body].material = op.material; log.push(`~ ${op.body}: material ${op.material}`); break;
+      }
+      case 'set_material': {
+        const m = validateMaterial(op.material);
+        if (isBuiltin(m.id)) throw new Error(`"${m.id}" is a built-in material; give your own one a different id`);
+        P.analysis = P.analysis || emptyAnalysis();
+        const i = P.analysis.materials.findIndex((x) => x.id === m.id);
+        const clean = JSON.parse(JSON.stringify({ ...m, custom: undefined }));
+        if (i >= 0) P.analysis.materials[i] = clean; else P.analysis.materials.push(clean);
+        log.push(`${i >= 0 ? '~' : '+'} material ${m.id}`); break;
+      }
+      case 'remove_material': {
+        P.analysis = P.analysis || emptyAnalysis();
+        const i = P.analysis.materials.findIndex((x) => x.id === op.id);
+        if (i < 0) throw new Error(isBuiltin(op.id) ? `"${op.id}" is a built-in material and cannot be removed` : `no project material "${op.id}"`);
+        const users = Object.entries(P.bodies || {}).filter(([, b]) => b.material === op.id).map(([n]) => n);
+        if (users.length) throw new Error(`material "${op.id}" is used by ${users.join(', ')}; assign another material first`);
+        P.analysis.materials.splice(i, 1); log.push(`− material ${op.id}`); break;
+      }
+      case 'set_ambient': case 'set_condition': case 'remove_condition': case 'set_limit': {
+        P.analysis = P.analysis || emptyAnalysis();
+        const c = P.analysis.conditions = JSON.parse(JSON.stringify(P.analysis.conditions || defaultConditions()));
+        if (op.op === 'set_ambient') { c.ambient = { ...c.ambient, ...(op.ambient || {}) }; log.push('~ ambient conditions'); }
+        else if (op.op === 'set_limit') { if (op.value === null || op.value === undefined) delete c.limits[op.key]; else c.limits[op.key] = op.value; log.push(`~ limit ${op.key}`); }
+        else {
+          if (!['heat', 'mounts', 'loads'].includes(op.list)) throw new Error('list must be heat, mounts or loads');
+          c[op.list] = c[op.list] || [];
+          if (op.op === 'remove_condition') { const i = c[op.list].findIndex((x) => x.id === op.id); if (i < 0) throw new Error(`no ${op.list} entry "${op.id}"`); c[op.list].splice(i, 1); log.push(`− ${op.list} ${op.id}`); }
+          else { const item = op.item || {}; const i = c[op.list].findIndex((x) => x.id === item.id); if (i >= 0) c[op.list][i] = item; else c[op.list].push(item); log.push(`${i >= 0 ? '~' : '+'} ${op.list} ${item.id}`); }
+        }
+        validateConditions(c, P); break;
+      }
       case 'set_extension': {
         if (actor !== 'user') throw new Error('only the user can install, enable or disable extensions');
         if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(op.id || '')) throw new Error('set_extension needs an extension id');
@@ -483,5 +530,5 @@ export function projectForAI(P) {
     if (featureLocked(P, f)) o.locked = true;
     return o;
   });
-  return { name: P.name, pcb: (P.pcb && (P.pcb.components || []).length) ? P.pcb : undefined, params: P.params.map((p) => (p.locked ? { ...p, locked: true } : { name: p.name, expr: p.expr })), bodies: P.bodies || {}, features, settings: P.settings, assets: Object.fromEntries(Object.entries(P.assets || {}).map(([k, a]) => [k, { name: a.name, tris: a.tris, bbox: a.bbox }])) };
+  return { name: P.name, pcb: (P.pcb && (P.pcb.components || []).length) ? P.pcb : undefined, params: P.params.map((p) => (p.locked ? { ...p, locked: true } : { name: p.name, expr: p.expr })), bodies: P.bodies || {}, analysis: (P.analysis && (P.analysis.materials.length || P.analysis.conditions.heat.length || P.analysis.conditions.mounts.length || P.analysis.conditions.loads.length)) ? P.analysis : undefined, features, settings: P.settings, assets: Object.fromEntries(Object.entries(P.assets || {}).map(([k, a]) => [k, { name: a.name, tris: a.tris, bbox: a.bbox }])) };
 }

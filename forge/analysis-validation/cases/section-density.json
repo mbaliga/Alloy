@@ -1,0 +1,16 @@
+{
+  "analysis": "xyz.mdhv.sample-mass/section-density",
+  "package": "examples/ext/sample-mass",
+  "cases": [
+    {
+      "id": "cube-20-voxel", "title": "20 mm cube voxelised at 1 mm, PLA, experimental",
+      "reference": "analytic: V = 8000 mm3 = 8 cm3. The cube is grid-aligned, so the voxel volume is exact; max density is the material's 1240 kg/m3. Result validity must stay experimental",
+      "setup": { "features": [{ "type": "box", "body": "Part", "size": [20, 20, 20], "anchor": "center" }], "materials": { "Part": "pla" } },
+      "expectValidity": "experimental",
+      "expect": [
+        { "metric": "solid_volume", "value": 8, "unit": "cm³", "tol": { "rel": 1e-6 } },
+        { "metric": "max_density", "value": 1240, "unit": "kg/m³", "tol": { "abs": 1e-3 } }
+      ]
+    }
+  ]
+}
