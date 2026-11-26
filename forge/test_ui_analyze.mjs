@@ -82,6 +82,19 @@ await page.waitForFunction(() => Object.values(window.__af.S.project.analysis.co
 const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }).catch(() => null), page.click('#an-report')]);
 if (dl) assert.match(dl.suggestedFilename(), /_report\.zip$/);
 
+// A1: the thermal estimate, installed from the bundled sample: an "estimate" badge, temperatures in °C, a surface field in the legend
+await page.click('#gear'); await page.click('#s-ext'); await page.waitForSelector('#extdlg[open]');
+await page.click('button[data-sample="thermal-estimate.alloyext"]'); await page.waitForSelector('#extconsent[open]');
+assert.match(await page.textContent('#extc-body'), /storage|agent/i);
+await page.click('#extc-ok'); await page.waitForSelector('.xpkg[data-ext="xyz.mdhv.thermal-estimate"].on'); await page.click('#extclose');
+await page.click('#t-an'); await page.selectOption('#p-analyze select[aria-label="Analysis"]', 'xyz.mdhv.thermal-estimate/thermal-estimate');
+await page.fill('#heat-w', '1.5'); await page.click('#heat-add');
+await page.click('#an-run'); await page.waitForSelector('#an-validity', { timeout: 60000 });
+assert.match(await page.textContent('#an-validity'), /estimate/);
+assert.match(await page.textContent('#an-result'), /internal_air_temp/); assert.match(await page.textContent('#an-result'), /°C/);
+assert.ok(await page.$('#an-result .errbox.warn[data-warning]'), 'assumptions are shown as warnings');
+await page.waitForSelector('#legend:not([hidden])'); assert.match(await page.textContent('#legend'), /°C/);
+
 // own material
 await page.click('summary:has-text("add your own material")');
 await page.fill('#mat-name', 'My resin'); await page.fill('input[data-prop="rho"]', '1180'); await page.fill('input[data-prop="k"]', '0.2');

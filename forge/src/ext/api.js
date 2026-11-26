@@ -4,6 +4,7 @@
 import { API_BY_NAME } from './api-spec.js';
 import { isNetworkPerm, networkHost } from './manifest.js';
 import { ExtError } from './host.js';
+import { prepareInput } from '../analysis/setup.js';
 import { voxelize, VOXEL_DEFAULT_MAX } from './voxelize.js';
 
 const MAX_VALUE_BYTES = 256 * 1024, MAX_BODY = 20 * 1024 * 1024, MAX_OVERLAY_POINTS = 2_000_000;
@@ -85,6 +86,7 @@ export class ExtApi {
     if (!hit) throw new ExtError('E_ARG', `no body or reference part named "${name}" in the current build`);
     return hit;
   }
+  api_analysis_input() { return prepareInput(this.#need('getProject')(), this.#need('getBuild')()); }
   api_geometry_list() {
     const b = this.#need('getBuild')();
     const row = (x, ref) => ({ name: x.name, ref, bbox: clone(x.bbox), volume_mm3: x.volume || 0, tris: x.tris || 0 });

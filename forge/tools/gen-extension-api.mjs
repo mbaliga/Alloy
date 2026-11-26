@@ -143,7 +143,7 @@ Return \`{ summary, fields, warnings, validity }\`. The host fills \`id\`, \`ver
 - \`validity\`: \`estimate\`, \`validated\` or \`experimental\` (the default when you leave it out). **\`experimental\` results are shown but never decide a pass or fail.** Only claim \`validated\` when every case in \`analysis-validation/cases/\` for your analysis passes within its tolerance.
 - \`contributes.analyses[].checks\`: \`{ id, label, metric, op, limit, unit }\` with \`op\` one of \`<=\`, \`<\`, \`>=\`, \`>\`. The user can change a limit (stored in the project as \`analysis.conditions.limits["<ext>:<analysis>:<check>"]\`, in the metric's unit). A check whose analysis has not run is an advisory "not run" row, never a pass.
 
-Results are cached in the browser by a hash of the package version, the setup and the geometry, and are never saved in the project. The loop spends at most \`analysisSeconds\` (default 120) on analyses; rows past the budget say "skipped". The critic sees summary rows only. The sample \`examples/ext/sample-mass\` is a worked example, and \`npm run test:analysis\` runs the validation suite.
+Results are cached in the browser by a hash of the package version, the setup and the geometry, and are never saved in the project. The loop spends at most \`analysisSeconds\` (default 120) on analyses; rows past the budget say "skipped". The critic sees summary rows only. The samples \`examples/ext/sample-mass\` and \`examples/ext/thermal-estimate\` are worked examples (the second also shows \`forge.analysis.input()\`, agent tools and \`storage.project\`), and \`npm run test:analysis\` runs the validation suite.
 
 ## Limits
 
@@ -155,7 +155,7 @@ Package: 24 MB zipped, 256 files, 12 MB per file, 32 MB expanded, zip64 and encr
 node tools/pack-ext.mjs examples/ext/sample-rib dist/ext-samples/sample-rib.alloyext
 \`\`\`
 
-Open Settings > Extensions, choose the file (or paste a URL, or pick a sample), read the install prompt, install, and switch it on for the project. Three samples ship in \`examples/ext/\`: \`sample-rib\` (a plugin: a Rib feature type and a check), \`sample-probe\` (an extension: a pane and an overlay) and \`sample-mass\` (a plugin with two analyses).
+Open Settings > Extensions, choose the file (or paste a URL, or pick a sample), read the install prompt, install, and switch it on for the project. Four samples ship in \`examples/ext/\`: \`sample-rib\` (a plugin: a Rib feature type and a check), \`sample-probe\` (an extension: a pane and an overlay) \`sample-mass\` (a plugin with two analyses) and \`thermal-estimate\` (a plugin: a thermal resistance network, two AI tools, vents stored in the project).
 
 ## When a package is removed
 
