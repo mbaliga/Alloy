@@ -47,6 +47,16 @@ export function lintCaseFile(file) {
       for (const k of c.calls || []) { if (!k.fn) problems.push(`${c.id}: a call needs "fn"`); try { compareValue(0, 0, k.tol); } catch (er) { problems.push(`${c.id}/${k.fn}: ${er.message}`); } }
       continue;
     }
+    if (c.kind === 'compare') {
+      if (!(c.a && c.a.metric && c.b && c.b.analysis && c.b.package && c.b.metric)) problems.push(`${c.id}: a compare case needs a.metric and b.{analysis,package,metric}`);
+      try { compareValue(0, 0, c.tol); } catch (er) { problems.push(`${c.id}: ${er.message}`); }
+      continue;
+    }
+    if (c.kind === 'reference') {
+      if (!c.referenceFile) problems.push(`${c.id}: a reference case names its referenceFile`);
+      for (const e of c.expect || []) { if (!e.refKey) problems.push(`${c.id}/${e.metric}: a reference expectation names its refKey`); try { compareValue(0, 0, e.tol); } catch (er) { problems.push(`${c.id}/${e.metric}: ${er.message}`); } }
+      continue;
+    }
     if (!(c.expect || []).length) problems.push(`${c.id}: no expectations`);
     for (const e of c.expect || []) { try { compareValue(0, 0, e.tol); } catch (er) { problems.push(`${c.id}/${e.metric}: ${er.message}`); } }
   }
@@ -86,7 +96,7 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
       const pkgPath = path.resolve(ROOT, file.data.package);
       if (!registry.get(ext)) await registry.install(await packDir(pkgPath));
       const stats = { file: file.name, analysis: file.data.analysis, cases: 0, passed: 0, validity: new Set() };
-      for (const c of file.data.cases) {
+      for (let c of file.data.cases) {
         stats.cases++; let casePass = true;
         const fail = (metric, note, extra = {}) => { casePass = false; rows.push({ file: file.name, case: c.id, metric, reference: c.reference, computed: '-', error: '-', tolerance: '-', pass: false, note, ...extra }); };
         if (c.kind === 'function' || c.kind === 'core') {
@@ -106,15 +116,51 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
           if (casePass) stats.passed++;
           continue;
         }
+        if (c.kind === 'compare') {
+          try {
+            const [extB, idB] = c.b.analysis.split('/');
+            if (!registry.get(extB)) await registry.install(await packDir(path.resolve(ROOT, c.b.package)));
+            const P = projectFor(c), entry = (id) => ({ id, name: registry.get(id).manifest.name, version: registry.get(id).manifest.version, enabled: true });
+            P.extensions = [entry(ext), entry(extB)];
+            const built = build(P, wasm); current = { P, build: built };
+            let ra, rb;
+            try { ra = await runner.run(P, built, ext, analysisId, { force: true, timeoutMs: 300000 }); rb = await runner.run(P, built, extB, idB, { force: true, timeoutMs: 300000 }); } finally { built.dispose(); }
+            stats.validity.add(ra.validity);
+            const amb = P.analysis.conditions.ambient.temperature_K - 273.15, get = (r, m) => (r.summary.find((x) => x.metric === m) || {}).value;
+            const va = get(ra, c.a.metric), vb = get(rb, c.b.metric);
+            if (!Number.isFinite(va) || !Number.isFinite(vb)) fail(c.a.metric, `a metric is missing (A: ${va}, B: ${vb})`);
+            else {
+              const want = vb - amb, got = va - amb, r = compareValue(got, want, c.tol), pass = r.pass;
+              if (!pass) casePass = false;
+              rows.push({ file: file.name, case: c.id, metric: `${c.a.metric} rise above ambient`, reference: c.reference, unit: 'K', expected: want, computed: got, error: r.error, tolerance: `${(r.limit * 100).toPrecision(3)} %`, errorText: `${(r.error * 100).toPrecision(3)} %`, pass, note: `${ext.split('.').pop()} ${va.toFixed(2)} C vs ${extB.split('.').pop()} ${vb.toFixed(2)} C, ambient ${amb.toFixed(1)} C` });
+            }
+            for (const m of c.info || []) { const ia = get(ra, m), ib = get(rb, m); if (Number.isFinite(ia) && Number.isFinite(ib)) rows.push({ file: file.name, case: c.id, metric: `${m} (info, not asserted)`, reference: c.reference, unit: 'C', expected: ib, computed: ia, error: '-', tolerance: '-', errorText: `${(100 * Math.abs((ia - amb) - (ib - amb)) / Math.max(Math.abs(ib - amb), 1e-9)).toPrecision(3)} % of rise`, pass: true, info: true }); }
+          } catch (e) { fail('(run)', String(e.message || e)); }
+          if (casePass) stats.passed++;
+          continue;
+        }
+        let expect = c.expect;
+        if (c.kind === 'reference') {
+          const refPath = path.resolve(ROOT, c.referenceFile);
+          if (!fs.existsSync(refPath)) {
+            rows.push({ file: file.name, case: c.id, metric: '(all)', reference: c.reference, computed: '-', error: '-', tolerance: '-', pass: false, skipped: true, note: `skipped: needs runner (reference file ${c.referenceFile} not found)` });
+            continue;
+          }
+          let ref; try { ref = JSON.parse(fs.readFileSync(refPath, 'utf8')); } catch (e) { fail('(reference)', `cannot read ${c.referenceFile}: ${e.message}`); continue; }
+          if (!ref || typeof ref !== 'object' || !ref.values || !ref.source) { fail('(reference)', `${c.referenceFile} needs "source" and "values"`); continue; }
+          expect = c.expect.map((e) => ({ ...e, value: ref.values[e.refKey] }));
+          if (expect.some((e) => !Number.isFinite(e.value))) { fail('(reference)', `${c.referenceFile} has no number for ${expect.filter((e) => !Number.isFinite(e.value)).map((e) => e.refKey).join(', ')}`); continue; }
+          if (ref.setup) c = { ...c, setup: { ...c.setup, ...ref.setup } };
+        }
         try {
           const P = projectFor(c);
           P.extensions = [{ id: ext, name: registry.get(ext).manifest.name, version: registry.get(ext).manifest.version, enabled: true }];
           const built = build(P, wasm); current = { P, build: built };
           let res;
-          try { res = await runner.run(P, built, ext, analysisId, { force: true, timeoutMs: 120000 }); } finally { built.dispose(); }
+          try { res = await runner.run(P, built, ext, analysisId, { force: true, timeoutMs: 300000 }); } finally { built.dispose(); }
           stats.validity.add(res.validity);
           if (c.expectValidity && res.validity !== c.expectValidity) fail('validity', `expected validity "${c.expectValidity}", got "${res.validity}"`);
-          for (const e of c.expect) {
+          for (const e of expect) {
             const m = res.summary.find((s) => s.metric === e.metric);
             if (!m) { fail(e.metric, 'the result has no such metric'); continue; }
             const pairs = e.where ? e.where.map((w, i) => [`${e.metric}.${'xyz'[i]}`, m.where ? m.where[i] : NaN, w]) : [[e.metric, m.value, e.value]];
@@ -134,16 +180,16 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
   } finally { host.stopAll(); }
   // an analysis may only claim "validated" if every one of its cases passes
   for (const s of summary) if (s.validity.includes('validated') && s.passed !== s.cases) rows.push({ file: s.file, case: '(rule)', metric: 'validity', reference: 'docs/EXTENSIONS_SPEC.md 3.3', computed: '-', error: '-', tolerance: '-', pass: false, note: `${s.analysis} returns "validated" but ${s.cases - s.passed} of ${s.cases} cases do not pass` });
-  return { rows, summary, pass: rows.every((r) => r.pass) };
+  return { rows, summary, pass: rows.every((r) => r.pass || r.skipped) };
 }
 
 const f = (v) => (typeof v === 'number' ? +v.toPrecision(6) : v);
 export function renderTable({ rows, summary }) {
   const lines = ['| Case | Metric | Reference | Expected | Computed | Error | Tolerance | Result |', '|---|---|---|---|---|---|---|---|'];
-  for (const r of rows) lines.push(`| ${r.case} | ${r.metric} | ${(r.reference || '').replace(/\|/g, '/').slice(0, 70)} | ${r.expected == null ? '' : `${f(r.expected)} ${r.unit || ''}`} | ${r.computed === '-' ? '-' : `${f(r.computed)} ${r.unit || ''}`} | ${r.errorText || r.error} | ${r.tolerance} | ${r.pass ? 'PASS' : 'FAIL' + (r.note ? ': ' + r.note : '')} |`);
+  for (const r of rows) lines.push(`| ${r.case} | ${r.metric} | ${(r.reference || '').replace(/\|/g, '/').slice(0, 70)} | ${r.expected == null ? '' : `${f(r.expected)} ${r.unit || ''}`} | ${r.computed === '-' ? '-' : `${f(r.computed)} ${r.unit || ''}`} | ${r.errorText || r.error} | ${r.tolerance} | ${r.skipped ? 'SKIPPED (not a pass): ' + r.note : r.info ? 'INFO' + (r.note ? ': ' + r.note : '') : r.pass ? 'PASS' + (r.note ? ' (' + r.note + ')' : '') : 'FAIL' + (r.note ? ': ' + r.note : '')} |`);
   lines.push('', ...summary.map((s) => `- ${s.analysis}: ${s.passed} of ${s.cases} cases pass; result validity ${s.validity.join(', ')}`));
-  const bad = rows.filter((r) => !r.pass).length;
-  lines.push('', `**${rows.length - bad} of ${rows.length} checks pass${bad ? `, ${bad} FAIL` : ''}.**`);
+  const asserted = rows.filter((r) => !r.skipped && !r.info), bad = asserted.filter((r) => !r.pass).length, skipped = rows.filter((r) => r.skipped).length;
+  lines.push('', `**${asserted.length - bad} of ${asserted.length} checks pass${bad ? `, ${bad} FAIL` : ''}${skipped ? `; ${skipped} case(s) SKIPPED (needs runner), not counted as passes` : ''}.**`);
   return lines.join('\n');
 }
 

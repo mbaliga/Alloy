@@ -17,9 +17,9 @@ export const VALIDITY_TEXT = {
 const canon = (v) => (v instanceof Float32Array || v instanceof Float64Array || v instanceof Uint8Array || v instanceof Uint32Array ? { typed: v.constructor.name, n: v.length } : Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
 const hex = async (u8) => sha256Hex(u8);
 
-/** sha256 over everything that can change an answer: the package version, the analysis, the setup and the geometry it saw. */
-export async function inputsHash({ ext, version, analysis, setup, bodies }) {
-  const parts = [JSON.stringify(canon({ ext, version, analysis, setup }))];
+/** sha256 over everything that can change an answer: the package version, the analysis, the setup, the package's own stored data (project.ext[id]: its settings, vents, ...) and the geometry it saw. */
+export async function inputsHash({ ext, version, analysis, setup, bodies, extData }) {
+  const parts = [JSON.stringify(canon({ ext, version, analysis, setup, extData: extData === undefined ? null : extData }))];
   for (const b of bodies || []) parts.push(`${b.name}:${await hex(new Uint8Array(b.positions.buffer, b.positions.byteOffset, b.positions.byteLength))}:${await hex(new Uint8Array(b.indices.buffer, b.indices.byteOffset, b.indices.byteLength))}`);
   return 'sha256-' + await sha256Hex(new TextEncoder().encode(parts.join('\n')));
 }
@@ -60,7 +60,8 @@ export function validateResult(r, meshes = {}) {
       const n = g.dims[0] * g.dims[1] * g.dims[2] * (f.kind === 'vector' ? 3 : 1);
       if (f.data.length !== n) bad(`field ${f.name}: ${f.data.length} values for a grid that needs ${n}`);
     }
-    for (let i = 0; i < f.data.length; i += Math.max(1, f.data.length >> 12)) if (!Number.isFinite(f.data[i])) bad(`field ${f.name}: contains NaN or Infinity`);
+    // NaN is allowed in a voxel field and means "no data here" (outside air): it is drawn transparent. Infinity never is.
+    for (let i = 0; i < f.data.length; i += Math.max(1, f.data.length >> 12)) if (!Number.isFinite(f.data[i]) && !(f.kind === 'voxel' && Number.isNaN(f.data[i]))) bad(`field ${f.name}: contains ${f.kind === 'voxel' ? 'Infinity' : 'NaN or Infinity'}`);
   }
   if (bytes > LIMITS.fieldBytes) bad(`fields are ${Math.round(bytes / 1048576)} MB; the limit is ${LIMITS.fieldBytes >> 20} MB`);
   return r;

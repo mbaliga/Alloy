@@ -1,0 +1,42 @@
+{
+  "id": "xyz.mdhv.thermal-3d",
+  "name": "Thermal 3D",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "Steady and transient heat conduction through your design on a voxel grid (finite volume, implicit time steps), with heat sources from PCB parts and bodies, convection and radiation to ambient, contact to a sink and fixed-temperature faces. Runs on your GPU (WebGPU) when it can and on the CPU otherwise. An estimate: the 3D enclosure reference from the Alloy Runner does not exist yet.",
+  "main": "main.js",
+  "permissions": ["doc.read", "geometry.read", "storage", "agent.tools", "compute.gpu"],
+  "contributes": {
+    "analyses": [
+      {
+        "id": "thermal-3d", "label": "Thermal 3D", "validity": "estimate",
+        "description": "Temperature field through the solid parts and the air enclosed by them. Set heat sources, ambient and mounts under Conditions, then pick the resolution below. Every result states its voxel size and grid limits.",
+        "fields": ["temperature", "surface_temperature"],
+        "settings": [
+          { "key": "quality", "label": "Resolution", "kind": "enum", "opts": ["draft", "normal", "fine"], "def": "normal", "tip": "Sets the voxel size so the grid has about this many active cells: draft 150 000, normal 600 000, fine 1 500 000 on a laptop GPU; 40 000, 120 000 and 250 000 on a phone or without WebGPU. Finer is slower and truer to thin walls and curved surfaces. The voxel size is shown in the result." },
+          { "key": "mode", "label": "Run", "kind": "enum", "opts": ["steady", "transient"], "def": "steady", "tip": "Steady finds the temperatures after everything has settled. Transient steps in time from the start temperature (ambient unless set) and reports when the hottest point reaches the limit." },
+          { "key": "t_end_s", "when": { "mode": "transient" }, "label": "Duration", "kind": "num", "unit": "s", "def": 600, "min": 1, "max": 100000, "tip": "Transient only: how long to simulate." },
+          { "key": "dt_s", "when": { "mode": "transient" }, "label": "Time step", "kind": "num", "unit": "s", "def": 0, "min": 0, "max": 100000, "tip": "Transient only. 0 means duration / 150. Implicit Euler is stable at any step; the accuracy is first order, so halve the step if the answer matters." },
+          { "key": "limit_C", "when": { "mode": "transient" }, "label": "Time-to-limit at", "kind": "num", "unit": "°C", "def": 85, "min": -50, "max": 1500, "tip": "Transient only: the temperature the hottest point is timed against." },
+          { "key": "backend", "label": "Compute", "kind": "enum", "opts": ["auto", "gpu", "cpu"], "def": "auto", "tip": "Auto uses WebGPU when the browser offers it and the grid is big enough to benefit; the CPU solver is the fallback and uses smaller grids." }
+        ],
+        "checks": [
+          { "id": "max-temp", "label": "Hottest point ≤ limit", "metric": "max_temp", "op": "<=", "limit": 85, "unit": "°C" },
+          { "id": "max-outer-temp", "label": "Outer surface ≤ limit (touch)", "metric": "max_outer_surface_temp", "op": "<=", "limit": 48, "unit": "°C" }
+        ]
+      }
+    ],
+    "agentTools": [
+      {
+        "id": "set-thermal-3d", "label": "Thermal 3D settings",
+        "description": "Set the Thermal 3D analysis settings stored in the project: quality (draft, normal, fine), mode (steady, transient), t_end_s, dt_s, limit_C, backend (auto, gpu, cpu), initial_C, and fixed: a list of fixed-temperature faces { face: '+x'|'-x'|'+y'|'-y'|'+z'|'-z', body?, T_C, box? [x0,x1,y0,y1,z0,z1] mm }. Only the keys given change. It does not run the analysis.",
+        "schema": { "type": "object", "properties": {
+          "quality": { "type": "string", "enum": ["draft", "normal", "fine"] }, "mode": { "type": "string", "enum": ["steady", "transient"] },
+          "t_end_s": { "type": "number" }, "dt_s": { "type": "number" }, "limit_C": { "type": "number" }, "initial_C": { "type": "number" }, "backend": { "type": "string", "enum": ["auto", "gpu", "cpu"] },
+          "fixed": { "type": "array", "items": { "type": "object", "properties": { "face": { "type": "string" }, "body": { "type": "string" }, "T_C": { "type": "number" }, "box": { "type": "array", "items": { "type": "number" } } }, "required": ["face", "T_C"] } } } }
+      }
+    ]
+  }
+}
