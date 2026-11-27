@@ -27,7 +27,7 @@ export function mountAnalyze(env) {
 
   const inputKey = () => {
     const P = S.project, c = P.analysis ? { ...P.analysis.conditions, limits: undefined } : null;
-    return JSON.stringify([(S.result ? S.result.bodies : []).map((b) => [b.name, +(b.volume || 0).toFixed(6)]), c, P.analysis && P.analysis.materials, Object.entries(P.bodies || {}).map(([n, b]) => [n, b.material])]);
+    return JSON.stringify([(S.result ? S.result.bodies : []).map((b) => [b.name, +(b.volume || 0).toFixed(6)]), c, P.analysis && P.analysis.materials, Object.entries(P.bodies || {}).map(([n, b]) => [n, b.material]), P.ext]);
   };
   // ───────── running
   async function run() {
@@ -84,6 +84,7 @@ export function mountAnalyze(env) {
     sec.append(h('div', { class: 'sub' }, 'Analysis', ib), it);
     sec.append(sel(l.map((x) => ({ value: `${x.ext}/${x.item.id}`, label: `${x.item.label} · ${x.pkg.manifest.name}` })), d ? `${d.ext}/${d.item.id}` : '', (v) => { st.sel = v; st.result = null; st.rows = []; refreshOverlays(); render(); }, 'Analysis'));
     if (d && d.item.description) sec.append(h('div', { class: 'hint' }, d.item.description));
+    if (d && (d.item.settings || []).length) sec.append(settingsBlock(d));
     sec.append(h('div', { class: 'chips' },
       st.running ? h('button', { class: 'chip', id: 'an-cancel', onclick: cancel }, 'cancel') : h('button', { class: 'chip on', id: 'an-run', disabled: !S.result || !S.result.bodies.length, onclick: run }, 'run')));
     if (st.running) { bar = h('div', { class: 'pbar-fill', style: `width:${Math.round(st.progress * 100)}%` }); sec.append(h('div', { class: 'pbar', role: 'progressbar', 'aria-label': 'Analysis progress' }, bar)); }
@@ -91,6 +92,27 @@ export function mountAnalyze(env) {
     if (st.result) sec.append(resultBlock());
     if (d) sec.append(checksBlock(d));
     return sec;
+  }
+
+  // Settings declared by the analysis (contributes.analyses[].settings), stored in the project as ext[<package id>].settings through
+  // the ext_set op, so they are saved with the document, undoable, and part of the result cache key.
+  function settingsBlock(d) {
+    const stored = (S.project.ext && S.project.ext[d.ext] && S.project.ext[d.ext].settings) || {}, cur = (k, def) => (stored[k] !== undefined ? stored[k] : def);
+    const set = (key, value) => ops([{ op: 'ext_set', id: d.ext, key: 'settings', value: { ...stored, [key]: value } }]);
+    const wrap = h('div', { class: 'asettings', id: 'an-settings' });
+    const [ib, it] = tip('Settings of this analysis. They are saved with the project and change the result, so a changed setting means a new run.');
+    wrap.append(h('div', { class: 'sub' }, 'Settings', ib), it);
+    for (const s of d.item.settings) {
+      if (s.when) { const [wk, wv] = Object.entries(s.when)[0]; if (cur(wk, (d.item.settings.find((x) => x.key === wk) || {}).def) !== wv) continue; }
+      const v = cur(s.key, s.def), [sb, st2] = s.tip ? tip(s.tip) : [null, null];
+      const ctl = s.kind === 'enum' ? sel(s.opts, v, (x) => set(s.key, x), s.label)
+        : s.kind === 'bool' ? h('input', { type: 'checkbox', checked: !!v, 'aria-label': s.label, onchange: (e) => set(s.key, e.target.checked) })
+        : h('input', { type: 'number', step: 'any', value: v, min: s.min, max: s.max, 'aria-label': s.label, style: 'width:90px', onchange: (e) => { const x = parseFloat(e.target.value); if (Number.isFinite(x)) set(s.key, Math.min(s.max ?? Infinity, Math.max(s.min ?? -Infinity, x))); } });
+      ctl.setAttribute('data-setting', s.key);
+      wrap.append(h('div', { class: 'fld' }, h('label', {}, h('span', { class: 'lb' }, s.label), sb), ctl, s.unit ? h('span', { class: 'tag' }, s.unit) : null));
+      if (st2) wrap.append(st2);
+    }
+    return wrap;
   }
 
   function resultBlock() {

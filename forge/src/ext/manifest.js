@@ -28,7 +28,7 @@ export const MANIFEST_SCHEMA = {
       type: 'object', additionalProperties: false,
       properties: {
         featureTypes: list({ icon: { type: 'string', maxLength: 4 }, desc: { type: 'string', maxLength: 300 }, fields: { type: 'array', items: FIELD, maxItems: 24 } }, ['id', 'label', 'fields']),
-        templates: list({}), stylePacks: list({}), checks: list({}), analyses: list({ fields: { type: 'array', items: { type: 'string' } }, description: { type: 'string', maxLength: 400 }, validity: { enum: ['estimate', 'validated', 'experimental'] }, checks: { type: 'array', maxItems: 16, items: { type: 'object', required: ['id', 'label', 'metric', 'op', 'limit'], additionalProperties: false, properties: { id: ID, label: LABEL, metric: { type: 'string', pattern: '^[\\w.-]{1,60}$' }, op: { enum: ['<=', '<', '>=', '>'] }, limit: { type: 'number' }, unit: { type: 'string', maxLength: 12 } } } } }),
+        templates: list({}), stylePacks: list({}), checks: list({}), analyses: list({ settings: { type: 'array', maxItems: 16, items: { type: 'object', required: ['key', 'label', 'kind'], additionalProperties: false, properties: { key: { type: 'string', pattern: '^[A-Za-z_][A-Za-z0-9_]*$' }, label: LABEL, kind: { enum: ['num', 'enum', 'bool'] }, def: {}, opts: { type: 'array', items: { type: 'string' }, minItems: 1 }, unit: { type: 'string', maxLength: 12 }, min: { type: 'number' }, max: { type: 'number' }, tip: { type: 'string', maxLength: 500 }, when: { type: 'object', maxProperties: 1 } } } }, fields: { type: 'array', items: { type: 'string' } }, description: { type: 'string', maxLength: 400 }, validity: { enum: ['estimate', 'validated', 'experimental'] }, checks: { type: 'array', maxItems: 16, items: { type: 'object', required: ['id', 'label', 'metric', 'op', 'limit'], additionalProperties: false, properties: { id: ID, label: LABEL, metric: { type: 'string', pattern: '^[\\w.-]{1,60}$' }, op: { enum: ['<=', '<', '>=', '>'] }, limit: { type: 'number' }, unit: { type: 'string', maxLength: 12 } } } } }),
         exporters: list({}), importers: list({}), libraries: list({}),
         agentTools: list({ description: { type: 'string', maxLength: 400 }, schema: { type: 'object' } }, ['id', 'label', 'schema']),
         loopSteps: list({}),
@@ -110,6 +110,7 @@ export function validateManifest(m, { hasFile = () => true } = {}) {
       }
     }
     for (const a of (m.contributes || {}).analyses || []) if (new Set((a.checks || []).map((c) => c.id)).size !== (a.checks || []).length) problems.push(`analyses.${a.id}: duplicate check ids`);
+    for (const a of (m.contributes || {}).analyses || []) { const ks = (a.settings || []).map((x) => x.key); if (new Set(ks).size !== ks.length) problems.push(`analyses.${a.id}: duplicate setting keys`); for (const x of a.settings || []) if (x.kind === 'enum' && !x.opts) problems.push(`analyses.${a.id}.settings.${x.key}: enum settings need opts`); }
     for (const t of (m.contributes || {}).featureTypes || []) {
       for (const f of t.fields) if (f.kind === 'enum' && !f.opts) problems.push(`featureTypes.${t.id}.${f.k}: enum fields need opts`);
       if (new Set(t.fields.map((f) => f.k)).size !== t.fields.length) problems.push(`featureTypes.${t.id}: duplicate field names`);

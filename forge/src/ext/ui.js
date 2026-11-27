@@ -7,7 +7,7 @@ import { enabledIn, projectEntry } from './registry.js';
 import { rangeOf, legendTicks, cssGradient, gridText, sliceCount } from './overlay.js';
 
 const RUNNER_KEY = 'af.runner';
-const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext']];
+const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext']];
 
 export function mountExtensions(env) {
   const { h, $, tip, S, registry, host, resolver, panes, view, say, blip, setExtension, rebuild, showSheet } = env;

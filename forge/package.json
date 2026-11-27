@@ -7,13 +7,15 @@
     "build": "node build.mjs",
     "test:ui": "node test_ui_loop.mjs",
     "vendor:loop": "node tools/vendor-loop-engine.mjs",
-    "test": "node test_kernel.mjs && node --test test_selbar.mjs test_loop.mjs test_occt.mjs test_ext.mjs test_analysis.mjs test_thermal.mjs",
+    "test": "node test_kernel.mjs && node --test test_selbar.mjs test_loop.mjs test_occt.mjs test_ext.mjs test_analysis.mjs test_thermal.mjs test_voxel_core.mjs test_thermal3d.mjs",
     "serve": "cd dist && python3 -m http.server 8765",
     "test:ext-ui": "node test_ui_ext.mjs",
     "test:analysis": "node analysis-validation/harness.mjs",
     "test:analyze-ui": "node test_ui_analyze.mjs",
     "docs:api": "node tools/gen-extension-api.mjs",
-    "pack:ext": "node tools/pack-ext.mjs"
+    "pack:ext": "node tools/pack-ext.mjs",
+    "build:ext": "node tools/bundle-ext.mjs",
+    "test:thermal3d-ui": "node test_ui_thermal3d.mjs"
   },
   "author": "Madhav Baliga",
   "license": "SEE LICENSE IN ../LICENSE",

@@ -19,7 +19,7 @@ export function createAnalysisRunner({ registry, host, cache, defaultTimeoutMs =
   async function prepare(P, build, ext, analysisId) {
     const pkg = registry.get(ext);
     const input = prepareInput(P, build);
-    const hash = await inputsHash({ ext, version: pkg.manifest.version, analysis: analysisId, setup: { ...input.setup, warnings: undefined, conditions: { ...input.setup.conditions, limits: undefined } }, bodies: input.bodies });
+    const hash = await inputsHash({ ext, version: pkg.manifest.version, analysis: analysisId, setup: { ...input.setup, warnings: undefined, conditions: { ...input.setup.conditions, limits: undefined } }, bodies: input.bodies, extData: (P && P.ext && P.ext[ext]) || null });
     return { pkg, input, hash };
   }
 

@@ -111,4 +111,4 @@ export function slicePlane(field, axis, index) {
 }
 
 /** Plain-language state of a voxel grid for the UI: the voxel size and the limit the framework enforces. */
-export const gridText = (g) => `voxel ${+g.h.toFixed(3)} mm, ${g.dims.join('×')} = ${(g.dims[0] * g.dims[1] * g.dims[2]).toLocaleString('en')} cells (limit 8 000 000)`;
+export const gridText = (g) => `voxel ${+g.h.toFixed(3)} mm, ${g.dims.join('×')} = ${(g.dims[0] * g.dims[1] * g.dims[2]).toLocaleString('en')} cells (limit 8 000 000)${g.active ? `, ${g.active.toLocaleString('en')} active${g.budget ? ` of a ${g.budget.toLocaleString('en')} budget` : ''}` : ''}`;
