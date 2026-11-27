@@ -123,3 +123,7 @@ Serve `dist/` over http(s); opening `index.html` from `file://` blocks the STEP 
 ## Licence
 
 Covered by the repository licence, [PolyForm Noncommercial 1.0.0](../LICENSE). Third-party components keep their own licences; see [THIRD_PARTY.md](THIRD_PARTY.md).
+
+
+## Online deployment (GitHub Pages)
+`.github/workflows/forge-pages.yml` builds `forge/dist` and publishes it to GitHub Pages on every push to `main` that touches `forge/`. A repository admin must enable it once: Settings, Pages, Source "GitHub Actions". The URL is `https://<owner>.github.io/<repo>/` (shown in the deploy job). The site is static and fully client-side: no backend, no telemetry; designs and API keys stay in the visitor's browser. Analyses run in the browser (CPU, or WebGPU where available); the optional Alloy Runner is a server the user configures themselves.

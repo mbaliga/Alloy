@@ -1,0 +1,53 @@
+name: Forge online (GitHub Pages)
+
+# Publishes the static Alloy Forge build (forge/dist) to GitHub Pages on every push to main that touches forge/.
+# One-time setup by a repository admin: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# The app is fully client-side: no backend, no telemetry; API keys and designs stay in the visitor's browser.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'forge/**'
+      - '.github/workflows/forge-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build forge/dist
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: forge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: forge/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: forge/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
