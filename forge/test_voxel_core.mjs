@@ -6,6 +6,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as VC from './analysis/voxel-core/index.js';
+import * as ELASTIC from './analysis/voxel-core/elastic.js';
+import * as GPU_ELASTIC from './analysis/voxel-core/gpu-elastic.js';
 import { coreScript } from './tools/bundle-ext.mjs';
 
 /** Closed box mesh [x0,x1,y0,y1,z0,z1], outward winding. */
@@ -193,7 +195,8 @@ test('WGSL: balanced braces, no stray template text, and the GPU backend reports
 test('bundle: the core evaluates as one script with every export, ready for a Worker', () => {
   const core = (0, eval)(coreScript());
   for (const k of ['buildVoxelModel', 'paintMesh', 'pcgSteps', 'cpuBackend', 'gpuBackend', 'wgslSource', 'hFace', 'faceConductances', 'gridBudget', 'deviceClass']) assert.equal(typeof core[k] === 'function' || typeof core[k] === 'object', true, k);
-  assert.equal(Object.keys(core).length, Object.keys(VC).length, 'the bundle and the module expose the same names');
+  assert.equal(Object.keys(core).length, Object.keys(VC).length - Object.keys(ELASTIC).length - Object.keys(GPU_ELASTIC).length, 'the thermal bundle and the module expose the same names, less the elastic solver of A3 (test_structural.mjs bundles that)');
+  for (const k of Object.keys(ELASTIC)) assert.ok(!(k in core), `${k} (A3 only) is not in the thermal bundle`);
 });
 
 test('voxelizer: the result does not depend on body order (a thin body on top of another keeps its voxels), and a very thin body neither hangs nor loops', () => {

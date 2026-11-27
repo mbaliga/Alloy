@@ -1,5 +1,5 @@
 // Validation harness for analyses (docs/EXTENSIONS_SPEC.md section 3.5).
-//   node analysis-validation/harness.mjs [--json out.json] [--md out.md] [--only <part of a case file name>]
+//   node analysis-validation/harness.mjs [--json out.json] [--md out.md] [--only <part of a case file name>] [--slow]
 //   npm run test:analysis
 // A case file names an analysis (and the package folder that provides it), then lists cases: a design (features and materials, built
 // through typed ops and the real kernel), and the expected values with an explicit tolerance and the reference they come from.
@@ -43,6 +43,7 @@ export function lintCaseFile(file) {
     if (!c.reference) problems.push(`${c.id}: every case states its reference (analytic derivation or source)`);
     if (c.kind === 'function' || c.kind === 'core') {
       if (c.kind === 'core' && !(c.setup && (c.setup.features || []).length)) problems.push(`${c.id}: a core case needs a setup with features`);
+      if (c.expectedDivergence !== undefined && !(typeof c.expectedDivergence === 'string' && c.expectedDivergence.length > 20)) problems.push(`${c.id}: expectedDivergence is a sentence that says why (the tolerance stays; the case still does not count as a pass)`);
       if (!(c.calls || []).length) problems.push(`${c.id}: no calls`);
       for (const k of c.calls || []) { if (!k.fn) problems.push(`${c.id}: a call needs "fn"`); try { compareValue(0, 0, k.tol); } catch (er) { problems.push(`${c.id}/${k.fn}: ${er.message}`); } }
       continue;
@@ -53,7 +54,7 @@ export function lintCaseFile(file) {
       if (c.expectedDivergence !== undefined && !(typeof c.expectedDivergence === 'string' && c.expectedDivergence.length > 20)) problems.push(`${c.id}: expectedDivergence is a sentence that says why (the tolerance stays; the case still does not count as a pass)`);
       continue;
     }
-    if (c.expectedDivergence !== undefined) problems.push(`${c.id}: expectedDivergence is only for compare cases`);
+    if (c.expectedDivergence !== undefined && !(typeof c.expectedDivergence === 'string' && c.expectedDivergence.length > 20)) problems.push(`${c.id}: expectedDivergence is a sentence that says why (the tolerance stays; the case still does not count as a pass)`);
     if (c.kind === 'reference') {
       if (!c.referenceFile) problems.push(`${c.id}: a reference case names its referenceFile`);
       for (const e of c.expect || []) { if (!e.refKey) problems.push(`${c.id}/${e.metric}: a reference expectation names its refKey`); try { compareValue(0, 0, e.tol); } catch (er) { problems.push(`${c.id}/${e.metric}: ${er.message}`); } }
@@ -180,6 +181,11 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
       summary.push(stats);
     }
   } finally { host.stopAll(); }
+  // a case that declares expectedDivergence (any kind): its missed rows are reported as DIVERGES (not a pass, does not fail the run, blocks "validated")
+  for (const file of caseFiles) for (const c of file.data.cases || []) {
+    if (!c.expectedDivergence || c.kind === 'compare') continue;
+    for (const r of rows) if (r.file === file.name && r.case === c.id && !r.pass && !r.skipped && !r.info) { r.diverges = true; r.note = c.expectedDivergence; }
+  }
   // an analysis may only claim "validated" if every one of its cases passes
   for (const s of summary) if (s.validity.includes('validated') && s.passed !== s.cases) rows.push({ file: s.file, case: '(rule)', metric: 'validity', reference: 'docs/EXTENSIONS_SPEC.md 3.3', computed: '-', error: '-', tolerance: '-', pass: false, note: `${s.analysis} returns "validated" but ${s.cases - s.passed} of ${s.cases} cases do not pass` });
   return { rows, summary, pass: rows.every((r) => r.pass || r.skipped || r.diverges) };
@@ -195,14 +201,15 @@ export function renderTable({ rows, summary }) {
   return lines.join('\n');
 }
 
-export function loadCaseFiles(only) {
-  const dir = path.join(HERE, 'cases');
+/** The default cases (`cases/`), or with `slow` the cases in `slow/` that take minutes (run on demand: npm run test:analysis:slow). */
+export function loadCaseFiles(only, slow = false) {
+  const dir = path.join(HERE, slow ? 'slow' : 'cases');
   return fs.readdirSync(dir).filter((n) => n.endsWith('.json') && (!only || n.includes(only))).sort().map((n) => ({ name: n, data: JSON.parse(fs.readFileSync(path.join(dir, n), 'utf8')) }));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
-  const caseFiles = loadCaseFiles(arg('--only'));
+  const caseFiles = loadCaseFiles(arg('--only'), process.argv.includes('--slow'));
   if (!caseFiles.length) { console.error('no case files found'); process.exit(2); }
   const out = await runValidation({ caseFiles });
   const md = renderTable(out);

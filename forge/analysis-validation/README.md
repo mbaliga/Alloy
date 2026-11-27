@@ -47,12 +47,22 @@ design and settings the reference solver used. If the file does not exist the ca
 A skipped case is **not** counted as a pass, does not fail the run, and, because the analysis then has a case that has not passed,
 blocks the analysis from returning `validated`. The count appears in the summary line (`N case(s) SKIPPED`).
 
-Currently pending: `thermal-3d.json` / `enclosure-vs-elmer-fine` (A2: 3D enclosure against Elmer within 5 % max-temperature error at
+Currently pending: `structural.json` / `bracket-vs-elmer` (A3, below) and `thermal-3d.json` / `enclosure-vs-elmer-fine` (A2: 3D enclosure against Elmer within 5 % max-temperature error at
 `fine`).
 
-### Documented expected divergence (compare cases)
+### Documented expected divergence
 
-A `compare` case may carry `"expectedDivergence": "<why, one sentence or more>"`. If the comparison misses its tolerance, the row is printed as
+A case of any kind may carry `"expectedDivergence": "<why, one sentence or more>"`. If the comparison (or any asserted value of the case) misses its tolerance, the row is printed as
 `DIVERGES (documented expected divergence, NOT a pass)` and the run does not exit 1 for it. The tolerance is not changed; the case is not a pass,
 it is counted separately in the summary line (`N DIVERGE`), and, like a skipped case, it blocks the analysis from returning `validated`. If the case
-passes, it is a plain PASS. Currently: `thermal-3d.json` / `enclosure-2-handheld-pc` (A1 against A2, 20.8 % apart, 15 % tolerance).
+passes, it is a plain PASS.
+
+Currently: `thermal-3d.json` / `enclosure-2-handheld-pc` (A1 against A2, 20.8 % apart, 15 % tolerance) and `structural.json` / `plate-hole-kirsch-default-voxelizer` (A3 plate with a hole at the default conservative voxelizer, 12.9 % under the Kirsch reference against 10 %). Both are listed in the summary line as DIVERGE and are not passes.
+
+### Slow cases
+
+`slow/*.json` holds cases that take minutes on the CPU (about 250 000 voxels at the quality `fine`). They are not in `npm run test:analysis`; `npm run test:analysis:slow` (or `node analysis-validation/harness.mjs --slow`) runs only them. Currently `slow/structural-fine.json`: the A3 cantilever at the quality fine, within 3 % of Euler-Bernoulli (the spec's wording). A result from it is only evidence when somebody has run it; the default run does not.
+
+### Cases that need the Alloy Runner, A3
+
+`structural.json` / `bracket-vs-elmer` (A3: an L bracket against Elmer: displacement and stiffness within 5 %, stress peak within 25 %; the tolerances are this repository's choice, the spec states none) reads `analysis-validation/reference/bracket-elmer.json` with `values` keys `max_displacement_mm`, `stiffness_N_per_mm` and `max_von_mises_MPa`. Until the Alloy Runner writes it, the case is SKIPPED (not a pass) and A3 stays `estimate`.

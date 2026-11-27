@@ -48,7 +48,7 @@ export function mountAnalyze(env) {
     if (f.kind === 'surface') {
       const b = S.result && S.result.bodies.find((x) => x.name === f.body); if (!b) return null;
       const m = b.mesh || b.view;
-      return { kind: 'surface', label: f.name, unit: f.unit, body: f.body, values: f.data, mesh: { pos: m.pos, idx: m.idx }, validity: st.result.validity, range: null };
+      return { kind: 'surface', label: f.name, unit: f.unit, body: f.body, values: f.data, mesh: { pos: m.pos, idx: m.idx }, validity: st.result.validity, range: null, note: f.grid ? gridText(f.grid) : null };
     }
     if (f.kind === 'voxel') {
       const n = f.grid.dims['xyz'.indexOf(st.slice.axis)];
@@ -132,7 +132,7 @@ export function mountAnalyze(env) {
         const on = st.shown.has(f.name), drawable = true;
         wrap.append(h('div', { class: 'row' + (on ? ' sel' : '') },
           h('span', { class: 'ico' }, f.kind === 'surface' ? '▦' : f.kind === 'voxel' ? '▤' : '➚'), h('span', { class: 'nm' }, f.name),
-          h('span', { class: 'tag' }, f.kind === 'voxel' ? gridText(f.grid) : f.kind === 'surface' ? `${f.data.length} vertices` : 'vectors, drawn as arrows'),
+          h('span', { class: 'tag' }, f.kind === 'voxel' ? gridText(f.grid) : f.kind === 'surface' ? `${f.data.length} vertices${f.grid ? ' · ' + gridText(f.grid) : ''}` : 'vectors, drawn as arrows'),
           h('button', { class: 'g' + (on ? ' on' : ''), disabled: !drawable, title: on ? 'Hide in viewport' : 'Show in viewport', 'data-field': f.name, onclick: () => { on ? st.shown.delete(f.name) : st.shown.add(f.name); refreshOverlays(); render(); blip(on ? 360 : 700); } }, on ? '●' : '○')));
       }
     }
@@ -171,8 +171,8 @@ export function mountAnalyze(env) {
     sec.append(h('div', { class: 'xrow' }, hTarget, hW, h('button', { class: 'chip', id: 'heat-add', disabled: !hTarget.options.length, onclick: () => { const [k, ...r] = hTarget.value.split(':'); const w = parseFloat(hW.value); if (!(w >= 0)) return say('Power must be zero or more watts.'); ops([{ op: 'set_condition', list: 'heat', item: { id: nextId('h', c.heat), target: { [k]: r.join(':') }, power_W: w } }]); } }, '+ add')));
     // mounts
     sec.append(h('div', { class: 'sub' }, 'Mounts'));
-    for (const m of c.mounts) sec.append(h('div', { class: 'row', 'data-mount': m.id }, h('span', { class: 'ico' }, m.kind === 'fixed' ? '⏚' : '≋'), h('span', { class: 'nm' }, `${m.kind} · ${m.body} ${m.face}`), h('span', { class: 'tag' }, m.kind === 'contact' ? `${m.conductance_W_m2K} W/m²K` : 'fixed'), h('button', { class: 'g', title: 'Remove', onclick: () => ops([{ op: 'remove_condition', list: 'mounts', id: m.id }]) }, '✕')));
-    const mk = sel(['contact', 'fixed'], 'contact', () => {}, 'Mount kind'), mb = sel(bs.length ? bs : [''], bs[0] || '', () => {}, 'Mount body'), mf = sel(FACES, '-z', () => {}, 'Mount face'), mc = h('input', { type: 'number', value: '50', step: 'any', 'aria-label': 'Contact conductance W/m²K', style: 'width:84px' });
+    for (const m of c.mounts) sec.append(h('div', { class: 'row', 'data-mount': m.id }, h('span', { class: 'ico' }, m.kind === 'fixed' ? '⏚' : m.kind === 'slider' ? '⇔' : '≋'), h('span', { class: 'nm' }, `${m.kind} · ${m.body} ${m.face}`), h('span', { class: 'tag' }, m.kind === 'contact' ? `${m.conductance_W_m2K} W/m²K` : m.kind), h('button', { class: 'g', title: 'Remove', onclick: () => ops([{ op: 'remove_condition', list: 'mounts', id: m.id }]) }, '✕')));
+    const mk = sel(['contact', 'fixed', 'slider'], 'contact', () => {}, 'Mount kind'), mb = sel(bs.length ? bs : [''], bs[0] || '', () => {}, 'Mount body'), mf = sel(FACES, '-z', () => {}, 'Mount face'), mc = h('input', { type: 'number', value: '50', step: 'any', 'aria-label': 'Contact conductance W/m²K', style: 'width:84px' });
     sec.append(h('div', { class: 'xrow' }, mk, mb, mf, mc, h('button', { class: 'chip', id: 'mount-add', disabled: !bs.length, onclick: () => ops([{ op: 'set_condition', list: 'mounts', item: { id: nextId('m', c.mounts), kind: mk.value, body: mb.value, face: mf.value, ...(mk.value === 'contact' ? { conductance_W_m2K: parseFloat(mc.value) || 0 } : {}) } }]) }, '+ add')));
     // loads
     const [lb, lt] = tip(ACCEL_ASSUMPTION + ' A drop or recoil becomes an equivalent acceleration in g; the assumption is shown with the load and in reports.');
