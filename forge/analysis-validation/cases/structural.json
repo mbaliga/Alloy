@@ -1,0 +1,2086 @@
+{
+ "analysis": "xyz.mdhv.structural/structural",
+ "package": "examples/ext/structural",
+ "cases": [
+  {
+   "id": "cantilever-tip-deflection",
+   "title": "Cantilever, 80 x 10 x 10 mm steel, 10 N at the free end, voxel size 1 mm (10 voxels through the depth)",
+   "reference": "Euler-Bernoulli (Gere and Goodno, Mechanics of Materials, table of beam deflections): delta = F L^3 / (3 E I) with F 10 N, L 80 mm, E 200000 MPa, I = w t^3 / 12 = 833.333 mm^4 gives 0.010240 mm; stiffness 3 E I / L^3 = 976.563 N/mm. The spec asks for within 3 % at fine; the run at the quality fine itself is in slow/structural-fine.json (npm run test:analysis:slow) because it needs about 250 000 voxels on the CPU. Timoshenko shear adds about 1.2 % to the true deflection of a beam this stocky, inside the tolerance.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Beam",
+      "size": [
+       80,
+       10,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Beam": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "wall",
+       "kind": "fixed",
+       "body": "Beam",
+       "face": "-x"
+      }
+     ],
+     "loads": [
+      {
+       "id": "tip",
+       "kind": "force",
+       "body": "Beam",
+       "face": "+x",
+       "vector_N": [
+        0,
+        0,
+        -10
+       ]
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 1
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "max_displacement",
+     "unit": "mm",
+     "value": 0.01024,
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "metric": "stiffness",
+     "unit": "N/mm",
+     "value": 976.5625,
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "metric": "reaction_force",
+     "unit": "N",
+     "value": 10,
+     "tol": {
+      "rel": 0.000001
+     }
+    },
+    {
+     "metric": "equilibrium_error",
+     "unit": "N",
+     "value": 0,
+     "tol": {
+      "abs": 0.0001
+     }
+    }
+   ]
+  },
+  {
+   "id": "cantilever-coarse-h2",
+   "kind": "core",
+   "title": "Same cantilever at a coarse voxel size of 2.5 mm (4 voxels through the depth)",
+   "reference": "Euler-Bernoulli as above, 0.010240 mm. The incompatible-mode hexahedron is nearly exact in bending, so even 4 elements through the depth stay within the 3 % of the spec (a plain trilinear hexahedron locks and would miss by tens of percent here).",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Beam",
+      "size": [
+       80,
+       10,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Beam": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "wall",
+       "kind": "fixed",
+       "body": "Beam",
+       "face": "-x"
+      }
+     ],
+     "loads": [
+      {
+       "id": "tip",
+       "kind": "force",
+       "body": "Beam",
+       "face": "+x",
+       "vector_N": [
+        0,
+        0,
+        -10
+       ]
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 2.5
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "probeU",
+     "metric": "tip deflection at the free end",
+     "args": [
+      "$input",
+      {},
+      79.99,
+      5,
+      5,
+      2
+     ],
+     "value": -0.01024,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  },
+  {
+   "id": "cantilever-half-model-slider",
+   "kind": "core",
+   "title": "Half of the cantilever (y from 0 to 5 mm) with a slider on the mid plane y = 5 mm and half the load",
+   "reference": "Symmetry: the beam loaded in z is symmetric about y = w/2, so the half model with a slider (only u_y held) on the plane y = 5 mm and F/2 gives the same deflection, Euler-Bernoulli 0.010240 mm (within 3 %).",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Half",
+      "size": [
+       80,
+       5,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Half": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "wall",
+       "kind": "fixed",
+       "body": "Half",
+       "face": "-x"
+      },
+      {
+       "id": "mid",
+       "kind": "slider",
+       "body": "Half",
+       "face": "+y"
+      }
+     ],
+     "loads": [
+      {
+       "id": "tip",
+       "kind": "force",
+       "body": "Half",
+       "face": "+x",
+       "vector_N": [
+        0,
+        0,
+        -5
+       ]
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 1.25
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "probeU",
+     "metric": "tip deflection at the free end",
+     "args": [
+      "$input",
+      {},
+      79.99,
+      2.5,
+      5,
+      2
+     ],
+     "value": -0.01024,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  },
+  {
+   "id": "axial-bar-sliders",
+   "kind": "core",
+   "title": "Bar in uniform tension: one octant with sliders on its three symmetry planes and a tensile pressure of 100 MPa on the far end",
+   "reference": "Uniaxial tension (Gere and Goodno, axial loading): sigma = P/A = 100 MPa everywhere, strain sigma/E = 5.000e-4, elongation delta = sigma L / E = 0.040000 mm over L 80 mm (E 200000 MPa); the lateral contraction is free (nu 0.3), so the state is exactly uniaxial and the element must reproduce it to solver precision. Tests the pressure load, the slider supports, the stress recovery and the reactions.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Bar",
+      "size": [
+       80,
+       10,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Bar": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "sx",
+       "kind": "slider",
+       "body": "Bar",
+       "face": "-x"
+      },
+      {
+       "id": "sy",
+       "kind": "slider",
+       "body": "Bar",
+       "face": "-y"
+      },
+      {
+       "id": "sz",
+       "kind": "slider",
+       "body": "Bar",
+       "face": "-z"
+      }
+     ],
+     "loads": [
+      {
+       "id": "p",
+       "kind": "pressure",
+       "body": "Bar",
+       "face": "+x",
+       "pressure_Pa": -100000000
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 2
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "probeU",
+     "metric": "elongation of the bar",
+     "args": [
+      "$input",
+      {},
+      79.999,
+      5,
+      5,
+      0
+     ],
+     "value": 0.04,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "probeSigma",
+     "metric": "stress sigma_xx (recovered) mid-length",
+     "args": [
+      "$input",
+      {},
+      40,
+      5,
+      5,
+      0
+     ],
+     "value": 100,
+     "unit": "MPa",
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "solveSync.vmMax",
+     "metric": "von Mises stress, largest",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 100,
+     "unit": "MPa",
+     "tol": {
+      "rel": 0.002
+     }
+    },
+    {
+     "fn": "solveSync.reac.balance",
+     "metric": "equilibrium error",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 0,
+     "unit": "N",
+     "tol": {
+      "abs": 0.0001
+     }
+    },
+    {
+     "fn": "solveSync.reac.reaction",
+     "metric": "reaction on the sliders against the applied force",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 10000,
+     "unit": "N",
+     "tol": {
+      "rel": 0.000001
+     }
+    }
+   ]
+  },
+  {
+   "id": "fdm-knockdown",
+   "kind": "core",
+   "title": "FDM inter-layer knock-down: tension along z of a bar with inter-layer factor 0.6 and yield 250 MPa",
+   "reference": "Definition used by the package (docs/EXTENSIONS_SPEC.md section 4, A3): tension across the printed layers is divided by the inter-layer factor before it is compared with the yield strength. The bar carries 100 MPa along z, so the safety factor is yield / sigma = 2.5 when the layers lie along x or y (the load is in the layers), and f yield / sigma = 1.5 when the layers stack along z (print axis z, the load pulls the layers apart); with the knock-down switched off it is 2.5 in both. An exact consequence of the definition, not a measurement of any material: it checks the code, not the factor.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Bar",
+      "size": [
+       10,
+       10,
+       80
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-pla",
+      "name": "Test layered",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 0.6,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Bar": "t-pla"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "sx",
+       "kind": "slider",
+       "body": "Bar",
+       "face": "-x"
+      },
+      {
+       "id": "sy",
+       "kind": "slider",
+       "body": "Bar",
+       "face": "-y"
+      },
+      {
+       "id": "sz",
+       "kind": "slider",
+       "body": "Bar",
+       "face": "-z"
+      }
+     ],
+     "loads": [
+      {
+       "id": "p",
+       "kind": "pressure",
+       "body": "Bar",
+       "face": "+z",
+       "pressure_Pa": -100000000
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 2.5
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "solveSync.sfMin",
+     "metric": "safety factor, print axis z",
+     "args": [
+      "$input",
+      {
+       "print_axis": "z"
+      }
+     ],
+     "value": 1.5,
+     "unit": "",
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "solveSync.sfMin",
+     "metric": "safety factor, print axis x",
+     "args": [
+      "$input",
+      {
+       "print_axis": "x"
+      }
+     ],
+     "value": 2.5,
+     "unit": "",
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "solveSync.sfMin",
+     "metric": "safety factor, knock-down off",
+     "args": [
+      "$input",
+      {
+       "print_axis": "z",
+       "knockdown": "off"
+      }
+     ],
+     "value": 2.5,
+     "unit": "",
+     "tol": {
+      "rel": 0.001
+     }
+    }
+   ]
+  },
+  {
+   "id": "cantilever-acceleration-load",
+   "title": "Cantilever under an acceleration load of 100 g toward -z (body force rho a)",
+   "reference": "Uniformly loaded cantilever (Gere and Goodno): delta = w L^4 / (8 E I) with the load per length w = rho A a = 7800 kg/m3 x 100 mm2 x 100 g = 0.76492 N/mm gives 0.023498 mm at the tip (Euler-Bernoulli, within 3 %). Tests the acceleration load and its direction (a held part loaded as if accelerating toward -z deflects toward -z).",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Beam",
+      "size": [
+       80,
+       10,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Beam": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "wall",
+       "kind": "fixed",
+       "body": "Beam",
+       "face": "-x"
+      }
+     ],
+     "loads": [
+      {
+       "id": "a",
+       "kind": "acceleration",
+       "accel_ms2": 980.665,
+       "direction": "-z"
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 1.25
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "max_displacement",
+     "unit": "mm",
+     "value": 0.02349830246399999,
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "metric": "applied_force",
+     "unit": "N",
+     "value": 61.19349599999999,
+     "tol": {
+      "rel": 1e-9
+     }
+    }
+   ]
+  },
+  {
+   "id": "drop-preset-and-self-weight",
+   "kind": "core",
+   "title": "Drop preset (1 m stopped over 2 mm) and self weight on the same cantilever",
+   "reference": "The preset is the equivalent acceleration a = g H / s = 500.0 g (energy: v^2 = 2 g H, constant deceleration over s), giving the uniform-load tip deflection 0.117492 mm (Gere and Goodno, within 3 %); self weight toward the ambient gravity -z gives 2.3498e-4 mm. The equivalence is an assumption stated in the result.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Beam",
+      "size": [
+       80,
+       10,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Beam": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "wall",
+       "kind": "fixed",
+       "body": "Beam",
+       "face": "-x"
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 1.25
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "probeU",
+     "metric": "tip deflection, drop preset",
+     "args": [
+      "$input",
+      {
+       "preset": "drop",
+       "drop_m": 1,
+       "drop_stop_mm": 2,
+       "preset_dir": "-z"
+      },
+      79.99,
+      5,
+      5,
+      2
+     ],
+     "value": -0.11749151231999998,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "fn": "probeU",
+     "metric": "tip deflection, self weight",
+     "args": [
+      "$input",
+      {
+       "self_weight": "on"
+      },
+      79.99,
+      5,
+      5,
+      2
+     ],
+     "value": -0.00023498302463999994,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  },
+  {
+   "id": "bolt-preload-uniform",
+   "kind": "core",
+   "title": "Bolt preload of 1 000 N spread over the whole 20 x 20 mm faces of a block (disc radius larger than the block)",
+   "reference": "Uniform compression (exact): 1000 N over 20 x 20 mm = 2.5 MPa, so sigma_zz = -2.5 MPa everywhere, sigma_xx = sigma_yy = 0 (the block is free to expand sideways: sliders on the three symmetry planes only hold the normal displacement), and the net applied load is zero. Tests the sign and the size of the preload, the choice of the outermost faces on both sides, and that a preload is self-equilibrated.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Block",
+      "size": [
+       20,
+       20,
+       20
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Block": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "sx",
+       "kind": "slider",
+       "body": "Block",
+       "face": "-x"
+      },
+      {
+       "id": "sy",
+       "kind": "slider",
+       "body": "Block",
+       "face": "-y"
+      },
+      {
+       "id": "sz",
+       "kind": "slider",
+       "body": "Block",
+       "face": "-z"
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 1,
+       "preloads": [
+        {
+         "axis": "z",
+         "center": [
+          10,
+          10,
+          10
+         ],
+         "radius_mm": 15,
+         "force_N": 1000
+        }
+       ]
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "probeSigma",
+     "metric": "sigma_zz mid-block",
+     "args": [
+      "$input",
+      {},
+      9.5,
+      9.5,
+      9.5,
+      2
+     ],
+     "value": -2.5,
+     "unit": "MPa",
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "probeSigma",
+     "metric": "sigma_xx mid-block",
+     "args": [
+      "$input",
+      {},
+      9.5,
+      9.5,
+      9.5,
+      0
+     ],
+     "value": 0,
+     "unit": "MPa",
+     "tol": {
+      "abs": 0.001
+     }
+    },
+    {
+     "fn": "solveSync.reac.applied",
+     "metric": "net applied force",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 0,
+     "unit": "N",
+     "tol": {
+      "abs": 1e-9
+     }
+    }
+   ]
+  },
+  {
+   "id": "bolt-preload-disc-equilibrium",
+   "kind": "core",
+   "title": "Bolt preload of 1 000 N through discs of radius 5 mm on the two faces of the block",
+   "reference": "Equilibrium (exact): the two discs push toward each other with 1000 N, so every cross-section between them carries a compressive force of 1000 N. The sliders only hold normal displacements, so they have no z reaction in the upper half and the part above the mid plane is held in equilibrium by 1000 N from the part below: the element nodal forces on the plane nodes sum to 1000 N (weak-form equilibrium, exact up to the solver tolerance), and the sum of the element-centre sigma_zz h^2 over the slab above the plane agrees with -1000 N within 3 %. A first version of this case used a fixed wall instead of sliders and read 7.9 % low: the wall carried local reactions of both signs (zero net), so the section force through the upper half was not the preload; the case was redesigned, not its tolerance.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Block",
+      "size": [
+       20,
+       20,
+       20
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Block": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "sx",
+       "kind": "slider",
+       "body": "Block",
+       "face": "-x"
+      },
+      {
+       "id": "sy",
+       "kind": "slider",
+       "body": "Block",
+       "face": "-y"
+      },
+      {
+       "id": "sz",
+       "kind": "slider",
+       "body": "Block",
+       "face": "-z"
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 1,
+       "preloads": [
+        {
+         "axis": "z",
+         "center": [
+          10,
+          10,
+          10
+         ],
+         "radius_mm": 5,
+         "force_N": 1000
+        }
+       ]
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "sectionForceNodal",
+     "metric": "force through the mid plane (nodal forces of the part above)",
+     "args": [
+      "$input",
+      {},
+      "z",
+      10,
+      2
+     ],
+     "value": 1000,
+     "unit": "N",
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "sectionForce",
+     "metric": "force through the mid slab (sum of element-centre sigma_zz h^2)",
+     "args": [
+      "$input",
+      {},
+      "z",
+      10.4,
+      2
+     ],
+     "value": -1000,
+     "unit": "N",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  },
+  {
+   "id": "plate-hole-kirsch",
+   "kind": "core",
+   "title": "Plate with a central circular hole in tension: stress concentration, volume-preserving voxel fill (voxelizer: centre)",
+   "reference": "Kirsch (1898) for an infinite plate: the hoop stress at the edge of a circular hole in uniaxial tension is 3 sigma (Timoshenko and Goodier, Theory of Elasticity, section 58). For a finite width plate the peak is Kt_net sigma_net with Kt_net = 3.00 - 3.13 (d/W) + 3.66 (d/W)^2 - 1.53 (d/W)^3 (Peterson's Stress Concentration Factors / Roark's Formulas for Stress and Strain, plate with a central hole in tension; recalled, not re-checked against the book) and sigma_net = sigma W/(W - d). Here d 6 mm, W 24 mm (d/W 0.25): Kt_net 2.4223, peak = 3.2298 x 100 MPa = 322.98 MPa at the hole edge on the symmetry plane normal to the load. A quarter of the plate (30 x 12 x 1 mm, hole radius 3 mm, voxel 0.25 mm = a/12) with sliders on the three symmetry planes and 100 MPa tension at the far end. The spec asks for the recovered stress within 10 % (after smoothing over 2 voxels).",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Plate",
+      "size": [
+       30,
+       12,
+       1
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "cylinder",
+      "body": "Plate",
+      "op": "cut",
+      "d": 6,
+      "h": 3,
+      "anchor": "center",
+      "pos": [
+       0,
+       0,
+       0.5
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Plate": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "sx",
+       "kind": "slider",
+       "body": "Plate",
+       "face": "-x"
+      },
+      {
+       "id": "sy",
+       "kind": "slider",
+       "body": "Plate",
+       "face": "-y"
+      },
+      {
+       "id": "sz",
+       "kind": "slider",
+       "body": "Plate",
+       "face": "-z"
+      }
+     ],
+     "loads": [
+      {
+       "id": "p",
+       "kind": "pressure",
+       "body": "Plate",
+       "face": "+x",
+       "pressure_Pa": -100000000
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 0.25,
+       "voxelizer": "centre"
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "solveSync.vmMax",
+     "metric": "peak von Mises stress at the hole, recovered over 2 voxels",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 322.9791666666667,
+     "unit": "MPa",
+     "tol": {
+      "rel": 0.1
+     }
+    },
+    {
+     "fn": "probeSigma",
+     "metric": "stress far from the hole (sigma_xx)",
+     "args": [
+      "$input",
+      {},
+      27,
+      10,
+      0.5,
+      0
+     ],
+     "value": 100,
+     "unit": "MPa",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  },
+  {
+   "id": "plate-hole-kirsch-default-voxelizer",
+   "kind": "core",
+   "title": "The same plate with the default conservative voxelizer (the hole shrinks by up to one voxel and its edge is a rougher staircase)",
+   "reference": "Kirsch (1898) for an infinite plate: the hoop stress at the edge of a circular hole in uniaxial tension is 3 sigma (Timoshenko and Goodier, Theory of Elasticity, section 58). For a finite width plate the peak is Kt_net sigma_net with Kt_net = 3.00 - 3.13 (d/W) + 3.66 (d/W)^2 - 1.53 (d/W)^3 (Peterson's Stress Concentration Factors / Roark's Formulas for Stress and Strain, plate with a central hole in tension; recalled, not re-checked against the book) and sigma_net = sigma W/(W - d). Here d 6 mm, W 24 mm (d/W 0.25): Kt_net 2.4223, peak = 3.2298 x 100 MPa = 322.98 MPa at the hole edge on the symmetry plane normal to the load. A quarter of the plate (30 x 12 x 1 mm, hole radius 3 mm, voxel 0.25 mm = a/12) with sliders on the three symmetry planes and 100 MPa tension at the far end. The spec asks for the recovered stress within 10 % (after smoothing over 2 voxels). This is the package default (voxelizer conservative: every voxel a surface touches is kept so a thin wall is never lost).",
+   "expectedDivergence": "With the default conservative voxelizer the hole is smaller by up to a voxel and its staircase is rougher, and the recovered peak reads about 13 % under the reference at this resolution (a/h = 12), outside the 10 % of the spec. The tolerance is not changed; the volume-preserving fill passes (plate-hole-kirsch). A finer voxel size closes the gap slowly.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Plate",
+      "size": [
+       30,
+       12,
+       1
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "cylinder",
+      "body": "Plate",
+      "op": "cut",
+      "d": 6,
+      "h": 3,
+      "anchor": "center",
+      "pos": [
+       0,
+       0,
+       0.5
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Plate": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "sx",
+       "kind": "slider",
+       "body": "Plate",
+       "face": "-x"
+      },
+      {
+       "id": "sy",
+       "kind": "slider",
+       "body": "Plate",
+       "face": "-y"
+      },
+      {
+       "id": "sz",
+       "kind": "slider",
+       "body": "Plate",
+       "face": "-z"
+      }
+     ],
+     "loads": [
+      {
+       "id": "p",
+       "kind": "pressure",
+       "body": "Plate",
+       "face": "+x",
+       "pressure_Pa": -100000000
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "h_mm": 0.25
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "solveSync.vmMax",
+     "metric": "peak von Mises stress at the hole, recovered over 2 voxels",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 322.9791666666667,
+     "unit": "MPa",
+     "tol": {
+      "rel": 0.1
+     }
+    }
+   ]
+  },
+  {
+   "id": "bracket-vs-elmer",
+   "kind": "reference",
+   "title": "L bracket against an Elmer reference (displacement within 5 %)",
+   "reference": "Spec docs/EXTENSIONS_SPEC.md section 4 (A3 validation): \"a bracket compared with an Elmer reference\". The reference numbers are produced once by the Alloy Runner (step A4, Elmer FEM, tetrahedral mesh) and stored in analysis-validation/reference/bracket-elmer.json. The spec gives no tolerance for this case: 5 % on displacement and stiffness (as for the A2 reference case) and 25 % on the stress peak (which the spec calls an estimate) are this repository's choice, written down before any reference exists.",
+   "referenceFile": "analysis-validation/reference/bracket-elmer.json",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Bracket",
+      "size": [
+       40,
+       30,
+       4
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Bracket",
+      "size": [
+       40,
+       4,
+       30
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Bracket": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "base",
+       "kind": "fixed",
+       "body": "Bracket",
+       "face": "-z"
+      }
+     ],
+     "loads": [
+      {
+       "id": "pull",
+       "kind": "force",
+       "body": "Bracket",
+       "face": "+z",
+       "vector_N": [
+        0,
+        30,
+        0
+       ]
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "quality": "fine"
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "max_displacement",
+     "unit": "mm",
+     "refKey": "max_displacement_mm",
+     "tol": {
+      "rel": 0.05
+     }
+    },
+    {
+     "metric": "stiffness",
+     "unit": "N/mm",
+     "refKey": "stiffness_N_per_mm",
+     "tol": {
+      "rel": 0.05
+     }
+    },
+    {
+     "metric": "max_von_mises",
+     "unit": "MPa",
+     "refKey": "max_von_mises_MPa",
+     "tol": {
+      "rel": 0.25
+     }
+    }
+   ]
+  }
+ ]
+}

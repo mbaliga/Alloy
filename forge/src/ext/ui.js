@@ -8,7 +8,7 @@ import { rangeOf, legendTicks, cssGradient, gridText, sliceCount, vectorScale } 
 import { createLayerStore, groupLayers, layerReadout } from './layers.js';
 
 const RUNNER_KEY = 'af.runner';
-const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext']];
+const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext'], ['Structural (analysis, GPU)', 'ext-samples/structural.alloyext']];
 
 export function mountExtensions(env) {
   const { h, $, tip, S, registry, host, resolver, panes, view, say, blip, setExtension, rebuild, showSheet } = env;
@@ -162,7 +162,7 @@ export function mountExtensions(env) {
       if (ov.kind === 'points' || ov.kind === 'vectors' || ov.kind === 'surface' || ov.kind === 'slice') {
         row.append(h('div', { class: 'lgbar', style: `background:${cssGradient()}` }), h('div', { class: 'lgt' }, legendTicks(o.range).map((t) => h('span', {}, String(t)))));
         const what = ov.kind === 'points' ? `${ov.values.length} points · tap a point to read it` : ov.kind === 'vectors' ? `${ov.values.length} samples drawn as ${ov.lines ? 'streamlines' : `arrows, longest ${+vectorScale(ov).maxLen.toFixed(1)} mm for the top of the range`} · colour is the speed · tap one to read it` : ov.kind === 'surface' ? `one value per vertex on ${ov.body} · tap the surface to read it` : `${gridText(ov.field.grid)} · tap the slice to read it`;
-        row.append(h('div', { class: 'tag' }, `${ov.unit ? 'unit ' + ov.unit + ' · ' : ''}${what}`));
+        row.append(h('div', { class: 'tag' }, `${ov.unit ? 'unit ' + ov.unit + ' · ' : ''}${what}${ov.note ? ' · ' + ov.note : ''}`));
         if (ov.kind === 'slice' && ov.onSlice) {
           const n = sliceCount(ov.field, ov.axis);
           row.append(h('div', { class: 'lgslice' },

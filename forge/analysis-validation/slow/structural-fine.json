@@ -1,0 +1,170 @@
+{
+ "analysis": "xyz.mdhv.structural/structural",
+ "package": "examples/ext/structural",
+ "cases": [
+  {
+   "id": "cantilever-fine",
+   "kind": "core",
+   "title": "Cantilever at the quality fine (about 250 000 voxels on the CPU), run on demand",
+   "reference": "Euler-Bernoulli as in cantilever-tip-deflection: 0.010240 mm, spec tolerance 3 % at fine. Slow (minutes on the CPU: about 1 000 conjugate-gradient iterations of 0.25 s), so it is not in the default run; npm run test:analysis:slow.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Beam",
+      "size": [
+       80,
+       10,
+       10
+      ],
+      "anchor": "min",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-steel",
+      "name": "Test steel",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 7800,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 500,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": 200000000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "nu": {
+        "value": 0.3,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "yield_strength": {
+        "value": 250000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "tensile_strength": {
+        "value": 400000000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "interlayer_factor": {
+        "value": 1,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Beam": "t-steel"
+    },
+    "conditions": {
+     "mounts": [
+      {
+       "id": "wall",
+       "kind": "fixed",
+       "body": "Beam",
+       "face": "-x"
+      }
+     ],
+     "loads": [
+      {
+       "id": "tip",
+       "kind": "force",
+       "body": "Beam",
+       "face": "+x",
+       "vector_N": [
+        0,
+        0,
+        -10
+       ]
+      }
+     ]
+    },
+    "ext": {
+     "xyz.mdhv.structural": {
+      "settings": {
+       "backend": "cpu",
+       "quality": "fine"
+      }
+     }
+    }
+   },
+   "calls": [
+    {
+     "fn": "probeU",
+     "metric": "tip deflection at the free end",
+     "args": [
+      "$input",
+      {},
+      79.99,
+      5,
+      5,
+      2
+     ],
+     "value": -0.01024,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "fn": "solveSync.maxU",
+     "metric": "largest displacement",
+     "args": [
+      "$input",
+      {}
+     ],
+     "value": 0.01024,
+     "unit": "mm",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  }
+ ]
+}

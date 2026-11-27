@@ -17,7 +17,7 @@ export const dirVector = (d) => dirVec[d];
 export const defaultConditions = () => ({
   ambient: { temperature_K: units.cToK(25), airspeed_ms: 0, gravity: '-z' },
   heat: [],      // { id, target: { pcb: 'U1' } | { body: 'Shell' }, power_W }
-  mounts: [],    // { id, kind: 'contact' | 'fixed', body, face, box?: [x0,x1,y0,y1,z0,z1] (mm), conductance_W_m2K? (contact) }
+  mounts: [],    // { id, kind: 'contact' | 'fixed' | 'slider', body, face, box?: [x0,x1,y0,y1,z0,z1] (mm), conductance_W_m2K? (contact) }; slider = holds only the displacement normal to the face (symmetry plane, frictionless support)
   loads: [],     // { id, kind: 'force' | 'pressure' | 'acceleration', body?, face?, vector_N?, direction?, pressure_Pa?, accel_ms2? }
   limits: {},    // "<ext>:<analysis>:<check>" -> limit in the check's SI unit (user thresholds for analysis checks)
 });
@@ -45,7 +45,7 @@ export function validateConditions(c, project) {
   }
   for (const m of c.mounts || []) {
     seen(m.id, 'mount');
-    if (!['contact', 'fixed'].includes(m.kind)) throw new Error(`mount ${m.id}: kind must be contact or fixed`);
+    if (!['contact', 'fixed', 'slider'].includes(m.kind)) throw new Error(`mount ${m.id}: kind must be contact, fixed or slider`);
     if (typeof m.body !== 'string' || !m.body) throw new Error(`mount ${m.id}: needs a body`);
     if (!FACES.includes(m.face)) throw new Error(`mount ${m.id}: face must be one of ${FACES.join(', ')}`);
     if (m.box != null && !(Array.isArray(m.box) && m.box.length === 6 && m.box.every(Number.isFinite))) throw new Error(`mount ${m.id}: box must be [x0,x1,y0,y1,z0,z1] in mm`);

@@ -4,3 +4,5 @@ export * from './correlations.js';
 export * from './grid.js';
 export * from './cg.js';
 export * from './gpu.js';
+export * from './elastic.js';
+export * from './gpu-elastic.js';

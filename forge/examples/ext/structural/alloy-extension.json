@@ -1,0 +1,288 @@
+{
+  "id": "xyz.mdhv.structural",
+  "name": "Structural",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "Linear elastic stress and deflection on a voxel grid (hexahedral elements, matrix-free conjugate gradient). Fixed and slider supports; forces, pressures, g loads with drop and recoil presets, self weight, bolt preload. Reports displacement, stress smoothed over 2 voxels and a safety factor with an FDM knock-down. WebGPU, else CPU. An estimate.",
+  "main": "main.js",
+  "permissions": [
+    "doc.read",
+    "geometry.read",
+    "storage",
+    "agent.tools",
+    "compute.gpu"
+  ],
+  "contributes": {
+    "analyses": [
+      {
+        "id": "structural",
+        "label": "Structural",
+        "validity": "estimate",
+        "description": "Displacement, von Mises stress and safety factor under your loads. Add a fixed mount (and optionally sliders for symmetry planes) and loads under Conditions, then pick the resolution below. Every result states its voxel size, grid limits and that stress peaks on boundary voxels are edge artefacts likely.",
+        "fields": [
+          "von_mises",
+          "displacement",
+          "safety_factor"
+        ],
+        "settings": [
+          {
+            "key": "quality",
+            "label": "Resolution",
+            "kind": "enum",
+            "opts": [
+              "draft",
+              "normal",
+              "fine"
+            ],
+            "def": "normal",
+            "tip": "Sets the voxel size so the grid has about this many solid voxels: draft 150 000, normal 600 000, fine 1 500 000 on a laptop GPU; 40 000, 120 000 and 250 000 on a phone or without WebGPU. Finer is slower and truer to thin walls and fillets. The voxel size is shown in the result."
+          },
+          {
+            "key": "backend",
+            "label": "Compute",
+            "kind": "enum",
+            "opts": [
+              "auto",
+              "gpu",
+              "cpu"
+            ],
+            "def": "auto",
+            "tip": "Auto uses WebGPU when the browser offers it and the grid is big enough to benefit; the CPU solver is the fallback and uses smaller grids."
+          },
+          {
+            "key": "print_axis",
+            "label": "Print axis",
+            "kind": "enum",
+            "opts": [
+              "x",
+              "y",
+              "z"
+            ],
+            "def": "z",
+            "tip": "The direction the layers stack in when the part is printed. Tension along it is weakened by the material's inter-layer factor in the safety factor. The document carries no print orientation yet, so this is set by hand."
+          },
+          {
+            "key": "self_weight",
+            "label": "Self weight",
+            "kind": "enum",
+            "opts": [
+              "off",
+              "on"
+            ],
+            "def": "off",
+            "tip": "Add the weight of the bodies, toward the gravity direction of the Conditions. Off by default: it is small next to a drop or recoil load."
+          },
+          {
+            "key": "preset",
+            "label": "Load preset",
+            "kind": "enum",
+            "opts": [
+              "none",
+              "drop",
+              "recoil"
+            ],
+            "def": "none",
+            "tip": "An equivalent quasi-static acceleration on top of your loads. Drop: a = g H / s for a fall of H stopped over s. Recoil: a constant acceleration you choose in g. Impact dynamics are not modelled."
+          },
+          {
+            "key": "drop_m",
+            "when": {
+              "preset": "drop"
+            },
+            "label": "Drop height",
+            "kind": "num",
+            "unit": "m",
+            "def": 1,
+            "min": 0.01,
+            "max": 100,
+            "tip": "Height of the fall. The speed at impact is the square root of 2 g H."
+          },
+          {
+            "key": "drop_stop_mm",
+            "when": {
+              "preset": "drop"
+            },
+            "label": "Stopping distance",
+            "kind": "num",
+            "unit": "mm",
+            "def": 2,
+            "min": 0.05,
+            "max": 1000,
+            "tip": "How far the part decelerates over (crush, case flex, soft surface). A shorter stop is a much harder hit: a = g H / s."
+          },
+          {
+            "key": "preset_g",
+            "when": {
+              "preset": "recoil"
+            },
+            "label": "Recoil",
+            "kind": "num",
+            "unit": "g",
+            "def": 1000,
+            "min": 0,
+            "max": 100000,
+            "tip": "A constant acceleration you choose. The default is a placeholder, not a measurement of any firearm or optic."
+          },
+          {
+            "key": "preset_dir",
+            "label": "Preset direction",
+            "kind": "enum",
+            "opts": [
+              "+x",
+              "-x",
+              "+y",
+              "-y",
+              "+z",
+              "-z"
+            ],
+            "def": "-z",
+            "tip": "The inertial load pushes the mass toward this direction, like gravity (a held part loaded as if accelerating)."
+          }
+        ],
+        "checks": [
+          {
+            "id": "min-safety-factor",
+            "label": "Safety factor ≥ limit",
+            "metric": "min_safety_factor",
+            "op": ">=",
+            "limit": 2,
+            "unit": ""
+          },
+          {
+            "id": "max-displacement",
+            "label": "Largest displacement ≤ limit",
+            "metric": "max_displacement",
+            "op": "<=",
+            "limit": 1,
+            "unit": "mm"
+          }
+        ]
+      }
+    ],
+    "agentTools": [
+      {
+        "id": "set-structural",
+        "label": "Structural settings",
+        "description": "Set the Structural settings in the project: quality, backend, print_axis (x|y|z), self_weight, knockdown, preset (none|drop|recoil) with preset_g, drop_m, drop_stop_mm, preset_dir, voxelizer, h_mm, smooth_voxels, preloads [{ axis, center [x,y,z] mm, radius_mm, force_N, body? }]. Only keys given change. Mounts (fixed or slider) and loads use set_condition ops. Does not run it.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "quality": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "normal",
+                "fine"
+              ]
+            },
+            "backend": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "gpu",
+                "cpu"
+              ]
+            },
+            "print_axis": {
+              "type": "string",
+              "enum": [
+                "x",
+                "y",
+                "z"
+              ]
+            },
+            "self_weight": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
+              ]
+            },
+            "knockdown": {
+              "type": "string",
+              "enum": [
+                "on",
+                "off"
+              ]
+            },
+            "preset": {
+              "type": "string",
+              "enum": [
+                "none",
+                "drop",
+                "recoil"
+              ]
+            },
+            "preset_g": {
+              "type": "number"
+            },
+            "drop_m": {
+              "type": "number"
+            },
+            "drop_stop_mm": {
+              "type": "number"
+            },
+            "preset_dir": {
+              "type": "string",
+              "enum": [
+                "+x",
+                "-x",
+                "+y",
+                "-y",
+                "+z",
+                "-z"
+              ]
+            },
+            "voxelizer": {
+              "type": "string",
+              "enum": [
+                "conservative",
+                "centre"
+              ]
+            },
+            "h_mm": {
+              "type": "number"
+            },
+            "smooth_voxels": {
+              "type": "number"
+            },
+            "preloads": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "axis": {
+                    "type": "string"
+                  },
+                  "center": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "radius_mm": {
+                    "type": "number"
+                  },
+                  "force_N": {
+                    "type": "number"
+                  },
+                  "body": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "axis",
+                  "center",
+                  "radius_mm",
+                  "force_N"
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}
