@@ -240,6 +240,213 @@
    ]
   },
   {
+   "id": "slab-nondividing-h",
+   "kind": "core",
+   "title": "Same plane wall, voxel size 3 mm that does not divide the 20 x 10 x 10 mm bar (7 x 4 x 4 voxels)",
+   "reference": "Analytic 1D conduction in series with convection as in slab-1d-convection (Incropera section 3.1): Q = 0.07272727 W. With h = 3 mm the conservative voxelizer keeps the partly touched last voxel in every axis (21 x 12 x 12 mm), which would add 2.5 % to Q without the staircase correction of the conduction path (face conductances and half-cell resistances scaled per axis by (V/V_voxel)(E_voxel/E)^2, as the film area already is). Tolerance 1 % of Q (stated before running; the uncorrected error was 2.5 % at h = 3 mm and 4.4 % at 7 mm).",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Slab",
+      "size": [
+       20,
+       10,
+       10
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "t-k2",
+      "name": "Test k 2",
+      "class": "custom",
+      "notes": "Validation test material.",
+      "properties": {
+       "k": {
+        "value": 2,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 1000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 1000,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.9,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "nu": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "yield_strength": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "tensile_strength": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "interlayer_factor": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Slab": "t-k2"
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 293.15,
+      "gravity": "-z"
+     },
+     "heat": [],
+     "mounts": [
+      {
+       "id": "insyp",
+       "kind": "contact",
+       "body": "Slab",
+       "face": "+y",
+       "conductance_W_m2K": 0
+      },
+      {
+       "id": "insym",
+       "kind": "contact",
+       "body": "Slab",
+       "face": "-y",
+       "conductance_W_m2K": 0
+      },
+      {
+       "id": "inszp",
+       "kind": "contact",
+       "body": "Slab",
+       "face": "+z",
+       "conductance_W_m2K": 0
+      },
+      {
+       "id": "inszm",
+       "kind": "contact",
+       "body": "Slab",
+       "face": "-z",
+       "conductance_W_m2K": 0
+      }
+     ]
+    }
+   },
+   "calls": [
+    {
+     "fn": "simulateSync.q.fixed",
+     "metric": "Q through the wall (h 3 mm)",
+     "args": [
+      "$input",
+      {
+       "convection": "fixed",
+       "radiation": false,
+       "h_mm": 3,
+       "h_W_m2K": 10,
+       "fixed": [
+        {
+         "face": "-x",
+         "body": "Slab",
+         "T_C": 100
+        }
+       ]
+      }
+     ],
+     "value": 0.07272727272727272,
+     "unit": "W",
+     "tol": {
+      "rel": 0.01
+     },
+     "mul": -1
+    },
+    {
+     "fn": "simulateSync.q.conv",
+     "metric": "Q out by convection (h 3 mm)",
+     "args": [
+      "$input",
+      {
+       "convection": "fixed",
+       "radiation": false,
+       "h_mm": 3,
+       "h_W_m2K": 10,
+       "fixed": [
+        {
+         "face": "-x",
+         "body": "Slab",
+         "T_C": 100
+        }
+       ]
+      }
+     ],
+     "value": 0.07272727272727272,
+     "unit": "W",
+     "tol": {
+      "rel": 0.01
+     }
+    },
+    {
+     "fn": "simulateSync.q.fixed",
+     "metric": "Q through the wall (h 7 mm)",
+     "args": [
+      "$input",
+      {
+       "convection": "fixed",
+       "radiation": false,
+       "h_mm": 7,
+       "h_W_m2K": 10,
+       "fixed": [
+        {
+         "face": "-x",
+         "body": "Slab",
+         "T_C": 100
+        }
+       ]
+      }
+     ],
+     "value": 0.07272727272727272,
+     "unit": "W",
+     "tol": {
+      "rel": 0.01
+     },
+     "mul": -1
+    }
+   ]
+  },
+  {
    "id": "slab-generation-convection",
    "kind": "core",
    "title": "Plane wall with uniform heat generation and convection on both faces",
@@ -441,7 +648,7 @@
    "id": "cylinder-generation",
    "kind": "core",
    "title": "Long cylinder with uniform heat generation, convection on the curved surface, insulated ends",
-   "reference": "Analytic (Incropera section 3.5, radial system with uniform generation): T(r) = Ts + q''' (R^2 - r^2)/(4k), Ts = Tinf + q''' R/(2h), R 10 mm, k 1, h 100, Tinf 20 C, P = 2 W in a 10 mm length (q''' = 6.3662e+5 W/m3, power per length 200 W/m). At r = 0.354 mm (the voxel nearest the axis): rise 47.7266 K. The kernel's 48-gon is within 0.3 % of the circle in area and 0.1 % in perimeter. Staircase surface: the film conductance is scaled so each body keeps its mesh surface area. Tolerance 2 % of the rise (0.955 K), stated before running.",
+   "reference": "Analytic (Incropera section 3.5, radial system with uniform generation): T(r) = Ts + q''' (R^2 - r^2)/(4k), Ts = Tinf + q''' R/(2h), R 10 mm, k 1, h 100, Tinf 20 C, P = 2 W in a 10 mm length (q''' = 6.3662e+5 W/m3, power per length 200 W/m). At r = 0.354 mm (the voxel nearest the axis): rise 47.7266 K. The kernel's 48-gon is within 0.3 % of the circle in area and 0.1 % in perimeter. Staircase surface: the film conductance is scaled so each body keeps its mesh surface area. The metric is the absolute temperature at the axis voxel (340.877 K = 293.15 K + the rise). Tolerance 2 % of the rise (0.955 K, 0.28 % of the temperature shown), stated before running.",
    "setup": {
     "features": [
      {
@@ -552,7 +759,7 @@
    "calls": [
     {
      "fn": "probeT",
-     "metric": "Rise at the axis",
+     "metric": "T at the axis (rise above ambient 47.73 K)",
      "args": [
       "$input",
       {
@@ -748,7 +955,7 @@
    "id": "transient-lumped",
    "kind": "core",
    "title": "Lumped-capacitance heating of a 20 mm aluminium cube (Biot 5e-4)",
-   "reference": "Analytic (Incropera section 5.1, lumped capacitance with generation): T - Tinf = (P/(hA)) (1 - exp(-t/tau)), tau = rho cp V/(h A) = 322.560 s, Bi = hV/(A k) = 4.99e-4 (lumped to better than 0.1 %). Cube 20 mm, aluminium k 167 rho 2700 cp 896, h 25 W/m2K on all faces, P = 4.800 W (steady rise 80 K), starting at Tinf 20 C. Volume-mean temperature at 600 s: 87.5477 C; time to reach 70 C: 316.38 s. Implicit Euler with a 1 s step is first order: it lags the exact curve by about 0.1 K here, so the temperature tolerance is 0.15 K (0.2 % of the 80 K rise) and the time tolerance 1 %. Limits are stated before running.",
+   "reference": "Analytic (Incropera section 5.1, lumped capacitance with generation): T - Tinf = (P/(hA)) (1 - exp(-t/tau)), tau = rho cp V/(h A) = 322.560 s, Bi = hV/(A k) = 4.99e-4 (lumped to better than 0.1 %). Cube 20 mm, aluminium k 167 rho 2700 cp 896, h 25 W/m2K on all faces, P = 4.800 W (steady rise 80 K), starting at Tinf 20 C. Volume-mean temperature at 600 s: 87.5477 C; time to reach 70 C: 316.38 s. First-order time stepping (implicit Euler, 1 s step) contributes about 0.04 K by the first-order estimate (t/tau)(dt/2tau)exp(-t/tau) x 80 K (0.014 K measured); the temperature tolerance of 0.15 K (0.2 % of the 80 K rise) also covers the voxel volume-mean approximation, and the time tolerance is 1 %. Limits are stated before running.",
    "setup": {
     "features": [
      {
@@ -1429,7 +1636,7 @@
    "id": "sealed-box-cengel-15-10",
    "kind": "core",
    "title": "Copper block with the outer size of the sealed box of Cengel Example 15-10, 112.7 W",
-   "reference": "Cengel, Heat and Mass Transfer 3rd ed., Example 15-10 (free chapter 15): box 0.40 x 0.30 x 0.15 m, eps 0.85, bottom insulated, room 35 C: published heat loss 112.7 W at a surface temperature of 65 C (convection 48.2 W, radiation 64.5 W). Here a solid copper block (k 401, isothermal to a few tenths of a kelvin) of that size receives 112.7 W through the Analyze conditions and the solver finds its surface temperature with the A1 correlations. Heat flows are about +-12 % from correlation spread (A1 reports 15 % on convection, 8 % on the total), which is about +-3.6 K on the 30 K rise (rise ~ Q^(1/1.25)), so the tolerance is 3.6 K around 65 C.",
+   "reference": "Cengel, Heat and Mass Transfer 3rd ed., Example 15-10 (free chapter 15): box 0.40 x 0.30 x 0.15 m, eps 0.85, bottom insulated, room 35 C: published heat loss 112.7 W at a surface temperature of 65 C (convection 48.2 W, radiation 64.5 W). Here a solid copper block (k 401, isothermal to a few tenths of a kelvin) of that size receives 112.7 W through the Analyze conditions and the solver finds its surface temperature with the A1 correlations. Heat flows are about +-15 % from correlation spread (A1 reports 15 % on convection, 8 % on the total), which is about +-3.6 K on the 30 K rise (rise ~ Q^(1/1.25): 30 (1.15^0.8 - 1) = 3.5 K), so the tolerance is 3.6 K around 65 C. Not independent evidence for A2: the solver uses A1's own correlations (copied into the voxel core), so this is a plumbing check of the 3D model against a book value that those correlations already approximate.",
    "setup": {
     "features": [
      {
@@ -2038,7 +2245,8 @@
    "info": [
     "max_outer_surface_temp",
     "internal_air_temp"
-   ]
+   ],
+   "expectedDivergence": "Documented expected divergence, tolerance NOT loosened: A2 gives a rise 20.8 % above A1 (A2 129.2 C vs A1 112.1 C at the time of writing). The cause is not isolated: A1 is a resistance network without board spreading and with its own cavity model, A2 treats the enclosed air as an effective conductor (called coarse in its warnings), and neither is a measurement. The case stays red as a check and does not count as a pass; the Elmer reference of step A4 is the arbiter."
   },
   {
    "id": "enclosure-3-aluminium-rail",

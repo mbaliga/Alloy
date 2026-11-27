@@ -88,14 +88,49 @@ function buildModel(input, settings, ctx) {
   const { grid, mat, struct } = vm, n = struct.n, hM = grid.h * 1e-3;
   for (const id of partOwners) { const o = owners[id]; let cnt = 0; for (let v = 0; v < grid.total; v++) if (mat[v] === id) cnt++; o.cells = cnt; }
 
+  // Staircase correction of the conduction path. When h does not divide a body dimension the conservative pass keeps the partly
+  // touched last voxel, so a bar's voxel length and cross-section are both too big. Per body and axis a (a rectilinear body that touches no
+  // enclosed air): the true conductance is A/L with L the true extent and A = V/L, the voxel one is A_v/L_v, so the face
+  // conductances along a are scaled by (V / V_v) (E_v / E)^2 with E the extent along a (mesh bounding box against the voxel cells of the body).
+  // The same factor scales the half-cell resistance of an exposed face along that axis. Equal to 1 when h divides the body; hollow
+  // (cavity) bodies are left alone (their wall thickness is the thin-wall warning's business).
+  const cF = new Float64Array(owners.length * 3).fill(1);
+  {
+    const cnt = new Float64Array(owners.length), imin = new Int32Array(owners.length * 3).fill(1 << 30), imax = new Int32Array(owners.length * 3).fill(-1), adj = new Uint8Array(owners.length), nx0 = grid.dims[0], ny0 = grid.dims[1];
+    for (let a = 0; a < n; a++) {
+      const m = mat[struct.cells[a]]; if (m === CAVITY) continue;
+      const v = struct.cells[a], ii = v % nx0, jj = ((v - ii) / nx0) % ny0, kk = (v - ii - nx0 * jj) / (nx0 * ny0), ix = [ii, jj, kk];
+      cnt[m]++; for (let q = 0; q < 3; q++) { if (ix[q] < imin[m * 3 + q]) imin[m * 3 + q] = ix[q]; if (ix[q] > imax[m * 3 + q]) imax[m * 3 + q] = ix[q]; }
+      for (let f = 0; f < 6; f++) { const j = struct.nbr[6 * a + f]; if (j >= 0 && mat[struct.cells[j]] === CAVITY) adj[m] = 1; }
+    }
+    for (const b of bodies) {
+      const id = bodyOwner.get(b.name); if (!cnt[id] || adj[id] || !(b.volume_mm3 > 0)) continue;
+      // only a rectilinear body (every triangle normal along an axis): for a curved or tilted body the prism argument does not hold
+      // (its surface is handled by the film-area scaling alone)
+      let rect = true; const p = b.positions, t = b.indices;
+      for (let q = 0; q < t.length && rect; q += 3) {
+        const A = t[q] * 3, B = t[q + 1] * 3, C = t[q + 2] * 3, ux = p[B] - p[A], uy = p[B + 1] - p[A + 1], uz = p[B + 2] - p[A + 2], vx = p[C] - p[A], vy = p[C + 1] - p[A + 1], vz = p[C + 2] - p[A + 2];
+        const X = uy * vz - uz * vy, Y = uz * vx - ux * vz, Z = ux * vy - uy * vx, len = Math.hypot(X, Y, Z);
+        if (len > 1e-12 && Math.max(Math.abs(X), Math.abs(Y), Math.abs(Z)) < 0.9999 * len) rect = false;
+      }
+      if (!rect) continue;
+      const Vv = cnt[id] * grid.h ** 3;
+      for (let q = 0; q < 3; q++) {
+        const Ev = (imax[id * 3 + q] - imin[id * 3 + q] + 1) * grid.h, Et = b.bbox.max[q] - b.bbox.min[q];
+        if (!(Et > 0)) continue;
+        const c = Math.min(4, Math.max(0.25, (b.volume_mm3 / Vv) * (Ev / Et) ** 2));
+        if (Math.abs(c - 1) > 5e-3) cF[id * 3 + q] = c;
+      }
+    }
+  }
   // per-cell properties
   const k = new Float64Array(n), cap = new Float64Array(n), eps = new Float32Array(n), own = new Uint8Array(n);
-  const kAir = airProps(300).k, aniso = owners.some((o) => o && o.kAxis), kAxis = aniso ? new Float64Array(3 * n) : null;
+  const kAir = airProps(300).k, aniso = owners.some((o) => o && o.kAxis) || cF.some((c) => c !== 1), kAxis = aniso ? new Float64Array(3 * n) : null;
   let nCav = 0;
   for (let a = 0; a < n; a++) {
     const m = mat[struct.cells[a]]; own[a] = m;
     if (m === CAVITY) { k[a] = kAir; cap[a] = AIR_CP_RHO * hM * hM * hM; eps[a] = 0.9; nCav++; if (kAxis) kAxis.fill(kAir, 3 * a, 3 * a + 3); }
-    else { const o = owners[m]; k[a] = o.k; cap[a] = o.rho * o.cp * hM * hM * hM; eps[a] = o.eps; if (kAxis) { const ka = o.kAxis || [o.k, o.k, o.k]; kAxis[3 * a] = ka[0]; kAxis[3 * a + 1] = ka[1]; kAxis[3 * a + 2] = ka[2]; } }
+    else { const o = owners[m]; k[a] = o.k; cap[a] = o.rho * o.cp * hM * hM * hM; eps[a] = o.eps; if (kAxis) { const ka = o.kAxis || [o.k, o.k, o.k]; for (let q = 0; q < 3; q++) kAxis[3 * a + q] = ka[q] * cF[m * 3 + q]; } }
   }
   // heat sources: watts per cell
   const qCell = new Float64Array(n);
@@ -171,17 +206,17 @@ function buildModel(input, settings, ctx) {
   const exOrient = new Uint8Array(m); // 0 side, 1 up, 2 down
   for (let q = 0; q < m; q++) { const o = orientOf(FACE_LIST[exFace[q]], gravity); exOrient[q] = o === 'side' ? 0 : o === 'up' ? 1 : 2; }
   // cavity bookkeeping
-  const cav = { cells: nCav, V: nCav * hM ** 3, A: 0, internal: [], wall: [] };
+  const cav = { cells: nCav, V: nCav * hM ** 3, A: 0, Ai: 0, Aw: 0, internal: [], wall: [] };
   if (nCav) {
     const seenI = new Uint8Array(n);
     for (let a = 0; a < n; a++) {
       if (own[a] !== CAVITY) continue;
-      for (let f = 0; f < 6; f++) { const j = struct.nbr[6 * a + f]; if (j >= 0 && own[j] !== CAVITY) { cav.A += hM * hM; if (!seenI[j]) { seenI[j] = 1; (owners[own[j]].kind === 'body' ? cav.wall : cav.internal).push(j); } } }
+      for (let f = 0; f < 6; f++) { const j = struct.nbr[6 * a + f]; if (j >= 0 && own[j] !== CAVITY) { cav.A += hM * hM; if (owners[own[j]].kind === 'body') cav.Aw += hM * hM; else cav.Ai += hM * hM; if (!seenI[j]) { seenI[j] = 1; (owners[own[j]].kind === 'body' ? cav.wall : cav.internal).push(j); } } }
     }
   }
   let volVox = 0; for (let a = 0; a < n; a++) if (own[a] && own[a] <= bodies.length) volVox++;
   volVox *= grid.h ** 3; const volMesh = bodies.reduce((x, b) => x + b.volume_mm3, 0);
-  return { owners, bodyOwner, partOwners, grid, mat, struct, n, hM, k, kAxis, cap, eps, own, qCell, Qin, Tamb, gravity, wind, exCell: Int32Array.from(exCell), exFace: Uint8Array.from(exFace), exKind: Uint8Array.from(exKind), exParam: Float64Array.from(exParam), exOrient, m, areaF, Lside, Lhoriz, cav, nCav, budget, budgetClass: cls, bb, size, volVox, volMesh, warnings, stats: vm.stats, bodies };
+  return { owners, bodyOwner, partOwners, grid, mat, struct, n, hM, k, kAxis, cap, eps, own, qCell, Qin, Tamb, gravity, wind, exCell: Int32Array.from(exCell), exFace: Uint8Array.from(exFace), exKind: Uint8Array.from(exKind), exParam: Float64Array.from(exParam), exOrient, m, areaF, cF, Lside, Lhoriz, cav, nCav, budget, budgetClass: cls, bb, size, volVox, volMesh, warnings, stats: vm.stats, bodies };
 }
 
 // ───────────────────────── physics assembly ─────────────────────────
@@ -208,7 +243,7 @@ function assembleBoundary(model, settings, T, Tref, tabs, bd) {
   bd.diag.fill(0); bd.rhs.fill(0);
   const A0 = hM * hM;
   for (let q = 0; q < m; q++) {
-    const a = exCell[q], Tc = T[a], Rs = 1 / (2 * k[a] * hM), f = areaF[own[a] * 3 + (exFace[q] >> 1)];
+    const a = exCell[q], Tc = T[a], Rs = 1 / (2 * (model.kAxis ? model.kAxis[3 * a + (exFace[q] >> 1)] : k[a]) * hM), f = areaF[own[a] * 3 + (exFace[q] >> 1)];
     let G = 0, hc = 0, hr = 0, Tb = Tamb;
     if (exKind[q] === 2) { G = 1 / Rs; Tb = exParam[q]; }
     else if (exKind[q] === 1) { hc = exParam[q]; G = hc > 0 ? 1 / (Rs + 1 / (f * A0 * hc)) : 0; }
@@ -226,20 +261,29 @@ function assembleBoundary(model, settings, T, Tref, tabs, bd) {
   }
 }
 
-/** Effective conductivity of the enclosed air (see the header). Returns { k, Nu, Ra, dT, L, eps }. */
+/**
+ * Effective conductivity of the enclosed air (see the header). Returns { k, Nu, Ra, dT, L, eps, kRad, kAir }.
+ * The conductivity acts between cavity cells and walls over the real voxel distance, so k_eff = h_eff L with L the true gap. L is
+ * 2V/A (equal to the gap of a plane-parallel slab; V/A of a slab is only L/2), never below 2 cells. The Rayleigh temperature
+ * difference is the difference across the gap: the mean temperature of the cavity-facing cells of the internal parts (the wall's
+ * when there are none) against the mean temperature of the cavity-facing wall cells. The grey radiation exchange uses the
+ * enclosure formula 1/eps_eff = 1/eps_i + (A_i/A_w)(1/eps_w - 1) (a small part in a big box radiates with its own emissivity;
+ * plates facing each other with A_i = A_w).
+ */
 function cavityState(model, settings, T) {
   const { cav, own, owners, nCav } = model;
   if (!nCav) return null;
-  const Lc = Math.max(4 * cav.V / Math.max(cav.A, 1e-12), 2 * model.hM);
-  let Th = -Infinity, Tw = 0, nw = 0, ew = 0, ei = 0, ni = 0;
+  const Lc = Math.max(2 * cav.V / Math.max(cav.A, 1e-12), 2 * model.hM);
+  let Th = 0, nh = 0, Tw = 0, nw = 0, ew = 0, ei = 0, ni = 0;
   const hotList = cav.internal.length ? cav.internal : cav.wall;
-  for (const j of hotList) Th = Math.max(Th, T[j]);
+  for (const j of hotList) { Th += T[j]; nh++; }
   for (const j of cav.wall) { Tw += T[j]; nw++; ew += owners[own[j]].eps; }
   for (const j of cav.internal) { ei += owners[own[j]].eps; ni++; }
-  Tw = nw ? Tw / nw : model.Tamb; const epsW = nw ? ew / nw : 0.9, epsI = ni ? ei / ni : epsW;
+  Th = nh ? Th / nh : model.Tamb; Tw = nw ? Tw / nw : model.Tamb; const epsW = nw ? ew / nw : 0.9, epsI = ni ? ei / ni : epsW;
   const dT = Math.max(Math.abs(Th - Tw), 0.01), Tm = (Th + Tw) / 2, p = airProps(Tm), Ra = rayleigh(dT, Lc, p);
   const Nu = settings.cavity === 'effective' ? Math.max(1, 0.2 * Math.pow(Ra, 0.25)) : 1;
-  const epsEff = 1 / (1 / epsI + 1 / epsW - 1);
+  const ratio = ni && cav.Aw > 0 ? Math.min(1, cav.Ai / cav.Aw) : 1;
+  const epsEff = 1 / (1 / epsI + ratio * (1 / epsW - 1));
   const kRad = settings.cavity === 'effective' ? 4 * SIGMA * Tm ** 3 * epsEff * Lc : 0;
   return { k: p.k * Nu + kRad, Nu, Ra, dT, L: Lc, eps: epsEff, kRad, kAir: p.k };
 }
@@ -363,7 +407,7 @@ function summarise(model, sim, settings) {
     if (ok && T[a] > maxC) { maxC = T[a]; maxCa = a; }
   }
   for (let e = 0; e < m; e++) {
-    const a = exCell[e], Rs = 1 / (2 * k[a] * hM); let Ts;
+    const a = exCell[e], Rs = 1 / (2 * (model.kAxis ? model.kAxis[3 * a + (model.exFace[e] >> 1)] : k[a]) * hM); let Ts;
     if (exKind[e] === 2) Ts = exParam[e]; else Ts = T[a] - sim.bd.G[e] * (T[a] - sim.bd.Tb[e]) * Rs;
     if (Ts > maxS) { maxS = Ts; maxSa = a; }
   }
@@ -430,7 +474,7 @@ const ASSUMPTIONS = [
   'Heat conduction on a voxel grid of cubic cells (finite volume, cell-centred, harmonic-mean face conductivity). Steady runs iterate the nonlinear boundary conditions; transient runs use implicit Euler, which is first order in time.',
   'The voxelizer is conservative: every voxel a surface passes through is solid, so walls thinner than a voxel are kept but thicken by up to one voxel; the volume ratio to the mesh is reported.',
   'Outside air is not modelled. Each exposed face has half a cell of conduction in series with a film: natural (and, with an air speed, mixed) convection from the plate correlations of A1 (Churchill and Chu; horizontal plates), using the model height or plan length as characteristic length, plus linearised grey-body radiation to ambient. Self-radiation between outer surfaces is ignored. The film area is scaled per axis so a curved body keeps its true surface area.',
-  'Air enclosed by the walls is one conducting medium with an effective conductivity: conduction times a Nusselt number of 0.2 Ra^(1/4) (not below 1) plus a linearised radiation conductivity for the gap length 4V/A. This is a coarse stand-in for internal convection and radiation, not a flow solution.',
+  'Air enclosed by the walls is one conducting medium with an effective conductivity: conduction times a Nusselt number of 0.2 Ra^(1/4) (not below 1) plus a linearised radiation conductivity for the gap length 2V/A (the true gap of a slab-shaped cavity), with the Rayleigh temperature difference taken between the cavity-facing surfaces of the internal parts and of the walls. This is a coarse stand-in for internal convection and radiation, not a flow solution.',
   'PCB parts are painted into the grid: the board is anisotropic (FR-4, 0.29 W/(m K), through its thickness; in the plane the setting board_k_inplane, default 20 W/(m K), as for a multilayer board with copper planes; no individual traces or vias), components are a lumped block with k = 5 W/(m K). Use the heat-source power as the junction power; junction-to-case resistances are not modelled. The hottest component temperature depends strongly on the board model (an FR-4-only board runs far hotter).',
   'Heat sources are volumetric and uniform over the part or body they target.',
 ];

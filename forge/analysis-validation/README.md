@@ -49,3 +49,10 @@ blocks the analysis from returning `validated`. The count appears in the summary
 
 Currently pending: `thermal-3d.json` / `enclosure-vs-elmer-fine` (A2: 3D enclosure against Elmer within 5 % max-temperature error at
 `fine`).
+
+### Documented expected divergence (compare cases)
+
+A `compare` case may carry `"expectedDivergence": "<why, one sentence or more>"`. If the comparison misses its tolerance, the row is printed as
+`DIVERGES (documented expected divergence, NOT a pass)` and the run does not exit 1 for it. The tolerance is not changed; the case is not a pass,
+it is counted separately in the summary line (`N DIVERGE`), and, like a skipped case, it blocks the analysis from returning `validated`. If the case
+passes, it is a plain PASS. Currently: `thermal-3d.json` / `enclosure-2-handheld-pc` (A1 against A2, 20.8 % apart, 15 % tolerance).

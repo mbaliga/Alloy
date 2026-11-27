@@ -195,3 +195,16 @@ test('bundle: the core evaluates as one script with every export, ready for a Wo
   for (const k of ['buildVoxelModel', 'paintMesh', 'pcgSteps', 'cpuBackend', 'gpuBackend', 'wgslSource', 'hFace', 'faceConductances', 'gridBudget', 'deviceClass']) assert.equal(typeof core[k] === 'function' || typeof core[k] === 'object', true, k);
   assert.equal(Object.keys(core).length, Object.keys(VC).length, 'the bundle and the module expose the same names');
 });
+
+test('voxelizer: the result does not depend on body order (a thin body on top of another keeps its voxels), and a very thin body neither hangs nor loops', () => {
+  const A = { ...boxMesh(0, 10, 0, 10, 0, 10.3), id: 1 }, B = { ...boxMesh(0, 10, 0, 10, 10.3, 11.2), id: 2 }, bbox = { lo: [0, 0, 0], hi: [10, 10, 11.2] };
+  const count = (m) => { const c = {}; for (const v of m.mat) if (v) c[v] = (c[v] || 0) + 1; return c; };
+  const ab = count(VC.buildVoxelModel({ meshes: [A, B], bbox, h: 1 })), ba = count(VC.buildVoxelModel({ meshes: [B, A], bbox, h: 1 }));
+  assert.deepEqual(ab, ba, 'same voxels per body in either order'); assert.ok(ab[2] >= 100, `the thin body keeps a layer: ${JSON.stringify(ab)}`);
+  // a 100 x 100 x 0.001 mm foil: the grid limit is hit by area, not volume; it must finish (coarser) instead of looping
+  const t0 = Date.now(), foil = { ...boxMesh(0, 100, 0, 100, 0, 0.001), id: 1 };
+  const m = VC.buildVoxelModel({ meshes: [foil], bbox: { lo: [0, 0, 0], hi: [100, 100, 0.001] }, budget: 600000 });
+  assert.ok(m.grid.total <= VC.GRID_HARD_LIMIT.total && Date.now() - t0 < 20000, 'finished within the grid limit');
+  // and a body that cannot fit at all is an error with a message, after a bounded number of passes
+  assert.throws(() => VC.buildVoxelModel({ meshes: [foil], bbox: { lo: [0, 0, 0], hi: [100, 100, 0.001] }, budget: 600000, maxTotal: 3 }), /too thin or flat/);
+});

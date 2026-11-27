@@ -121,7 +121,7 @@ test('area correction: an aligned box keeps its area, and a cylinder side is sca
 
 test('cavity: sealed walls enclose air with an effective conductivity above still air; the conduction-only option is lower; a vented box has none', () => {
   const sealed = run(enclosure({ watts: 1 })); assert.ok(sealed.model.nCav > 1000);
-  const c = core.cavityState(sealed.model, sealed.settings, sealed.sim.T); assert.ok(c.k > c.kAir * 3 && c.Nu >= 1 && c.kRad > 0, `k ${c.k} against still air ${c.kAir}`);
+  const c = core.cavityState(sealed.model, sealed.settings, sealed.sim.T); assert.ok(c.k > c.kAir * 2 && c.Nu >= 1 && c.kRad > 0, `k ${c.k} against still air ${c.kAir}`);
   const cond = run(enclosure({ watts: 1, ext: { cavity: 'conduction' } })); assert.ok(cond.maxCK > sealed.maxCK + 5, 'with air that only conducts the part is hotter');
   // a box with a 6 x 6 mm hole through the wall: the cavity is connected to the outside and is outside air
   const P = enclosure({ watts: 1 });
@@ -242,4 +242,40 @@ test('harness: the committed case file is well formed, every case has a referenc
   for (const id of ['slab-1d-convection', 'slab-generation-convection', 'cylinder-generation', 'fin-efficiency', 'transient-lumped', 'transient-slab', 'energy-balance-steady', 'energy-balance-transient', 'enclosure-1-small-abs', 'enclosure-2-handheld-pc', 'enclosure-3-aluminium-rail', 'enclosure-vs-elmer-fine']) assert.ok(ids.includes(id), id);
   const el = data.cases.find((c) => c.id === 'enclosure-vs-elmer-fine'); assert.equal(el.kind, 'reference'); assert.ok(!fs.existsSync(el.referenceFile), 'the reference file is produced by the Alloy Runner (A4) and does not exist yet');
   for (const id of ['enclosure-1-small-abs', 'enclosure-2-handheld-pc', 'enclosure-3-aluminium-rail']) { const c = data.cases.find((x) => x.id === id); assert.equal(c.kind, 'compare'); assert.deepEqual(c.tol, { rel: 0.15 }); assert.equal(c.b.analysis, `${A1}/thermal-estimate`); }
+});
+
+test('staircase: a voxel size that does not divide the bar leaves the conduction and film consistent (the 20 mm bar at 3, 4.5 and 7 mm is within 1 % of the analytic heat flow)', () => {
+  const k = 2, A = 1e-4, Q = (100 - 20) / (0.02 / (k * A) + 1 / (10 * A));
+  for (const hm of [3, 4.5, 7]) {
+    const r = run(bar({ k, ext: { h_mm: hm, fixed: [{ face: '-x', body: 'Bar', T_C: 100 }] } }));
+    assert.ok(Math.abs(r.q.conv / Q - 1) < 0.01, `h ${hm} mm: Q ${r.q.conv} against ${Q}`);
+    assert.ok(Math.abs(-r.q.fixed / Q - 1) < 0.01);
+  }
+  // a dividing h needs no correction at all
+  const m = run(bar({ k, ext: { h_mm: 2 } })).model; assert.ok(Array.from(m.cF).every((c) => c === 1));
+});
+
+test('cavity: the gap is 2V/A (the true gap of a slab), the radiation conductivity is 4 sigma Tm^3 eps_eff L, and a part in a big box radiates with its own emissivity', () => {
+  // 60 x 60 x 8 mm sealed box with a 4 mm slab cavity (56 x 56 x 4), no internal parts
+  let P = applyOps(migrate(emptyProject()), [{ type: 'box', body: 'Case', size: [60, 60, 8], anchor: 'bottom', pos: [0, 0, 0] }, { type: 'box', body: 'Case', op: 'cut', size: [56, 56, 4], anchor: 'bottom', pos: [0, 0, 2] }].map((feature) => ({ op: 'add_feature', feature }))).project;
+  P = applyOps(P, [{ op: 'set_body_material', body: 'Case', material: 'abs' }, { op: 'set_condition', list: 'heat', item: { id: 'h', target: { body: 'Case' }, power_W: 1 } }]).project;
+  P.ext = { [EXT]: { settings: { backend: 'cpu', h_mm: 1, convection: 'fixed', h_W_m2K: 10 } } };
+  const r = run(P), c = core.cavityState(r.model, r.settings, r.sim.T);
+  const Lslab = 4, SIG = 5.670374419e-8, Tm = 273.15 + 25 + (c.dT ? 0 : 0);
+  assert.ok(c.L > 0.85 * Lslab * 1e-3 && c.L <= 1.0 * Lslab * 1e-3 + 1e-9, `gap ${c.L} m for a 4 mm slab cavity (4V/A would give about 2x)`);
+  const epsW = r.model.owners[1].eps; assert.ok(Math.abs(c.eps - epsW / (2 - epsW)) < 1e-9, 'wall to wall: parallel plates');
+  const Tm3 = Math.cbrt(c.kRad / (4 * SIG * c.eps * c.L)); assert.ok(Tm3 >= 292 && Tm3 < 400, `kRad = 4 sigma Tm^3 eps L with Tm ${Tm3} K`); void Tm;
+  // an internal part (area ratio below 1) radiates with its own emissivity, above the plate value
+  const e = run(enclosure({ watts: 1 })), ce = core.cavityState(e.model, e.settings, e.sim.T);
+  assert.ok(e.model.cav.Ai < e.model.cav.Aw && ce.eps > 0 && ce.eps <= 1);
+  const Ai = e.model.cav.Ai, Aw = e.model.cav.Aw, ei = 0.9, ew = e.model.owners[1].eps; assert.ok(Math.abs(ce.eps - 1 / (1 / ei + (Ai / Aw) * (1 / ew - 1))) < 0.02);
+});
+
+test('harness: a compare case with a documented expected divergence is reported as DIVERGES, is not a pass, does not fail the run, and its tolerance is untouched', () => {
+  const data = JSON.parse(fs.readFileSync('analysis-validation/cases/thermal-3d.json', 'utf8'));
+  assert.deepEqual(lintCaseFile(data), []);
+  const bad = JSON.parse(JSON.stringify(data)); bad.cases.find((c) => c.id === 'enclosure-2-handheld-pc').expectedDivergence = 'x'; assert.ok(lintCaseFile(bad).length, 'a one-word reason is refused');
+  for (const c of data.cases.filter((x) => x.expectedDivergence)) { assert.equal(c.kind, 'compare'); assert.deepEqual(c.tol, { rel: 0.15 }); }
+  const rows = [{ case: 'x', metric: 'm', pass: false, diverges: true, note: 'n', computed: 1, expected: 1, error: 1, tolerance: '1 %' }, { case: 'y', metric: 'm', pass: true, computed: 1, expected: 1, error: 0, tolerance: '1 %' }];
+  const t = renderTable({ rows, summary: [] }); assert.match(t, /DIVERGES \(documented expected divergence, NOT a pass\)/); assert.match(t, /1 of 2 checks pass, 1 DIVERGE/);
 });

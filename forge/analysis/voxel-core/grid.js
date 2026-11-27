@@ -54,8 +54,14 @@ export function triBoxOverlap(cx, cy, cz, e, p, ia, ib, ic) {
  * Returns { inside, touched, oddColumns } counts. `conservative:false` gives the centre-sampled (volume-preserving) fill only.
  */
 export function paintMesh(grid, mat, mesh, id, { conservative = true } = {}) {
+  const f = paintMeshFill(grid, mat, mesh, id), t = conservative ? paintMeshTouch(grid, mat, mesh, id) : 0;
+  return { inside: f.inside, touched: t, oddColumns: f.oddColumns };
+}
+
+/** Parity fill only (see paintMesh): the voxels whose centres are inside the mesh. Returns { inside, oddColumns }. */
+export function paintMeshFill(grid, mat, mesh, id) {
   const { origin: lo, h, dims: [nx, ny, nz] } = grid, pos = mesh.positions, idx = mesh.indices, nt = idx.length / 3;
-  let inside = 0, touched = 0;
+  let inside = 0;
   // parity fill: collect (column, z) hits, sort by column with a counting sort
   let cap = 1 << 16, hitCol = new Int32Array(cap), hitZ = new Float64Array(cap), nh = 0;
   const jx = h * 1.37e-4, jy = h * 2.91e-4;
@@ -92,7 +98,14 @@ export function paintMesh(grid, mat, mesh, id, { conservative = true } = {}) {
       for (let k = k0; k <= k1; k++) { const v = col + nx * ny * k; if (mat[v] === 0) { mat[v] = id; inside++; } }
     }
   }
-  if (conservative) {
+  return { inside, oddColumns };
+}
+
+/** Conservative pass only (see paintMesh): every still-empty voxel a triangle passes through. Run it for all bodies AFTER every body's fill, so a body's surface layer never takes voxels that another body contains. Returns the count. */
+export function paintMeshTouch(grid, mat, mesh, id) {
+  const { origin: lo, h, dims: [nx, ny] } = grid, pos = mesh.positions, idx = mesh.indices, nt = idx.length / 3;
+  let touched = 0;
+  {
     const e = h * 0.5 * (1 - 1e-3);
     for (let t = 0; t < nt; t++) {
       const a = idx[3 * t] * 3, b = idx[3 * t + 1] * 3, c = idx[3 * t + 2] * 3;
@@ -106,7 +119,7 @@ export function paintMesh(grid, mat, mesh, id, { conservative = true } = {}) {
       }
     }
   }
-  return { inside, touched, oddColumns };
+  return touched;
 }
 
 /** Paint an axis-aligned box [x0,x1,y0,y1,z0,z1] (mm) into empty voxels whose centres lie inside it. At least one voxel (the one holding the centre) is painted. Returns the voxel count. */
@@ -236,15 +249,18 @@ export function buildVoxelModel({ meshes, bbox, paint = null, h = null, budget =
   const size = [0, 1, 2].map((k) => bbox.hi[k] - bbox.lo[k]);
   if (!(size.every((s) => s > 0))) throw new Error('the model has no extent along at least one axis');
   const vol = size[0] * size[1] * size[2];
-  let hh = h || Math.cbrt(vol / budget), tries = 0, out = null;
+  let hh = h || Math.cbrt(vol / budget), tries = 0, coarsen = 0, out = null;
   for (;;) {
     const grid = makeGrid(bbox.lo, bbox.hi, hh);
     if (grid.total > maxTotal) {
       if (h) throw new Error(`grid ${grid.dims.join('×')} = ${grid.total.toLocaleString('en')} cells exceeds the limit of ${maxTotal.toLocaleString('en')}; use a voxel size of at least ${Math.cbrt(vol / maxTotal).toFixed(3)} mm`);
-      hh = Math.cbrt(vol / maxTotal) * 1.01; continue;
+      // a thin or flat body has far more cells than vol/h^3: coarsen from the actual count (at least 10 % per pass) and give up after 8 passes
+      if (++coarsen > 8) throw new Error('the body is too thin or flat for the grid limit: its bounding box needs more cells than the limit even at a coarse voxel size; analyse it with a fixed larger voxel size or split the model');
+      hh = hh * Math.max(1.1, Math.cbrt(grid.total / maxTotal) * 1.01); continue;
     }
-    const mat = new Uint8Array(grid.total), paints = [];
-    for (const m of meshes) paints.push({ id: m.id, ...paintMesh(grid, mat, m, m.id, { conservative }) });
+    const mat = new Uint8Array(grid.total), paints = meshes.map((m) => ({ id: m.id, ...paintMeshFill(grid, mat, m, m.id), touched: 0 }));
+    // all interiors first, then every conservative pass into the voxels still empty, so the result does not depend on body order
+    if (conservative) meshes.forEach((m, i) => { paints[i].touched = paintMeshTouch(grid, mat, m, m.id); });
     if (paint) paint(grid, mat);
     const air = classifyAir(grid, mat), struct = buildStructure(grid, mat);
     out = { grid, mat, struct, air, stats: { paints, active: struct.n, attempts: tries + 1 } };

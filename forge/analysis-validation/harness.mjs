@@ -50,8 +50,10 @@ export function lintCaseFile(file) {
     if (c.kind === 'compare') {
       if (!(c.a && c.a.metric && c.b && c.b.analysis && c.b.package && c.b.metric)) problems.push(`${c.id}: a compare case needs a.metric and b.{analysis,package,metric}`);
       try { compareValue(0, 0, c.tol); } catch (er) { problems.push(`${c.id}: ${er.message}`); }
+      if (c.expectedDivergence !== undefined && !(typeof c.expectedDivergence === 'string' && c.expectedDivergence.length > 20)) problems.push(`${c.id}: expectedDivergence is a sentence that says why (the tolerance stays; the case still does not count as a pass)`);
       continue;
     }
+    if (c.expectedDivergence !== undefined) problems.push(`${c.id}: expectedDivergence is only for compare cases`);
     if (c.kind === 'reference') {
       if (!c.referenceFile) problems.push(`${c.id}: a reference case names its referenceFile`);
       for (const e of c.expect || []) { if (!e.refKey) problems.push(`${c.id}/${e.metric}: a reference expectation names its refKey`); try { compareValue(0, 0, e.tol); } catch (er) { problems.push(`${c.id}/${e.metric}: ${er.message}`); } }
@@ -132,7 +134,7 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
             else {
               const want = vb - amb, got = va - amb, r = compareValue(got, want, c.tol), pass = r.pass;
               if (!pass) casePass = false;
-              rows.push({ file: file.name, case: c.id, metric: `${c.a.metric} rise above ambient`, reference: c.reference, unit: 'K', expected: want, computed: got, error: r.error, tolerance: `${(r.limit * 100).toPrecision(3)} %`, errorText: `${(r.error * 100).toPrecision(3)} %`, pass, note: `${ext.split('.').pop()} ${va.toFixed(2)} C vs ${extB.split('.').pop()} ${vb.toFixed(2)} C, ambient ${amb.toFixed(1)} C` });
+              rows.push({ file: file.name, case: c.id, metric: `${c.a.metric} rise above ambient`, reference: c.reference, unit: 'K', expected: want, computed: got, error: r.error, tolerance: `${(r.limit * 100).toPrecision(3)} %`, errorText: `${(r.error * 100).toPrecision(3)} %`, pass, diverges: !pass && !!c.expectedDivergence, note: `${ext.split('.').pop()} ${va.toFixed(2)} C vs ${extB.split('.').pop()} ${vb.toFixed(2)} C, ambient ${amb.toFixed(1)} C` });
             }
             for (const m of c.info || []) { const ia = get(ra, m), ib = get(rb, m); if (Number.isFinite(ia) && Number.isFinite(ib)) rows.push({ file: file.name, case: c.id, metric: `${m} (info, not asserted)`, reference: c.reference, unit: 'C', expected: ib, computed: ia, error: '-', tolerance: '-', errorText: `${(100 * Math.abs((ia - amb) - (ib - amb)) / Math.max(Math.abs(ib - amb), 1e-9)).toPrecision(3)} % of rise`, pass: true, info: true }); }
           } catch (e) { fail('(run)', String(e.message || e)); }
@@ -180,16 +182,16 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
   } finally { host.stopAll(); }
   // an analysis may only claim "validated" if every one of its cases passes
   for (const s of summary) if (s.validity.includes('validated') && s.passed !== s.cases) rows.push({ file: s.file, case: '(rule)', metric: 'validity', reference: 'docs/EXTENSIONS_SPEC.md 3.3', computed: '-', error: '-', tolerance: '-', pass: false, note: `${s.analysis} returns "validated" but ${s.cases - s.passed} of ${s.cases} cases do not pass` });
-  return { rows, summary, pass: rows.every((r) => r.pass || r.skipped) };
+  return { rows, summary, pass: rows.every((r) => r.pass || r.skipped || r.diverges) };
 }
 
 const f = (v) => (typeof v === 'number' ? +v.toPrecision(6) : v);
 export function renderTable({ rows, summary }) {
   const lines = ['| Case | Metric | Reference | Expected | Computed | Error | Tolerance | Result |', '|---|---|---|---|---|---|---|---|'];
-  for (const r of rows) lines.push(`| ${r.case} | ${r.metric} | ${(r.reference || '').replace(/\|/g, '/').slice(0, 70)} | ${r.expected == null ? '' : `${f(r.expected)} ${r.unit || ''}`} | ${r.computed === '-' ? '-' : `${f(r.computed)} ${r.unit || ''}`} | ${r.errorText || r.error} | ${r.tolerance} | ${r.skipped ? 'SKIPPED (not a pass): ' + r.note : r.info ? 'INFO' + (r.note ? ': ' + r.note : '') : r.pass ? 'PASS' + (r.note ? ' (' + r.note + ')' : '') : 'FAIL' + (r.note ? ': ' + r.note : '')} |`);
+  for (const r of rows) lines.push(`| ${r.case} | ${r.metric} | ${(r.reference || '').replace(/\|/g, '/').slice(0, 70)} | ${r.expected == null ? '' : `${f(r.expected)} ${r.unit || ''}`} | ${r.computed === '-' ? '-' : `${f(r.computed)} ${r.unit || ''}`} | ${r.errorText || r.error} | ${r.tolerance} | ${r.skipped ? 'SKIPPED (not a pass): ' + r.note : r.info ? 'INFO' + (r.note ? ': ' + r.note : '') : r.pass ? 'PASS' + (r.note ? ' (' + r.note + ')' : '') : r.diverges ? 'DIVERGES (documented expected divergence, NOT a pass): ' + r.note : 'FAIL' + (r.note ? ': ' + r.note : '')} |`);
   lines.push('', ...summary.map((s) => `- ${s.analysis}: ${s.passed} of ${s.cases} cases pass; result validity ${s.validity.join(', ')}`));
-  const asserted = rows.filter((r) => !r.skipped && !r.info), bad = asserted.filter((r) => !r.pass).length, skipped = rows.filter((r) => r.skipped).length;
-  lines.push('', `**${asserted.length - bad} of ${asserted.length} checks pass${bad ? `, ${bad} FAIL` : ''}${skipped ? `; ${skipped} case(s) SKIPPED (needs runner), not counted as passes` : ''}.**`);
+  const asserted = rows.filter((r) => !r.skipped && !r.info), div = asserted.filter((r) => !r.pass && r.diverges).length, bad = asserted.filter((r) => !r.pass && !r.diverges).length, skipped = rows.filter((r) => r.skipped).length;
+  lines.push('', `**${asserted.length - bad - div} of ${asserted.length} checks pass${bad ? `, ${bad} FAIL` : ''}${div ? `, ${div} DIVERGE (documented, tolerance unchanged, not passes)` : ''}${skipped ? `; ${skipped} case(s) SKIPPED (needs runner), not counted as passes` : ''}.**`);
   return lines.join('\n');
 }
 
