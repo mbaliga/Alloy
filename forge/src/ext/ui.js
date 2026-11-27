@@ -5,10 +5,11 @@ import { loadPackage } from './loader.js';
 import { describeInstall } from './manifest.js';
 import { enabledIn, projectEntry } from './registry.js';
 import { rangeOf, legendTicks, cssGradient, gridText, sliceCount, vectorScale } from './overlay.js';
+import { adapterLine } from '../analysis/runner-client.js';
 import { createLayerStore, groupLayers, layerReadout } from './layers.js';
 
 const RUNNER_KEY = 'af.runner';
-const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext'], ['Structural (analysis, GPU)', 'ext-samples/structural.alloyext']];
+const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext'], ['Structural (analysis, GPU)', 'ext-samples/structural.alloyext'], ['Alloy Runner (analysis, remote)', 'ext-samples/runner.alloyext']];
 
 export function mountExtensions(env) {
   const { h, $, tip, S, registry, host, resolver, panes, view, say, blip, setExtension, rebuild, showSheet } = env;
@@ -88,7 +89,18 @@ export function mountExtensions(env) {
     const ru = h('input', { value: r.url, placeholder: 'https://runner.example.org', spellcheck: 'false', id: 'runner-url', 'aria-label': 'Runner URL' });
     const rk = h('input', { value: r.token, type: 'password', autocomplete: 'off', spellcheck: 'false', id: 'runner-token', 'aria-label': 'Runner token' });
     const save = () => { const v = ru.value.trim(); if (v && !validRunnerUrl(v)) { say('✕ The runner address must be https (or http on localhost).'); return; } runner.set({ url: v.replace(/\/+$/, ''), token: rk.value.trim() }); say(v ? 'Runner saved.' : 'Runner cleared.'); blip(700); };
-    box.append(h('div', { class: 'sub' }, 'Alloy Runner', rb), rt, h('div', { class: 'xrow' }, ru), h('div', { class: 'xrow' }, rk, h('button', { class: 'chip', id: 'runner-save', onclick: save }, 'save')));
+    const status = h('div', { class: 'hint', id: 'runner-status', role: 'status' });
+    const test = async () => {
+      save(); status.textContent = 'Testing…'; status.className = 'hint';
+      try {
+        const r = await env.client.test();
+        const lines = [`${r.name} ${r.version}, protocol ${r.protocol}. ${r.authenticated ? 'The token is accepted.' : `The token is NOT accepted${r.authError ? ': ' + r.authError : ''}.`}`];
+        if (r.adapters) for (const [id, a] of Object.entries(r.adapters)) lines.push(adapterLine(id, a));
+        if (r.authenticated) lines.push(r.qualification ? `Qualification file: ${r.qualification.passed ? 'the operator attests the reference cases' : 'present, but does not attest them'}.` : 'No qualification file: results can be graded estimate at most.');
+        status.className = r.authenticated ? 'hint ok' : 'errbox warn'; status.textContent = ''; status.append(...lines.flatMap((l, i) => (i ? [h('br'), l] : [l])));
+      } catch (e) { status.className = 'errbox warn'; status.textContent = String(e.message || e); }
+    };
+    box.append(h('div', { class: 'sub' }, 'Alloy Runner', rb), rt, h('div', { class: 'xrow' }, ru), h('div', { class: 'xrow' }, rk, h('button', { class: 'chip', id: 'runner-save', onclick: save }, 'save'), h('button', { class: 'chip', id: 'runner-test', disabled: !env.client, onclick: test }, 'test')), status);
   }
 
   function packageRow(pkg) {

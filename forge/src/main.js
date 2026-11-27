@@ -19,6 +19,7 @@ import { createResolver, hasExtFeatures } from './ext/resolve.js';
 import { createPaneHost } from './ext/panes.js';
 import { mountExtensions } from './ext/ui.js';
 import { createAnalysisRunner } from './analysis/runner.js';
+import { createRunnerClient } from './analysis/runner-client.js';
 import { mountAnalyze } from './analysis/ui.js';
 import { createResultCache, idbStore as idbResultStore, memoryStore as memResultStore } from './analysis/cache.js';
 
@@ -814,18 +815,20 @@ async function boot() {
     },
     onOverlay: (e, i, o) => extUi.setOverlay(e, i, o), onPane: (m) => extUi.onPane(m),
     getRunner: () => { const r = extUi.runner.get(); return r.url ? r : null },
+    remoteConsent: (info) => (analyzeUi ? analyzeUi.requestConsent(info) : false),
     gpuInfo: async () => {
       if (!navigator.gpu) return { available: false };
       try { const a = await navigator.gpu.requestAdapter(); if (!a) return { available: false }; const i = a.info || {}; return { available: true, adapter: [i.vendor, i.architecture, i.device].filter(Boolean).join(' ') || 'unknown', limits: { maxBufferSize: a.limits.maxBufferSize, maxStorageBufferBindingSize: a.limits.maxStorageBufferBindingSize } }; } catch (_) { return { available: false }; }
     },
   });
   extHost = new ExtHost({ createWorker: browserWorkerFactory, api });
+  const runnerClient = createRunnerClient({ getRunner: () => { const r = extUi.runner.get(); return r.url ? r : null; } });
   analysisRunner = createAnalysisRunner({ registry, host: extHost, cache: createResultCache({ store: typeof indexedDB !== 'undefined' ? idbResultStore() : memResultStore() }) });
   resolver = createResolver({ registry, host: extHost, analysis: analysisRunner });
   const themeNow = () => { const cs = getComputedStyle(document.body); return { ink: cs.getPropertyValue('--ink').trim(), dim: cs.getPropertyValue('--dim').trim(), acc: cs.getPropertyValue('--acc').trim(), dark: S.theme !== 'light' }; };
   panes = createPaneHost({ host: extHost, getPkg: (id) => registry.get(id), getTheme: themeNow });
-  extUi = mountExtensions({ h, $, tip: tipToggle, S, registry, host: extHost, resolver, panes, view, say, blip, setExtension, rebuild: scheduleRebuild, showSheet, renderPanes, refreshAddMenu });
-  analyzeUi = mountAnalyze({ h, $, S, tip: tipToggle, say, blip, runner: analysisRunner, extUi, snapshot: () => view.snapshot(), download,
+  extUi = mountExtensions({ client: runnerClient, h, $, tip: tipToggle, S, registry, host: extHost, resolver, panes, view, say, blip, setExtension, rebuild: scheduleRebuild, showSheet, renderPanes, refreshAddMenu });
+  analyzeUi = mountAnalyze({ h, $, S, tip: tipToggle, say, blip, runner: analysisRunner, extUi, client: runnerClient, snapshot: () => view.snapshot(), download,
     commitOps: (ops) => { try { commit(applyOps(S.project, ops, { actor: 'user' }).project); return true; } catch (e) { say(String(e.message || e)); blip(200, 0.08); return false; } } });
   registry.subscribe(() => { resolver.clear(); });
 

@@ -47,6 +47,11 @@ design and settings the reference solver used. If the file does not exist the ca
 A skipped case is **not** counted as a pass, does not fail the run, and, because the analysis then has a case that has not passed,
 blocks the analysis from returning `validated`. The count appears in the summary line (`N case(s) SKIPPED`).
 
+**Producing a reference file.** `node tools/make-reference.mjs --case structural/bracket-vs-elmer --runner <url> --token <token> [--mesh-mm n]` (`npm run reference:make -- ...`)
+builds the case's design, sends it to **your** Alloy Runner with a two-mesh study, and writes the file only when the solve was done by a real Elmer (adapter `elmer`, never the
+simulated solver) and the study converged; otherwise it refuses and writes nothing. It supports the structural bracket today; the enclosure case needs PCB heat sources, which the
+runner protocol does not carry yet. **No reference file exists in this repository**, so both Elmer cases stay SKIPPED until someone with a real Elmer runs it.
+
 Currently pending: `structural.json` / `bracket-vs-elmer` (A3, below) and `thermal-3d.json` / `enclosure-vs-elmer-fine` (A2: 3D enclosure against Elmer within 5 % max-temperature error at
 `fine`).
 

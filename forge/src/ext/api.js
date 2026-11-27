@@ -24,6 +24,8 @@ const clone = (v) => JSON.parse(JSON.stringify(v));
  *   onOverlay(extId, id, overlay|null), onPane({kind, extId, id, message})
  *   gpuInfo()                         Promise<{available, adapter?, limits?}>
  *   getRunner()                       { url, token } the user entered, or null
+ *   remoteConsent({url, path, bytes}) Promise<boolean> | boolean: the user's yes to sending a request BODY (geometry, case) to the runner. Without this hook, or when it answers
+ *                                     false, a compute.remote.fetch with a body rejects with E_CONSENT. Requests without a body (health, polling, cancel, download) need none.
  *   fetch                             fetch implementation (defaults to globalThis.fetch)
  */
 export class ExtApi {
@@ -167,6 +169,12 @@ export class ExtApi {
     if (!r || !r.url) throw new ExtError('E_UNAVAILABLE', 'no Alloy Runner URL is set (Settings > Extensions)');
     if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//') || path.includes('..') || /[\r\n]/.test(path)) throw new ExtError('E_ARG', 'path must start with a single "/" and stay inside the runner');
     const base = r.url.replace(/\/+$/, '');
+    const size = init.body == null ? 0 : typeof init.body === 'string' ? new TextEncoder().encode(init.body).length : (init.body.byteLength ?? 0);
+    if (size > 0) { // data is about to leave the browser: only with the user's explicit yes, asked for this very request
+      let ok = false;
+      try { ok = !!(this.ctx.remoteConsent && await this.ctx.remoteConsent({ url: base, path, bytes: size, method: String(init.method || 'POST').toUpperCase(), extId: _pkg.manifest.id })); } catch (_) { ok = false; }
+      if (!ok) throw new ExtError('E_CONSENT', 'sending data to the Alloy Runner needs your confirmation in the Analyze pane; nothing was sent');
+    }
     return this.#fetch(base + path, init, r.token ? { Authorization: 'Bearer ' + r.token } : {});
   }
   async api_net_fetch(_pkg, url, init = {}) {
