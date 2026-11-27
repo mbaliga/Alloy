@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
-import { colorsFor, nearestPoint, interpolateSurface, sampleVoxel, sliceImage, slicePlane } from './ext/overlay.js';
+import { colorsFor, nearestPoint, interpolateSurface, sampleVoxel, sliceImage, slicePlane, vectorSegments } from './ext/overlay.js';
 
 const THEMES = {
   dark: { bg: 0x0e1215, line: [0.62, 0.72, 0.78], glow: [0.56, 0.94, 0.77], edge: 0x05080a, vol: 0x6f8590, grey: '#5d666c' },
@@ -244,8 +244,9 @@ export function createView(el, cb) {
   // ── overlays: colour-mapped points and boxes (extensions), and analysis fields: a surface map on a body and a voxel slice plane.
   // Colour is paired with a legend and a probe (see ext/overlay.js and the legend in the page); the probe prints the exact value.
   function setOverlays(list) {
-    clear(overlayGroup); overlayList = list.filter((o) => o.ov.kind === 'points');
-    for (const { ov, range } of list) {
+    clear(overlayGroup); overlayList = list.filter((o) => o.ov.kind === 'points' || o.ov.kind === 'vectors');
+    for (const { ov, range, opacity = 1 } of list) {
+      const first = overlayGroup.children.length;
       if (ov.kind === 'points') {
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(ov.positions), 3));
@@ -272,7 +273,16 @@ export function createView(el, cb) {
         g.setAttribute('uv', new THREE.BufferAttribute(Float32Array.from([0, 0, 1, 0, 1, 1, 0, 1]), 2)); g.setIndex([0, 1, 2, 0, 2, 3]);
         const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
         m.renderOrder = 7; m.userData.overlay = ov; overlayGroup.add(m);
+      } else if (ov.kind === 'vectors') {
+        // arrows or streamlines as line segments, coloured by speed with the same map as the legend
+        const sg = vectorSegments(ov), g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(sg.positions, 3));
+        g.setAttribute('color', new THREE.BufferAttribute(colorsFor({ values: sg.values }, range), 3));
+        const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true }));
+        l.renderOrder = 8; overlayGroup.add(l);
       }
+      // the layer's opacity (Layers sheet) applies to everything this overlay added
+      if (opacity < 1) for (let i = first; i < overlayGroup.children.length; i++) { const mt = overlayGroup.children[i].material; mt.transparent = true; mt.opacity *= opacity; mt.depthWrite = false; }
     }
   }
   function probe(x, y) {
@@ -289,7 +299,7 @@ export function createView(el, cb) {
     }
     const project = (px, py, pz) => { v.set(px, py, pz).project(cam); if (v.z > 1 || v.z < -1) return null; return { x: ((v.x + 1) / 2) * r.width + r.left, y: ((1 - v.y) / 2) * r.height + r.top, depth: v.z }; };
     let best = null;
-    for (const { ov, range } of overlayList) { const n = nearestPoint(ov, project, x, y); if (n && (!best || n.distance < best.distance)) best = { ...n, label: ov.label, unit: ov.unit, validity: ov.validity, range }; }
+    for (const { ov, range } of overlayList) { const n = nearestPoint(ov, project, x, y); if (n && (!best || n.distance < best.distance)) best = { ...n, label: ov.label, unit: ov.unit, validity: ov.validity, range, vector: ov.vectors ? [...ov.vectors.subarray(3 * n.index, 3 * n.index + 3)] : undefined }; }
     return best;
   }
 

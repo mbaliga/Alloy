@@ -266,7 +266,7 @@ forge.scene.overlay(id: string, overlay: Overlay) → void
 - Permission: `scene.overlay`
 - Must be declared in `contributes.overlays`
 
-Draw or replace an overlay. Kinds: `points` ({ positions: Float32Array, values: Float32Array, unit, label, range? }) and `box` ({ min, max, label }). The host adds the colour map, legend and tap probe. `id` must be declared in `contributes.overlays`.
+Draw or replace an overlay. Kinds: `points` ({ positions: Float32Array, values: Float32Array, unit, label, range? }), `vectors` ({ positions: Float32Array, vectors: Float32Array, unit, label, range?, scale?, lines? }) and `box` ({ min, max, label }). A `vectors` overlay has 3 floats per sample in `positions` and in `vectors` (same length, all finite); the host takes the magnitude per sample (the unit is the unit of the vector, e.g. m/s), colours by it and draws one arrow per sample, as long as `scale` mm per unit when given, else about one sample spacing for the largest. With `lines` (a Uint32Array of strictly increasing start indices, the first 0) the samples are drawn as streamlines instead: consecutive samples of a line are joined. The host adds the colour map, legend and tap probe (the probe prints the speed and the vector). Every overlay also gets a row in the Layers sheet (on/off, opacity, solo; kept in the viewer browser, not in the project), so give it a clear `label`. `id` must be declared in `contributes.overlays`.
 
 ### `forge.scene.clearOverlay`
 
