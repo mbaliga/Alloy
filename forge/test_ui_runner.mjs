@@ -54,7 +54,7 @@ await page.fill('#runner-url', runnerUrl); await page.fill('#runner-token', 'wro
 await page.waitForFunction(() => /token is NOT accepted/.test(document.querySelector('#runner-status').textContent), null, { timeout: 15000 });
 await page.fill('#runner-token', TOKEN); await page.click('#runner-test');
 await page.waitForFunction(() => /token is accepted/.test(document.querySelector('#runner-status').textContent), null, { timeout: 15000 });
-const status = await page.textContent('#runner-status'); assert.match(status, /alloy-runner 0\.1\.0, protocol 1/); assert.match(status, /fake: ready \(simulated, protocol tests only\)/); assert.match(status, /elmer: not available/); assert.match(status, /openfoam: not available.*not implemented/); assert.match(status, /No qualification file/);
+const status = await page.textContent('#runner-status'); assert.match(status, /alloy-runner 0\.1\.0, protocol 1/); assert.match(status, /fake: ready \(simulated, protocol tests only\)/); assert.match(status, /elmer: not available/); assert.match(status, /openfoam: not available.*not found/); assert.match(status, /No qualification file/);
 assert.ok(log.every((l) => l.method === 'GET' || l.method === 'OPTIONS'), 'testing the connection sends no geometry: ' + JSON.stringify(log.map((l) => l.method + l.path)));
 await page.click('#extclose');
 

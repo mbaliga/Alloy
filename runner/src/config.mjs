@@ -23,6 +23,7 @@ export function loadConfig(env = process.env, overrides = {}) {
     enableFake: env.ALLOY_RUNNER_ENABLE_FAKE === '1',
     gmshBin: env.ALLOY_RUNNER_GMSH || 'gmsh',
     elmerBin: env.ALLOY_RUNNER_ELMER || 'ElmerSolver',
+    openfoamBin: env.ALLOY_RUNNER_OPENFOAM_BIN || '',
     qualificationFile: env.ALLOY_RUNNER_QUALIFICATION || '',
     ...overrides,
   };

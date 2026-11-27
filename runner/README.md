@@ -13,7 +13,7 @@ This is step A4 of `docs/EXTENSIONS_SPEC.md`. Read its "A4 done" block for what 
   and the adapter is tested against a stub script, not against Elmer. Treat your first real run as commissioning: compare it with a
   hand calculation (a bar in tension, a cantilever) before you trust a number.
 - The container image has **not been built** (no Docker daemon in the sandbox).
-- **OpenFOAM is not implemented** (flow arrives with step A5). `GET /v1/health` says so.
+- **OpenFOAM (A5): the case writer and the adapter exist, OpenFOAM has never been run.** A `flow` job (below) becomes a steady `simpleFoam` case (blockMesh box, snappyHexMesh around your bodies, k-omega SST) with the flow through named planes read back from `surfaceFieldValue`. The case files are checked as text and the adapter against stub scripts; the real programs were not installable in the build sandbox, the image does not install them, and `chtMultiRegionFoam` (natural convection, conjugate heat) is **not** written. Treat the first real run as commissioning: compare a plain duct with a hand calculation. Forge does not submit flow jobs yet. `GET /v1/health` lists the three programs it needs and which are missing.
 - Results from the runner are graded `estimate` at best until your runner carries a qualification file (see below). The simulated
   solver (protocol tests only, off by default) produces `experimental` results labelled SIMULATED.
 
@@ -50,6 +50,7 @@ In Forge: Settings > Extensions > install **Alloy Runner**, then enter the addre
 | `ALLOY_RUNNER_JOB_TIMEOUT_S` | `3600` | a running job is stopped after this long |
 | `ALLOY_RUNNER_MAX_BODY_MB`, `_MAX_BODIES`, `_MAX_JOBS`, `_MAX_TETS`, `_CONCURRENCY` | 100, 16, 50, 400000, 1 | limits |
 | `ALLOY_RUNNER_GMSH`, `ALLOY_RUNNER_ELMER` | `gmsh`, `ElmerSolver` | the programs it starts |
+| `ALLOY_RUNNER_OPENFOAM_BIN` | none (the `PATH`) | the folder that holds `blockMesh`, `snappyHexMesh` and `simpleFoam` |
 | `ALLOY_RUNNER_ENABLE_FAKE=1` | off | enable the **simulated** solver (protocol tests only; every result says SIMULATED) |
 | `ALLOY_RUNNER_QUALIFICATION` | none | path of the qualification file (below) |
 
@@ -76,6 +77,8 @@ solve ends. Failed and cancelled jobs are deleted by Forge right away.
 The STL must be closed and wound outward (it is checked). Faces are the same vocabulary as Forge's Analyze pane: a direction of a body's bounding box, optionally inside a box.
 `step` is accepted by the schema but **refused in this version** (send STL).
 
+**A flow job** (`kind: "flow"`, adapter `auto` or `openfoam`): `flow: { speed_ms, dir: "+x".."-z", nu_m2s?, margin_mm?, planes: [{ id, point_mm, normal, bounds_mm }] }`; the bodies are closed walls (no material), the box of air is their bounding box plus a margin (upstream and sides `margin_mm`, downstream twice that), and each plane yields a summary row `plane_<id>_flow` in L/s (the sum of `phi` over it, signed by its normal). There is no `result.vtu` for a flow job.
+
 **Mesh study.** With `options.mesh_study` the runner solves twice, at the mesh size and at a size 1.5 times finer, and reports the relative change of
 displacement, stiffness and von Mises (tolerances 2 %, 2 %, 10 %) in `study`. `study.converged` is true only when all are within tolerance.
 
@@ -100,7 +103,7 @@ It is a statement by whoever runs the runner, shown in every result; this reposi
 - **Thermal:** steady state; free surfaces lose heat by a single film coefficient (`h_conv_W_m2K`, default 10); no separate radiation. Heat sources must be on bodies:
   Forge does not send PCB parts, and says how many watts it left out.
 - **Mesh:** first-order tetrahedra only; stress at sharp corners depends on the mesh (the study shows how much).
-- Not implemented: OpenFOAM, STEP input, transient thermal, contact, GPU.
+- Not implemented: `chtMultiRegionFoam`, a Forge client for flow jobs, OpenFOAM in the image, STEP input, transient thermal, contact, GPU.
 
 ## Tests
 

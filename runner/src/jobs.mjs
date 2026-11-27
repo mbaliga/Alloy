@@ -60,12 +60,12 @@ export class JobStore {
       const out = await adapter.run(rec.job, ctx);
       if (rec.ac.signal.aborted) throw Object.assign(new Error('cancelled'), { code: 'CANCELLED' });
       const validity = this.#validity(adapter, out);
-      const result = { protocol: 1, job: rec.id, kind: rec.kind, adapter: adapter.id, solver_real: !!adapter.real, simulated: !adapter.real, units: { length: 'mm', stress: 'MPa', temperature: 'degC', displacement: 'mm' },
+      const result = { protocol: 1, job: rec.id, kind: rec.kind, adapter: adapter.id, solver_real: !!adapter.real, simulated: !adapter.real, units: { length: 'mm', stress: 'MPa', temperature: 'degC', displacement: 'mm', speed: 'm/s', flow: 'L/s' },
         summary: out.summary, warnings: [...rec.job.warnings, ...(out.warnings || [])], info: out.info || {}, study: out.study || null, qualification: this.qualification, validity_hint: validity,
         bodies: rec.job.bodies.map((b) => b.name), seconds: (this.now() - rec.started) / 1000 };
       if (!adapter.real) result.warnings.push('SIMULATED: this result came from the runner\'s simulated solver, which solves no equation. It is for testing the protocol only.');
       const put = (name, data, mime) => { const p = path.join(rec.dir, name); fs.writeFileSync(p, data); rec.files[name] = { path: p, bytes: Buffer.byteLength(data), mime }; };
-      put('result.vtu', out.vtu, 'application/xml'); put('result.json', JSON.stringify(result), 'application/json');
+      if (out.vtu) put('result.vtu', out.vtu, 'application/xml'); put('result.json', JSON.stringify(result), 'application/json');
       rec.result = result; rec.progress = 1; rec.state = 'done'; rec.stage = 'done'; this.event(rec, 'done');
     } catch (e) {
       if (e && e.code === 'CANCELLED' || rec.ac.signal.aborted) { rec.state = 'cancelled'; rec.stage = 'cancelled'; rec.error = rec.timedOut ? { code: 'E_TIMEOUT', message: `stopped: longer than ${cfg.jobTimeoutSeconds} s` } : null; this.event(rec, rec.timedOut ? 'stopped (timeout)' : 'cancelled'); }

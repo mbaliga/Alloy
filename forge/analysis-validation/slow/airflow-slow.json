@@ -1,0 +1,67 @@
+{
+ "analysis": "xyz.mdhv.airflow/airflow",
+ "package": "examples/ext/airflow",
+ "cases": [
+  {
+   "id": "cavity-re1000-n128",
+   "kind": "function",
+   "title": "Lid-driven cavity, Re 1000, 128 x 128 cells (Ghia)",
+   "reference": "Ghia, Ghia and Shin (1982), J. Comput. Phys. 48, 387-411, tables I and II (u on the vertical and v on the horizontal centreline, 17 points each; the numbers are transcribed from memory of the tables and were not re-checked against the paper). Quasi-2D cavity of N x N fluid cells, lid speed 0.1, Smagorinsky off, run to a steady state. The metric is the largest difference to the table in units of the lid speed; the tolerance was written down before the run.",
+   "calls": [
+    {
+     "fn": "refCavity.eu",
+     "args": [
+      {
+       "Re": 1000,
+       "N": 128
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.03
+     },
+     "metric": "u on the vertical centreline, max |difference|",
+     "unit": "U_lid"
+    },
+    {
+     "fn": "refCavity.ev",
+     "args": [
+      {
+       "Re": 1000,
+       "N": 128
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.03
+     },
+     "metric": "v on the horizontal centreline, max |difference|",
+     "unit": "U_lid"
+    }
+   ]
+  },
+  {
+   "id": "cylinder-strouhal-h66",
+   "kind": "function",
+   "title": "Flow past a cylinder in a channel, Re 100: Strouhal number at 66 cells (Schaefer-Turek 2D-2)",
+   "reference": "Schaefer and Turek (1996), benchmark 2D-2, Strouhal number 0.2950 to 0.3050 (mid 0.3000); 66 cells across the channel (cylinder 16.1 cells), 30 000 steps. Tolerance 5 % of 0.300, written down before the run.",
+   "calls": [
+    {
+     "fn": "refCylinder.St",
+     "args": [
+      {
+       "H": 66,
+       "steps": 30000
+      }
+     ],
+     "value": 0.3,
+     "tol": {
+      "rel": 0.05
+     },
+     "metric": "Strouhal number",
+     "unit": ""
+    }
+   ]
+  }
+ ]
+}

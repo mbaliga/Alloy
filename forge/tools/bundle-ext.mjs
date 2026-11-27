@@ -1,5 +1,5 @@
 // Builds a package's main.js from the shared voxel core and the package's own source, because a package Worker loads ONE file:
-//   node tools/bundle-ext.mjs            writes examples/ext/thermal-3d/main.js and examples/ext/structural/main.js   (npm run build:ext)
+//   node tools/bundle-ext.mjs            writes examples/ext/{thermal-3d,structural,airflow,runner}/main.js   (npm run build:ext)
 //   node tools/bundle-ext.mjs --check    exits 1 if a committed main.js is stale (run by test_thermal3d.mjs and test_structural.mjs)
 // The core files have no imports between them; `export ` is stripped so everything lands in the package function's scope.
 import fs from 'node:fs';
@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = ['correlations.js', 'grid.js', 'cg.js', 'gpu.js'];
 const CORE_STRUCTURAL = ['grid.js', 'cg.js', 'elastic.js', 'gpu-elastic.js'];
+const CORE_AIRFLOW = ['grid.js', 'lbm.js', 'gpu-lbm.js'];
 const strip = (s) => s.replace(/^export (async function|function\*|function|const|let|class)/gm, '$1');
 
 // Files outside voxel-core that a package bundles: shared by the Runner server and the Forge client (one parser for both sides).
@@ -17,6 +18,7 @@ const RUNNER_SHARED = ['../runner/src/lib/stl.js', '../runner/src/lib/vtu.js'];
 export const TARGETS = {
   'thermal-3d': { src: 'analysis/thermal-3d/package-main.js', out: 'examples/ext/thermal-3d/main.js', core: CORE },
   'structural': { src: 'analysis/structural/package-main.js', out: 'examples/ext/structural/main.js', core: CORE_STRUCTURAL },
+  'airflow': { src: 'analysis/airflow/package-main.js', out: 'examples/ext/airflow/main.js', core: CORE_AIRFLOW },
   'runner': { src: 'analysis/runner/package-main.js', out: 'examples/ext/runner/main.js', core: [], extra: RUNNER_SHARED },
 };
 

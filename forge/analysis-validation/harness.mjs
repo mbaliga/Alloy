@@ -88,7 +88,7 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
   const rows = [], summary = [];
   const registry = new ExtRegistry({ store: memoryStore() });
   let current = { P: null, build: null };
-  const api = new ExtApi({ getProject: () => current.P, getBuild: () => current.build, isEnabled: () => true });
+  const api = new ExtApi({ getProject: () => current.P, getBuild: () => current.build, isEnabled: () => true, onOverlay: () => {} });
   const host = new ExtHost({ createWorker: nodeWorker, api });
   const runner = createAnalysisRunner({ registry, host, cache: createResultCache({ store: memResults() }) });
   try {
