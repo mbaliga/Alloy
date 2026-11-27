@@ -7,7 +7,7 @@ import { units, FACES, ACCEL_ASSUMPTION, G0 } from './conditions.js';
 import { VALIDITY_TEXT } from './result.js';
 import { resolveSetup } from './setup.js';
 import { buildReport } from './report.js';
-import { gridText } from '../ext/overlay.js';
+import { gridText, vectorFieldSamples } from '../ext/overlay.js';
 import { writeZip } from '../ext/zip.js';
 
 const BADGE = { validated: '▮ validated', estimate: '◆ estimate', experimental: '◇ experimental' };
@@ -36,7 +36,7 @@ export function mountAnalyze(env) {
     try {
       const r = await runner.run(S.project, S.result, d.ext, d.item.id, { signal: st.ac.signal, onProgress: (v) => { st.progress = v; if (bar) bar.style.width = `${Math.round(v * 100)}%`; } });
       st.result = r; st.key = inputKey(); st.setup = resolveSetup(S.project, S.result); st.rows = await runner.rows(S.project, S.result, { run: false });
-      st.shown = new Set(r.fields.filter((f) => f.kind !== 'vector').slice(0, 1).map((f) => f.name)); refreshOverlays();
+      st.shown = new Set((r.fields.filter((f) => f.kind !== 'vector')[0] ? [r.fields.filter((f) => f.kind !== 'vector')[0]] : r.fields.slice(0, 1)).map((f) => f.name)); refreshOverlays();
       say(`${d.item.label}: done${r.cached ? ' (cached)' : ` in ${r.seconds.toFixed(1)} s`}. Validity: ${r.validity}.`); blip(980);
     } catch (e) { st.error = e.code === 'E_CANCELLED' || /cancel/i.test(e.message) ? 'Cancelled.' : String(e.message || e); blip(200, 0.08); }
     st.running = false; st.ac = null; render();
@@ -54,6 +54,11 @@ export function mountAnalyze(env) {
       const n = f.grid.dims['xyz'.indexOf(st.slice.axis)];
       return { kind: 'slice', label: f.name, unit: f.unit, field: { data: f.data, grid: f.grid }, axis: st.slice.axis, index: Math.round(st.slice.frac * (n - 1)), validity: st.result.validity, range: null,
         onSlice: (axis, frac) => { st.slice = { axis, frac }; refreshOverlays(); } };
+    }
+    if (f.kind === 'vector') {
+      const v = vectorFieldSamples({ data: f.data, grid: f.grid });
+      if (!v.values.length) return null;
+      return { kind: 'vectors', label: f.name, unit: f.unit, positions: v.positions, vectors: v.vectors, values: v.values, lines: null, scale: null, validity: st.result.validity, range: null };
     }
     return null;
   }
@@ -124,10 +129,10 @@ export function mountAnalyze(env) {
     if (r.fields.length) {
       wrap.append(h('div', { class: 'sub' }, 'Fields'));
       for (const f of r.fields) {
-        const on = st.shown.has(f.name), drawable = f.kind !== 'vector';
+        const on = st.shown.has(f.name), drawable = true;
         wrap.append(h('div', { class: 'row' + (on ? ' sel' : '') },
           h('span', { class: 'ico' }, f.kind === 'surface' ? '▦' : f.kind === 'voxel' ? '▤' : '➚'), h('span', { class: 'nm' }, f.name),
-          h('span', { class: 'tag' }, f.kind === 'voxel' ? gridText(f.grid) : f.kind === 'surface' ? `${f.data.length} vertices` : 'not drawn yet'),
+          h('span', { class: 'tag' }, f.kind === 'voxel' ? gridText(f.grid) : f.kind === 'surface' ? `${f.data.length} vertices` : 'vectors, drawn as arrows'),
           h('button', { class: 'g' + (on ? ' on' : ''), disabled: !drawable, title: on ? 'Hide in viewport' : 'Show in viewport', 'data-field': f.name, onclick: () => { on ? st.shown.delete(f.name) : st.shown.add(f.name); refreshOverlays(); render(); blip(on ? 360 : 700); } }, on ? '●' : '○')));
       }
     }

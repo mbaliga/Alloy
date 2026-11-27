@@ -215,6 +215,17 @@ body.thinking #send{animation:pulse .9s infinite alternate}
 .lgslice{display:flex;align-items:center;gap:8px;margin-top:6px}.lgslice input[type=range]{flex:1;accent-color:#8ff0c4;padding:0}.lgslice select{width:auto;padding:6px 8px}
 .lgbar{height:10px;border-radius:6px;margin:6px 0 2px}.lgt{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--dim)}
 #probe{position:fixed;left:50%;transform:translateX(-50%);top:92px;z-index:9;padding:8px 14px;border-radius:999px;font-family:var(--mono);font-size:11px;white-space:nowrap;max-width:calc(100vw - 20px);overflow:hidden;text-overflow:ellipsis}
+#layersdlg{position:fixed;margin:0;inset:auto 16px 76px auto;width:min(340px,calc(100vw - 20px));max-height:70vh;padding:16px 16px 14px;z-index:8;background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass2);color:var(--ink)}
+#layersdlg:not([open]){display:none}
+.lyhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}.lyhead .chip{min-height:32px}
+.lygrp{margin:10px 0 4px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.ly{padding:8px 0;border-top:1px solid var(--glass2)}.ly.off{opacity:.6}
+.lyrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lyrow b{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;flex:1;min-width:0;overflow-wrap:anywhere}
+.lysw{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer;min-height:32px}.lysw input{width:34px;height:20px;accent-color:#8ff0c4}
+.lyop{display:flex;align-items:center;gap:8px;margin-top:4px}.lyop input[type=range]{flex:1;accent-color:#8ff0c4;padding:0;min-height:28px}.lyop .tag{min-width:38px;text-align:right}
+.lysw1{width:34px;height:8px;border-radius:4px;flex:none}.lyread{margin-top:2px;text-transform:none;letter-spacing:.02em;white-space:normal}
+.lyempty{color:var(--dim);font-size:12px;padding:6px 0}
+@media(max-width:899px){#layersdlg{inset:auto 0 0 0;width:100%;max-height:56vh;border-radius:24px 24px 0 0;border-bottom:0;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}#layersdlg .chip,#layersdlg .lysw,#layersdlg .g{min-height:40px}#layersdlg .lyop input[type=range]{min-height:40px}#layersdlg .g{min-width:40px}}
 @media(min-width:900px){#legend{left:auto;right:16px}}
 @media(max-width:899px){dialog.sheet{margin:auto 0 0;width:100%;max-width:none;border-radius:24px 24px 0 0;max-height:88vh}#legend{bottom:132px;left:10px}#probe{top:128px}.extframe{height:260px}.xpkg .chip,#extdlg .chip,#p-analyze .chip,#p-analyze button.g,#p-analyze select,#p-analyze input,#p-analyze summary{min-height:40px}#p-analyze button.g{min-width:40px}}
 dialog.sheet::backdrop{background:rgba(5,8,10,.55)}
@@ -270,7 +281,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
   <div class="tr"><button class="tb on" data-mode="orbit">Select</button><button class="tb" data-mode="pick">Pick</button><button class="tb" data-mode="measure">Measure</button><span class="sl">/</span><button class="tb" data-gz="translate" title="Move gizmo (G)">Move</button><button class="tb" data-gz="rotate" title="Rotate gizmo (R)">Rotate</button><button class="tb" data-gz="snap" title="Snap 0.5 mm / 15°">Snap</button></div>
   <div class="tr">
     <button class="tb" data-view="iso">Iso</button><button class="tb" data-view="top">Top</button><button class="tb" data-view="front">Front</button><button class="tb" data-view="right">Right</button><button class="tb" id="fit">Fit</button>
-    <button class="tb" id="ortho">Ortho</button><button class="tb on" id="edges">Edges</button>
+    <button class="tb" id="ortho">Ortho</button><button class="tb on" id="edges">Edges</button><button class="tb" id="layers-btn" type="button" aria-haspopup="dialog" title="Overlay layers">Layers</button>
   </div>
   <div class="tr"><select id="sec-axis" title="Section view"><option value="off">Section off</option><option value="x">Section X</option><option value="y">Section Y</option><option value="z">Section Z</option></select><input type="range" id="sec-pos" hidden step="0.1"></div>
 </div>
@@ -300,6 +311,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
   </div>
   <div class="dact"><button class="btn" id="sclose">Done</button></div>
 </dialog>
+<dialog id="layersdlg" aria-label="Layers"><h2>Layers</h2><div id="layersbody"></div></dialog>
 <dialog id="extdlg" class="sheet"><h2>Settings / Extensions</h2><div id="extbody"></div><div class="dact"><button class="btn" id="extclose">Done</button></div></dialog>
 <dialog id="extconsent" class="sheet"><h2>Install package</h2><div id="extc-body"></div><div class="dact"><button class="btn ghost" id="extc-no">Cancel</button><button class="btn" id="extc-ok">Install</button></div></dialog>
 <div id="legend" class="glass" hidden></div><div id="probe" class="glass" hidden role="status"></div>

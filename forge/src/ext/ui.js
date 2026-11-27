@@ -4,14 +4,15 @@
 import { loadPackage } from './loader.js';
 import { describeInstall } from './manifest.js';
 import { enabledIn, projectEntry } from './registry.js';
-import { rangeOf, legendTicks, cssGradient, gridText, sliceCount } from './overlay.js';
+import { rangeOf, legendTicks, cssGradient, gridText, sliceCount, vectorScale } from './overlay.js';
+import { createLayerStore, groupLayers, layerReadout } from './layers.js';
 
 const RUNNER_KEY = 'af.runner';
 const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext']];
 
 export function mountExtensions(env) {
   const { h, $, tip, S, registry, host, resolver, panes, view, say, blip, setExtension, rebuild, showSheet } = env;
-  const overlays = new Map(), hiddenOverlays = new Set();
+  const overlays = new Map(), layers = env.layerStore || createLayerStore();
   let busy = '';
 
   // ───────── runner settings (A4 uses them; the host adds the token, packages never see it)
@@ -144,23 +145,23 @@ export function mountExtensions(env) {
   // ───────── overlays: legend + probe
   function setOverlay(extId, id, ov) {
     const key = `${extId}:${id}`;
-    if (ov) { overlays.set(key, { key, extId, id, ov, range: rangeOf(ov), name: registry.get(extId)?.manifest.name || extId }); hiddenOverlays.delete(key); } else overlays.delete(key);
+    if (ov) { overlays.set(key, { key, extId, id, ov, range: rangeOf(ov), name: registry.get(extId)?.manifest.name || extId }); } else overlays.delete(key);
     applyOverlays();
   }
   function clearOverlaysOf(extId) { for (const k of [...overlays.keys()]) if (overlays.get(k).extId === extId) overlays.delete(k); applyOverlays(); }
-  function applyOverlays() {
-    const shown = [...overlays.values()].filter((o) => !hiddenOverlays.has(o.key));
+  function applyOverlays(keepSheet) {
+    const shown = [...overlays.values()].filter((o) => layers.isOn(o.key)).map((o) => ({ ...o, opacity: layers.opacity(o.key) }));
     view.setOverlays(shown);
     const lg = $('#legend'); lg.textContent = ''; lg.hidden = !overlays.size;
     for (const o of overlays.values()) {
-      const hid = hiddenOverlays.has(o.key), ov = o.ov;
+      const hid = !layers.isOn(o.key), ov = o.ov;
       const row = h('div', { class: 'lg' + (hid ? ' off' : ''), 'data-overlay': o.key },
         h('div', { class: 'lgh' }, h('b', {}, ov.label), h('span', { class: 'tag' }, ov.validity), h('span', { class: 'tag' }, o.name),
-          h('button', { class: 'g', title: hid ? 'Show overlay' : 'Hide overlay', onclick: () => { hid ? hiddenOverlays.delete(o.key) : hiddenOverlays.add(o.key); applyOverlays(); } }, hid ? '○' : '●'),
+          h('button', { class: 'g', title: hid ? 'Show overlay' : 'Hide overlay', onclick: () => { layers.set(o.key, { on: hid }); applyOverlays(); } }, hid ? '○' : '●'),
           h('button', { class: 'g', title: 'Remove overlay', onclick: () => { overlays.delete(o.key); applyOverlays(); } }, '✕')));
-      if (ov.kind === 'points' || ov.kind === 'surface' || ov.kind === 'slice') {
+      if (ov.kind === 'points' || ov.kind === 'vectors' || ov.kind === 'surface' || ov.kind === 'slice') {
         row.append(h('div', { class: 'lgbar', style: `background:${cssGradient()}` }), h('div', { class: 'lgt' }, legendTicks(o.range).map((t) => h('span', {}, String(t)))));
-        const what = ov.kind === 'points' ? `${ov.values.length} points · tap a point to read it` : ov.kind === 'surface' ? `one value per vertex on ${ov.body} · tap the surface to read it` : `${gridText(ov.field.grid)} · tap the slice to read it`;
+        const what = ov.kind === 'points' ? `${ov.values.length} points · tap a point to read it` : ov.kind === 'vectors' ? `${ov.values.length} samples drawn as ${ov.lines ? 'streamlines' : `arrows, longest ${+vectorScale(ov).maxLen.toFixed(1)} mm for the top of the range`} · colour is the speed · tap one to read it` : ov.kind === 'surface' ? `one value per vertex on ${ov.body} · tap the surface to read it` : `${gridText(ov.field.grid)} · tap the slice to read it`;
         row.append(h('div', { class: 'tag' }, `${ov.unit ? 'unit ' + ov.unit + ' · ' : ''}${what}`));
         if (ov.kind === 'slice' && ov.onSlice) {
           const n = sliceCount(ov.field, ov.axis);
@@ -172,10 +173,47 @@ export function mountExtensions(env) {
       } else row.append(h('div', { class: 'tag' }, `box ${ov.min.map((v) => +v.toFixed(1)).join(',')} to ${ov.max.map((v) => +v.toFixed(1)).join(',')} mm`));
       lg.append(row);
     }
+    if (!keepSheet) renderLayers();
   }
+
+  // ───────── Layers sheet: every overlay, grouped by analysis or extension, with on/off, opacity, solo and the unit and range.
+  // Non-modal, so the viewport stays live while you change a layer. State is kept per layer id in this browser (ext/layers.js).
+  const lyDlg = () => $('#layersdlg');
+  function renderLayers() {
+    const btn = $('#layers-btn'), all = [...overlays.values()];
+    if (btn) { const n = all.filter((o) => layers.isOn(o.key)).length; btn.textContent = all.length ? `Layers ${n}/${all.length}` : 'Layers'; btn.classList.toggle('on', lyDlg().open); }
+    const dlg = lyDlg(); if (!dlg.open) return;
+    const body = $('#layersbody'), ids = all.map((o) => o.key), top = body.scrollTop; body.textContent = '';
+    const [tb, tt] = tip('A layer is one thing an analysis or extension draws in the viewport. Switch it off to hide it, or lower its opacity to see the model through it. Solo shows only that layer; tap Solo again to bring the others back. The colour bar next to a name is the colour map for that layer: the numbers are in the readout below it. Your choices are remembered in this browser, not in the project, and they survive re-running an analysis.');
+    const sw = (on, label, act) => h('button', { class: 'chip', type: 'button', 'data-act': act, 'aria-pressed': String(on), onclick: () => { ({ all: () => layers.showAll(ids), none: () => layers.hideAll(ids) })[act](); applyOverlays(); blip(on ? 700 : 360, 0.03); } }, label);
+    body.append(h('div', { class: 'lyhead' }, sw(true, 'Show all', 'all'), sw(false, 'Hide all', 'none'), h('button', { class: 'chip', type: 'button', 'data-act': 'close', onclick: () => { dlg.close(); renderLayers(); } }, 'Close'), tb), tt);
+    if (!all.length) { body.append(h('div', { class: 'lyempty' }, 'No overlay layers yet. Run an analysis, or switch on an extension that draws in the viewport, and its layers appear here.')); return; }
+    const solo = layers.soloed(ids);
+    for (const g of groupLayers(all)) {
+      body.append(h('div', { class: 'lygrp' }, g.name));
+      for (const o of g.layers) {
+        const st = layers.get(o.key), ov = o.ov, hasMap = ov.kind !== 'box';
+        const id = 'lyop-' + o.key.replace(/[^a-z0-9]/gi, '_');
+        body.append(h('div', { class: 'ly' + (st.on ? '' : ' off'), 'data-layer': o.key },
+          h('div', { class: 'lyrow' },
+            hasMap ? h('span', { class: 'lysw1', style: `background:${cssGradient()}`, title: 'Colour map of this layer' }) : null,
+            h('b', {}, ov.label), h('span', { class: 'tag' }, ov.validity),
+            h('label', { class: 'lysw' }, h('input', { type: 'checkbox', role: 'switch', 'data-act': 'switch', checked: st.on, 'aria-label': `Show ${ov.label}`, onchange: (e) => { layers.set(o.key, { on: e.target.checked }); applyOverlays(); blip(e.target.checked ? 700 : 360, 0.03); } }), st.on ? 'ON' : 'OFF'),
+            h('button', { class: 'chip', type: 'button', 'data-act': 'solo', 'aria-pressed': String(solo === o.key), onclick: () => { layers.solo(ids, o.key); applyOverlays(); blip(600, 0.03); } }, solo === o.key ? 'Solo on' : 'Solo')),
+          h('div', { class: 'lyop' }, h('span', { class: 'tag' }, 'Opacity'),
+            h('input', { type: 'range', id, min: 5, max: 100, step: 5, value: Math.round(st.opacity * 100), 'data-act': 'opacity', 'aria-label': `Opacity of ${ov.label}`, oninput: (e) => { layers.set(o.key, { opacity: +e.target.value / 100 }); e.target.nextSibling.textContent = e.target.value + '%'; applyOverlays(true); } }),
+            h('span', { class: 'tag', 'data-read': 'opacity' }, Math.round(st.opacity * 100) + '%')),
+          h('div', { class: 'tag lyread' }, layerReadout(o))));
+      }
+    }
+    body.scrollTop = top;
+  }
+  function toggleLayers(force) { const d = lyDlg(), want = force ?? !d.open; if (want && !d.open) d.show(); else if (!want && d.open) d.close(); renderLayers(); }
+  $('#layers-btn').onclick = () => { toggleLayers(); blip(520, 0.03); };
+  lyDlg().addEventListener('close', renderLayers);
   let probeT = 0;
   function showProbe(p) {
-    const el = $('#probe'); el.textContent = `${p.label}  ${+p.value.toFixed(3)}${p.unit ? ' ' + p.unit : ''}  ·  ${p.validity}  ·  at ${p.position.map((v) => +v.toFixed(1)).join(', ')} mm`; el.hidden = false;
+    const el = $('#probe'); el.textContent = `${p.label}  ${+p.value.toFixed(3)}${p.unit ? ' ' + p.unit : ''}${p.vector ? '  ·  vector ' + p.vector.map((v) => +v.toFixed(3)).join(', ') : ''}  ·  ${p.validity}  ·  at ${p.position.map((v) => +v.toFixed(1)).join(', ')} mm`; el.hidden = false;
     clearTimeout(probeT); probeT = setTimeout(() => { el.hidden = true; }, 5000); blip(820, 0.03);
   }
 
@@ -191,6 +229,6 @@ export function mountExtensions(env) {
       if (m.kind === 'open') { if (!paneList().some((p) => p.ext === m.extId && p.pane.id === m.id)) return; S.pane = 'ext'; env.renderPanes(); showSheet('ext'); }
       else if (m.kind === 'post') panes.post(m.extId, m.id, m.message);
     },
-    overlayCount: () => overlays.size,
+    overlayCount: () => overlays.size, layers, toggleLayers,
   };
 }

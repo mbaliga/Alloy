@@ -6,6 +6,7 @@ import { isNetworkPerm, networkHost } from './manifest.js';
 import { ExtError } from './host.js';
 import { prepareInput } from '../analysis/setup.js';
 import { voxelize, VOXEL_DEFAULT_MAX } from './voxelize.js';
+import { vectorMagnitudes } from './overlay.js';
 
 const MAX_VALUE_BYTES = 256 * 1024, MAX_BODY = 20 * 1024 * 1024, MAX_OVERLAY_POINTS = 2_000_000;
 const KEY = /^[A-Za-z0-9_.-]{1,64}$/;
@@ -127,7 +128,21 @@ export class ExtApi {
       const ok = (a) => Array.isArray(a) && a.length === 3 && a.every(Number.isFinite);
       if (!ok(o.min) || !ok(o.max)) throw new ExtError('E_ARG', 'box overlay needs min and max [x,y,z]');
       ov = { kind: 'box', min: o.min, max: o.max, label: String(o.label ?? id).slice(0, 60), unit: '', validity: 'experimental' };
-    } else throw new ExtError('E_ARG', 'overlay kind must be "points" or "box"');
+    } else if (o.kind === 'vectors') {
+      const p = o.positions, vec = o.vectors;
+      if (!(p instanceof Float32Array) || !(vec instanceof Float32Array) || p.length !== vec.length || p.length % 3) throw new ExtError('E_ARG', 'vectors overlay needs Float32Array positions and vectors of the same length (3 floats per sample)');
+      const n = p.length / 3;
+      if (n > MAX_OVERLAY_POINTS) throw new ExtError('E_LIMIT', `more than ${MAX_OVERLAY_POINTS} samples`);
+      for (let i = 0; i < p.length; i++) if (!Number.isFinite(p[i]) || !Number.isFinite(vec[i])) throw new ExtError('E_ARG', 'vectors overlay: positions and vectors must be finite');
+      let lines = null;
+      if (o.lines != null) {
+        const l = o.lines;
+        if (!(l instanceof Uint32Array) || l.length < 1 || l[0] !== 0 || l.some((s, i) => s >= n || (i > 0 && s <= l[i - 1]))) throw new ExtError('E_ARG', 'vectors overlay: lines is a Uint32Array of strictly increasing start indices, the first 0, each below the sample count');
+        lines = l;
+      }
+      if (o.scale != null && !(Number.isFinite(o.scale) && o.scale > 0)) throw new ExtError('E_ARG', 'vectors overlay: scale must be a positive number (mm per unit)');
+      ov = { kind: 'vectors', positions: p, vectors: vec, values: vectorMagnitudes(vec), lines, scale: o.scale ?? null, unit: String(o.unit ?? '').slice(0, 12), label: String(o.label ?? id).slice(0, 60), range: Array.isArray(o.range) && o.range.length === 2 && o.range.every(Number.isFinite) ? o.range : null, validity: ['estimate', 'validated', 'experimental'].includes(o.validity) ? o.validity : 'experimental' };
+    } else throw new ExtError('E_ARG', 'overlay kind must be "points", "vectors" or "box"');
     this.#need('onOverlay')(pkg.manifest.id, id, ov);
   }
   api_scene_clearOverlay(pkg, id) { this.#need('onOverlay')(pkg.manifest.id, String(id), null); }

@@ -14,6 +14,7 @@ export const cssGradient = () => 'linear-gradient(90deg,' + STOPS.map((c, i) => 
 /** Value range of an overlay: the package's own `range`, else min/max of the finite values. */
 export function rangeOf(ov) {
   if (ov.range) return ov.range;
+  if (ov.kind === 'box') return [0, 1]; // a box carries no values
   if (ov.field) return fieldRange(ov.field.data);
   let lo = Infinity, hi = -Infinity;
   for (const v of ov.values) if (Number.isFinite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; }
@@ -112,3 +113,68 @@ export function slicePlane(field, axis, index) {
 
 /** Plain-language state of a voxel grid for the UI: the voxel size and the limit the framework enforces. */
 export const gridText = (g) => `voxel ${+g.h.toFixed(3)} mm, ${g.dims.join('×')} = ${(g.dims[0] * g.dims[1] * g.dims[2]).toLocaleString('en')} cells (limit 8 000 000)${g.active ? `, ${g.active.toLocaleString('en')} active${g.budget ? ` of a ${g.budget.toLocaleString('en')} budget` : ''}` : ''}`;
+
+// ───────── vector overlays (arrows and streamlines, e.g. airflow). `positions` and `vectors` are 3 floats per sample, `values` the
+// magnitude per sample (the host computes it, so the colour map, legend and probe work as for points). Optional `lines` holds the
+// start index of each streamline in sample order: with it the samples are drawn as polylines, without it as one arrow per sample.
+
+/** Magnitude (|v|) per sample of a packed 3-vector array. */
+export function vectorMagnitudes(vectors) {
+  const n = Math.floor(vectors.length / 3), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) out[i] = Math.hypot(vectors[3 * i], vectors[3 * i + 1], vectors[3 * i + 2]);
+  return out;
+}
+
+/** Arrow length (mm) for the largest magnitude: the package's `scale` is mm per unit, else about one sample spacing (bounding-box diagonal over the cube root of the count). */
+export function vectorScale(ov) {
+  const n = ov.values.length; let max = 0;
+  for (let i = 0; i < n; i++) if (ov.values[i] > max) max = ov.values[i];
+  if (!(max > 0)) return { mmPerUnit: 1, maxLen: 0 };
+  if (ov.scale > 0) return { mmPerUnit: ov.scale, maxLen: ov.scale * max };
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < n; i++) for (let a = 0; a < 3; a++) { const v = ov.positions[3 * i + a]; if (v < lo[a]) lo[a] = v; if (v > hi[a]) hi[a] = v; }
+  const diag = Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) || 1, len = Math.min(diag / 4, (1.2 * diag) / Math.max(2, Math.cbrt(n)));
+  return { mmPerUnit: len / max, maxLen: len };
+}
+
+/**
+ * Line segments for a vectors overlay: Float32Array of segment end points (3 per vertex, 2 vertices per segment) and the magnitude of
+ * the sample each vertex belongs to (for colour). Arrows are a shaft and two barbs; streamlines join consecutive samples of a line.
+ */
+export function vectorSegments(ov) {
+  const n = ov.values.length, P = ov.positions, V = ov.vectors, pos = [], val = [];
+  const seg = (a, b, m) => { pos.push(a[0], a[1], a[2], b[0], b[1], b[2]); val.push(m, m); };
+  if (ov.lines && ov.lines.length) {
+    for (let k = 0; k < ov.lines.length; k++) {
+      const s = ov.lines[k], e = k + 1 < ov.lines.length ? ov.lines[k + 1] : n;
+      for (let i = s; i + 1 < e; i++) seg([P[3 * i], P[3 * i + 1], P[3 * i + 2]], [P[3 * i + 3], P[3 * i + 4], P[3 * i + 5]], ov.values[i]);
+    }
+  } else {
+    const { mmPerUnit } = vectorScale(ov);
+    for (let i = 0; i < n; i++) {
+      const m = ov.values[i]; if (!(m > 0)) continue;
+      const d = [V[3 * i] / m, V[3 * i + 1] / m, V[3 * i + 2] / m], L = m * mmPerUnit, a = [P[3 * i], P[3 * i + 1], P[3 * i + 2]], b = [a[0] + d[0] * L, a[1] + d[1] * L, a[2] + d[2] * L];
+      // a unit vector perpendicular to the direction, for the barbs
+      const t = Math.abs(d[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0], c = [d[1] * t[2] - d[2] * t[1], d[2] * t[0] - d[0] * t[2], d[0] * t[1] - d[1] * t[0]], cl = Math.hypot(...c) || 1, u = c.map((x) => x / cl), hd = L * 0.28;
+      seg(a, b, m);
+      for (const s of [1, -1]) seg(b, [b[0] - d[0] * hd + u[0] * hd * 0.5 * s, b[1] - d[1] * hd + u[1] * hd * 0.5 * s, b[2] - d[2] * hd + u[2] * hd * 0.5 * s], m);
+    }
+  }
+  return { positions: Float32Array.from(pos), values: Float32Array.from(val) };
+}
+
+/**
+ * Arrows for a gridded vector field (an analysis field of kind 'vector': 3 floats per cell, i fastest). Cells are sampled with a
+ * stride so at most about `maxArrows` arrows are drawn; cells with NaN or zero magnitude are skipped. Positions are cell centres (mm).
+ */
+export function vectorFieldSamples(field, maxArrows = 4000) {
+  const [nx, ny, nz] = field.grid.dims, { origin, h } = field.grid, total = nx * ny * nz;
+  const stride = Math.max(1, Math.ceil(Math.cbrt(total / maxArrows))), P = [], V = [];
+  for (let k = 0; k < nz; k += stride) for (let j = 0; j < ny; j += stride) for (let i = 0; i < nx; i += stride) {
+    const c = (k * ny + j) * nx + i, x = field.data[3 * c], y = field.data[3 * c + 1], z = field.data[3 * c + 2];
+    if (!Number.isFinite(x + y + z) || !(Math.hypot(x, y, z) > 0)) continue;
+    P.push(origin[0] + (i + 0.5) * h, origin[1] + (j + 0.5) * h, origin[2] + (k + 0.5) * h); V.push(x, y, z);
+  }
+  const vectors = Float32Array.from(V);
+  return { positions: Float32Array.from(P), vectors, values: vectorMagnitudes(vectors), stride };
+}
