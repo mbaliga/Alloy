@@ -1,0 +1,24 @@
+# docker compose -f runner/docker-compose.yml up --build
+# Not run by the author (no Docker daemon in the sandbox); see the notes in Dockerfile.
+services:
+  runner:
+    build: .
+    image: alloy-runner
+    ports:
+      - "127.0.0.1:8787:8787"          # loopback only; put a TLS reverse proxy in front for anything else
+    environment:
+      ALLOY_RUNNER_TOKEN: ${ALLOY_RUNNER_TOKEN:?set ALLOY_RUNNER_TOKEN to a long random string}
+      ALLOY_RUNNER_ORIGINS: ${ALLOY_RUNNER_ORIGINS:-}   # the origin Forge is served from, e.g. https://forge.example.org
+      ALLOY_RUNNER_MAX_TETS: ${ALLOY_RUNNER_MAX_TETS:-400000}
+    volumes:
+      - runner-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${ALLOY_RUNNER_MEM:-8g}
+    restart: unless-stopped
+volumes:
+  runner-data:

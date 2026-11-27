@@ -64,7 +64,7 @@ export const API = [
   { name: 'storage.user.set', perm: 'storage', args: '(key: string, value: any)', returns: 'void', doc: 'Values up to 256 KB.' },
   { name: 'compute.gpu.info', perm: 'compute.gpu', args: '()', returns: '{ available: boolean, adapter?: string, limits?: object }', doc: 'Whether WebGPU is available. `navigator.gpu` is only present inside the Worker of a package that holds `compute.gpu`.' },
   { name: 'compute.remote.fetch', perm: 'compute.remote', args: '(path: string, init?: { method, headers, body })', returns: '{ status, headers, body: Uint8Array }',
-    doc: 'Request to the Alloy Runner URL entered in Settings. `path` must start with `/`. The host adds the runner token; the package never sees it. Rejects with E_UNAVAILABLE when no runner is set.' },
+    doc: 'Request to the Alloy Runner URL entered in Settings. `path` must start with `/`. The host adds the runner token; the package never sees it. Rejects with E_UNAVAILABLE when no runner is set. A request that carries a body (geometry, a case) is sent only after the user has confirmed it in the Analyze pane, asked for that request; otherwise it rejects with E_CONSENT and nothing leaves the browser. Requests without a body (health, polling, cancel, download) need no confirmation.' },
   { name: 'net.fetch', perm: 'network', args: '(url: string, init?: { method, headers, body })', returns: '{ status, headers, body: Uint8Array }',
     doc: 'Request to a host the package declared as `network:<host>` (exact host name, https, or http on localhost). Anything else is refused.' },
 ];
@@ -76,6 +76,7 @@ export const ERRORS = {
   E_CONTRIB: 'The id is not declared in the manifest `contributes`.',
   E_ARG: 'Invalid arguments.',
   E_UNAVAILABLE: 'Not available right now (wrong kernel, no runner, no GPU, ...).',
+  E_CONSENT: 'The user did not confirm sending data to the Alloy Runner (or the call did not come from a user action such as pressing Run). Nothing was sent.',
   E_LIMIT: 'A size or count limit was exceeded.',
   E_OPS: 'The ops were rejected (validation or a lock). Nothing was changed.',
   E_TIMEOUT: 'The package Worker did not answer in time and was stopped.',

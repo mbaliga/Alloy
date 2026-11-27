@@ -1,0 +1,13 @@
+{
+  "name": "alloy-runner",
+  "version": "0.1.0",
+  "description": "Alloy Runner: a small HTTP job server that meshes with gmsh and runs Elmer, for the Alloy Forge extension that talks to it. No dependencies, no telemetry.",
+  "type": "module",
+  "private": true,
+  "license": "SEE LICENSE IN ../LICENSE",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node bin/alloy-runner.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

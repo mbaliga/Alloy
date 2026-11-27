@@ -66,7 +66,7 @@ export function lintCaseFile(file) {
   return problems;
 }
 
-function projectFor(c) {
+export function projectFor(c) {
   const ops = (c.setup.features || []).map((f) => ({ op: 'add_feature', feature: f }));
   let P = applyOps(migrate(emptyProject()), ops).project;
   const mats = Object.entries(c.setup.materials || {}).map(([body, material]) => ({ op: 'set_body_material', body, material }));

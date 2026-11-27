@@ -14,8 +14,8 @@ const BADGE = { validated: '▮ validated', estimate: '◆ estimate', experiment
 const slug = (s) => String(s || 'part').replace(/[^\w-]+/g, '_');
 
 export function mountAnalyze(env) {
-  const { h, S, tip, say, blip, runner, extUi } = env;
-  const st = { sel: '', running: false, progress: 0, result: null, rows: [], error: '', ac: null, shown: new Set(), slice: { axis: 'z', frac: 0.5 }, setup: null };
+  const { h, S, tip, say, blip, runner, extUi, client } = env;
+  const st = { sel: '', running: false, userRun: false, jobs: null, jobsError: '', jobsBusy: false, progress: 0, result: null, rows: [], error: '', ac: null, shown: new Set(), slice: { axis: 'z', frac: 0.5 }, setup: null };
   let box = null, bar = null;
 
   const list = () => runner.declared(S.project);
@@ -23,6 +23,8 @@ export function mountAnalyze(env) {
   const ops = (arr) => { const ok = env.commitOps(arr); if (ok) { render(); } return ok; };
   const nextId = (prefix, items) => { let n = 1; while (items.some((x) => x.id === `${prefix}${n}`)) n++; return `${prefix}${n}`; };
   const conds = () => S.project.analysis.conditions;
+  const needsRemote = (d) => !!(d && d.pkg.manifest.permissions.includes('compute.remote'));
+  const runnerUrl = () => { const r = extUi.runner.get(); return r && r.url ? r.url : ''; };
   const bodies = () => (S.result ? S.result.bodies.map((b) => b.name) : []);
 
   const inputKey = () => {
@@ -32,16 +34,77 @@ export function mountAnalyze(env) {
   // ───────── running
   async function run() {
     const d = current(); if (!d || st.running) return;
-    st.sel = `${d.ext}/${d.item.id}`; st.running = true; st.progress = 0; st.error = ''; st.ac = new AbortController(); render(); blip(660);
+    st.sel = `${d.ext}/${d.item.id}`; st.running = true; st.userRun = true; st.progress = 0; st.error = ''; st.ac = new AbortController(); render(); blip(660);
+    if (needsRemote(d)) setTimeout(refreshJobs, 700); // the job list follows the run (list and progress only; no geometry)
     try {
       const r = await runner.run(S.project, S.result, d.ext, d.item.id, { signal: st.ac.signal, onProgress: (v) => { st.progress = v; if (bar) bar.style.width = `${Math.round(v * 100)}%`; } });
       st.result = r; st.key = inputKey(); st.setup = resolveSetup(S.project, S.result); st.rows = await runner.rows(S.project, S.result, { run: false });
       st.shown = new Set((r.fields.filter((f) => f.kind !== 'vector')[0] ? [r.fields.filter((f) => f.kind !== 'vector')[0]] : r.fields.slice(0, 1)).map((f) => f.name)); refreshOverlays();
       say(`${d.item.label}: done${r.cached ? ' (cached)' : ` in ${r.seconds.toFixed(1)} s`}. Validity: ${r.validity}.`); blip(980);
-    } catch (e) { st.error = e.code === 'E_CANCELLED' || /cancel/i.test(e.message) ? 'Cancelled.' : String(e.message || e); blip(200, 0.08); }
-    st.running = false; st.ac = null; render();
+    } catch (e) { st.error = e.code === 'E_CONSENT' ? 'Nothing was sent: you did not confirm sending the design to the runner.' : e.code === 'E_CANCELLED' || /cancel/i.test(e.message) ? 'Cancelled.' : String(e.message || e); blip(200, 0.08); }
+    st.running = false; st.userRun = false; st.ac = null; render(); if (needsRemote(d)) refreshJobs();
   }
-  const cancel = () => { if (st.ac) st.ac.abort(); };
+  const cancel = () => { if (st.ac) st.ac.abort(); const dlg = env.$('#remotedlg'); if (dlg && dlg.open) dlg.close('no'); };
+
+  // ───────── consent: geometry leaves the browser only after this dialog, and only during a run the user started
+  /** Called by the host when a package is about to send a request body to the runner. Resolves true only when the user presses "Send and run" in the dialog this call opens. */
+  function requestConsent(info) {
+    if (!st.userRun) return Promise.resolve(false); // an AI tool, a loop or a scorecard check can never upload
+    const dlg = env.$('#remotedlg'), body = env.$('#remote-body'); if (!dlg || !body) return Promise.resolve(false);
+    const d = current(), bs = S.result ? S.result.bodies : [], mb = (info.bytes / 1048576).toFixed(info.bytes < 1048576 ? 2 : 1);
+    body.textContent = '';
+    const [tb, tt] = tip('Forge talks to no server except the ones you set up yourself. The Alloy Runner is yours: you start it, you choose where it runs, and you paste its token here. This window is the only moment the design leaves the browser for it, and only because you pressed Run.');
+    body.append(
+      h('p', { id: 'remote-url' }, 'This sends your design to the Alloy Runner at ', h('b', {}, info.url), tb), tt,
+      h('div', { class: 'sub' }, `Sent (about ${mb} MB)`),
+      h('ul', { id: 'remote-sent' }, ...bs.map((b) => h('li', {}, `${b.name}: triangle mesh, ${(b.tris || 0).toLocaleString('en')} triangles`)),
+        h('li', {}, 'the material numbers of each body (stiffness, density, strengths, conductivity)'), h('li', {}, 'your mounts, loads, heat sources and ambient temperature'), h('li', {}, 'this analysis\'s settings')),
+      h('div', { class: 'sub' }, 'Not sent'),
+      h('ul', { id: 'remote-notsent' }, h('li', {}, 'your project file, its name, undo history or the other settings'), h('li', {}, 'parts on a PCB, reference parts, assets'), h('li', {}, 'your AI key or any other key'), h('li', {}, 'anything to any other address')),
+      h('p', { class: 'hint' }, `Whoever runs that server can see the geometry. The runner deletes the job and files once Forge has downloaded the result${(((S.project.ext || {})[d && d.ext] || {}).settings || {}).keep === 'on' ? ' (you chose to keep it, so it stays there until you delete it)' : ''}.`));
+    return new Promise((resolve) => {
+      let answered = false; const done = (v) => { if (!answered) { answered = true; resolve(v); } };
+      env.$('#remote-ok').onclick = () => { done(true); dlg.close('ok'); };
+      env.$('#remote-no').onclick = () => { done(false); dlg.close('no'); };
+      dlg.onclose = () => done(dlg.returnValue === 'ok'); dlg.returnValue = ''; dlg.showModal();
+    });
+  }
+
+  // ───────── runner jobs (host-side calls to the runner URL only; no geometry)
+  let pollTimer = null;
+  async function refreshJobs() {
+    const d = current(); if (!d || !needsRemote(d) || !client || !runnerUrl() || st.jobsBusy) return;
+    st.jobsBusy = true;
+    try { st.jobs = await client.list(); st.jobsError = ''; } catch (e) { st.jobs = null; st.jobsError = String(e.message || e); }
+    st.jobsBusy = false; renderJobsOnly(); schedulePoll();
+  }
+  function schedulePoll() {
+    clearTimeout(pollTimer); pollTimer = null;
+    if (S.pane !== 'analyze' || !(st.running || (st.jobs && st.jobs.some((j) => j.state === 'queued' || j.state === 'running')))) return;
+    pollTimer = setTimeout(refreshJobs, 1500);
+  }
+  function renderJobsOnly() { const old = box && box.querySelector('#rjobs'); if (old) old.replaceWith(jobsBlock()); }
+  function jobsBlock() {
+    const wrap = h('div', { class: 'ajobs', id: 'rjobs' });
+    const [ib, it] = tip('Jobs on your Alloy Runner, most recent first. A finished job is deleted by the runner once its result has been downloaded (unless you chose to keep it). Cancel stops a queued or running job. Nothing here sends your design.');
+    wrap.append(h('div', { class: 'sub' }, 'Runner jobs', ib, h('button', { class: 'chip', id: 'rj-refresh', style: 'margin-left:auto', onclick: refreshJobs }, 'refresh')), it);
+    if (!runnerUrl()) { wrap.append(h('div', { class: 'hint' }, 'No runner is set: Settings > Extensions > Alloy Runner.')); return wrap; }
+    if (st.jobsError) wrap.append(h('div', { class: 'errbox warn', id: 'rj-error' }, st.jobsError));
+    else if (st.jobs && !st.jobs.length) wrap.append(h('div', { class: 'empty' }, 'No jobs on the runner'));
+    for (const j of st.jobs || []) {
+      const active = j.state === 'queued' || j.state === 'running', sym = { queued: '…', running: '▶', done: '✓', failed: '✕', cancelled: '◌' }[j.state] || '·';
+      wrap.append(h('div', { class: 'row', 'data-job': j.id, 'data-state': j.state },
+        h('span', { class: 'ico' }, sym), h('span', { class: 'nm' }, `${j.kind} · ${j.stage}`), h('span', { class: 'tag' }, `${j.state} ${Math.round((j.progress || 0) * 100)} %`),
+        active ? h('button', { class: 'g', title: 'Cancel this job', 'data-job-cancel': j.id, onclick: async () => { try { await client.cancel(j.id); } catch (e) { say(String(e.message || e)); } refreshJobs(); } }, 'cancel') : h('button', { class: 'g', title: 'Delete this job from the runner', 'data-job-delete': j.id, onclick: async () => { try { await client.remove(j.id); } catch (e) { say(String(e.message || e)); } refreshJobs(); } }, '✕')));
+    }
+    return wrap;
+  }
+  function remoteBlock(d) {
+    const wrap = h('div', { class: 'aremote', id: 'aremote' });
+    const url = runnerUrl();
+    wrap.append(h('div', { class: 'hint', id: 'remote-note' }, url ? `Runs on your Alloy Runner at ${url}. Pressing run asks you to confirm before the design is sent.` : 'This analysis runs on your own Alloy Runner. Set its address and token under Settings > Extensions > Alloy Runner; nothing is sent until you confirm.'), jobsBlock());
+    return wrap;
+  }
 
   // ───────── overlays from the result's fields
   function overlayFor(f) {
@@ -87,7 +150,7 @@ export function mountAnalyze(env) {
     const sec = h('div', { class: 'asec' });
     const [ib, it] = tip('An analysis runs in its package\'s own Worker, so the viewport stays interactive. Results are cached in this browser and are not saved in the project; only the setup below is. Every result carries its validity, and an experimental result never decides a pass or fail.');
     sec.append(h('div', { class: 'sub' }, 'Analysis', ib), it);
-    sec.append(sel(l.map((x) => ({ value: `${x.ext}/${x.item.id}`, label: `${x.item.label} · ${x.pkg.manifest.name}` })), d ? `${d.ext}/${d.item.id}` : '', (v) => { st.sel = v; st.result = null; st.rows = []; refreshOverlays(); render(); }, 'Analysis'));
+    sec.append(sel(l.map((x) => ({ value: `${x.ext}/${x.item.id}`, label: `${x.item.label} · ${x.pkg.manifest.name}` })), d ? `${d.ext}/${d.item.id}` : '', (v) => { st.sel = v; st.result = null; st.rows = []; st.jobs = null; st.jobsError = ''; refreshOverlays(); render(); }, 'Analysis'));
     if (d && d.item.description) sec.append(h('div', { class: 'hint' }, d.item.description));
     if (d && (d.item.settings || []).length) sec.append(settingsBlock(d));
     sec.append(h('div', { class: 'chips' },
@@ -95,6 +158,7 @@ export function mountAnalyze(env) {
     if (st.running) { bar = h('div', { class: 'pbar-fill', style: `width:${Math.round(st.progress * 100)}%` }); sec.append(h('div', { class: 'pbar', role: 'progressbar', 'aria-label': 'Analysis progress' }, bar)); }
     if (st.error) sec.append(h('div', { class: st.error === 'Cancelled.' ? 'hint' : 'errbox', id: 'an-error' }, st.error));
     if (st.result) sec.append(resultBlock());
+    if (d && needsRemote(d)) sec.append(remoteBlock(d));
     if (d) sec.append(checksBlock(d));
     return sec;
   }
@@ -229,12 +293,13 @@ export function mountAnalyze(env) {
     bar = null; box.textContent = '';
     if (!list().length) { box.append(h('div', { class: 'empty' }, 'No analyses installed. Install one in Settings > Extensions.')); return; }
     box.append(analysisSection(), conditionsSection(), materialsSection());
+    const cd = current(); if (cd && needsRemote(cd) && client && runnerUrl() && st.jobs === null && !st.jobsError && !st.jobsBusy) setTimeout(refreshJobs, 0);
   }
 
   return {
     render, refreshTabs() { for (const id of ['t-an', 'n-an']) { const b = env.$('#' + id); if (b) b.hidden = !list().length; } if (!list().length && S.pane === 'analyze') S.pane = 'tree'; },
     // A result stays on screen while the setup behind it is unchanged (a threshold edit rebuilds the document but not the inputs).
     invalidate() { if (st.running) return; const k = inputKey(); if (st.result && k === st.key) return; st.result = null; st.rows = []; extUi.clearOverlaysOf('analysis'); },
-    state: st, run, cancel,
+    state: st, run, cancel, requestConsent, refreshJobs,
   };
 }

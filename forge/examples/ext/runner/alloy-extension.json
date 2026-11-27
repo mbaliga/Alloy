@@ -1,0 +1,235 @@
+{
+  "id": "xyz.mdhv.runner",
+  "name": "Alloy Runner",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "Sends the design to an Alloy Runner you run yourself (gmsh meshing, Elmer solver) for structural and thermal results, and draws the solution on the body surfaces. Your geometry leaves the browser only when you confirm, and only to the runner address in Settings.",
+  "main": "main.js",
+  "permissions": [
+    "doc.read",
+    "geometry.read",
+    "storage",
+    "agent.tools",
+    "compute.remote"
+  ],
+  "contributes": {
+    "analyses": [
+      {
+        "id": "runner-structural",
+        "label": "Structural (Runner)",
+        "validity": "estimate",
+        "description": "Linear elasticity with Elmer on a tetrahedral mesh, run on your Alloy Runner. Add a fixed mount (every body needs one: bodies are meshed separately) and loads under Conditions. Sends the geometry of every body to the runner after you confirm.",
+        "fields": [
+          "runner_von_mises",
+          "runner_displacement",
+          "runner_safety_factor"
+        ],
+        "settings": [
+          {
+            "key": "adapter",
+            "label": "Solver",
+            "kind": "enum",
+            "opts": [
+              "auto",
+              "elmer"
+            ],
+            "def": "auto",
+            "tip": "Auto lets the runner pick: Elmer when it is installed there. The runner's simulated solver (protocol tests only, off by default) is chosen by auto only when nothing real is available, and every result from it says SIMULATED and is experimental."
+          },
+          {
+            "key": "mesh_size_mm",
+            "label": "Mesh size",
+            "kind": "num",
+            "unit": "mm",
+            "def": 0,
+            "min": 0,
+            "max": 1000,
+            "tip": "Element size of the tetrahedral mesh. 0 lets the runner choose from the geometry and its element limit. A smaller size is slower and closer to the true solution; the mesh study shows how much a result still changes."
+          },
+          {
+            "key": "mesh_study",
+            "label": "Mesh study",
+            "kind": "enum",
+            "opts": [
+              "off",
+              "on"
+            ],
+            "def": "off",
+            "tip": "Solve twice, at the mesh size and at a size 1.5 times finer, and report how much each result changed. A result can only be graded validated when this converged. Takes about four times as long."
+          },
+          {
+            "key": "keep",
+            "label": "Keep job on runner",
+            "kind": "enum",
+            "opts": [
+              "off",
+              "on"
+            ],
+            "def": "off",
+            "tip": "Normally the runner deletes the job and its files once Forge has downloaded the result. Keep leaves them there (until you delete them or the runner's time limit passes), for example to look at the files yourself."
+          },
+          {
+            "key": "self_weight",
+            "label": "Self weight",
+            "kind": "enum",
+            "opts": [
+              "off",
+              "on"
+            ],
+            "def": "off",
+            "tip": "Add the weight of the bodies toward the gravity direction of the Conditions."
+          }
+        ],
+        "checks": [
+          {
+            "id": "min-safety-factor",
+            "label": "Safety factor ≥ limit",
+            "metric": "min_safety_factor",
+            "op": ">=",
+            "limit": 2,
+            "unit": ""
+          },
+          {
+            "id": "max-displacement",
+            "label": "Largest displacement ≤ limit",
+            "metric": "max_displacement",
+            "op": "<=",
+            "limit": 1,
+            "unit": "mm"
+          }
+        ]
+      },
+      {
+        "id": "runner-thermal",
+        "label": "Thermal (Runner)",
+        "validity": "estimate",
+        "description": "Steady heat conduction with Elmer on a tetrahedral mesh, run on your Alloy Runner. Heat sources must be on bodies (PCB parts are not sent). Contact mounts become conductances to the ambient; every other surface loses heat to the air through the film coefficient below.",
+        "fields": [
+          "runner_temperature"
+        ],
+        "settings": [
+          {
+            "key": "adapter",
+            "label": "Solver",
+            "kind": "enum",
+            "opts": [
+              "auto",
+              "elmer"
+            ],
+            "def": "auto",
+            "tip": "Auto lets the runner pick: Elmer when it is installed there. The runner's simulated solver (protocol tests only, off by default) is chosen by auto only when nothing real is available, and every result from it says SIMULATED and is experimental."
+          },
+          {
+            "key": "mesh_size_mm",
+            "label": "Mesh size",
+            "kind": "num",
+            "unit": "mm",
+            "def": 0,
+            "min": 0,
+            "max": 1000,
+            "tip": "Element size of the tetrahedral mesh. 0 lets the runner choose from the geometry and its element limit. A smaller size is slower and closer to the true solution; the mesh study shows how much a result still changes."
+          },
+          {
+            "key": "mesh_study",
+            "label": "Mesh study",
+            "kind": "enum",
+            "opts": [
+              "off",
+              "on"
+            ],
+            "def": "off",
+            "tip": "Solve twice, at the mesh size and at a size 1.5 times finer, and report how much each result changed. A result can only be graded validated when this converged. Takes about four times as long."
+          },
+          {
+            "key": "keep",
+            "label": "Keep job on runner",
+            "kind": "enum",
+            "opts": [
+              "off",
+              "on"
+            ],
+            "def": "off",
+            "tip": "Normally the runner deletes the job and its files once Forge has downloaded the result. Keep leaves them there (until you delete them or the runner's time limit passes), for example to look at the files yourself."
+          },
+          {
+            "key": "h_conv_W_m2K",
+            "label": "Air film coefficient",
+            "kind": "num",
+            "unit": "W/m2K",
+            "def": 10,
+            "min": 0,
+            "max": 100000,
+            "tip": "Convection from every surface that is not a contact mount, to the ambient air. A typical value for still indoor air is 5 to 10. Radiation is not modelled separately."
+          }
+        ],
+        "checks": [
+          {
+            "id": "max-temp",
+            "label": "Hottest point ≤ limit",
+            "metric": "max_temp",
+            "op": "<=",
+            "limit": 85,
+            "unit": "°C"
+          }
+        ]
+      }
+    ],
+    "agentTools": [
+      {
+        "id": "set-runner",
+        "label": "Runner settings",
+        "description": "Set the Alloy Runner analysis settings in the project: adapter (auto|elmer), mesh_size_mm (0 = automatic), mesh_study (off|on), keep (off|on), self_weight (off|on), h_conv_W_m2K. Only keys given change. Does not run anything and cannot send geometry: running a runner analysis needs the user to confirm in the Analyze pane.",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "adapter": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "elmer"
+              ]
+            },
+            "mesh_size_mm": {
+              "type": "number"
+            },
+            "mesh_study": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
+              ]
+            },
+            "keep": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
+              ]
+            },
+            "self_weight": {
+              "type": "string",
+              "enum": [
+                "off",
+                "on"
+              ]
+            },
+            "h_conv_W_m2K": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      {
+        "id": "runner-status",
+        "label": "Runner status",
+        "description": "Read the health of the configured Alloy Runner: reachable, version, which solvers it has. Sends no geometry.",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  }
+}

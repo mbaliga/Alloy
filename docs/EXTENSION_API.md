@@ -368,7 +368,7 @@ forge.compute.remote.fetch(path: string, init?: { method, headers, body }) → {
 
 - Permission: `compute.remote`
 
-Request to the Alloy Runner URL entered in Settings. `path` must start with `/`. The host adds the runner token; the package never sees it. Rejects with E_UNAVAILABLE when no runner is set.
+Request to the Alloy Runner URL entered in Settings. `path` must start with `/`. The host adds the runner token; the package never sees it. Rejects with E_UNAVAILABLE when no runner is set. A request that carries a body (geometry, a case) is sent only after the user has confirmed it in the Analyze pane, asked for that request; otherwise it rejects with E_CONSENT and nothing leaves the browser. Requests without a body (health, polling, cancel, download) need no confirmation.
 
 ### `forge.net.fetch`
 
@@ -390,6 +390,7 @@ Rejections carry `error.code`:
 | `E_CONTRIB` | The id is not declared in the manifest `contributes`. |
 | `E_ARG` | Invalid arguments. |
 | `E_UNAVAILABLE` | Not available right now (wrong kernel, no runner, no GPU, ...). |
+| `E_CONSENT` | The user did not confirm sending data to the Alloy Runner (or the call did not come from a user action such as pressing Run). Nothing was sent. |
 | `E_LIMIT` | A size or count limit was exceeded. |
 | `E_OPS` | The ops were rejected (validation or a lock). Nothing was changed. |
 | `E_TIMEOUT` | The package Worker did not answer in time and was stopped. |

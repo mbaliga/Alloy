@@ -201,6 +201,14 @@ test('permissions: network is per host; the runner path is confined; disabled pa
   const sent = log.fetches.at(-1);
   assert.equal(sent.url, 'https://runner.example.org/jobs'); assert.equal(sent.init.headers.Authorization, 'Bearer SECRET', 'the host adds the runner token');
   assert.ok(!('cookie' in sent.init.headers) && sent.init.headers['x-a'] === '1');
+  // a request BODY leaves the browser only with the user's yes (A4): no hook, a refusal, a throwing hook and a non-user call all refuse, and nothing is fetched
+  const n0 = log.fetches.length;
+  await rejects(api.call(pkg, 'compute.remote.fetch', ['/v1/jobs', { method: 'POST', body: '{"a":1}' }]), 'E_CONSENT');
+  for (const hook of [() => false, async () => false, () => { throw new Error('x'); }]) await rejects(new ExtApi(stubCtx({ remoteConsent: hook }).ctx).call(pkg, 'compute.remote.fetch', ['/v1/jobs', { method: 'POST', body: new Uint8Array(3) }]), 'E_CONSENT');
+  assert.equal(log.fetches.length, n0, 'nothing was fetched without consent');
+  const asked = []; const ok = stubCtx({ remoteConsent: async (i) => { asked.push(i); return true; } });
+  await new ExtApi(ok.ctx).call(pkg, 'compute.remote.fetch', ['/v1/jobs', { method: 'POST', body: 'héllo' }]); await new ExtApi(ok.ctx).call(pkg, 'compute.remote.fetch', ['/v1/health']);
+  assert.deepEqual(asked.map((a) => [a.url, a.path, a.bytes, a.method]), [['https://runner.example.org', '/v1/jobs', 6, 'POST']], 'asked once, with the size in bytes, and not for a request without a body'); assert.equal(ok.log.fetches.length, 2);
   await rejects(new ExtApi(stubCtx({ getRunner: () => null }).ctx).call(pkg, 'compute.remote.fetch', ['/x']), 'E_UNAVAILABLE');
   await rejects(new ExtApi({ ...stubCtx().ctx, isEnabled: () => false }).call(fake(ALL, DECLARED), 'doc.get', []), 'E_PERM');
   await rejects(api.call(pkg, 'no.such.call', []), 'E_ARG');

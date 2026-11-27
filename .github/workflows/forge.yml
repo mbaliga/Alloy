@@ -7,10 +7,12 @@ on:
     branches: [main]
     paths:
       - 'forge/**'
+      - 'runner/**'
       - '.github/workflows/forge.yml'
   pull_request:
     paths:
       - 'forge/**'
+      - 'runner/**'
       - '.github/workflows/forge.yml'
   workflow_dispatch:
 
@@ -52,3 +54,22 @@ jobs:
             test -s "$f" || { echo "missing build output: $f"; exit 1; }
           done
           ls -l dist | head -20
+
+  # The Alloy Runner (runner/): its tests use the real gmsh from Ubuntu's archive for meshing and a simulated solver for the protocol.
+  # No Elmer is installed here, so nothing in this job validates a solver result.
+  runner:
+    name: Alloy Runner tests (gmsh, simulated solver)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: runner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install gmsh (meshing step; GPL, run as a separate process)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gmsh
+      - name: Runner tests
+        run: npm test
