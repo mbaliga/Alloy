@@ -22,9 +22,11 @@ function b64(s, what, maxBytes) {
 export function validateJob(req, config) {
   if (!req || typeof req !== 'object' || Array.isArray(req)) bad('the body must be a JSON object');
   if (req.protocol !== PROTOCOL) bad(`protocol must be ${PROTOCOL}`);
-  if (!KINDS.includes(req.kind)) bad(`kind must be one of ${KINDS.join(', ')} (flow arrives with a later runner version)`);
+  if (!KINDS.includes(req.kind)) bad(`kind must be one of ${KINDS.join(', ')}`);
   const adapter = req.adapter === undefined ? 'auto' : req.adapter;
-  if (!['auto', 'elmer', 'fake'].includes(adapter)) bad('adapter must be auto, elmer or fake');
+  if (!['auto', 'elmer', 'fake', 'openfoam'].includes(adapter)) bad('adapter must be auto, elmer, openfoam or fake');
+  if (adapter === 'openfoam' && req.kind !== 'flow') bad('the openfoam adapter handles kind flow only');
+  if (req.kind === 'flow' && !['auto', 'openfoam'].includes(adapter)) bad('a flow job needs adapter auto or openfoam');
   const label = typeof req.label === 'string' ? req.label.slice(0, 80).replace(/[\r\n]/g, ' ') : '';
   if (!Array.isArray(req.bodies) || !req.bodies.length) bad('bodies must be a non-empty array');
   if (req.bodies.length > config.maxBodies) bad(`more than ${config.maxBodies} bodies`);
@@ -52,6 +54,15 @@ export function validateJob(req, config) {
     if (req.kind === 'thermal' && !(mat.k > 0)) bad(`${w}.material needs k (W/m K) for a thermal job`);
     return { name: b.name, format: b.format, bytes, stats, material: mat };
   });
+  let flow = null;
+  if (req.kind === 'flow') {
+    const f = req.flow; if (!f || typeof f !== 'object' || Array.isArray(f)) bad('a flow job needs a flow object { speed_ms, dir, ... }');
+    if (!isNum(f.speed_ms, 0.01, 100)) bad('flow.speed_ms must be 0.01 to 100'); if (!FACES.includes(f.dir)) bad(`flow.dir must be one of ${FACES.join(', ')}`);
+    const nu = f.nu_m2s === undefined ? 1.55e-5 : f.nu_m2s; if (!isNum(nu, 1e-7, 1e-3)) bad('flow.nu_m2s must be 1e-7 to 1e-3'); const margin = f.margin_mm === undefined ? 0 : f.margin_mm; if (!isNum(margin, 0, 5000)) bad('flow.margin_mm must be 0 (automatic) to 5000');
+    const planes = (f.planes || []).map((p, i) => { const w = `flow.planes[${i}]`; if (!p || typeof p.id !== 'string' || !ID.test(p.id)) bad(`${w}.id must be 1 to 40 characters of A-Z a-z 0-9 _ . -`); const v3 = (a) => Array.isArray(a) && a.length === 3 && a.every((x) => isNum(x)); if (!v3(p.point_mm) || !v3(p.normal) || !(Math.hypot(...p.normal) > 0)) bad(`${w} needs point_mm [x,y,z] and a non-zero normal [x,y,z]`); if (!(Array.isArray(p.bounds_mm) && p.bounds_mm.length === 6 && p.bounds_mm.every((x) => isNum(x)))) bad(`${w}.bounds_mm must be [x0,x1,y0,y1,z0,z1] in mm`); return { id: p.id, point_mm: p.point_mm, normal: p.normal, bounds_mm: p.bounds_mm }; });
+    if (planes.length > 32) bad('more than 32 flow planes'); if (new Set(planes.map((p) => p.id)).size !== planes.length) bad('flow.planes ids must be unique');
+    flow = { speed_ms: f.speed_ms, dir: f.dir, nu_m2s: nu, margin_mm: margin, planes };
+  }
   const c = req.conditions || {}, cond = { mounts: [], loads: [], heat: [] };
   if (typeof c !== 'object' || Array.isArray(c)) bad('conditions must be an object');
   cond.ambient_K = c.ambient_K === undefined ? 298.15 : c.ambient_K; if (!isNum(cond.ambient_K, 200, 1000)) bad('conditions.ambient_K must be 200 to 1000');
@@ -75,5 +86,6 @@ export function validateJob(req, config) {
   if (!isNum(options.mesh_size_mm, 0, 1000)) bad('options.mesh_size_mm must be 0 (automatic) to 1000');
   if (adapter === 'fake' || adapter === 'auto') { if (o.fake_delay_ms !== undefined) options.fake_delay_ms = isNum(o.fake_delay_ms, 0, 5000) ? o.fake_delay_ms : bad('options.fake_delay_ms must be 0 to 5000'); if (o.fake_mesh_dependence !== undefined) options.fake_mesh_dependence = isNum(o.fake_mesh_dependence, 0, 10) ? o.fake_mesh_dependence : bad('options.fake_mesh_dependence must be 0 to 10'); }
   if (req.kind === 'structural') warnings.push('The FDM inter-layer knock-down is not applied by the runner (isotropic material); the safety factor is against yield.');
-  return { protocol: PROTOCOL, kind: req.kind, adapter, label, bodies, conditions: cond, options, warnings };
+  if (req.kind === 'flow') warnings.push('Flow jobs use the bodies as closed walls in a box of air; materials and structural or thermal conditions are ignored.');
+  return { protocol: PROTOCOL, kind: req.kind, adapter, label, bodies, conditions: cond, options, warnings, flow };
 }

@@ -52,8 +52,8 @@ builds the case's design, sends it to **your** Alloy Runner with a two-mesh stud
 simulated solver) and the study converged; otherwise it refuses and writes nothing. It supports the structural bracket today; the enclosure case needs PCB heat sources, which the
 runner protocol does not carry yet. **No reference file exists in this repository**, so both Elmer cases stay SKIPPED until someone with a real Elmer runs it.
 
-Currently pending: `structural.json` / `bracket-vs-elmer` (A3, below) and `thermal-3d.json` / `enclosure-vs-elmer-fine` (A2: 3D enclosure against Elmer within 5 % max-temperature error at
-`fine`).
+Currently pending: `structural.json` / `bracket-vs-elmer` (A3, below), `thermal-3d.json` / `enclosure-vs-elmer-fine` (A2: 3D enclosure against Elmer within 5 % max-temperature error at
+`fine`), and, for A5, `airflow.json` / `enclosure-forced-vs-openfoam` (total flow through the vents within 10 %, file `reference/airflow-enclosure-openfoam.json`, key `through_flow_L_s`) and `enclosure-natural-vs-chtmultiregionfoam` (peak temperature rise within 10 %, file `reference/airflow-natural-chtmultiregionfoam.json`, key `max_temperature_rise_K`). The runner's OpenFOAM adapter (`runner/`) is written and stub-tested but has never run OpenFOAM, and Forge does not submit flow jobs, so neither airflow reference can be produced yet.
 
 ### Documented expected divergence
 
@@ -71,3 +71,7 @@ Currently: `thermal-3d.json` / `enclosure-2-handheld-pc` (A1 against A2, 20.8 % 
 ### Cases that need the Alloy Runner, A3
 
 `structural.json` / `bracket-vs-elmer` (A3: an L bracket against Elmer: displacement and stiffness within 5 %, stress peak within 25 %; the tolerances are this repository's choice, the spec states none) reads `analysis-validation/reference/bracket-elmer.json` with `values` keys `max_displacement_mm`, `stiffness_N_per_mm` and `max_von_mises_MPa`. Until the Alloy Runner writes it, the case is SKIPPED (not a pass) and A3 stays `estimate`.
+
+### A5 airflow cases
+
+`cases/airflow.json` mixes `function` cases (the package's own reference problems, called through `__core`: `refCavity` Ghia lid-driven cavity, `refCylinder` Schaefer-Turek 2D-2 Strouhal number, `refPoiseuille`, `refDeVahl` the heated cavity), `run` cases through the real runner and a Worker (a closed box: no through flow; a duct: mass balance) and the two OpenFOAM `reference` cases (SKIPPED). The reference problems memoise their run, so a case with two calls on one problem runs it once. `slow/airflow-slow.json` has the Re 1000 cavity at 128 x 128 and the cylinder at 66 cells across (minutes on the CPU; `npm run test:analysis:slow`). The tolerances were written down before the runs; for the Ghia and Strouhal cases they are this repository's (the spec gives none), for the Nusselt number the spec's 2 %.

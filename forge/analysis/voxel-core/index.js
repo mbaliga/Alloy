@@ -6,3 +6,5 @@ export * from './cg.js';
 export * from './gpu.js';
 export * from './elastic.js';
 export * from './gpu-elastic.js';
+export * from './lbm.js';
+export * from './gpu-lbm.js';

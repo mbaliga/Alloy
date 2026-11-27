@@ -21,7 +21,7 @@ const { packDir } = await import('./tools/pack-ext.mjs');
 fs.mkdirSync('dist/ext-samples', { recursive: true });
 { const { bundle: bundleExt, TARGETS: EXT_TARGETS } = await import('./tools/bundle-ext.mjs'); // examples/ext/thermal-3d/main.js is generated from analysis/voxel-core and analysis/thermal-3d
   for (const n of Object.keys(EXT_TARGETS)) fs.writeFileSync(EXT_TARGETS[n].out, bundleExt(n)); }
-for (const d of ['sample-rib', 'sample-probe', 'sample-mass', 'thermal-estimate', 'thermal-3d', 'structural', 'runner']) fs.writeFileSync(`dist/ext-samples/${d}.alloyext`, await packDir(`examples/ext/${d}`));
+for (const d of ['sample-rib', 'sample-probe', 'sample-mass', 'thermal-estimate', 'thermal-3d', 'structural', 'airflow', 'runner']) fs.writeFileSync(`dist/ext-samples/${d}.alloyext`, await packDir(`examples/ext/${d}`));
 for (const f of ['occt-import-js.js', 'occt-import-js.wasm']) fs.copyFileSync('node_modules/occt-import-js/dist/' + f, 'dist/' + f);
 fs.copyFileSync('node_modules/occt-import-js/dist/license.occt-import-js.txt', 'dist/LICENSE.occt-import-js.txt');
 const walk = (d) => fs.readdirSync(d).flatMap((f) => (fs.statSync(d + '/' + f).isDirectory() ? walk(d + '/' + f) : [d + '/' + f]));

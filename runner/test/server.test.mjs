@@ -19,10 +19,10 @@ test('auth: health is open but minimal; everything else needs the exact bearer t
   r = await api(base, T, 'POST', '/v1/jobs', barJob(), { headers: { Authorization: 'Bearer nope' } }); assert.equal(r.status, 401);
 });
 
-test('health with the token lists every adapter, why one is unavailable, the limits; OpenFOAM is reported as not implemented', async () => {
+test('health with the token lists every adapter, why one is unavailable, the limits; OpenFOAM is reported as not found (no OpenFOAM here)', async () => {
   const r = await api(base, T, 'GET', '/v1/health'); assert.equal(r.json.authenticated, true);
   assert.equal(r.json.adapters.fake.ok, true); assert.equal(r.json.adapters.fake.real, false);
-  assert.equal(r.json.adapters.openfoam.ok, false); assert.match(r.json.adapters.openfoam.reason, /not implemented/);
+  assert.equal(r.json.adapters.openfoam.ok, false); assert.match(r.json.adapters.openfoam.reason, /not found: blockMesh/);
   assert.equal(typeof r.json.adapters.elmer.ok, 'boolean'); if (!r.json.adapters.elmer.ok) assert.match(r.json.adapters.elmer.reason, /not found/);
   assert.ok(r.json.limits.max_tets > 0); assert.equal(r.json.qualification, null);
 });
@@ -40,8 +40,9 @@ test('CORS: only a listed origin is answered, preflight is handled, private-netw
 test('submission validation names the wrong field (protocol, kind, names, STL, materials, faces, numbers) and never accepts an open or inside-out STL', async () => {
   const bad = async (mut, re, status = 400) => { const j = barJob(); mut(j); const r = await api(base, T, 'POST', '/v1/jobs', j); assert.equal(r.status, status, r.text); assert.match(r.json.error.message, re); };
   await bad((j) => { j.protocol = 2; }, /protocol must be 1/);
-  await bad((j) => { j.kind = 'flow'; }, /kind must be one of structural, thermal/);
-  await bad((j) => { j.adapter = 'openfoam'; }, /adapter must be/);
+  await bad((j) => { j.kind = 'plasma'; }, /kind must be one of structural, thermal, flow/);
+  await bad((j) => { j.adapter = 'openfoam'; }, /openfoam adapter handles kind flow only/);
+  await bad((j) => { j.adapter = 'cfx'; }, /adapter must be/);
   await bad((j) => { j.bodies = []; }, /non-empty/);
   await bad((j) => { j.bodies[0].name = '../x'; }, /bodies\[0\]\.name/);
   await bad((j) => { j.bodies.push({ ...j.bodies[0] }); }, /used twice/);

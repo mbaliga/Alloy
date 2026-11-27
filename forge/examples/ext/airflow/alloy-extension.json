@@ -1,0 +1,268 @@
+{
+ "id": "xyz.mdhv.airflow",
+ "name": "Airflow",
+ "version": "0.1.0",
+ "forgeApi": "^1.0",
+ "author": "Madhav Baliga",
+ "licence": "PolyForm-Noncommercial-1.0.0",
+ "description": "Airflow around and through your design on a voxel lattice (lattice Boltzmann D3Q19 with a Smagorinsky closure). Free stream or fans in, flow per vent, dead zones, speed, pressure and streamlines. WebGPU, else CPU. An estimate; natural convection with conducting solids is experimental.",
+ "main": "main.js",
+ "permissions": [
+  "doc.read",
+  "geometry.read",
+  "storage",
+  "agent.tools",
+  "compute.gpu",
+  "scene.overlay"
+ ],
+ "contributes": {
+  "analyses": [
+   {
+    "id": "airflow",
+    "label": "Airflow",
+    "validity": "estimate",
+    "description": "Air speed, flow through each vent, dead zones and streamlines. Set the air speed under Conditions (ambient) or add a fan with the set-airflow tool, then pick the resolution. Natural convection (mode) adds the heat sources and the conduction of the bodies, and is experimental: it never decides a pass or fail.",
+    "fields": [
+     "speed",
+     "velocity",
+     "pressure",
+     "dead_zone",
+     "temperature"
+    ],
+    "settings": [
+     {
+      "key": "quality",
+      "label": "Resolution",
+      "kind": "enum",
+      "opts": [
+       "draft",
+       "normal",
+       "fine"
+      ],
+      "def": "normal",
+      "tip": "Sets the voxel size so the lattice has about this many cells (the whole box, margin included): draft 262 144, normal 1 000 000, fine 2 097 152 (128 cubed) on a laptop GPU; 32 768, 110 592 and 262 144 (64 cubed) on a phone; 16 000, 40 000 and 100 000 without WebGPU. Vents narrower than about three voxels are poorly resolved. The voxel size is shown in the result."
+     },
+     {
+      "key": "backend",
+      "label": "Compute",
+      "kind": "enum",
+      "opts": [
+       "auto",
+       "gpu",
+       "cpu"
+      ],
+      "def": "auto",
+      "tip": "Auto uses WebGPU when the browser offers it and the lattice is big enough to benefit; the CPU solver is the fallback and uses much smaller lattices. Natural convection runs on the CPU."
+     },
+     {
+      "key": "mode",
+      "label": "Mode",
+      "kind": "enum",
+      "opts": [
+       "forced",
+       "natural"
+      ],
+      "def": "forced",
+      "tip": "Forced: a free stream and/or fans drive the air (an estimate). Natural: buoyancy from the heat sources of the Conditions, coupled to the conduction of the bodies (experimental, CPU only)."
+     },
+     {
+      "key": "flow_dir",
+      "when": {
+       "mode": "forced"
+      },
+      "label": "Flow direction",
+      "kind": "enum",
+      "opts": [
+       "+x",
+       "-x",
+       "+y",
+       "-y",
+       "+z",
+       "-z"
+      ],
+      "def": "+x",
+      "tip": "The direction the free stream blows in. The model sits in a box: the upstream face and the sides carry the free-stream speed, the downstream face is open at gauge pressure 0."
+     },
+     {
+      "key": "speed_ms",
+      "when": {
+       "mode": "forced"
+      },
+      "label": "Air speed",
+      "kind": "num",
+      "unit": "m/s",
+      "def": 0,
+      "min": 0,
+      "max": 100,
+      "tip": "The free-stream speed. 0 takes the air speed of the Conditions (ambient). With 0 and no fan the analysis says nothing drives the air."
+     },
+     {
+      "key": "flow_throughs",
+      "label": "Flow-throughs",
+      "kind": "num",
+      "unit": "",
+      "def": 6,
+      "min": 1,
+      "max": 200,
+      "tip": "How many times the air crosses the box before the result is taken. The run stops early once the kinetic energy settles, or at the time limit."
+     },
+     {
+      "key": "max_seconds",
+      "label": "Time limit",
+      "kind": "num",
+      "unit": "s",
+      "def": 90,
+      "min": 5,
+      "max": 7200,
+      "tip": "The run is stopped after this long and says that it did not settle. The CPU fallback is slow: expect about a million cell updates per 0.1 s."
+     },
+     {
+      "key": "dead_frac",
+      "label": "Dead-zone threshold",
+      "kind": "num",
+      "unit": "",
+      "def": 0.05,
+      "min": 0.005,
+      "max": 0.5,
+      "tip": "Interior air slower than this fraction of the reference speed (the free stream, else the mean speed through the inflow vents) counts as dead."
+     }
+    ],
+    "checks": [
+     {
+      "id": "dead-zone-fraction",
+      "label": "Dead-zone fraction \u2264 limit",
+      "metric": "dead_zone_fraction",
+      "op": "<=",
+      "limit": 0.35,
+      "unit": ""
+     },
+     {
+      "id": "through-flow",
+      "label": "Through flow \u2265 limit",
+      "metric": "through_flow",
+      "op": ">=",
+      "limit": 0.5,
+      "unit": "L/s"
+     }
+    ]
+   }
+  ],
+  "overlays": [
+   {
+    "id": "streamlines",
+    "label": "Airflow streamlines"
+   }
+  ],
+  "agentTools": [
+   {
+    "id": "set-airflow",
+    "label": "Airflow settings",
+    "description": "Set the Airflow settings in the project: quality, backend, mode (forced|natural), flow_dir, speed_ms, margin_mm, flow_throughs, max_seconds, smagorinsky, min_tau, dead_frac, streamlines (count), h_mm, fans [{center [x,y,z] mm, dir, radius_mm, dp_Pa, q_m3s?}]. Only given keys change. Does not run it.",
+    "schema": {
+     "type": "object",
+     "properties": {
+      "quality": {
+       "type": "string",
+       "enum": [
+        "draft",
+        "normal",
+        "fine"
+       ]
+      },
+      "backend": {
+       "type": "string",
+       "enum": [
+        "auto",
+        "gpu",
+        "cpu"
+       ]
+      },
+      "mode": {
+       "type": "string",
+       "enum": [
+        "forced",
+        "natural"
+       ]
+      },
+      "flow_dir": {
+       "type": "string",
+       "enum": [
+        "+x",
+        "-x",
+        "+y",
+        "-y",
+        "+z",
+        "-z"
+       ]
+      },
+      "speed_ms": {
+       "type": "number"
+      },
+      "margin_mm": {
+       "type": "number"
+      },
+      "flow_throughs": {
+       "type": "number"
+      },
+      "max_seconds": {
+       "type": "number"
+      },
+      "smagorinsky": {
+       "type": "number"
+      },
+      "dead_frac": {
+       "type": "number"
+      },
+      "streamlines": {
+       "type": "number"
+      },
+      "h_mm": {
+       "type": "number"
+      },
+      "delta_T_guess_K": {
+       "type": "number"
+      },
+      "fans": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "center": {
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         "dir": {
+          "type": "string"
+         },
+         "radius_mm": {
+          "type": "number"
+         },
+         "dp_Pa": {
+          "type": "number"
+         },
+         "q_m3s": {
+          "type": "number"
+         },
+         "thickness_mm": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "center",
+         "dir",
+         "radius_mm",
+         "dp_Pa"
+        ]
+       }
+      },
+      "min_tau": {
+       "type": "number"
+      }
+     }
+    }
+   }
+  ]
+ }
+}

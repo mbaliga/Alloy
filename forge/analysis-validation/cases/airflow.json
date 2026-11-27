@@ -1,0 +1,555 @@
+{
+ "analysis": "xyz.mdhv.airflow/airflow",
+ "package": "examples/ext/airflow",
+ "cases": [
+  {
+   "id": "cavity-re100",
+   "kind": "function",
+   "title": "Lid-driven cavity, Re 100, 64 x 64 cells (Ghia)",
+   "reference": "Ghia, Ghia and Shin (1982), J. Comput. Phys. 48, 387-411, tables I and II (u on the vertical and v on the horizontal centreline, 17 points each; the numbers are transcribed from memory of the tables and were not re-checked against the paper). Quasi-2D cavity of N x N fluid cells, lid speed 0.1, Smagorinsky off, run to a steady state. The metric is the largest difference to the table in units of the lid speed; the tolerance was written down before the run.",
+   "calls": [
+    {
+     "fn": "refCavity.eu",
+     "args": [
+      {
+       "Re": 100,
+       "N": 64
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.02
+     },
+     "metric": "u on the vertical centreline, max |difference|",
+     "unit": "U_lid"
+    },
+    {
+     "fn": "refCavity.ev",
+     "args": [
+      {
+       "Re": 100,
+       "N": 64
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.02
+     },
+     "metric": "v on the horizontal centreline, max |difference|",
+     "unit": "U_lid"
+    }
+   ]
+  },
+  {
+   "id": "cavity-re1000",
+   "kind": "function",
+   "title": "Lid-driven cavity, Re 1000, 64 x 64 cells (Ghia)",
+   "reference": "Ghia, Ghia and Shin (1982), J. Comput. Phys. 48, 387-411, tables I and II (u on the vertical and v on the horizontal centreline, 17 points each; the numbers are transcribed from memory of the tables and were not re-checked against the paper). Quasi-2D cavity of N x N fluid cells, lid speed 0.1, Smagorinsky off, run to a steady state. The metric is the largest difference to the table in units of the lid speed; the tolerance was written down before the run. Re 1000 at 64 cells is coarse: the 128-cell case is in slow/airflow-slow.json.",
+   "calls": [
+    {
+     "fn": "refCavity.eu",
+     "args": [
+      {
+       "Re": 1000,
+       "N": 64
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.05
+     },
+     "metric": "u on the vertical centreline, max |difference|",
+     "unit": "U_lid"
+    },
+    {
+     "fn": "refCavity.ev",
+     "args": [
+      {
+       "Re": 1000,
+       "N": 64
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.05
+     },
+     "metric": "v on the horizontal centreline, max |difference|",
+     "unit": "U_lid"
+    }
+   ]
+  },
+  {
+   "id": "cylinder-strouhal",
+   "kind": "function",
+   "title": "Flow past a cylinder in a channel, Re 100: Strouhal number (Schaefer-Turek 2D-2)",
+   "reference": "Schaefer and Turek (1996), Benchmark computations of laminar flow around a cylinder, benchmark 2D-2 (Re 100 on the mean speed and the diameter, channel 0.41 x 2.2, cylinder D 0.1 at (0.2, 0.2), parabolic inflow, mean speed 2/3 of the peak): the Strouhal number f D / U_mean lies in 0.2950 to 0.3050 (mid 0.3000). 50 cells across the channel (cylinder 12.2 cells), 20 000 steps, frequency from the zero crossings of the transverse velocity 0.6 from the inlet. The tolerance 5 % of 0.300 was written down before the run.",
+   "calls": [
+    {
+     "fn": "refCylinder.St",
+     "args": [
+      {
+       "H": 50,
+       "steps": 20000
+      }
+     ],
+     "value": 0.3,
+     "tol": {
+      "rel": 0.05
+     },
+     "metric": "Strouhal number",
+     "unit": ""
+    }
+   ]
+  },
+  {
+   "id": "channel-poiseuille",
+   "kind": "function",
+   "title": "Plane Poiseuille flow between walls (analytic)",
+   "reference": "u(y) = F y (H - y) / (2 nu) for a body force F between no-slip walls. Halfway bounce-back is exact for a parabola when (tau - 1/2)^2 = 3/16, which this case uses; H = 24 cells. The metric is the largest relative difference of the profile; the tolerance 0.5 % was written down before the run.",
+   "calls": [
+    {
+     "fn": "refPoiseuille.relErr",
+     "args": [
+      {
+       "H": 24,
+       "steps": 12000
+      }
+     ],
+     "value": 0,
+     "tol": {
+      "abs": 0.005
+     },
+     "metric": "profile error / peak",
+     "unit": ""
+    }
+   ]
+  },
+  {
+   "id": "devahl-ra1e3",
+   "kind": "function",
+   "title": "Differentially heated cavity, Ra 1e+03, 32 x 32 cells (de Vahl Davis): Nusselt number",
+   "reference": "de Vahl Davis (1983), Int. J. Numer. Methods Fluids 3, 249-264: natural convection in a square cavity, Pr 0.71, hot and cold side walls, adiabatic top and bottom; average Nusselt number 1.118 at Ra 1e+03 (benchmark values 1.118, 2.243, 4.519, 8.800 at Ra 1e3 to 1e6). D3Q7 thermal lattice with Boussinesq buoyancy, N x N cells; Nu from the heat flux through the vertical mid-plane. Tolerance 2 % (the spec's), written down before the run.",
+   "calls": [
+    {
+     "fn": "refDeVahl.Nu",
+     "args": [
+      {
+       "Ra": 1000,
+       "N": 32
+      }
+     ],
+     "value": 1.118,
+     "tol": {
+      "rel": 0.02
+     },
+     "metric": "average Nusselt number",
+     "unit": ""
+    }
+   ]
+  },
+  {
+   "id": "devahl-ra1e4",
+   "kind": "function",
+   "title": "Differentially heated cavity, Ra 1e+04, 32 x 32 cells (de Vahl Davis): Nusselt number",
+   "reference": "de Vahl Davis (1983), Int. J. Numer. Methods Fluids 3, 249-264: natural convection in a square cavity, Pr 0.71, hot and cold side walls, adiabatic top and bottom; average Nusselt number 2.243 at Ra 1e+04 (benchmark values 1.118, 2.243, 4.519, 8.800 at Ra 1e3 to 1e6). D3Q7 thermal lattice with Boussinesq buoyancy, N x N cells; Nu from the heat flux through the vertical mid-plane. Tolerance 2 % (the spec's), written down before the run.",
+   "calls": [
+    {
+     "fn": "refDeVahl.Nu",
+     "args": [
+      {
+       "Ra": 10000,
+       "N": 32
+      }
+     ],
+     "value": 2.243,
+     "tol": {
+      "rel": 0.02
+     },
+     "metric": "average Nusselt number",
+     "unit": ""
+    }
+   ]
+  },
+  {
+   "id": "devahl-ra1e5",
+   "kind": "function",
+   "title": "Differentially heated cavity, Ra 1e+05, 48 x 48 cells (de Vahl Davis): Nusselt number",
+   "reference": "de Vahl Davis (1983), Int. J. Numer. Methods Fluids 3, 249-264: natural convection in a square cavity, Pr 0.71, hot and cold side walls, adiabatic top and bottom; average Nusselt number 4.519 at Ra 1e+05 (benchmark values 1.118, 2.243, 4.519, 8.800 at Ra 1e3 to 1e6). D3Q7 thermal lattice with Boussinesq buoyancy, N x N cells; Nu from the heat flux through the vertical mid-plane. Tolerance 2 % (the spec's), written down before the run.",
+   "calls": [
+    {
+     "fn": "refDeVahl.Nu",
+     "args": [
+      {
+       "Ra": 100000,
+       "N": 48
+      }
+     ],
+     "value": 4.519,
+     "tol": {
+      "rel": 0.02
+     },
+     "metric": "average Nusselt number",
+     "unit": ""
+    }
+   ]
+  },
+  {
+   "id": "devahl-ra1e6",
+   "kind": "function",
+   "title": "Differentially heated cavity, Ra 1e+06, 64 x 64 cells (de Vahl Davis): Nusselt number",
+   "reference": "de Vahl Davis (1983), Int. J. Numer. Methods Fluids 3, 249-264: natural convection in a square cavity, Pr 0.71, hot and cold side walls, adiabatic top and bottom; average Nusselt number 8.8 at Ra 1e+06 (benchmark values 1.118, 2.243, 4.519, 8.800 at Ra 1e3 to 1e6). D3Q7 thermal lattice with Boussinesq buoyancy, N x N cells; Nu from the heat flux through the vertical mid-plane. Tolerance 2 % (the spec's), written down before the run.",
+   "calls": [
+    {
+     "fn": "refDeVahl.Nu",
+     "args": [
+      {
+       "Ra": 1000000,
+       "N": 64
+      }
+     ],
+     "value": 8.8,
+     "tol": {
+      "rel": 0.02
+     },
+     "metric": "average Nusselt number",
+     "unit": ""
+    }
+   ]
+  },
+  {
+   "id": "closed-box-no-through-flow",
+   "title": "A closed hollow box in a stream: no air goes through it",
+   "reference": "Conservation of mass: a closed box has no vents, so the flow through its walls is zero and the air inside stays still (no vent is found, through flow 0, every interior cell is a dead zone). Tolerances written down before the run: through flow exactly 0 L/s, dead-zone fraction 1 within 0.05.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Case",
+      "size": [
+       50,
+       40,
+       30
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       46,
+       36,
+       26
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       2
+      ]
+     }
+    ],
+    "materials": {
+     "Case": "abs"
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 298.15,
+      "airspeed_ms": 2,
+      "gravity": "-z"
+     }
+    },
+    "ext": {
+     "xyz.mdhv.airflow": {
+      "settings": {
+       "backend": "cpu",
+       "quality": "draft",
+       "max_seconds": 60,
+       "streamlines": 0
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "through_flow",
+     "value": 0,
+     "unit": "L/s",
+     "tol": {
+      "abs": 1e-06
+     }
+    },
+    {
+     "metric": "dead_zone_fraction",
+     "value": 1,
+     "unit": "",
+     "tol": {
+      "abs": 0.05
+     }
+    }
+   ],
+   "expectValidity": "estimate"
+  },
+  {
+   "id": "duct-mass-conservation",
+   "title": "A duct open at both ends: the air that goes in comes out",
+   "reference": "Conservation of mass for an incompressible flow through a duct 100 x 30 x 30 mm with a 20 x 20 mm bore: the flow into the two end openings equals the flow out of them. The metric is |in - out| over their mean; tolerance 15 % (written down before the run; the average of the last samples of a steady state, on a coarse lattice). Also the through flow is positive.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Case",
+      "size": [
+       100,
+       30,
+       30
+      ],
+      "anchor": "center",
+      "pos": [
+       0,
+       0,
+       15
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       120,
+       20,
+       20
+      ],
+      "anchor": "center",
+      "pos": [
+       0,
+       0,
+       15
+      ]
+     }
+    ],
+    "materials": {
+     "Case": "abs"
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 298.15,
+      "airspeed_ms": 2,
+      "gravity": "-z"
+     }
+    },
+    "ext": {
+     "xyz.mdhv.airflow": {
+      "settings": {
+       "backend": "cpu",
+       "quality": "draft",
+       "max_seconds": 90,
+       "streamlines": 0,
+       "flow_throughs": 8
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "mass_balance_error",
+     "value": 0,
+     "unit": "",
+     "tol": {
+      "abs": 0.15
+     }
+    }
+   ],
+   "expectValidity": "estimate"
+  },
+  {
+   "id": "enclosure-forced-vs-openfoam",
+   "kind": "reference",
+   "title": "A vented enclosure in a stream against OpenFOAM (flow through the vents within 10 %)",
+   "reference": "Spec docs/EXTENSIONS_SPEC.md section 4 (A5 phase 1): \"one enclosure compared with OpenFOAM via A4\". The reference number is produced once by the Alloy Runner with OpenFOAM (a flow job with one plane across each vent, runner/README.md) and stored in analysis-validation/reference/airflow-enclosure-openfoam.json as the total flow into the enclosure through its vents. The spec gives no tolerance: 10 % of that flow is this repository's choice, written down before any reference exists. NO reference exists in this repository: the case is SKIPPED, and Forge does not submit flow jobs yet.",
+   "referenceFile": "analysis-validation/reference/airflow-enclosure-openfoam.json",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Case",
+      "size": [
+       80,
+       50,
+       30
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       76,
+       46,
+       26
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       2
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       6,
+       30,
+       16
+      ],
+      "anchor": "bottom",
+      "pos": [
+       -40,
+       0,
+       7
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       6,
+       30,
+       16
+      ],
+      "anchor": "bottom",
+      "pos": [
+       40,
+       0,
+       7
+      ]
+     }
+    ],
+    "materials": {
+     "Case": "abs"
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 298.15,
+      "airspeed_ms": 2,
+      "gravity": "-z"
+     }
+    },
+    "ext": {
+     "xyz.mdhv.airflow": {
+      "settings": {
+       "backend": "cpu",
+       "quality": "normal",
+       "max_seconds": 300
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "through_flow",
+     "refKey": "through_flow_L_s",
+     "unit": "L/s",
+     "tol": {
+      "rel": 0.1
+     }
+    }
+   ]
+  },
+  {
+   "id": "enclosure-natural-vs-chtmultiregionfoam",
+   "kind": "reference",
+   "title": "A heated enclosure in still air against OpenFOAM chtMultiRegionFoam (maximum temperature within 10 % of the rise)",
+   "reference": "Spec docs/EXTENSIONS_SPEC.md section 4 (A5 phase 2): \"an enclosure compared with OpenFOAM chtMultiRegionFoam\". The reference is produced once by the Alloy Runner and stored in analysis-validation/reference/airflow-natural-chtmultiregionfoam.json. The spec gives no tolerance for this case: 10 % of the temperature rise above ambient is this repository's choice, written down before any reference exists. NO reference exists in this repository: the case is SKIPPED, and natural convection stays experimental.",
+   "referenceFile": "analysis-validation/reference/airflow-natural-chtmultiregionfoam.json",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Case",
+      "size": [
+       60,
+       40,
+       25
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       56,
+       36,
+       21
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       2
+      ]
+     }
+    ],
+    "materials": {
+     "Case": "abs"
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 298.15,
+      "gravity": "-z"
+     },
+     "heat": [
+      {
+       "id": "h1",
+       "target": {
+        "body": "Case"
+       },
+       "power_W": 2
+      }
+     ],
+     "mounts": []
+    },
+    "ext": {
+     "xyz.mdhv.airflow": {
+      "settings": {
+       "backend": "cpu",
+       "quality": "normal",
+       "mode": "natural",
+       "max_seconds": 300
+      }
+     }
+    }
+   },
+   "expect": [
+    {
+     "metric": "max_temperature_rise",
+     "refKey": "max_temperature_rise_K",
+     "unit": "K",
+     "tol": {
+      "rel": 0.1
+     }
+    }
+   ]
+  }
+ ]
+}

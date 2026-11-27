@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import * as VC from './analysis/voxel-core/index.js';
 import * as ELASTIC from './analysis/voxel-core/elastic.js';
 import * as GPU_ELASTIC from './analysis/voxel-core/gpu-elastic.js';
+import * as LBM from './analysis/voxel-core/lbm.js';
+import * as GPU_LBM from './analysis/voxel-core/gpu-lbm.js';
 import { coreScript } from './tools/bundle-ext.mjs';
 
 /** Closed box mesh [x0,x1,y0,y1,z0,z1], outward winding. */
@@ -195,7 +197,8 @@ test('WGSL: balanced braces, no stray template text, and the GPU backend reports
 test('bundle: the core evaluates as one script with every export, ready for a Worker', () => {
   const core = (0, eval)(coreScript());
   for (const k of ['buildVoxelModel', 'paintMesh', 'pcgSteps', 'cpuBackend', 'gpuBackend', 'wgslSource', 'hFace', 'faceConductances', 'gridBudget', 'deviceClass']) assert.equal(typeof core[k] === 'function' || typeof core[k] === 'object', true, k);
-  assert.equal(Object.keys(core).length, Object.keys(VC).length - Object.keys(ELASTIC).length - Object.keys(GPU_ELASTIC).length, 'the thermal bundle and the module expose the same names, less the elastic solver of A3 (test_structural.mjs bundles that)');
+  assert.equal(Object.keys(core).length, Object.keys(VC).length - Object.keys(ELASTIC).length - Object.keys(GPU_ELASTIC).length - Object.keys(LBM).length - Object.keys(GPU_LBM).length, 'the thermal bundle and the module expose the same names, less the elastic solver of A3 and the lattice Boltzmann solver of A5 (test_structural.mjs and test_airflow.mjs bundle those)');
+  for (const k of Object.keys(LBM)) assert.ok(!(k in core), `${k} (A5 only) is not in the thermal bundle`);
   for (const k of Object.keys(ELASTIC)) assert.ok(!(k in core), `${k} (A3 only) is not in the thermal bundle`);
 });
 

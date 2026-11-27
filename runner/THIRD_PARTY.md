@@ -11,7 +11,7 @@ Each keeps its own licence; if you distribute the container image you are distri
 |---|---|---|---|
 | gmsh (https://gmsh.info) | STL surface to tetrahedral volume mesh | GPL-2.0-or-later (with an exception for linking against some libraries; see gmsh's own text) | `gmsh body.geo -3 -format msh2` |
 | Elmer FEM (https://www.elmerfem.org, ElmerSolver) | structural (linear elasticity) and thermal (heat equation) solves | GPL-2.0-or-later (ElmerSolver; some libraries LGPL) | `ElmerSolver case.sif` |
-| OpenFOAM (ESI or Foundation) | flow (planned for step A5; **not used by this version**) | GPL-3.0-or-later | not started |
+| OpenFOAM (ESI or Foundation) | flow (step A5: simpleFoam case writer and adapter, run as a separate process, never linked; **OpenFOAM has never been run by the author**) | GPL-3.0-or-later | not installed in the image |
 | Node.js (https://nodejs.org) | runs the service | MIT | the container's entry point |
 
 No file produced by these programs is copied into the repository. A reference result stored under `forge/analysis-validation/reference/`
