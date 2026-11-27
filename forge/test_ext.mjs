@@ -135,7 +135,7 @@ test('integrity: a package edited after it was built is refused', async () => {
 const ALL = Object.keys(PERMISSIONS).filter((p) => !p.startsWith('network')).concat('network:api.example.com');
 const DECLARED = Object.fromEntries(Object.keys(CONTRIBUTES).map((k) => [k, [{ id: 'x', label: 'X', file: 'p.html', fields: [], schema: {} }]]));
 const ARGS = {
-  'doc.get': [], 'doc.applyOps': [[{ op: 'set_param', name: 'a', expr: '1' }]], 'pcb.get': [], 'geometry.list': [], 'geometry.mesh': ['Box'], 'geometry.brep': ['Box'], 'geometry.voxelize': ['Box', 2],
+  'doc.get': [], 'doc.applyOps': [[{ op: 'set_param', name: 'a', expr: '1' }]], 'pcb.get': [], 'geometry.list': [], 'geometry.mesh': ['Box'], 'geometry.brep': ['Box'], 'geometry.voxelize': ['Box', 2], 'analysis.input': [],
   'checks.register': ['x', { has: ['fn'] }], 'analysis.register': ['x', { has: ['run'] }], 'featureType.register': ['x', { has: ['expand'] }], 'agent.tool': ['x', { has: ['fn'] }], 'loop.step': ['x', { has: ['fn'] }],
   'scene.overlay': ['x', { kind: 'box', min: [0, 0, 0], max: [1, 1, 1] }], 'scene.clearOverlay': ['x'], 'ui.pane.open': ['x'], 'ui.pane.post': ['x', { a: 1 }],
   'storage.project.get': ['k'], 'storage.project.set': ['k', 1], 'storage.user.get': ['k'], 'storage.user.set': ['k', 1],

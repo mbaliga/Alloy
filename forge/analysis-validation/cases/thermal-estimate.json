@@ -1,0 +1,543 @@
+{
+ "analysis": "xyz.mdhv.thermal-estimate/thermal-estimate",
+ "package": "examples/ext/thermal-estimate",
+ "cases": [
+  {
+   "id": "vertical-plate-cengel-style",
+   "kind": "function",
+   "title": "Vertical plate 0.6 m, Ts 90 C, ambient 30 C (Churchill and Chu)",
+   "reference": "Lecture-note Example 9.1 (Al-Mustaqbal Univ. College, Heat Transfer, natural convection; Cengel-style, air at 60 C: k 0.02808, nu 1.896e-5, Pr 0.722): published Ra 7.656e8, Nu 113.4. The source's own Ra arithmetic is 0.15 % below an independent recompute (7.668e8), so Ra gets 0.5 %.",
+   "calls": [
+    {
+     "fn": "rayleigh",
+     "metric": "Ra_L",
+     "args": [
+      60,
+      0.6,
+      {
+       "beta": 0.003003003003003003,
+       "nu": 1.896e-05,
+       "alpha": 2.626038781163435e-05
+      }
+     ],
+     "value": 765600000.0,
+     "unit": "",
+     "tol": {
+      "rel": 0.005
+     }
+    },
+    {
+     "fn": "nuVertical",
+     "metric": "Nu_L",
+     "args": [
+      765600000.0,
+      0.722
+     ],
+     "value": 113.4,
+     "unit": "",
+     "tol": {
+      "rel": 0.003
+     }
+    }
+   ]
+  },
+  {
+   "id": "horizontal-plate-cengel-9-2",
+   "kind": "function",
+   "title": "Horizontal plate 0.6 x 0.6 m, Ts 90 C, ambient 30 C",
+   "reference": "Cengel, Heat Transfer: A Practical Approach 2nd ed., Example 9-2 (also reproduced in lecture notes): Lc = A/p = 0.15 m, air at 60 C. Published Ra 1.196e7 and hot-face-down Nu = 0.27 Ra^(1/4) = 15.86. (The book also applies 0.54 Ra^(1/4) = 31.76 to the hot-face-up case at Ra above 1e7; Forge uses the 0.15 Ra^(1/3) branch there, as Incropera does, so that number is not tested.)",
+   "calls": [
+    {
+     "fn": "rayleigh",
+     "metric": "Ra_Lc",
+     "args": [
+      60,
+      0.15,
+      {
+       "beta": 0.003003003003003003,
+       "nu": 1.896e-05,
+       "alpha": 2.632602054984727e-05
+      }
+     ],
+     "value": 11960000.0,
+     "unit": "",
+     "tol": {
+      "rel": 0.003
+     }
+    },
+    {
+     "fn": "nuHorizontalRestricted",
+     "metric": "Nu hot face down",
+     "args": [
+      11960000.0
+     ],
+     "value": 15.86,
+     "unit": "",
+     "tol": {
+      "rel": 0.003
+     }
+    }
+   ]
+  },
+  {
+   "id": "horizontal-enhanced-solution-manual",
+   "kind": "function",
+   "title": "Horizontal plate, hot face up and down at Ra = 222 593",
+   "reference": "SFU ENSC 388 (Bahrami) solution-manual line as printed: Ra = 222 593 gives Nu = 11.73 (0.54 Ra^(1/4), hot face up) and 5.865 (0.27 Ra^(1/4), hot face down). Only the printed Ra and Nu pair is used; the problem's other inputs were not checked.",
+   "calls": [
+    {
+     "fn": "nuHorizontalEnhanced",
+     "metric": "Nu hot face up",
+     "args": [
+      222593
+     ],
+     "value": 11.73,
+     "unit": "",
+     "tol": {
+      "rel": 0.002
+     }
+    },
+    {
+     "fn": "nuHorizontalRestricted",
+     "metric": "Nu hot face down",
+     "args": [
+      222593
+     ],
+     "value": 5.865,
+     "unit": "",
+     "tol": {
+      "rel": 0.002
+     }
+    }
+   ]
+  },
+  {
+   "id": "radiation-cengel-15-10",
+   "kind": "function",
+   "title": "Radiation from the sealed box of Cengel Example 15-10",
+   "reference": "Cengel, Heat and Mass Transfer 3rd ed., Example 15-10 (McGraw-Hill free chapter 15): eps 0.85, area 0.21 + 0.12 m2, Ts 65 C = 338 K, room 35 C = 308 K: published Q_rad = 64.5 W. h_r (Ts^2+Ta^2)(Ts+Ta) eps sigma equals eps sigma (Ts^4 - Ta^4)/(Ts - Ta) exactly.",
+   "calls": [
+    {
+     "fn": "hRadiation",
+     "metric": "Q_rad",
+     "args": [
+      0.85,
+      338,
+      308
+     ],
+     "mul": 9.9,
+     "value": 64.5,
+     "unit": "W",
+     "tol": {
+      "rel": 0.003
+     }
+    }
+   ]
+  },
+  {
+   "id": "air-properties-60C",
+   "kind": "function",
+   "title": "Air properties at 60 C, 1 atm",
+   "reference": "Table A-15 values quoted in Cengel Examples 9-2 and 15-10 (via the sources above): k = 0.02808 W/m K, nu = 1.896e-5 m2/s, Pr = 0.7202 at 333 K. The property fits claim about 3 %: the Incropera and Cengel tables themselves differ by about 2 %.",
+   "calls": [
+    {
+     "fn": "airProps.k",
+     "metric": "k",
+     "args": [
+      333.15
+     ],
+     "value": 0.02808,
+     "unit": "W/m K",
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "fn": "airProps.nu",
+     "metric": "nu",
+     "args": [
+      333.15
+     ],
+     "value": 1.896e-05,
+     "unit": "m2/s",
+     "tol": {
+      "rel": 0.03
+     }
+    },
+    {
+     "fn": "airProps.Pr",
+     "metric": "Pr",
+     "args": [
+      333.15
+     ],
+     "value": 0.7202,
+     "unit": "",
+     "tol": {
+      "rel": 0.03
+     }
+    }
+   ]
+  },
+  {
+   "id": "stack-flow-hand",
+   "kind": "function",
+   "title": "Stack flow through two 1000 mm2 openings 0.1 m apart",
+   "reference": "Derived by hand from V = Cd A_eff sqrt(2 g H (Ti - To) / Ti), A_eff = A1 A2 / sqrt(A1^2 + A2^2), Cd 0.6, Ti 330 K, To 300 K, computed separately in Python: 1.79149e-4 m3/s.",
+   "calls": [
+    {
+     "fn": "stackFlow",
+     "metric": "V",
+     "args": [
+      0.001,
+      0.001,
+      0.1,
+      330,
+      300
+     ],
+     "value": 0.000179149,
+     "unit": "m3/s",
+     "tol": {
+      "rel": 0.0001
+     }
+    }
+   ]
+  },
+  {
+   "id": "network-series-exact",
+   "kind": "function",
+   "title": "Two-resistor chain with a heat source",
+   "reference": "Exact: 10 W into node 0, G(0-1) = 5 W/K, G(1-ambient) = 2.5 W/K, ambient 300 K: T1 = 300 + 10/2.5 = 304 K, T0 = 304 + 10/5 = 306 K.",
+   "calls": [
+    {
+     "fn": "solveNetwork.0",
+     "metric": "T0",
+     "args": [
+      2,
+      [
+       [
+        0,
+        1,
+        5
+       ],
+       [
+        1,
+        -1,
+        2.5
+       ]
+      ],
+      [
+       10,
+       0
+      ],
+      300
+     ],
+     "value": 306,
+     "unit": "K",
+     "tol": {
+      "abs": 1e-09
+     }
+    },
+    {
+     "fn": "solveNetwork.1",
+     "metric": "T1",
+     "args": [
+      2,
+      [
+       [
+        0,
+        1,
+        5
+       ],
+       [
+        1,
+        -1,
+        2.5
+       ]
+      ],
+      [
+       10,
+       0
+      ],
+      300
+     ],
+     "value": 304,
+     "unit": "K",
+     "tol": {
+      "abs": 1e-09
+     }
+    }
+   ]
+  },
+  {
+   "id": "sealed-box-cengel-15-10",
+   "kind": "core",
+   "title": "Outer surface of the sealed box of Cengel Example 15-10 held at 65 C, room 35 C",
+   "reference": "Cengel, Heat and Mass Transfer 3rd ed., Example 15-10 (McGraw-Hill free chapter 15): box 0.40 x 0.30 x 0.15 m, eps 0.85, bottom insulated (on a stand), Ts 65 C, room 35 C: published convection 48.2 W (sides 33.6 + top 14.6), radiation 64.5 W, total 112.7 W. Radiation is exact. Convection differs by construction: the book uses a simplified correlation with Lc = 4A/p for the top face, Forge uses Churchill-Chu and A/P (Incropera), which gives a higher top-face coefficient; natural-convection correlations are good to about 15 %, so convection gets 15 % and the total 8 %. The bottom face is insulated with a zero-conductance contact. Split by face (reported, not asserted): the four sides give 32.6 W against the book's 33.6 W (3 %), the top gives 21.1 W against 14.6 W (45 % high), so the aggregate band hides a large top-face difference that comes from the book's simplified top-face correlation and length.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Box",
+      "size": [
+       400,
+       300,
+       150
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Box",
+      "op": "cut",
+      "size": [
+       396,
+       296,
+       146
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       2
+      ]
+     }
+    ],
+    "customMaterials": [
+     {
+      "id": "painted-metal",
+      "name": "Painted metal (eps 0.85)",
+      "class": "custom",
+      "notes": "Test material: thin metal wall with a painted outer surface, as in the textbook case.",
+      "properties": {
+       "k": {
+        "value": 167,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "rho": {
+        "value": 2700,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "cp": {
+        "value": 896,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "emissivity": {
+        "value": 0.85,
+        "quality": "measured",
+        "sources": [
+         "user"
+        ]
+       },
+       "E": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "nu": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "yield_strength": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "tensile_strength": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       },
+       "interlayer_factor": {
+        "value": null,
+        "quality": "n/a",
+        "sources": []
+       }
+      }
+     }
+    ],
+    "customAssign": {
+     "Box": "painted-metal"
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 308.15,
+      "gravity": "-z"
+     },
+     "heat": [],
+     "mounts": [
+      {
+       "id": "stand",
+       "kind": "contact",
+       "body": "Box",
+       "face": "-z",
+       "conductance_W_m2K": 0
+      }
+     ]
+    }
+   },
+   "calls": [
+    {
+     "fn": "outerRejection.rad",
+     "metric": "Q_rad",
+     "args": [
+      "$input",
+      338.15
+     ],
+     "value": 64.5,
+     "unit": "W",
+     "tol": {
+      "rel": 0.003
+     }
+    },
+    {
+     "fn": "outerRejection.conv",
+     "metric": "Q_conv",
+     "args": [
+      "$input",
+      338.15
+     ],
+     "value": 48.2,
+     "unit": "W",
+     "tol": {
+      "rel": 0.15
+     }
+    },
+    {
+     "fn": "outerRejection.total",
+     "metric": "Q_total",
+     "args": [
+      "$input",
+      338.15
+     ],
+     "value": 112.7,
+     "unit": "W",
+     "tol": {
+      "rel": 0.08
+     }
+    }
+   ]
+  },
+  {
+   "id": "pcb-box-energy-balance",
+   "title": "60 x 40 x 25 mm ABS box with a board and one 1 W component",
+   "reference": "Conservation of energy (exact): at steady state the heat leaving through the outer surface and vents equals the 1 W dissipated, so the balance error is zero to solver precision; total_heat echoes the input. Not a comparison with a measurement.",
+   "setup": {
+    "features": [
+     {
+      "type": "box",
+      "body": "Case",
+      "size": [
+       60,
+       40,
+       25
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "type": "box",
+      "body": "Case",
+      "op": "cut",
+      "size": [
+       56,
+       36,
+       21
+      ],
+      "anchor": "bottom",
+      "pos": [
+       0,
+       0,
+       2
+      ]
+     }
+    ],
+    "materials": {
+     "Case": "abs"
+    },
+    "pcb": {
+     "components": [
+      {
+       "name": "board",
+       "kind": "box",
+       "role": "board",
+       "box": [
+        -25,
+        25,
+        -16,
+        16,
+        6,
+        7.6
+       ]
+      },
+      {
+       "name": "mcu",
+       "kind": "box",
+       "role": "component",
+       "box": [
+        -4,
+        4,
+        -4,
+        4,
+        7.6,
+        9.6
+       ]
+      }
+     ]
+    },
+    "conditions": {
+     "ambient": {
+      "temperature_K": 298.15,
+      "gravity": "-z"
+     },
+     "heat": [
+      {
+       "id": "h1",
+       "target": {
+        "pcb": "mcu"
+       },
+       "power_W": 1
+      }
+     ]
+    }
+   },
+   "expectValidity": "estimate",
+   "expect": [
+    {
+     "metric": "energy_balance_error",
+     "value": 0,
+     "unit": "W",
+     "tol": {
+      "abs": 0.001
+     }
+    },
+    {
+     "metric": "total_heat",
+     "value": 1,
+     "unit": "W",
+     "tol": {
+      "rel": 1e-09
+     }
+    }
+   ]
+  }
+ ]
+}

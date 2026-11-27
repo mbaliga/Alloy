@@ -1,0 +1,36 @@
+{
+  "id": "xyz.mdhv.thermal-estimate",
+  "name": "Thermal estimate",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "A steady-state thermal resistance network for a hand-held electronics enclosure: components, board, internal air, wall, natural or forced convection and radiation to ambient, stack-effect vents, and an optional contact to a heat sink. Solves in milliseconds. An estimate, not a simulation: its assumptions are listed in every result.",
+  "main": "main.js",
+  "permissions": ["doc.read", "geometry.read", "storage", "agent.tools"],
+  "contributes": {
+    "analyses": [
+      {
+        "id": "thermal-estimate", "label": "Thermal estimate", "validity": "estimate",
+        "description": "Internal air, board and component temperatures, outer surface temperature and the vent area needed to meet a target. Set the heat sources, ambient and any mounting contact under Conditions.",
+        "fields": ["surface_temperature"],
+        "checks": [
+          { "id": "max-component-temp", "label": "Hottest part ≤ limit", "metric": "max_component_temp", "op": "<=", "limit": 85, "unit": "°C" },
+          { "id": "max-outer-temp", "label": "Outer surface ≤ limit (touch)", "metric": "max_outer_surface_temp", "op": "<=", "limit": 48, "unit": "°C" }
+        ]
+      }
+    ],
+    "agentTools": [
+      {
+        "id": "thermal-estimate", "label": "Thermal estimate: vent area for a target",
+        "description": "Given a target temperature in °C for the hottest internal part, returns the temperature now, the vent area installed and the total vent area (one low and one high opening) that would meet the target. Estimate only.",
+        "schema": { "type": "object", "properties": { "target_C": { "type": "number", "description": "Target for the hottest internal part, in °C" } }, "required": ["target_C"] }
+      },
+      {
+        "id": "set-vents", "label": "Record the enclosure's vents",
+        "description": "Store the vents of the design for the thermal estimate. Each vent has its open area in mm² and the coordinate of its centre along the vertical (gravity) axis, in mm, document frame.",
+        "schema": { "type": "object", "properties": { "vents": { "type": "array", "items": { "type": "object", "properties": { "area_mm2": { "type": "number" }, "z_mm": { "type": "number", "description": "Position of the vent centre along the vertical axis (the axis gravity acts along), mm, document frame" }, "note": { "type": "string" } }, "required": ["area_mm2", "z_mm"] } } }, "required": ["vents"] }
+      }
+    ]
+  }
+}

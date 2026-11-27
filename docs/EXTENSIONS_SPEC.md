@@ -156,6 +156,18 @@ Outputs: internal air temperature, each component's temperature, and the vent ar
 Validation: a sealed box with a known answer from a heat-transfer textbook case (cite it), and agreement with A2 within 15% on three reference enclosures.
 Validity: `estimate`.
 
+### A1 done
+
+Status: built on branch `forge-a1-thermal-estimate` (PR open, not merged). Package: `forge/examples/ext/thermal-estimate` (a plugin: `doc.read`, `geometry.read`, `storage`, `agent.tools`).
+
+- [x] Thermal resistance network solved in milliseconds: component, board, internal air, six wall faces (inner and outer surface), ambient. Natural convection per face orientation (Churchill and Chu vertical; horizontal hot-up/hot-down; the gravity direction in the conditions says which face is up), forced air by mixing with the flat-plate correlation, linearised radiation outside and from board and components to the inner walls, stack-effect vents, contact conductance to a sink at ambient (a zero-conductance contact insulates a face). Deviation: inside the box the air-to-wall coefficients use the same plate correlations on the cavity's own dimensions, not an enclosed-cavity Rayleigh correlation, because the air is one mixed node rather than a hot wall facing a cold wall.
+- [x] Outputs: internal air, board, each component, hottest part, hottest outer surface, vent flow and heat through vents, energy-balance error, and the **vent area needed** to bring the hottest internal part under a target (default 60 °C; `unreachable` is reported when vents alone cannot). A surface field of the wall temperature is drawn in the viewport.
+- [x] AI tools: `thermal-estimate({ target_C })` returns the temperature now, the vent area installed and the area needed; `set-vents({ vents: [{ area_mm2, z_mm }] })` records the vents in the project (`ext[<id>].vents`, one undoable op). Deviation: vents are **not detected from the geometry** (there is no vent feature to read); they are entered through the AI tool or the project storage. The tool ids use hyphens because the manifest pattern requires them.
+- [x] Checks: hottest part and outer surface (touch) limits, both editable; an `estimate` result gates the verdict.
+- [x] Validation (`analysis-validation/cases/thermal-estimate.json`, 9 cases, 18 checks): the correlations against published Cengel/lecture-note examples with their stated inputs, the radiation term against Cengel Example 15-10, air properties against the quoted table values, the stack-flow formula against a hand calculation, the network solver against an exact two-resistor chain, the outer-surface heat rejection of the Cengel Example 15-10 box (radiation 0.3 %, convection 15 %, total 8 %. Observed: sides within 3 % of the book, top face 45 % higher, because the book uses a simplified correlation and a different characteristic length there; the aggregate tolerance is wide and is stated as such), and an energy-balance run through the real runner and Worker.
+- [ ] **Not met: "agreement with A2 within 15 % on three reference enclosures".** A2 does not exist yet; this check is deferred to A2 and must be added there against this package.
+- [ ] **Not validated against a measurement or a 3D solution.** Whole-enclosure temperatures are an estimate; the textbook cases check the pieces, not the assembled network. In particular the component-to-board resistance is a crude FR-4 estimate and the internal natural convection and radiation use plate correlations in a closed box; expect errors of tens of percent on internal temperatures.
+
 ### A2 · Thermal 3D (extension, `compute.gpu`) · medium
 
 - **Shared voxel core** (`analysis/voxel-core/`), also used by A3 and A5:

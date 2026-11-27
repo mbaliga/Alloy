@@ -1,5 +1,5 @@
 // Validation harness for analyses (docs/EXTENSIONS_SPEC.md section 3.5).
-//   node analysis-validation/harness.mjs [--json out.json] [--md out.md] [--only <case-file-or-case-id>]
+//   node analysis-validation/harness.mjs [--json out.json] [--md out.md] [--only <part of a case file name>]
 //   npm run test:analysis
 // A case file names an analysis (and the package folder that provides it), then lists cases: a design (features and materials, built
 // through typed ops and the real kernel), and the expected values with an explicit tolerance and the reference they come from.
@@ -16,6 +16,7 @@ import { ExtRegistry, memoryStore } from '../src/ext/registry.js';
 import { ExtHost } from '../src/ext/host.js';
 import { ExtApi } from '../src/ext/api.js';
 import { createAnalysisRunner } from '../src/analysis/runner.js';
+import { prepareInput } from '../src/analysis/setup.js';
 import { createResultCache, memoryStore as memResults } from '../src/analysis/cache.js';
 import { packDir } from '../tools/pack-ext.mjs';
 
@@ -40,6 +41,12 @@ export function lintCaseFile(file) {
   for (const c of file.cases || []) {
     if (ids.has(c.id)) problems.push(`duplicate case id ${c.id}`); ids.add(c.id);
     if (!c.reference) problems.push(`${c.id}: every case states its reference (analytic derivation or source)`);
+    if (c.kind === 'function' || c.kind === 'core') {
+      if (c.kind === 'core' && !(c.setup && (c.setup.features || []).length)) problems.push(`${c.id}: a core case needs a setup with features`);
+      if (!(c.calls || []).length) problems.push(`${c.id}: no calls`);
+      for (const k of c.calls || []) { if (!k.fn) problems.push(`${c.id}: a call needs "fn"`); try { compareValue(0, 0, k.tol); } catch (er) { problems.push(`${c.id}/${k.fn}: ${er.message}`); } }
+      continue;
+    }
     if (!(c.expect || []).length) problems.push(`${c.id}: no expectations`);
     for (const e of c.expect || []) { try { compareValue(0, 0, e.tol); } catch (er) { problems.push(`${c.id}/${e.metric}: ${er.message}`); } }
   }
@@ -51,6 +58,15 @@ function projectFor(c) {
   let P = applyOps(migrate(emptyProject()), ops).project;
   const mats = Object.entries(c.setup.materials || {}).map(([body, material]) => ({ op: 'set_body_material', body, material }));
   if (mats.length) P = applyOps(P, mats).project;
+  if (c.setup.pcb) { P.pcb = { ...P.pcb, ...c.setup.pcb }; }
+  const cops = [];
+  for (const m of c.setup.customMaterials || []) cops.push({ op: 'set_material', material: m });
+  for (const [body, material] of Object.entries(c.setup.customAssign || {})) cops.push({ op: 'set_body_material', body, material });
+  const cn = c.setup.conditions || {};
+  if (cn.ambient) cops.push({ op: 'set_ambient', ambient: cn.ambient });
+  for (const list of ['heat', 'mounts', 'loads']) for (const item of cn[list] || []) cops.push({ op: 'set_condition', list, item });
+  if (cops.length) P = applyOps(P, cops).project;
+  if (c.setup.ext) P.ext = { ...(P.ext || {}), ...c.setup.ext };
   return P;
 }
 
@@ -73,6 +89,23 @@ export async function runValidation({ caseFiles, wasm, log = () => {} }) {
       for (const c of file.data.cases) {
         stats.cases++; let casePass = true;
         const fail = (metric, note, extra = {}) => { casePass = false; rows.push({ file: file.name, case: c.id, metric, reference: c.reference, computed: '-', error: '-', tolerance: '-', pass: false, note, ...extra }); };
+        if (c.kind === 'function' || c.kind === 'core') {
+          let built = null;
+          try {
+            const core = {}; const src = fs.readFileSync(path.join(pkgPath, 'main.js'), 'utf8').replace(/^export /gm, '');
+            new Function('__core', src)(core);
+            let input = null;
+            if (c.kind === 'core') { const P = projectFor(c); P.extensions = [{ id: ext, name: registry.get(ext).manifest.name, version: registry.get(ext).manifest.version, enabled: true }]; built = build(P, wasm); input = prepareInput(P, built); }
+            for (const k of c.calls) {
+              const args = (k.args || []).map((a) => (a === '$input' ? input : a));
+              const [fnName, ...sel] = k.fn.split('.'); let got = core[fnName](...args); for (const key of sel) got = got[key]; got *= k.mul ?? 1; const r = compareValue(got, k.value, k.tol), pass = r.pass && Number.isFinite(got);
+              if (!pass) casePass = false;
+              rows.push({ file: file.name, case: c.id, metric: k.metric || k.fn, reference: c.reference, unit: k.unit || '', expected: k.value, computed: got, error: r.error, tolerance: r.mode === 'rel' ? `${(r.limit * 100).toPrecision(3)} %` : `${r.limit} ${k.unit || ''}`, errorText: r.mode === 'rel' ? `${(r.error * 100).toPrecision(3)} %` : `${r.error.toPrecision(3)} ${k.unit || ''}`, pass });
+            }
+          } catch (e) { fail('(run)', String(e.message || e)); } finally { if (built) built.dispose(); }
+          if (casePass) stats.passed++;
+          continue;
+        }
         try {
           const P = projectFor(c);
           P.extensions = [{ id: ext, name: registry.get(ext).manifest.name, version: registry.get(ext).manifest.version, enabled: true }];
