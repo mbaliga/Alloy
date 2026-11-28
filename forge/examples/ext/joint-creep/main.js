@@ -7,9 +7,9 @@
 //                         tan(phi) = 0.362 + 0.032 ln(beta_L / 2) + 0.153 ln(y); the cone is cut off at the outer diameter D_A when the part is narrower
 //   embedding             F_Z = f_Z / (d_S + d_P)   (VDI guide values for metal interfaces; a plastic interface is a data gap)
 //   thermal change        F(T) = [D0 - f_Z + (sum(alpha_i l_i) - alpha_S l_K)(T - T0) - delta_creep] / (d_S + d_P(T)),   D0 = F_M (d_S + d_P)
-//   creep (Findley)       clamped plastic creep strain eps0 (1 + beta(T) t^n) with beta = m / eps0; time hardening, so over a segment of constant T
-//                         the force obeys  X = D - sum(delta_creep)  with  X(t2) = X(t1) exp(-lambda),  lambda = sum_i c_i beta_i (t2^n - t1^n) / (d_S + d_P)
-//                         (exact for that rule; for a single material at one temperature F(t) = F0 exp(-kappa beta t^n), kappa = d_P / (d_S + d_P))
+//   creep (Findley)       clamped plastic creep compliance J(t) = 1 + beta(T) t^n, linear viscoelastic superposition (Boltzmann) at fixed joint length:
+//                         F C + sum_i c_i beta_i integral (xi(t) - xi(tau))^n dF(tau) = D - f_Z + shift(T), with a reduced time xi for temperature (see creepRun).
+//                         (Earlier drafts used time hardening, F = F0 exp(-kappa beta t^n); that over-predicts the relaxation, 19 % at one year in the reference case.)
 //   slip                  margin = mu_clamp n F_residual / F_Q,   F_Q = carried mass x peak recoil acceleration; a thread locker lowers the severity one step
 // Everything is SI inside (m, N, Pa, K as differences, s); lengths from the project are mm and are converted at the top of each function.
 const G0 = 9.80665, PI = Math.PI;
@@ -38,6 +38,7 @@ const BEARING_FRACTION = 0.5;     // rule of thumb, not a standard: keep the pla
 const MIN_KEEP_FRACTION = 0.25;   // placeholder: a joint with under a quarter of its nominal preload left is treated as no longer clamping, unless the joint states min_clamp_N
 const SHEAR_YIELD = 0.577;        // von Mises shear / tension yield ratio for the pull-out of an insert or tapped thread in plastic
 const ENGAGE_METAL = 0.8, ENGAGE_PLASTIC = 2.0; // minimum thread engagement in multiples of d: rules of thumb, not a standard
+const BOSS_OD_FACTOR = 3;         // placeholder: outer diameter of the boss around a thread or insert in plastic, in multiples of d, when the joint does not state it
 const MU_G_TORSION = 0.14;        // thread friction assumed for the torsion share of the assembly stress when the nut-factor method gives none
 
 // ───────────────────────── table lookups ─────────────────────────
@@ -121,52 +122,57 @@ function allowedAssemblyPreload({ Rp, As, d2, d3, P, muG, nu = YIELD_USE }) {
 
 // ───────────────────────── creep ─────────────────────────
 /**
- * Preload against time by time-hardening Findley creep.
- *   X0        elastic force numerator at the start: D - f_Z (m), so that F = X / C(T) (C in m/N)
- *   segments  [{ T, hours }] repeated for `days` days (the daily profile); the global clock runs across them
- *   sources   [{ n, a(T) }]: creep sources; a(T) = c_i(T) beta_i(T) is the creep compliance coefficient (m/N)
- *   Cof(T)    total compliance (m/N) at T;  shift(T) elastic expansion mismatch (m) at T
- * Returns { delta: creep shortening per source (m), sample(times) }.
+ * Preload against time by linear viscoelastic superposition (Boltzmann) of Findley creep, J(t) = 1 + beta t^n per source.
+ * The joint has a fixed total length, so at every time
+ *     F(t) C(T) + sum_i c_i(T) beta_ref_i H_i(t) = X0 + shift(T),     H_i(t) = integral of (xi_i(t) - xi_i(tau))^n_i dF(tau) over the whole history (F(0) included),
+ * c_i(T) the compliance (m/N) of source i at T. Temperature enters by reduced time: xi_i(t) = integral of (beta_i(T)/beta_ref_i)^(1/n_i) dt, so a hot hour
+ * ages the material by more than a cold one and the ageing is not undone by cooling (time-temperature superposition; beta_ref_i is beta at the first
+ * segment, which only fixes the units of xi). F is held at or above zero: an open joint carries no load.
+ * Stepped implicitly with the load increment of each step placed at its midpoint; steps are fine early (the t^n kernel is steep near zero)
+ * and one per temperature segment later.
+ *   X0        D - f_Z (m)      segments  [{ T, hours }] repeated for `days` days      sources  [{ n, c(T), beta(T) }]
+ * Returns { hours, force(T): the preload if the temperature changed to T at the end, checkpoints: [{ t, F, T, Frest }] }.
  */
-function creepRun({ X0, days, segments, sources, Cof, shift, T0, checkpoints = [] }) {
-  const delta = sources.map(() => 0);
-  let t = 0; const cps = checkpoints.slice().sort((a, b) => a - b); let ci = 0; const out = [];
-  const Fnow = (T) => Math.max(0, (X0 + shift(T) - delta.reduce((a, b) => a + b, 0)) / Cof(T));
-  const advance = (T, dt) => {
-    if (dt <= 0) return;
-    const t2 = t + dt, C = Cof(T), X = X0 + shift(T) - delta.reduce((a, b) => a + b, 0);
-    const u = sources.map((s) => (Math.pow(t2, s.n) - Math.pow(t, s.n)) * s.a(T));
-    const lambda = u.reduce((a, b) => a + b, 0) / C;
-    const integral = lambda > 1e-12 ? X * (1 - Math.exp(-lambda)) / (C * lambda) : X / C; // integral of F over the segment in the u-weighted clock
-    for (let i = 0; i < sources.length; i++) delta[i] += u[i] * integral;
-    t = t2;
+function creepRun({ X0, days, segments, sources, Cof, shift, checkpoints = [], probeT = null }) {
+  const taus = [], dFs = [], xis = sources.map(() => []); // load increments, the times they act at, and the reduced times there
+  const bref = sources.map((s) => { const b = s.beta(segments[0].T); return b > 0 ? b : 1; });
+  const xi = sources.map(() => 0);
+  let t = 0, Fprev = null; const cps = checkpoints.slice().sort((a, b) => a - b); let ci = 0; const out = [];
+  const Hat = (i, xin) => { let h = 0; const n = sources[i].n, xs = xis[i]; for (let j = 0; j < dFs.length; j++) h += Math.pow(Math.max(0, xin - xs[j]), n) * dFs[j]; return h; };
+  const solve = (T, xin, dxi) => { // preload at reduced times xin and temperature T; dxi the reduced length of the step (null: instantaneous, no increment of its own)
+    const C = Cof(T); let num = X0 + shift(T), den = C;
+    for (let i = 0; i < sources.length; i++) {
+      const b = sources[i].c(T) * bref[i], w = dxi ? Math.pow(dxi[i] / 2, sources[i].n) : 0; num -= b * Hat(i, xin[i]);
+      if (dxi && Fprev != null) { num += b * w * Fprev; den += b * w; }
+    }
+    return Math.max(0, num / den);
   };
-  const rest = segments.reduce((a, s) => a + s.hours, 0);
+  const step = (T, dt) => {
+    if (Fprev == null) { Fprev = Math.max(0, (X0 + shift(T)) / Cof(T)); taus.push(0); dFs.push(Fprev); xis.forEach((x) => x.push(0)); } // the load at t = 0, before any creep
+    const dxi = sources.map((s, i) => dt * Math.pow(Math.max(0, s.beta(T)) / bref[i], 1 / s.n)), xn = xi.map((x, i) => x + dxi[i]);
+    const F = sources.length ? solve(T, xn, dxi) : Math.max(0, (X0 + shift(T)) / Cof(T));
+    taus.push(t + dt / 2); dFs.push(F - Fprev); xis.forEach((x, i) => x.push(xi[i] + dxi[i] / 2)); Fprev = F; t += dt; xn.forEach((x, i) => { xi[i] = x; });
+  };
   for (let day = 0; day < days; day++) {
     for (const s of segments) {
       let left = s.hours;
       while (left > 1e-9) {
         const next = ci < cps.length ? cps[ci] - t : Infinity;
-        const dt = next > 0 && next < left ? next : left;
-        advance(s.T, dt); left -= dt;
-        while (ci < cps.length && t >= cps[ci] - 1e-9) { out.push({ t: cps[ci], F: Fnow(s.T), T: s.T, delta: delta.reduce((a, b) => a + b, 0) }); ci++; }
+        let dt = Math.min(left, Math.max(0.2 * t, 0.1)); if (next > 0 && next < dt) dt = next;
+        step(s.T, dt); left -= dt;
+        while (ci < cps.length && t >= cps[ci] - 1e-9) { out.push({ t: cps[ci], F: Fprev, T: s.T, Frest: probeT != null ? solve(probeT, xi, null) : Fprev }); ci++; }
       }
     }
   }
-  void rest; void T0;
-  return { delta, hours: t, force: Fnow, checkpoints: out };
+  return { hours: t, force: (T) => (Fprev == null ? Math.max(0, (X0 + shift(T)) / Cof(T)) : solve(T, xi, null)), checkpoints: out };
 }
 
 /** Test helper: the preload after `days` repetitions of constant-beta phases, for a joint of fixed compliances (the temperature argument of creepRun carries beta here). */
 function creepRelaxNumbers({ F0, dS, dP, n, phases, days }) {
   const C = dS + dP, segments = phases.map((p) => ({ T: p.beta, hours: p.hours }));
-  const r = creepRun({ X0: F0 * C, days, segments, sources: [{ n, a: (beta) => dP * beta }], Cof: () => C, shift: () => 0, T0: 0 });
-  return r.force(segments[0].T);
+  const r = creepRun({ X0: F0 * C, days, segments, sources: [{ n, c: () => dP, beta: (b) => b }], Cof: () => C, shift: () => 0 });
+  return r.force(segments[segments.length - 1].T);
 }
-/**
- * Closed form of the single-material isothermal case used by the validation: F(t) = F0 exp(-kappa beta t^n), kappa = d_P / (d_S + d_P).
- */
-const relaxationClosedForm = (F0, kappa, beta, n, t) => F0 * Math.exp(-kappa * beta * Math.pow(t, n));
 
 // ───────────────────────── materials ─────────────────────────
 const isPlasticMat = (m) => !!m && (m.cls === 'fdm-polymer' || (m.cls === 'custom' && m.props.E != null && m.props.E < 1.5e10));
@@ -214,6 +220,9 @@ function jointModel(j, ctx) {
     else { m = ctx.materials[c.material] || null; label = c.external; if (!m) gaps.push({ what: `the material "${c.material}" of "${c.external}" is not available`, key: `ext:${c.material}` }); }
     return { i, c, m, label, t: c.thickness_mm, DA: c.outer_d_mm || null, plastic: isPlasticMat(m), sleeved: false };
   });
+  for (const l of layers) if (l.c.body != null && ctx.bodyMaterial[l.c.body] && ctx.bodyMaterial[l.c.body].assumed) gaps.push({ what: `body "${l.c.body}" has no material assigned (PLA would only be a guess)`, key: `body:${l.c.body}` });
+  if (threadInPlastic && j.anchor && ctx.bodyMaterial[j.anchor.body] && ctx.bodyMaterial[j.anchor.body].assumed) gaps.push({ what: `anchor body "${j.anchor.body}" has no material assigned (PLA would only be a guess)`, key: `body:${j.anchor.body}` });
+  if (gaps.some((g) => g.key.startsWith('body:'))) return { ok: false, gaps, reason: 'a body has no material assigned' };
   if (layers.some((l) => !l.m)) return { ok: false, gaps, reason: 'a clamped layer has no material' };
   if (sleeve) {
     if (!steel) return { ok: false, gaps: [...gaps, { what: 'the steel material needed for the sleeve is not available', key: 'sleeve' }], reason: 'no sleeve material' };
@@ -240,6 +249,12 @@ function jointModel(j, ctx) {
   if (threadInPlastic && !anchorMat) gaps.push({ what: `the anchor body "${j.anchor && j.anchor.body}" is not in the build`, key: `anchor:${j.anchor && j.anchor.body}` });
   if (threadInPlastic && anchorMat) { const d = matData(anchorMat, T0, hum); for (const k of d.gaps) if (k !== 'cte') gaps.push({ what: `${anchorMat.name} (anchor) has no ${k === 'E_T' ? 'E against temperature' : k === 'yield_T' ? 'yield strength against temperature' : 'Young\'s modulus'}`, key: `${anchorMat.id}:${k}` }); d.qualities.forEach((q) => qual.add(q)); }
 
+  const anchorD = threadInPlastic ? (j.anchor.d_mm != null ? j.anchor.d_mm : (j.insert === 'heat_set_brass' ? 1.5 * bk.d + 0.1 : bk.d)) : 0;
+  const bossOd = threadInPlastic ? Math.max(anchorD * 1.05, j.anchor.boss_od_mm != null ? j.anchor.boss_od_mm : BOSS_OD_FACTOR * bk.d) : 0;
+  if (threadInPlastic && j.anchor.boss_od_mm == null) gaps.push({ what: `the outer diameter of the boss around the anchor is not stated, so ${BOSS_OD_FACTOR} d (${(BOSS_OD_FACTOR * bk.d).toFixed(1)} mm) is assumed for the anchorage stiffness`, key: 'boss_od', level: 'low' });
+  if (j.tightening.method !== 'friction' && j.tightening.mode !== 'preload') gaps.push({ what: `the thread friction is not given by the nut-factor method, so ${MU_G_TORSION} is assumed for the torsion share of the assembly stress`, key: 'mu_torsion', level: 'low' });
+  if (j.min_clamp_N == null) gaps.push({ what: 'the clamp load the joint must keep (min_clamp_N) is not stated, so a quarter of the nominal preload is used as a placeholder floor', key: 'min_clamp', level: 'low' });
+
   // stiffness at a temperature (m/N): bolt + clamped layers (+ the anchor in plastic)
   const compMemo = new Map();
   const comp = (T) => {
@@ -250,7 +265,7 @@ function jointModel(j, ctx) {
       const c = layerCompliance({ x0: x, x1: x + l.t, lK, dW, dh, DA: l.DA, E, w, tp }); x += l.t; return { l, c, E, d, i };
     });
     let anc = 0, G = null;
-    if (threadInPlastic && anchorMat) { const d = matData(anchorMat, T, hum); G = d.E / (2 * (1 + anchorMat.props.nu)); anc = 1 / (PI * G * mm(j.anchor.length_mm)); }
+    if (threadInPlastic && anchorMat) { const d = matData(anchorMat, T, hum); G = d.E / (2 * (1 + anchorMat.props.nu)); anc = Math.log(bossOd / anchorD) / (2 * PI * G * mm(j.anchor.length_mm)); } // shear of an annular boss: u = F ln(r2/r1) / (2 pi G L)
     const dp = perLayer.reduce((a, p) => a + p.c, 0);
     const res = { ds, dp, anc, total: ds + dp + anc, perLayer }; compMemo.set(T, res); return res;
   };
@@ -286,8 +301,8 @@ function jointModel(j, ctx) {
   const srcFor = (T) => {
     if (srcMemo.has(T)) return srcMemo.get(T);
     const cc = comp(T), list = [];
-    for (const p of cc.perLayer) if (p.l.plastic && !p.l.sleeved) { const cr = creepOf(p.l.m, T); if (!cr) { noCreep.push(p.l.m.name); continue; } list.push({ n: cr.n, a: p.c * cr.beta, q: cr.qualities }); }
-    if (threadInPlastic && anchorMat) { const cr = creepOf(anchorMat, T); if (!cr) noCreep.push(anchorMat.name); else list.push({ n: cr.n, a: cc.anc * cr.beta, q: cr.qualities }); }
+    for (const p of cc.perLayer) if (p.l.plastic && !p.l.sleeved) { const cr = creepOf(p.l.m, T); if (!cr) { noCreep.push(p.l.m.name); continue; } list.push({ n: cr.n, c: p.c, beta: cr.beta, q: cr.qualities }); }
+    if (threadInPlastic && anchorMat) { const cr = creepOf(anchorMat, T); if (!cr) noCreep.push(anchorMat.name); else list.push({ n: cr.n, c: cc.anc, beta: cr.beta, q: cr.qualities }); }
     srcMemo.set(T, list); return list;
   };
   const plasticPath = srcFor(Tuse).length > 0 || noCreep.length > 0;
@@ -303,10 +318,9 @@ function jointModel(j, ctx) {
   const checkpoints = lifeH > 0 ? [1, 10, 100, 1000, 3000, 10000, 30000].filter((x) => x < lifeH).concat([lifeH]) : [];
   const runCase = (F) => {
     if (!duty || !creepKnown || !nSrc || days <= 0) return { delta: [], force: (T) => force(F, T, 0), checkpoints: [], creepN: 0 };
-    const sources = srcFor(Tuse).map((s, i) => ({ n: s.n, a: (T) => { const l = srcFor(T)[i]; return l ? l.a : s.a; } }));
-    const r = creepRun({ X0: Dnom(F), days, segments, sources, Cof, shift, T0, checkpoints });
-    const sum = r.delta.reduce((a, b) => a + b, 0);
-    return { delta: r.delta, sum, force: (T) => force(F, T, sum), checkpoints: r.checkpoints, creepN: sources.length };
+    const sources = srcFor(Tuse).map((s, i) => ({ n: s.n, c: (T) => (srcFor(T)[i] || s).c, beta: (T) => (srcFor(T)[i] || s).beta }));
+    const r = creepRun({ X0: Dnom(F), days, segments, sources, Cof, shift, checkpoints, probeT: Trest });
+    return { force: (T) => r.force(T), checkpoints: r.checkpoints, creepN: sources.length };
   };
   const cMin = runCase(FMmin), cNom = runCase(FM), cMax = runCase(FMmax);
   const temps = [...new Set([Tmin, Trest, Tuse, Tmax, T0])];
@@ -364,7 +378,9 @@ function evaluate(input) {
   const w0 = joints.length ? joints[0].where : [0, 0, 0];
   const flag = (f, quals) => flags.push({ ...f, confidence: confidenceOf(validity, quals) });
 
-  if (!joints.length) warnings.push('The project has no joints. Add one in Analyze > Joints (the template marks its fasteners).');
+  if (!joints.length) { warnings.push('The project has no joints. Add one in Analyze > Joints (the template marks its fasteners).');
+    flag({ id: 'joints:none', mechanism: 'data_gap', severity: 'medium', body: '', where: w0, metric: 'joints', value: null, limit: null, margin: null,
+      why: 'The project has no joints defined, so no preload, creep or loosening was calculated.', fix: { text: 'Add the fasteners in Analyze > Joints (the pcb-enclosure template marks the rear-cap screws).', proposals: [] } }, []); }
   if (!duty) flag({ id: 'duty:missing', mechanism: 'data_gap', severity: 'medium', body: '', where: w0, metric: 'duty_profile', value: null, limit: null, margin: null,
     why: 'No duty profile is set, so shots, service life and temperature extremes are unknown: creep and slip are not computed, only the assembly state.',
     fix: { text: 'Pick a duty preset or enter the real duty in Analyze > Duty profile; the presets are placeholders.', proposals: [] } }, []);
@@ -397,7 +413,7 @@ function evaluate(input) {
     R('preload_installed_min', m.F_inst_min, 'N'); R('preload_end_of_life_min', m.F_eol_min, 'N'); R('preload_hot_max', m.F_max_hot, 'N');
     R('required_clamp', m.Freq, 'N'); R('transverse_load', m.FQ, 'N'); R('use_temperature', m.Tuse, '°C');
     if (duty && m.creepKnown && m.nSrc) R('creep_loss_fraction', 1 - m.cMin.force(m.Trest) / Math.max(1e-9, m.force(m.FMmin, m.Trest)), '');
-    if (m.cNom.checkpoints && m.cNom.checkpoints.length) series.push({ name: `${id} preload`, x: 'time (h)', y: 'N at ' + m.Trest.toFixed(0) + ' °C', xs: [0, ...m.cNom.checkpoints.map((c) => c.t)], ys: [m.force(m.FM, m.Trest, 0), ...m.cNom.checkpoints.map((c) => m.force(m.FM, m.Trest, c.delta))] });
+    if (m.cNom.checkpoints && m.cNom.checkpoints.length) series.push({ name: `${id} preload`, x: 'time (h)', y: 'N at ' + m.Trest.toFixed(0) + ' °C', xs: [0, ...m.cNom.checkpoints.map((c) => c.t)], ys: [m.force(m.FM, m.Trest, 0), ...m.cNom.checkpoints.map((c) => c.Frest)] });
 
     // A. installed preload after embedding over the temperature range
     {
@@ -478,7 +494,7 @@ const ASSUMPTIONS = [
   'Simplified VDI 2230: one axially loaded bolt, pressure-cone stiffness of the clamped parts (cut off at an outer diameter if given), preload scatter from the tightening factor, no bending of the joint and no external axial load.',
   'Preload scatter: the torque gives the nominal preload; the minimum and maximum are F x 2/(1+a) and F x 2a/(1+a) with a the tightening factor (1.6 for a torque wrench unless you set it), so that max/min = a.',
   'Embedding: VDI 2230 guide values for metal interfaces (thread 3 um, head 2.5 um, 1.5 um per inner interface); an interface with plastic is not in the table and is reported as a data gap.',
-  'Creep: Findley power law, linear in stress, time hardening with temperature-dependent coefficients; moisture changes E and strength only (not the creep rate); the creep data are typical values for the material class, not measurements.',
+  'Creep: Findley power law, linear in stress, linear viscoelastic superposition (Boltzmann) with a reduced time for temperature (the creep ageing of a hot hour is not undone by cooling); moisture changes E and strength only (not the creep rate); the creep data are typical values for the material class, not measurements.',
   'The duty temperature profile: the use hours each day at the use temperature (the Thermal 3D result at the joint when it has been run on this design, otherwise the duty maximum), the rest of the day at ambient clipped into the duty range; the minimum and maximum duty temperatures are the extremes checked for the bolt and slip.',
   'Slip: the transverse load per shot is the carried mass times the peak recoil acceleration (quasi-static, no dynamic amplification); the grip is the clamp friction times the residual preload times the number of interfaces. Fretting, a changing coefficient of friction and shock above the stated peak are not modelled.',
   'Not modelled: fatigue of the bolt, vibration, long-term moisture uptake, orthotropy of printed parts (the isotropic E is used), and the plastic loaded beyond its linear range (flagged).',
@@ -495,4 +511,4 @@ if (typeof forge !== 'undefined') {
     },
   });
 }
-if (typeof __core !== 'undefined') Object.assign(__core, { BOLTS, GRADES, NEXT_GRADE, LARGE_WASHER_OD, EMBED_UM, interp, severityFromMargin, stepDown, confidenceOf, tanPhi, layerCompliance, cylinderCompliance, boltCompliance, preloadFromTorque, thermalPreloadChange, embeddingLoss, allowedAssemblyPreload, creepRun, creepRelaxNumbers, relaxationClosedForm, matData, creepOf, jointModel, evaluate, proposals });
+if (typeof __core !== 'undefined') Object.assign(__core, { BOLTS, GRADES, NEXT_GRADE, LARGE_WASHER_OD, EMBED_UM, interp, severityFromMargin, stepDown, confidenceOf, tanPhi, layerCompliance, cylinderCompliance, boltCompliance, preloadFromTorque, thermalPreloadChange, embeddingLoss, allowedAssemblyPreload, creepRun, creepRelaxNumbers, matData, creepOf, jointModel, evaluate, proposals });

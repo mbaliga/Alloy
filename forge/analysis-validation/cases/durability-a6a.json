@@ -205,8 +205,8 @@
   {
    "id": "findley-relaxation-closed-form",
    "kind": "function",
-   "title": "Preload against time by Findley creep of the clamped plastic: isothermal, two temperature phases, a daily cycle",
-   "reference": "Closed-form self-consistency reference, not a published figure. Findley power law, linear in stress: creep strain eps0 (1 + beta t^n). Time hardening on a joint of bolt compliance delta_S 1.1e-8 and plastic compliance delta_P 8.4e-8 m/N at fixed total length: dF/F = -kappa d(beta t^n), kappa = delta_P / (delta_S + delta_P) = 0.88421, so F(t) = F0 exp(-kappa sum beta_i [t_i,end^n - t_i,start^n]). F0 1500 N, n 0.2. (a) beta 0.15 for 8760 h: 663.97 N. (b) beta 0.15 for 1000 h then 0.6 to 8760 h: 280.72 N. (c) one year of days, each 1 h at beta 0.6 then 23 h at beta 0.15, summed day by day here: 414.25 N. The package steps the same law through segments with its integrator; (a) and (b) are one long segment each, (c) is 365 daily cycles.",
+   "title": "Preload against time by Findley creep of the clamped plastic (linear viscoelastic superposition): isothermal, two temperature phases, a daily cycle",
+   "reference": "Self-consistency reference from an independent numerical solution, not a published figure and not a measurement. Findley power law, linear in stress: creep compliance J(t) = 1 + beta t^n. The preload relaxes by Boltzmann superposition on a joint of bolt compliance delta_S 1.1e-8 and plastic compliance delta_P 8.4e-8 m/N at fixed total length: delta_S F + delta_P [F + beta_ref integral (xi(t) - xi(tau))^n dF(tau)] = (delta_S + delta_P) F0, with the reduced time xi = integral (beta(T)/beta_ref)^(1/n) dt for temperature. The reference solves this Volterra equation here by backward Euler on a fine grid (steps of at most 0.5 % of the elapsed time and 1 h); the package uses an implicit midpoint stepping with far fewer steps, so the two schemes are independent. F0 1500 N, n 0.2. (a) beta 0.15 for 8760 h: 817.01 N. (b) beta 0.15 for 1000 h then 0.6 to 8760 h: 345.97 N. (c) 365 daily cycles of 1 h at beta 0.6 then 23 h at beta 0.15: 535.47 N. NOTE: an earlier version of this package used time hardening (dF/F = -kappa d(beta t^n)); that over-predicts relaxation by about 19 % for (a) (664 N against 817 N) and far more for hot, long holds, which is why it was replaced.",
    "calls": [
     {
      "fn": "creepRelaxNumbers",
@@ -227,7 +227,7 @@
        "days": 1
       }
      ],
-     "value": 663.9712611240728,
+     "value": 817.0099579334677,
      "tol": {
       "rel": 0.02
      }
@@ -255,7 +255,7 @@
        "days": 1
       }
      ],
-     "value": 280.7155238087488,
+     "value": 345.9736839096031,
      "tol": {
       "rel": 0.02
      }
@@ -283,7 +283,7 @@
        "days": 365
       }
      ],
-     "value": 414.2517698309478,
+     "value": 535.4683573742844,
      "tol": {
       "rel": 0.02
      }
@@ -294,7 +294,7 @@
    "id": "sleeve-vs-no-sleeve",
    "kind": "function",
    "title": "A metal compression sleeve takes the plastic out of the bolt load: the creep path is removed",
-   "reference": "Closed-form self-consistency reference, not a published figure. M3 grade 8.8 x 16, a 6 mm plastic layer (E 2.1 GPa, Findley beta 0.15, n 0.2, flat in temperature, dry) over a 3 mm steel rail layer, both cylinders of outer diameter 5.5 mm, hole 3.4 mm, preload 1500 N, embedding 8.5 um, held at 23 C for 5 years (43800 h). Compliances: delta_S 1.1502e-8, plastic 1.9464e-7, steel rail 9.9694e-10, steel sleeve of the same 6 mm 1.9939e-9 m/N. Installed preload F - f_Z/C: no sleeve 1459.0 N, sleeve 913.5 N. End of life, no sleeve: F exp(-lambda), lambda = delta_P beta t^n / C = 1.1950: 441.6 N, a loss of 69.7 %. With the sleeve the plastic carries no bolt load, so the end-of-life preload equals the installed preload (913.5 N, no creep sources).",
+   "reference": "Closed-form self-consistency reference, not a published figure. M3 grade 8.8 x 16, a 6 mm plastic layer (E 2.1 GPa, Findley beta 0.15, n 0.2, flat in temperature, dry) over a 3 mm steel rail layer, both cylinders of outer diameter 5.5 mm, hole 3.4 mm, preload 1500 N, embedding 8.5 um, held at 23 C for 5 years (43800 h). Compliances: delta_S 1.1502e-8, plastic 1.9464e-7, steel rail 9.9694e-10, steel sleeve of the same 6 mm 1.9939e-9 m/N. Installed preload F - f_Z/C: no sleeve 1459.0 N, sleeve 913.5 N. End of life, no sleeve: independent Volterra (Boltzmann superposition) integration of the Findley creep, as in case findley-relaxation-closed-form: 653.2 N, a loss of 55.2 %. With the sleeve the plastic carries no bolt load, so the end-of-life preload equals the installed preload (913.5 N, no creep sources).",
    "calls": [
     {
      "fn": "jointModel.F_inst_min",
@@ -723,7 +723,7 @@
        "useSource": null
       }
      ],
-     "value": 441.6484746765126,
+     "value": 653.2294592873836,
      "tol": {
       "rel": 0.02
      }
@@ -1597,7 +1597,7 @@
   {
    "id": "run-no-sleeve",
    "title": "Through the runner and a Worker: no sleeve: the plastic carries the bolt, so the preload creeps down",
-   "reference": "The closed form of case sleeve-vs-no-sleeve (installed 1459.0 N, end of life 441.6 N), here with the built-in steel (E falls 0.1 % at 23 C against the 205 GPa of the closed form) and the joint stored in the project.",
+   "reference": "The closed form of case sleeve-vs-no-sleeve (installed 1459.0 N, end of life 653.2 N), here with the built-in steel (E falls 0.1 % at 23 C against the 205 GPa of the closed form) and the joint stored in the project.",
    "setup": {
     "features": [
      {
@@ -1861,7 +1861,7 @@
     },
     {
      "metric": "J1.preload_end_of_life_min",
-     "value": 441.6484746765126,
+     "value": 653.2294592873836,
      "unit": "N",
      "tol": {
       "rel": 0.02

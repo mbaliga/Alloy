@@ -104,8 +104,14 @@ async function flow(page, { phone }) {
   await page.evaluate((b) => { const P = JSON.parse(JSON.stringify(window.__af.S.project)); delete P.bodies[b].locked; window.__af.commit(P); }, body);
   // the table export (the edits above cleared the result, so run again)
   await page.click('#an-run'); await page.waitForSelector('#risk-pane', { timeout: 60000 });
-  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }).catch(() => null), page.click('#risk-csv')]);
-  if (dl) assert.match(dl.suggestedFilename(), /_risk_flags\.csv$/);
+  const nFlags = (await page.$$('.rflag')).length; assert.ok(nFlags > 0, 'there are flags to export');
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), page.click('#risk-csv')]);
+  assert.match(dl.suggestedFilename(), /_risk_flags\.csv$/);
+  const csvLines = fs.readFileSync(await dl.path(), 'utf8').trim().split(/\r?\n/);
+  assert.match(csvLines[0], /severity/i, 'CSV header row'); assert.ok(csvLines.length >= 1 + nFlags, `CSV has the header and every flag (${csvLines.length} lines, ${nFlags} flags)`);
+  const [dm] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), page.click('#risk-md')]);
+  assert.match(dm.suggestedFilename(), /_risk_flags\.md$/);
+  const md = fs.readFileSync(await dm.path(), 'utf8'); assert.ok(md.length > 50 && /\|/.test(md) && /estimate/i.test(md), 'markdown table with the validity stated');
   // pins can be switched off
   await page.click('#risk-pins'); assert.equal((await page.$$('button.pin')).length, 0); await page.click('#risk-pins');
 }

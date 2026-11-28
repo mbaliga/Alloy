@@ -74,7 +74,7 @@ const FACES = ['+x', '-x', '+y', '-y', '+z', '-z'];
  *     mu_clamp (friction between the clamped parts), thread_locker (bool),
  *     clamps:[{ body } | { external, material }, thickness_mm, outer_d_mm? ]  head to nut,
  *     insert: 'none' | 'heat_set_brass' | 'metal_sleeve' | 'moulded_nut', thread_in: 'metal' | 'plastic',
- *     anchor?: { body, length_mm, d_mm? } (thread or insert in a plastic body), sleeve?: { od_mm? }, washer?: { od_mm },
+ *     anchor?: { body, length_mm, d_mm?, boss_od_mm? } (thread or insert in a plastic body), sleeve?: { od_mm? }, washer?: { od_mm },
  *     carried_mass_g?, min_clamp_N?, embedding_um?, note?, locked? }
  */
 export function validateJoint(j, project) {

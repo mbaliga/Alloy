@@ -112,10 +112,14 @@ test('joints: set_joint validates every field, replaces by id, remove_joint remo
 });
 test('joints: locks are enforced in the ops layer (a locked joint, a locked body, and an unlock)', () => {
   const P = design({ duty: null });
-  const lockedJ = applyOps(P, [{ op: 'set_joint', joint: { ...P.joints[0], locked: true } }]).project;
+  const lockedJ = applyOps(P, [{ op: 'set_joint', joint: { ...P.joints[0], locked: true } }], { actor: 'user' }).project;
   assert.throws(() => applyOps(lockedJ, [{ op: 'set_joint', joint: { ...lockedJ.joints[0], thread_locker: true } }]), /locked by the user/);
   assert.throws(() => applyOps(lockedJ, [{ op: 'remove_joint', id: 'J1' }]), /locked by the user/);
-  assert.equal(applyOps(lockedJ, [{ op: 'set_joint', joint: { ...lockedJ.joints[0], locked: false } }]).project.joints[0].locked, false, 'an explicit unlock goes through');
+  assert.throws(() => applyOps(lockedJ, [{ op: 'set_joint', joint: { ...lockedJ.joints[0], locked: false, insert: 'metal_sleeve' } }]), /locked by the user/, 'the AI cannot unlock and edit in one op');
+  assert.throws(() => applyOps(lockedJ, [{ op: 'set_joint', joint: { ...lockedJ.joints[0], locked: false } }], { actor: 'ext', extId: 'x' }), /locked by the user/, 'a package cannot unlock');
+  assert.throws(() => applyOps(lockedJ, [{ op: 'set_joint', joint: { ...lockedJ.joints[0], thread_locker: true } }], { actor: 'user' }), /locked by the user/, 'even the user must unlock first');
+  assert.equal(applyOps(lockedJ, [{ op: 'set_joint', joint: { ...lockedJ.joints[0], locked: false } }], { actor: 'user' }).project.joints[0].locked, false, 'only the user can unlock');
+  assert.throws(() => applyOps(P, [{ op: 'set_joint', joint: { ...P.joints[0], locked: true } }, { op: 'set_joint', joint: { ...P.joints[0], locked: false } }]).project, /only the user/, 'the AI cannot flip the lock flag');
   const lockedB = clone(P); lockedB.bodies.Shell.locked = true;
   assert.throws(() => applyOps(lockedB, [{ op: 'set_joint', joint: { ...P.joints[0], insert: 'metal_sleeve' } }]), /body "Shell" is locked/);
   assert.throws(() => applyOps(lockedB, [{ op: 'remove_joint', id: 'J1' }]), /body "Shell" is locked/);
@@ -208,8 +212,18 @@ test('package: creep preload falls with time, with temperature and with the plas
   const at = (o) => core.creepRelaxNumbers({ F0: 1500, dS: 1.1e-8, dP: 8.4e-8, n: 0.2, days: 1, phases: [{ hours: 1000, beta: 0.15 }], ...o });
   assert.ok(at({}) < 1500 && at({ phases: [{ hours: 5000, beta: 0.15 }] }) < at({}) && at({ phases: [{ hours: 1000, beta: 0.6 }] }) < at({}) && at({ dP: 1e-9 }) > at({}));
   assert.ok(at({ phases: [{ hours: 1e6, beta: 50 }] }) >= 0);
-  const order1 = at({ phases: [{ hours: 1000, beta: 0.15 }, { hours: 1000, beta: 0.6 }] }), order2 = at({ phases: [{ hours: 1000, beta: 0.6 }, { hours: 1000, beta: 0.15 }] });
-  assert.ok(Math.abs(order1 - order2) / order1 > 1e-3, 'time hardening: when the hot hours come matters, and the package does not hide that');
+  // superposition: stress history is remembered, so a cold hold after a hot one recovers a little instead of relaxing further, and the force at a hotter temperature is lower
+  const hotThenCold = at({ phases: [{ hours: 1000, beta: 0.6 }, { hours: 1000, beta: 0.15 }] }), coldOnly = at({ phases: [{ hours: 2000, beta: 0.15 }] });
+  assert.ok(hotThenCold < coldOnly, 'hot hours cost preload that a later cold hold does not give back in full');
+  // an open joint carries no load and cannot creep: a cold shift big enough to open it keeps the hot preload at or below the installed one
+  const F0 = 300, C = 1.2e-8, open = core.creepRun({ X0: F0 * C, days: 200, segments: [{ T: 1, hours: 1 }, { T: 0, hours: 23 }], sources: [{ n: 0.2, c: () => 4e-9, beta: () => 0.5 }], Cof: () => C, shift: (T) => (T === 0 ? -1.2 * F0 * C : 0) });
+  assert.equal(open.force(0), 0, 'the joint is open when cold');
+  assert.ok(open.force(1) <= F0 + 1e-9 && open.force(1) >= 0, `hot preload ${open.force(1)} must not exceed the installed ${F0}`);
+  // the superposition integral matches an independent fine-grid Volterra integration (log grid, backward Euler) for an isothermal hold
+  const dS = 1.1e-8, dP = 8.4e-8, beta = 0.15, n = 0.2, Tend = 8760;
+  const ts = [0]; for (let i = 0; i < 3000; i++) ts.push(1e-3 * Math.pow(Tend / 1e-3, i / 2999));
+  const F = [1500]; for (let k = 1; k < ts.length; k++) { let h = Math.pow(ts[k], n) * 1500; for (let i = 1; i < k; i++) h += Math.pow(ts[k] - ts[i], n) * (F[i] - F[i - 1]); const w = Math.pow(ts[k] - ts[k - 1], n); F.push(((dS + dP) * 1500 - dP * beta * h + dP * beta * w * F[k - 1]) / (dS + dP + dP * beta * w)); }
+  assert.ok(Math.abs(at({ phases: [{ hours: Tend, beta }] }) - F[F.length - 1]) / F[F.length - 1] < 0.02, 'agrees with the Volterra reference within 2 %');
 });
 
 // ───────── the package: flags on a joint
@@ -227,10 +241,11 @@ test('package: a joint in plastic gives flags that all validate, each with mecha
   assert.ok(r.warnings.some((w) => /placeholder/.test(w)), 'the placeholder duty is said in the result');
   validateResult({ ...r, id: 'a/b', version: '1', inputsHash: 'h', fields: [] });
 });
-test('package: with typical material data every confidence is low, so no flag can gate; datasheet-quality data lifts it to medium and high flags then gate', () => {
+test('package: with typical material data the creep and slip flags are low confidence, so they cannot gate (the assembly flag is medium and can); datasheet-quality data lifts it to medium and high flags then gate', () => {
   const r = run(design());
   for (const f of r.flags) if (['creep', 'self_loosening', 'preload_loss:preload'].includes(f.mechanism) && !/assembly|engage/.test(f.id)) assert.equal(f.confidence, 'low', f.id);
   assert.ok(r.flags.some((f) => f.severity === 'high'), 'there is something high to be advisory about');
+  assert.equal(flagOf(r, ':assembly').confidence, 'medium', 'the assembly flag rests on ISO 898-1 grade strengths and the torque only, so it is medium and can gate on stock data');
   const good = goodPlastic();
   const P = design({ material: 'petg', extra: [{ op: 'set_material', material: good }, { op: 'set_body_material', body: 'Shell', material: 'petg-good' }, { op: 'set_duty', duty: { ...makeDuty('handheld-light'), humidity: 'dry' } }] });
   const g = run(P);
@@ -252,8 +267,10 @@ test('package: missing material data is a data-gap flag and nothing is silently 
   const gaps = r.flags.filter((f) => f.mechanism === 'data_gap').map((f) => f.why).join(' ');
   assert.match(gaps, /thermal expansion/); assert.match(gaps, /E against temperature/); assert.match(gaps, /creep data/);
   r = run(design({ duty: null })); assert.ok(r.flags.some((f) => f.id === 'duty:missing' && f.mechanism === 'data_gap')); assert.equal(flagOf(r, ':slip'), undefined, 'no duty, no slip result');
+  assert.ok(run(design({ duty: 'handheld-light', extra: [{ op: 'remove_joint', id: 'J1' }] })).flags.some((f) => f.id === 'joints:none' && f.mechanism === 'data_gap'), 'no joints is a data-gap flag, so it reaches the table and the scorecard');
   const unassigned = design({ extra: [{ op: 'set_body_material', body: 'Shell', material: null }] });
   assert.ok(run(unassigned).flags.some((f) => f.mechanism === 'data_gap' && /no material assigned/.test(f.why)), 'the PLA fallback is a flag, not a silence');
+  assert.equal(flagOf(run(unassigned), ':creep'), undefined, 'a joint in a body with no material is not calculated with borrowed PLA numbers');
   const ext = design({ jointOver: { clamps: [{ body: 'Shell', thickness_mm: 6 }, { external: 'rail', material: 'unobtainium', thickness_mm: 3 }] } });
   assert.ok(run(ext).flags.some((f) => f.mechanism === 'data_gap' && /unobtainium/.test(f.why)));
   assert.ok(run(design()).flags.some((f) => f.id.endsWith('gap:embedding')), 'a plastic interface is not in the VDI embedding table');
@@ -295,6 +312,17 @@ test('package: an insert or a thread in plastic adds the anchorage (shear creep 
   const hs = run(design({ insert: 'heat_set_brass', jointOver: { clamps: [{ external: 'rail', material: 'steel-carbon', thickness_mm: 3 }], anchor: { body: 'Shell', length_mm: 5 } } }));
   assert.ok(flagOf(hs, ':pullout') && flagOf(hs, ':creep')); assert.ok(hs.summary.some((s) => s.metric === 'J1.anchor_compliance'));
   assert.throws(() => validateJoint({ ...newJoint({ id: 'x', clamps: [{ body: 'Shell', thickness_mm: 3 }] }), insert: 'heat_set_brass' }, null), /anchor/);
+  assert.ok(flagOf(hs, 'gap:boss_od'), 'an unstated boss diameter is a data gap, not a silent default');
+});
+test('package: the anchorage compliance is the shear of an annular boss, ln(r2/r1) / (2 pi G L), and follows the boss diameter', () => {
+  const at = (boss) => run(design({ insert: 'heat_set_brass', jointOver: { clamps: [{ external: 'rail', material: 'steel-carbon', thickness_mm: 3 }], anchor: { body: 'Shell', length_mm: 5, ...(boss ? { boss_od_mm: boss } : {}) } } }));
+  const anc = (r) => r.summary.find((x) => x.metric === 'J1.anchor_compliance').value;
+  const wide = anc(at(12)), narrow = anc(at(6)); assert.ok(wide > narrow, 'a wider boss is softer');
+  const P = design({ insert: 'heat_set_brass', jointOver: { clamps: [{ external: 'rail', material: 'steel-carbon', thickness_mm: 3 }], anchor: { body: 'Shell', length_mm: 5, boss_od_mm: 12 } } });
+  const mats = builtinMaterials(), petg = mats.find((m) => m.id === 'petg'), E = petg.properties.E.value * core.interp(petg.durability.E_T.points, 20), nu = petg.properties.nu.value, G = E / (2 * (1 + nu));
+  const want = Math.log(12 / (1.5 * 3 + 0.1)) / (2 * Math.PI * G * 5e-3);
+  const assumedHum = run(P).summary.find((x) => x.metric === 'J1.anchor_compliance').value;
+  assert.ok(Math.abs(assumedHum / want - 1) < 0.35, `anchor compliance ${assumedHum} against ${want} (the duty humidity and temperature move E)`);
 });
 test('package: the temperature comes from the duty profile, the joint says which, and an unknown bolt grade or short bolt is caught', () => {
   const r = run(design()); assert.equal(r.summary.find((s) => s.metric === 'J1.use_temperature').value, 55);

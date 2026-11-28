@@ -15,6 +15,23 @@ const TOL = { rel: 0.02 };
 const PI = Math.PI;
 const cases = [];
 
+// Independent reference for the creep: the Volterra integral equation of linear viscoelastic superposition (Boltzmann), solved here by backward Euler on a
+// fine grid (steps of at most 0.5 % of the elapsed time, and at most 1 h), with a reduced-time clock for temperature. Not the package's scheme.
+//   dS F(t) + dP [F(t) + beta_ref integral (xi(t) - xi(tau))^n dF(tau)] = (dS + dP) F0,   xi = integral (beta(T)/beta_ref)^(1/n) dt
+function volterra({ F0, dS, dP, n, phases, days }) {
+  const bref = phases[0].beta, ts = [0], xi = [0], seg = [];
+  let t = 0, x = 0;
+  for (let d = 0; d < days; d++) for (const p of phases) { let left = p.hours; while (left > 1e-9) { const dt = Math.min(left, Math.max(0.005 * t, 0.005), 1e3); t += dt; x += dt * Math.pow(p.beta / bref, 1 / n); ts.push(t); xi.push(x); left -= dt; } }
+  const F = [0], dF = [0];
+  for (let k = 1; k < ts.length; k++) {
+    let h = 0; for (let j = 1; j < k; j++) h += Math.pow(xi[k] - xi[j - 1], n) * dF[j];
+    const w = Math.pow(xi[k] - xi[k - 1], n); // the increment at the start of step k, F_k - F_{k-1}, has lag xi_k - xi_{k-1}; for k = 1 it is the whole load at t = 0
+    const Fk = ((dS + dP) * F0 - dP * bref * h + dP * bref * w * F[k - 1]) / (dS + dP + dP * bref * w);
+    F.push(Fk); dF.push(Fk - F[k - 1]);
+  }
+  return F[F.length - 1];
+}
+
 // ───────── data shared by the cases (a flat, invented set of material numbers so that every closed form is exact) ─────────
 const q = { E: 'handbook', nu: 'handbook', yield_strength: 'handbook', interlayer_factor: 'handbook' };
 const steel = { id: 'steel-carbon', name: 'Steel (case)', cls: 'metal', props: { E: 205e9, nu: 0.29, yield_strength: 350e6, rho: 7850, interlayer_factor: 1 }, quality: q, durability: { cte: { value: 11.7e-6, quality: 'handbook', sources: ['case'] } } };
@@ -73,16 +90,14 @@ const M8 = { d: 8, P: 1.25, d2: 7.188, d3: 6.466 }, M3 = { d: 3, P: 0.5, d2: 2.6
 }
 // ───────── 4. Findley relaxation (closed form) ─────────
 {
-  // joint: bolt compliance dS and plastic compliance dP; kappa = dP / (dS + dP); F(t) = F0 exp(-kappa beta t^n)  (time hardening)
-  const dS = 1.1e-8, dP = 8.4e-8, F0 = 1500, beta = 0.15, n = 0.2, kappa = dP / (dS + dP);
-  const t1 = 8760, F1 = F0 * Math.exp(-kappa * beta * Math.pow(t1, n));
+  const dS = 1.1e-8, dP = 8.4e-8, F0 = 1500, beta = 0.15, n = 0.2;
+  const t1 = 8760, F1 = volterra({ F0, dS, dP, n, phases: [{ hours: t1, beta }], days: 1 });
   // two temperature phases: beta1 = 0.15 for the first 1000 h, beta2 = 0.6 for the next 7760 h
-  const b1 = 0.15, b2 = 0.6, ta = 1000, tb = 8760, F2 = F0 * Math.exp(-kappa * (b1 * Math.pow(ta, n) + b2 * (Math.pow(tb, n) - Math.pow(ta, n))));
-  // a daily cycle for one year: 1 h at beta 0.6 then 23 h at beta 0.15, summed day by day
-  let acc = 0; for (let d = 0; d < 365; d++) { const t0 = d * 24, t1h = t0 + 1, t2h = t0 + 24; acc += b2 * (Math.pow(t1h, n) - Math.pow(t0, n)) + b1 * (Math.pow(t2h, n) - Math.pow(t1h, n)); }
-  const F3 = F0 * Math.exp(-kappa * acc);
-  cases.push({ id: 'findley-relaxation-closed-form', kind: 'function', title: 'Preload against time by Findley creep of the clamped plastic: isothermal, two temperature phases, a daily cycle',
-    reference: `Closed-form self-consistency reference, not a published figure. Findley power law, linear in stress: creep strain eps0 (1 + beta t^n). Time hardening on a joint of bolt compliance delta_S ${dS} and plastic compliance delta_P ${dP} m/N at fixed total length: dF/F = -kappa d(beta t^n), kappa = delta_P / (delta_S + delta_P) = ${kappa.toFixed(5)}, so F(t) = F0 exp(-kappa sum beta_i [t_i,end^n - t_i,start^n]). F0 1500 N, n 0.2. (a) beta 0.15 for 8760 h: ${F1.toFixed(2)} N. (b) beta 0.15 for 1000 h then 0.6 to 8760 h: ${F2.toFixed(2)} N. (c) one year of days, each 1 h at beta 0.6 then 23 h at beta 0.15, summed day by day here: ${F3.toFixed(2)} N. The package steps the same law through segments with its integrator; (a) and (b) are one long segment each, (c) is 365 daily cycles.`,
+  const b1 = 0.15, b2 = 0.6, ta = 1000, tb = 8760, F2 = volterra({ F0, dS, dP, n, phases: [{ hours: ta, beta: b1 }, { hours: tb - ta, beta: b2 }], days: 1 });
+  // a daily cycle for one year: 1 h at beta 0.6 then 23 h at beta 0.15
+  const F3 = volterra({ F0, dS, dP, n, phases: [{ hours: 1, beta: b2 }, { hours: 23, beta: b1 }], days: 365 });
+  cases.push({ id: 'findley-relaxation-closed-form', kind: 'function', title: 'Preload against time by Findley creep of the clamped plastic (linear viscoelastic superposition): isothermal, two temperature phases, a daily cycle',
+    reference: `Self-consistency reference from an independent numerical solution, not a published figure and not a measurement. Findley power law, linear in stress: creep compliance J(t) = 1 + beta t^n. The preload relaxes by Boltzmann superposition on a joint of bolt compliance delta_S ${dS} and plastic compliance delta_P ${dP} m/N at fixed total length: delta_S F + delta_P [F + beta_ref integral (xi(t) - xi(tau))^n dF(tau)] = (delta_S + delta_P) F0, with the reduced time xi = integral (beta(T)/beta_ref)^(1/n) dt for temperature. The reference solves this Volterra equation here by backward Euler on a fine grid (steps of at most 0.5 % of the elapsed time and 1 h); the package uses an implicit midpoint stepping with far fewer steps, so the two schemes are independent. F0 1500 N, n 0.2. (a) beta 0.15 for 8760 h: ${F1.toFixed(2)} N. (b) beta 0.15 for 1000 h then 0.6 to 8760 h: ${F2.toFixed(2)} N. (c) 365 daily cycles of 1 h at beta 0.6 then 23 h at beta 0.15: ${F3.toFixed(2)} N. NOTE: an earlier version of this package used time hardening (dF/F = -kappa d(beta t^n)); that over-predicts relaxation by about 19 % for (a) (664 N against ${F1.toFixed(0)} N) and far more for hot, long holds, which is why it was replaced.`,
     calls: [
       { fn: 'creepRelaxNumbers', metric: 'F after 8760 h isothermal', unit: 'N', args: [{ F0, dS, dP, n, phases: [{ hours: t1, beta }], days: 1 }], value: F1, tol: TOL },
       { fn: 'creepRelaxNumbers', metric: 'F after two temperature phases', unit: 'N', args: [{ F0, dS, dP, n, phases: [{ hours: ta, beta: b1 }, { hours: tb - ta, beta: b2 }], days: 1 }], value: F2, tol: TOL },
@@ -96,14 +111,14 @@ const M8 = { d: 8, P: 1.25, d2: 7.188, d3: 6.466 }, M3 = { d: 3, P: 0.5, d2: 2.6
   const cSteel3 = cyl(3, DA, dh, 205e9), cPet6 = cyl(6, DA, dh, 2.1e9), cSteel6 = cyl(6, DA, dh, 205e9);
   const Cn = dS + cPet6 + cSteel3, Cs = dS + cSteel6 + cSteel3;
   const Fin = Fm - fZ * 1e-6 / Cn, Fis = Fm - fZ * 1e-6 / Cs;
-  const tEnd = Math.round(5 * 365) * 24, lambda = cPet6 * BETA * Math.pow(tEnd, N) / Cn, Fen = Fin * Math.exp(-lambda);
+  const tEnd = Math.round(5 * 365) * 24, Fen = volterra({ F0: Fin, dS: Cn - cPet6, dP: cPet6, n: N, phases: [{ hours: tEnd, beta: BETA }], days: 1 });
   void bk;
   const joint = (insert) => ({ id: 'J1', name: 'case joint', where: [0, 0, 0], axis: '+z', bolt: { size: 'M3', grade: '8.8', length_mm: L }, tightening: { mode: 'preload', preload_N: Fm, assembly_C: 23 }, mu_clamp: 0.2, thread_locker: false,
     clamps: [{ body: 'Shell', thickness_mm: 6, outer_d_mm: DA }, { external: 'rail', material: 'steel-carbon', thickness_mm: 3, outer_d_mm: DA }], insert, thread_in: 'metal' });
   const duty = { preset: 'custom', placeholder: false, life: { years: 5, hours_per_day: 24, target_years: 5 }, shots: { per_day: 100, total: 182500, peak_g: 500, pulse_ms: 2 }, vibration: { preset: 'custom', psd: [[10, 0.01], [100, 0.01]], hours: 0 }, temperature: { min_C: 23, max_C: 23, cycles_per_day: 0 }, humidity: 'dry', safety_factor: 3 };
   const ctx = { materials: { 'steel-carbon': steel }, bodyMaterial: { Shell: petg }, duty, ambientC: 23, massKg: 0.075, useC: null, useSource: null };
   cases.push({ id: 'sleeve-vs-no-sleeve', kind: 'function', title: 'A metal compression sleeve takes the plastic out of the bolt load: the creep path is removed',
-    reference: `Closed-form self-consistency reference, not a published figure. M3 grade 8.8 x 16, a 6 mm plastic layer (E 2.1 GPa, Findley beta ${BETA}, n ${N}, flat in temperature, dry) over a 3 mm steel rail layer, both cylinders of outer diameter 5.5 mm, hole 3.4 mm, preload 1500 N, embedding 8.5 um, held at 23 C for 5 years (${tEnd} h). Compliances: delta_S ${dS.toExponential(4)}, plastic ${cPet6.toExponential(4)}, steel rail ${cSteel3.toExponential(4)}, steel sleeve of the same 6 mm ${cSteel6.toExponential(4)} m/N. Installed preload F - f_Z/C: no sleeve ${Fin.toFixed(1)} N, sleeve ${Fis.toFixed(1)} N. End of life, no sleeve: F exp(-lambda), lambda = delta_P beta t^n / C = ${lambda.toFixed(4)}: ${Fen.toFixed(1)} N, a loss of ${((1 - Fen / Fin) * 100).toFixed(1)} %. With the sleeve the plastic carries no bolt load, so the end-of-life preload equals the installed preload (${Fis.toFixed(1)} N, no creep sources).`,
+    reference: `Closed-form self-consistency reference, not a published figure. M3 grade 8.8 x 16, a 6 mm plastic layer (E 2.1 GPa, Findley beta ${BETA}, n ${N}, flat in temperature, dry) over a 3 mm steel rail layer, both cylinders of outer diameter 5.5 mm, hole 3.4 mm, preload 1500 N, embedding 8.5 um, held at 23 C for 5 years (${tEnd} h). Compliances: delta_S ${dS.toExponential(4)}, plastic ${cPet6.toExponential(4)}, steel rail ${cSteel3.toExponential(4)}, steel sleeve of the same 6 mm ${cSteel6.toExponential(4)} m/N. Installed preload F - f_Z/C: no sleeve ${Fin.toFixed(1)} N, sleeve ${Fis.toFixed(1)} N. End of life, no sleeve: independent Volterra (Boltzmann superposition) integration of the Findley creep, as in case findley-relaxation-closed-form: ${Fen.toFixed(1)} N, a loss of ${((1 - Fen / Fin) * 100).toFixed(1)} %. With the sleeve the plastic carries no bolt load, so the end-of-life preload equals the installed preload (${Fis.toFixed(1)} N, no creep sources).`,
     calls: [
       { fn: 'jointModel.F_inst_min', metric: 'installed preload, no sleeve', unit: 'N', args: [joint('none'), ctx], value: Fin, tol: TOL },
       { fn: 'jointModel.F_eol_min', metric: 'end-of-life preload, no sleeve', unit: 'N', args: [joint('none'), ctx], value: Fen, tol: TOL },
@@ -118,7 +133,7 @@ const M8 = { d: 8, P: 1.25, d2: 7.188, d3: 6.466 }, M3 = { d: 3, P: 0.5, d2: 2.6
   const bk = { M3 }; void bk;
   const dS = bolt(M3, 16, 9, 205e9, 205e9), cSteel3 = cyl(3, 5.5, 3.4, 205e9), cPet6 = cyl(6, 5.5, 3.4, 2.1e9), cSteel6 = cyl(6, 5.5, 3.4, 205e9);
   const Cn = dS + cPet6 + cSteel3, Cs = dS + cSteel6 + cSteel3, fZ = 8.5, Fin = 1500 - fZ * 1e-6 / Cn, Fis = 1500 - fZ * 1e-6 / Cs;
-  const tEnd = 1825 * 24, Fen = Fin * Math.exp(-cPet6 * BETA * Math.pow(tEnd, N) / Cn);
+  const tEnd = 1825 * 24, Fen = volterra({ F0: Fin, dS: Cn - cPet6, dP: cPet6, n: N, phases: [{ hours: tEnd, beta: BETA }], days: 1 });
   const props = (o) => Object.fromEntries(Object.entries({ k: 0.2, rho: 1250, cp: 1200, emissivity: 0.9, E: 2.1e9, nu: 0.4, yield_strength: 45e6, tensile_strength: 50e6, interlayer_factor: 0.6, ...o }).map(([k, v]) => [k, { value: v, quality: 'datasheet', sources: ['user'] }]));
   const mat = { id: 'petg-flat', name: 'PETG flat (case)', class: 'custom', notes: 'Validation case material: creep flat in temperature.', properties: props({}), durability: petg.durability };
   const joint = (insert) => ({ id: 'J1', name: 'case joint', where: [0, 0, 5], axis: '+z', bolt: { size: 'M3', grade: '8.8', length_mm: 16 }, tightening: { mode: 'preload', preload_N: 1500, assembly_C: 23 }, mu_clamp: 0.2, thread_locker: false,

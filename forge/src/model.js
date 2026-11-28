@@ -515,10 +515,11 @@ export function applyOps(project, ops, opts = {}) {
         validateJoint(j, P);
         P.joints = Array.isArray(P.joints) ? P.joints : [];
         const i = P.joints.findIndex((x) => x.id === j.id);
-        if (i >= 0 && P.joints[i].locked && j.locked !== false) throw new Error(`joint "${j.id}" is locked by the user — cannot change it. Tell the user it needs unlocking.`);
+        if (i >= 0 && P.joints[i].locked && (actor !== 'user' || j.locked !== false)) throw new Error(`joint "${j.id}" is locked by the user — cannot change it. Tell the user it needs unlocking.`);
         // a joint changes how its bodies are drilled, bolted or inserted: a locked body refuses it
         for (const b of jointBodies(j)) if (bodyLocked(P, b)) throw new Error(`body "${b}" is locked by the user — cannot change a joint that clamps or anchors in it`);
         if (i >= 0) for (const b of jointBodies(P.joints[i])) if (bodyLocked(P, b)) throw new Error(`body "${b}" is locked by the user — cannot change a joint that clamps or anchors in it`);
+        if (i >= 0 && actor !== 'user' && !!P.joints[i].locked !== !!j.locked) throw new Error(`only the user can lock or unlock joint "${j.id}"`);
         if (i >= 0) P.joints[i] = j; else P.joints.push(j);
         log.push(`${i >= 0 ? '~' : '+'} joint ${j.id}`); break;
       }
