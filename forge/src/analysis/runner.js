@@ -9,6 +9,15 @@ import { enabledIn } from '../ext/registry.js';
 import { ExtError } from '../ext/host.js';
 import { prepareInput } from './setup.js';
 import { inputsHash, finalizeResult, validateResult, summaryOf, compare } from './result.js';
+import { flagRows } from './risk.js';
+import { sampleVoxel } from '../ext/overlay.js';
+
+/** Mean of the finite cells within one voxel of a point (a bolt hole is air in the grid, so the cell itself may hold no value). null when there is none. */
+function probeVoxel(field, [x, y, z]) {
+  const h = field.grid.h; let sum = 0, n = 0;
+  for (const dx of [-1, 0, 1]) for (const dy of [-1, 0, 1]) for (const dz of [-1, 0, 1]) { const v = sampleVoxel(field, x + dx * h, y + dy * h, z + dz * h); if (Number.isFinite(v)) { sum += v; n++; } }
+  return n ? sum / n : null;
+}
 
 export function createAnalysisRunner({ registry, host, cache, defaultTimeoutMs = 10 * 60 * 1000 }) {
   const last = new Map(); // `${ext}/${analysis}` -> most recent result in this session
@@ -16,10 +25,31 @@ export function createAnalysisRunner({ registry, host, cache, defaultTimeoutMs =
   const declared = (P) => registry.contributions('analyses').filter((c) => enabledIn(P, c.ext));
   const find = (P, ext, id) => declared(P).find((c) => c.ext === ext && c.item.id === id);
 
-  async function prepare(P, build, ext, analysisId) {
+  // An analysis can name results it builds on (contributes.analyses[].upstream: ["<ext>/<analysis>"]). When one of those has been run
+  // on this very design (its result is in the cache), the host hands over its summary rows and, for every joint of the project, the
+  // value of its voxel fields at the joint. Nothing is run on the way: a missing result is simply absent, and the package says which
+  // source it used. The probes enter the inputs hash, so a new upstream result means a new answer.
+  async function upstreamOf(P, build, item) {
+    const out = {};
+    for (const id of item.upstream || []) {
+      const [uext, uid] = id.split('/'), hit = find(P, uext, uid);
+      if (!hit) continue;
+      const { hash } = await prepare(P, build, uext, uid, { noUpstream: true });
+      const res = await cache.get(hash);
+      if (!res) continue;
+      const probes = [];
+      for (const j of P.joints || []) for (const f of res.fields) if (f.kind === 'voxel' && f.grid) { const v = probeVoxel({ data: f.data, grid: f.grid }, j.where); if (v !== null) probes.push({ joint: j.id, field: f.name, value: +v.toFixed(3), unit: f.unit }); }
+      out[id] = { validity: res.validity, summary: res.summary.map((r) => ({ metric: r.metric, value: r.value, unit: r.unit })), probes };
+    }
+    return out;
+  }
+
+  async function prepare(P, build, ext, analysisId, { noUpstream = false } = {}) {
     const pkg = registry.get(ext);
     const input = prepareInput(P, build);
-    const hash = await inputsHash({ ext, version: pkg.manifest.version, analysis: analysisId, setup: { ...input.setup, warnings: undefined, conditions: { ...input.setup.conditions, limits: undefined } }, bodies: input.bodies, extData: (P && P.ext && P.ext[ext]) || null });
+    const item = (((pkg.manifest.contributes || {}).analyses) || []).find((a) => a.id === analysisId) || {};
+    if (!noUpstream && (item.upstream || []).length) input.upstream = await upstreamOf(P, build, item);
+    const hash = await inputsHash({ ext, version: pkg.manifest.version, analysis: analysisId, setup: { ...input.setup, warnings: undefined, conditions: { ...input.setup.conditions, limits: undefined }, upstream: input.upstream || null }, bodies: input.bodies, extData: (P && P.ext && P.ext[ext]) || null });
     return { pkg, input, hash };
   }
 
@@ -51,7 +81,7 @@ export function createAnalysisRunner({ registry, host, cache, defaultTimeoutMs =
     const limits = (P.analysis && P.analysis.conditions && P.analysis.conditions.limits) || {};
     for (const { ext, item } of declared(P)) {
       const checks = item.checks || [];
-      if (!checks.length) continue;
+      if (!checks.length && !item.flags) continue;
       const row = (c, o) => ({ id: `${ext}:${item.id}:${c.id}`, label: c.label, ext, analysis: item.id, items: [], ...o });
       let res = null, problem = null, skipped = null;
       try {
@@ -63,6 +93,12 @@ export function createAnalysisRunner({ registry, host, cache, defaultTimeoutMs =
           else { const r = await run(P, build, ext, item.id, { signal, timeoutMs: budget ? Math.max(1000, budget.left * 1000) : undefined }); if (budget) budget.left -= r.seconds || 0; res = r; }
         }
       } catch (e) { problem = String(e.message || e); }
+      if (item.flags) {
+        // risk flags join the scorecard (spec 4A): high flags gate unless their confidence is low; experimental never gates; no result is an advisory "not run"
+        const label = item.label;
+        if (problem) out.push(row({ id: 'risk', label: `${label}: risk flags` }, { id: `${ext}:${item.id}:risk`, severity: (item.validity || 'estimate') === 'experimental' ? 'advisory' : 'hard', pass: false, detail: `analysis could not run: ${problem}`, validity: item.validity || 'estimate' }));
+        else out.push(...flagRows(res, { ext, analysis: item.id, label }));
+      }
       for (const c of checks) {
         const key = `${ext}:${item.id}:${c.id}`, limit = limits[key] ?? c.limit;
         if (problem) { out.push(row(c, { severity: (item.validity || 'estimate') === 'experimental' ? 'advisory' : 'hard', pass: false, detail: `analysis could not run: ${problem}`, validity: item.validity || 'estimate' })); continue; }

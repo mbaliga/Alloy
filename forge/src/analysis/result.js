@@ -3,10 +3,11 @@
 // `validity` is always shown with a result and never hidden. 'experimental' results cannot drive a pass/fail check.
 // A package returns { summary, fields, warnings, validity }; the runner adds id, version and inputsHash and validates the whole.
 import { sha256Hex } from '../ext/loader.js';
+import { validateFlag } from './risk.js';
 
 export const VALIDITY = ['estimate', 'validated', 'experimental'];
 export const FIELD_KINDS = ['surface', 'voxel', 'vector'];
-export const LIMITS = { summary: 200, warnings: 50, fields: 16, fieldBytes: 96 * 1024 * 1024 };
+export const LIMITS = { summary: 200, warnings: 50, fields: 16, fieldBytes: 96 * 1024 * 1024, flags: 200, series: 16, seriesPoints: 256 };
 
 export const VALIDITY_TEXT = {
   validated: 'Validated: agrees with reference cases within the stated tolerance (analysis-validation/).',
@@ -44,6 +45,18 @@ export function validateResult(r, meshes = {}) {
   }
   if (!Array.isArray(r.warnings) || r.warnings.length > LIMITS.warnings || r.warnings.some((w) => typeof w !== 'string')) bad('warnings must be an array of strings');
   if (!Array.isArray(r.fields) || r.fields.length > LIMITS.fields) bad(`fields must be an array of at most ${LIMITS.fields}`);
+  if (r.flags !== undefined) {
+    if (!Array.isArray(r.flags) || r.flags.length > LIMITS.flags) bad(`flags must be an array of at most ${LIMITS.flags} risk flags`);
+    const ids = new Set();
+    for (const f of r.flags) { try { validateFlag(f); } catch (e) { bad(e.message.replace(/^invalid risk flag/, 'risk flag')); } if (ids.has(f.id)) bad(`duplicate risk flag id "${f.id}"`); ids.add(f.id); }
+  }
+  if (r.series !== undefined) {
+    if (!Array.isArray(r.series) || r.series.length > LIMITS.series) bad(`series must be an array of at most ${LIMITS.series} curves`);
+    for (const c of r.series) {
+      if (!c || typeof c.name !== 'string' || typeof c.x !== 'string' || typeof c.y !== 'string') bad('a series needs name, x and y labels');
+      if (!(Array.isArray(c.xs) && Array.isArray(c.ys) && c.xs.length === c.ys.length && c.xs.length >= 2 && c.xs.length <= LIMITS.seriesPoints && [...c.xs, ...c.ys].every(Number.isFinite))) bad(`series "${c.name}": xs and ys must be equal-length arrays of 2 to ${LIMITS.seriesPoints} finite numbers`);
+    }
+  }
   let bytes = 0;
   for (const f of r.fields) {
     if (!f || typeof f.name !== 'string' || !f.name) bad('every field needs a name');
@@ -74,6 +87,7 @@ export function finalizeResult(raw, { id, version, inputsHash: hash, warnings = 
     id, version, inputsHash: hash,
     summary: Array.isArray(r.summary) ? r.summary : [], fields: Array.isArray(r.fields) ? r.fields : [],
     warnings: [...warnings, ...(Array.isArray(r.warnings) ? r.warnings : [])],
+    ...(Array.isArray(r.flags) ? { flags: r.flags } : {}), ...(Array.isArray(r.series) ? { series: r.series } : {}),
     validity: VALIDITY.includes(r.validity) ? r.validity : 'experimental',
   };
 }

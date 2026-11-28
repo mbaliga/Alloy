@@ -2,6 +2,7 @@
 import { checkSyntax } from './expr.js';
 import { allMaterials, validateMaterial, isBuiltin } from './analysis/materials.js';
 import { defaultConditions, validateConditions } from './analysis/conditions.js';
+import { validateDuty, validateJoint, jointBodies } from './analysis/durability.js';
 
 const V3 = (a, b, c) => [String(a), String(b), String(c)];
 
@@ -217,7 +218,7 @@ export function emptyProject() {
   return {
     v: DOC_VERSION, name: 'Untitled', params: [], features: [], assets: {}, bodies: {}, pcb: emptyPcb(),
     settings: { detail: 48, density: 1.24, printVolume: [180, 180, 180], kernel: 'manifold' },
-    extensions: [], ext: {}, analysis: emptyAnalysis(),
+    extensions: [], ext: {}, analysis: emptyAnalysis(), joints: [],
   };
 }
 
@@ -234,6 +235,7 @@ export function migrate(p) {
   if (!Array.isArray(out.extensions)) out.extensions = [];
   if (!out.ext || typeof out.ext !== 'object' || Array.isArray(out.ext)) out.ext = {};
   const an = out.analysis && typeof out.analysis === 'object' && !Array.isArray(out.analysis) ? out.analysis : {};
+  out.joints = Array.isArray(out.joints) ? out.joints : [];
   out.analysis = { materials: Array.isArray(an.materials) ? an.materials : [], conditions: Object.assign(defaultConditions(), an.conditions || {}) };
   out.analysis.conditions.ambient = Object.assign(defaultConditions().ambient, out.analysis.conditions.ambient || {});
   out.v = DOC_VERSION;
@@ -463,7 +465,7 @@ export function applyOps(project, ops, opts = {}) {
         log.push(`~ ${op.id} data "${op.key}"`); break;
       }
       case 'set_body_material': {
-        const names = new Set([...Object.keys(P.bodies || {}), ...P.features.filter((f) => f.body && f.body !== '*' && f.op !== 'ref').map((f) => f.body)]);
+        const names = new Set([...Object.keys(P.bodies || {}), ...P.features.filter((f) => f.body && f.body !== '*' && f.op !== 'ref').map((f) => f.body), ...P.features.filter((f) => f.capBody).map((f) => f.capBody)]); // an enclosure feature also makes its cap body
         if (!names.has(op.body)) throw new Error(`no body "${op.body}"`);
         guardBody(P, op.body, 'add');
         P.bodies = P.bodies || {}; P.bodies[op.body] = P.bodies[op.body] || {};
@@ -501,6 +503,33 @@ export function applyOps(project, ops, opts = {}) {
         }
         validateConditions(c, P); break;
       }
+      case 'set_duty': {
+        // the duty profile: a whole replacement, or null to clear it (docs/EXTENSIONS_SPEC.md 4A)
+        P.analysis = P.analysis || emptyAnalysis();
+        const c = P.analysis.conditions = JSON.parse(JSON.stringify(P.analysis.conditions || defaultConditions()));
+        c.duty = op.duty == null ? null : JSON.parse(JSON.stringify(op.duty));
+        validateDuty(c.duty); log.push(c.duty ? `~ duty profile${c.duty.placeholder ? ' (placeholder preset)' : ''}` : '− duty profile'); break;
+      }
+      case 'set_joint': {
+        const j = JSON.parse(JSON.stringify(op.joint || {}));
+        validateJoint(j, P);
+        P.joints = Array.isArray(P.joints) ? P.joints : [];
+        const i = P.joints.findIndex((x) => x.id === j.id);
+        if (i >= 0 && P.joints[i].locked && j.locked !== false) throw new Error(`joint "${j.id}" is locked by the user — cannot change it. Tell the user it needs unlocking.`);
+        // a joint changes how its bodies are drilled, bolted or inserted: a locked body refuses it
+        for (const b of jointBodies(j)) if (bodyLocked(P, b)) throw new Error(`body "${b}" is locked by the user — cannot change a joint that clamps or anchors in it`);
+        if (i >= 0) for (const b of jointBodies(P.joints[i])) if (bodyLocked(P, b)) throw new Error(`body "${b}" is locked by the user — cannot change a joint that clamps or anchors in it`);
+        if (i >= 0) P.joints[i] = j; else P.joints.push(j);
+        log.push(`${i >= 0 ? '~' : '+'} joint ${j.id}`); break;
+      }
+      case 'remove_joint': {
+        P.joints = Array.isArray(P.joints) ? P.joints : [];
+        const i = P.joints.findIndex((x) => x.id === op.id);
+        if (i < 0) throw new Error(`no joint "${op.id}"`);
+        if (P.joints[i].locked) throw new Error(`joint "${op.id}" is locked by the user — cannot remove it`);
+        for (const b of jointBodies(P.joints[i])) if (bodyLocked(P, b)) throw new Error(`body "${b}" is locked by the user — cannot remove a joint that clamps or anchors in it`);
+        P.joints.splice(i, 1); log.push(`− joint ${op.id}`); break;
+      }
       case 'set_extension': {
         if (actor !== 'user') throw new Error('only the user can install, enable or disable extensions');
         if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(op.id || '')) throw new Error('set_extension needs an extension id');
@@ -530,5 +559,5 @@ export function projectForAI(P) {
     if (featureLocked(P, f)) o.locked = true;
     return o;
   });
-  return { name: P.name, pcb: (P.pcb && (P.pcb.components || []).length) ? P.pcb : undefined, params: P.params.map((p) => (p.locked ? { ...p, locked: true } : { name: p.name, expr: p.expr })), bodies: P.bodies || {}, analysis: (P.analysis && (P.analysis.materials.length || P.analysis.conditions.heat.length || P.analysis.conditions.mounts.length || P.analysis.conditions.loads.length)) ? P.analysis : undefined, features, settings: P.settings, assets: Object.fromEntries(Object.entries(P.assets || {}).map(([k, a]) => [k, { name: a.name, tris: a.tris, bbox: a.bbox }])) };
+  return { name: P.name, pcb: (P.pcb && (P.pcb.components || []).length) ? P.pcb : undefined, params: P.params.map((p) => (p.locked ? { ...p, locked: true } : { name: p.name, expr: p.expr })), bodies: P.bodies || {}, analysis: (P.analysis && (P.analysis.materials.length || P.analysis.conditions.heat.length || P.analysis.conditions.mounts.length || P.analysis.conditions.loads.length || P.analysis.conditions.duty)) ? P.analysis : undefined, joints: (P.joints || []).length ? P.joints : undefined, features, settings: P.settings, assets: Object.fromEntries(Object.entries(P.assets || {}).map(([k, a]) => [k, { name: a.name, tris: a.tris, bbox: a.bbox }])) };
 }

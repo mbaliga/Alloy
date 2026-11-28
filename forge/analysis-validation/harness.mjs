@@ -77,6 +77,8 @@ export function projectFor(c) {
   for (const [body, material] of Object.entries(c.setup.customAssign || {})) cops.push({ op: 'set_body_material', body, material });
   const cn = c.setup.conditions || {};
   if (cn.ambient) cops.push({ op: 'set_ambient', ambient: cn.ambient });
+  if (cn.duty) cops.push({ op: 'set_duty', duty: cn.duty });
+  for (const joint of c.setup.joints || []) cops.push({ op: 'set_joint', joint });
   for (const list of ['heat', 'mounts', 'loads']) for (const item of cn[list] || []) cops.push({ op: 'set_condition', list, item });
   if (cops.length) P = applyOps(P, cops).project;
   if (c.setup.ext) P.ext = { ...(P.ext || {}), ...c.setup.ext };

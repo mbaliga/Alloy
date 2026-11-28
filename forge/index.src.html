@@ -246,10 +246,21 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 .note{color:var(--faint);font-size:11.5px}
 .fatal{position:fixed;inset:20px;color:var(--bad);white-space:pre-wrap;z-index:99}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:6px}
+#pins{position:fixed;inset:0;z-index:5;pointer-events:none}
+.pin{position:absolute;left:0;top:0;pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;background:transparent;border:0;padding:0;cursor:pointer;color:var(--ink)}
+.pin .pg{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;line-height:1;background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid currentColor}
+.pin.high{color:var(--bad)}.pin.medium{color:var(--warn)}.pin.low{color:var(--acc)}.pin.info{color:var(--faint)}.pin:focus-visible .pg{outline:2px solid var(--acc);outline-offset:2px}
+#pincard{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:9;width:min(340px,calc(100vw - 20px));max-height:34vh;overflow:auto;padding:10px 12px;border-radius:18px}#pincard[hidden]{display:none}
+.pcnav{display:flex;align-items:center;gap:8px}.pcnav b{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;flex:1}
+.rdetail{padding:6px 4px 8px 24px;font-size:12.5px}#pincard .rdetail{padding-left:2px}.rwhy{margin-bottom:4px}.rfix{margin:6px 0;color:var(--dim)}.rfix b{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+.rflag.high .ico{color:var(--bad)}.rflag.medium .ico{color:var(--warn)}.rflag.low .ico{color:var(--acc)}
+.arisk{margin:10px 0}.rspark svg{display:block}.jedit{padding:4px 6px 8px 14px;border-left:1px solid var(--glass2);margin:2px 0 8px}.jedit .fld,#duty-sec .fld{grid-template-columns:96px minmax(0,1fr)}.fld .xrow{min-width:0}.fld .xrow input,.fld .xrow select{flex:0 1 auto;min-width:0}.fld .xrow input[aria-label="Joint name"]{flex:1 1 100px}.fld .xrow input[type=checkbox]{flex:none}
+@media(max-width:899px){#pincard{bottom:132px}#pincard .g,#pincard .chip,#p-analyze .rflag,#p-analyze .row{min-height:40px}#pincard .g{min-width:40px}}
 </style>
 </head>
 <body>
 <div id="vp"></div>
+<div id="pins" aria-label="Risk pins"></div>
 
 <header>
   <span class="brand">ALLOY <em>FORGE</em></span><span class="slash">/</span>
@@ -315,7 +326,7 @@ dialog h2{margin:0 0 14px;font-family:var(--mono);text-transform:uppercase;lette
 <dialog id="extdlg" class="sheet"><h2>Settings / Extensions</h2><div id="extbody"></div><div class="dact"><button class="btn" id="extclose">Done</button></div></dialog>
 <dialog id="extconsent" class="sheet"><h2>Install package</h2><div id="extc-body"></div><div class="dact"><button class="btn ghost" id="extc-no">Cancel</button><button class="btn" id="extc-ok">Install</button></div></dialog>
 <dialog id="remotedlg" class="sheet"><h2>Send to your Alloy Runner</h2><div id="remote-body"></div><div class="dact"><button class="btn ghost" id="remote-no">Cancel: send nothing</button><button class="btn" id="remote-ok">Send and run</button></div></dialog>
-<div id="legend" class="glass" hidden></div><div id="probe" class="glass" hidden role="status"></div>
+<div id="pincard" class="glass" hidden role="dialog" aria-label="Risk flag detail"></div><div id="legend" class="glass" hidden></div><div id="probe" class="glass" hidden role="status"></div>
 <script src="app.js"></script>
 </body>
 </html>
