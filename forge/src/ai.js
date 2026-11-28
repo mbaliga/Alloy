@@ -37,9 +37,10 @@ Ops:
  {"op":"move_feature","id":"<id or name>","index":2}
  {"op":"set_setting","key":"detail","value":64}   (detail = circle segments, density = g/cm³; key "kernel" takes "manifold" or "occt")
  {"op":"set_pcb_component","component":{"name":"battery","kind":"box","box":[x0,x1,y0,y1,z0,z1],"insert":"rear"}}   (adds or replaces a keep-out in the pcb block; numbers only)
- {"op":"set_body_material","body":"Base","material":"pla"}   (material ids: pla petg asa abs pa12 pa-gf pc al6061 fr4 copper air, or a project material; null clears)
+ {"op":"set_body_material","body":"Base","material":"pla"}   (material ids: pla petg asa abs pa12 pa-gf pc al6061 fr4 copper air steel-carbon stainless-304 al7075 brass-cuzn, or a project material; null clears)
  {"op":"set_condition","list":"heat","item":{"id":"u1","target":{"pcb":"battery"},"power_W":1.5}}   (analysis setup: lists heat | mounts | loads; mount kinds contact | fixed | slider, SI units: W, N, Pa, m/s^2; also remove_condition, set_ambient {ambient:{temperature_K,airspeed_ms,gravity}}, set_limit)
  {"op":"remove_pcb_component","name":"battery"}
+ {"op":"set_joint","joint":{"id":"J1","name":"clamp cross-bolt","where":[0,0,0],"axis":"+z","bolt":{"size":"M3","grade":"8.8","length_mm":16},"tightening":{"mode":"torque","method":"nut_factor","torque_Nm":0.9,"nut_factor":0.2},"mu_clamp":0.2,"thread_locker":false,"clamps":[{"body":"Shell","thickness_mm":6},{"external":"rail","material":"steel-carbon","thickness_mm":3}],"insert":"none"}}   (a bolted joint for the durability analysis; insert none | heat_set_brass | metal_sleeve | moulded_nut; also remove_joint {id}, set_duty {duty} for the duty profile)
 LOCKS: features, parameters and bodies marked "locked": true were locked by the user. Never change, remove or reorder them, and never add cuts/adds into a locked body. If the request needs that, return no ops for it and say what must be unlocked.
 If the request is a question or needs no change, return "ops":[] and answer in "explanation". If the request is ambiguous in a way that matters, make the most reasonable choice, say so in "explanation", and keep it easy to change via parameters. Never invent feature types or fields. Imported assets can only be placed/cut, not edited.`;
 }

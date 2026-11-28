@@ -9,7 +9,7 @@ import { adapterLine } from '../analysis/runner-client.js';
 import { createLayerStore, groupLayers, layerReadout } from './layers.js';
 
 const RUNNER_KEY = 'af.runner';
-const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext'], ['Structural (analysis, GPU)', 'ext-samples/structural.alloyext'], ['Airflow (analysis, GPU)', 'ext-samples/airflow.alloyext'], ['Alloy Runner (analysis, remote)', 'ext-samples/runner.alloyext']];
+const SAMPLES = [['Rib (plugin)', 'ext-samples/sample-rib.alloyext'], ['Height probe (extension)', 'ext-samples/sample-probe.alloyext'], ['Mass properties (analysis)', 'ext-samples/sample-mass.alloyext'], ['Thermal estimate (analysis)', 'ext-samples/thermal-estimate.alloyext'], ['Joint and creep (analysis, risk flags)', 'ext-samples/joint-creep.alloyext'], ['Thermal 3D (analysis, GPU)', 'ext-samples/thermal-3d.alloyext'], ['Structural (analysis, GPU)', 'ext-samples/structural.alloyext'], ['Airflow (analysis, GPU)', 'ext-samples/airflow.alloyext'], ['Alloy Runner (analysis, remote)', 'ext-samples/runner.alloyext']];
 
 export function mountExtensions(env) {
   const { h, $, tip, S, registry, host, resolver, panes, view, say, blip, setExtension, rebuild, showSheet } = env;

@@ -828,7 +828,7 @@ async function boot() {
   const themeNow = () => { const cs = getComputedStyle(document.body); return { ink: cs.getPropertyValue('--ink').trim(), dim: cs.getPropertyValue('--dim').trim(), acc: cs.getPropertyValue('--acc').trim(), dark: S.theme !== 'light' }; };
   panes = createPaneHost({ host: extHost, getPkg: (id) => registry.get(id), getTheme: themeNow });
   extUi = mountExtensions({ client: runnerClient, h, $, tip: tipToggle, S, registry, host: extHost, resolver, panes, view, say, blip, setExtension, rebuild: scheduleRebuild, showSheet, renderPanes, refreshAddMenu });
-  analyzeUi = mountAnalyze({ h, $, S, tip: tipToggle, say, blip, runner: analysisRunner, extUi, client: runnerClient, snapshot: () => view.snapshot(), download,
+  analyzeUi = mountAnalyze({ h, $, S, view, closeSheet: () => { if (matchMedia('(max-width:899px)').matches) showSheet('none'); }, tip: tipToggle, say, blip, runner: analysisRunner, extUi, client: runnerClient, snapshot: () => view.snapshot(), download,
     commitOps: (ops) => { try { commit(applyOps(S.project, ops, { actor: 'user' }).project); return true; } catch (e) { say(String(e.message || e)); blip(200, 0.08); return false; } } });
   registry.subscribe(() => { resolver.clear(); });
 

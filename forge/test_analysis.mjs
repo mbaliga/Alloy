@@ -50,7 +50,7 @@ test('materials: the built-in file validates, every value has a quality and sour
     validateMaterial(m);
     for (const p of PROPS) {
       const v = m.properties[p.k]; assert.ok(v, `${m.id}.${p.k}`);
-      assert.ok(['datasheet', 'handbook', 'estimate', 'measured', 'n/a'].includes(v.quality), `${m.id}.${p.k} quality`);
+      assert.ok(['datasheet', 'handbook', 'estimate', 'typical', 'measured', 'n/a'].includes(v.quality), `${m.id}.${p.k} quality`);
       if (v.value != null) { assert.ok(v.value >= p.min && v.value <= p.max, `${m.id}.${p.k} in bounds`); if (v.quality !== 'n/a') assert.ok(v.sources.length, `${m.id}.${p.k} has a source`); for (const s of v.sources) assert.ok(SOURCES[s], `${m.id}.${p.k}: unknown source ${s}`); }
     }
   }

@@ -1,0 +1,21 @@
+{
+  "id": "xyz.mdhv.joint-creep",
+  "name": "Joint and creep",
+  "version": "0.1.0",
+  "forgeApi": "^1.0",
+  "author": "Madhav Baliga",
+  "licence": "PolyForm-Noncommercial-1.0.0",
+  "description": "Bolted joints in plastic parts: a simplified VDI 2230 calculation (stiffness, preload from torque, embedding, thermal change), creep relaxation of the clamped plastic over the duty temperature profile, and slip and self-loosening per shot. Returns ranked risk flags with suggested fixes. An estimate for ranking designs, never a sign-off.",
+  "main": "main.js",
+  "permissions": ["doc.read"],
+  "contributes": {
+    "analyses": [
+      {
+        "id": "joint-creep", "label": "Joint, preload and creep", "validity": "estimate", "flags": true,
+        "upstream": ["xyz.mdhv.thermal-3d/thermal-3d"],
+        "description": "Add the joints (Analyze > Joints) and the duty profile (Analyze > Duty), then run. Uses the Thermal 3D temperature at each joint when that analysis has been run on this design, otherwise the duty temperatures.",
+        "fields": []
+      }
+    ]
+  }
+}

@@ -1,9 +1,12 @@
 // Turns a project and a build into what an analysis receives: per-body material properties in SI, the loads and conditions, and
 // the geometry (meshes in mm, per body). Anything assumed on the user's behalf becomes a warning that travels with the result.
-import { materialOf, siProps, PROPS } from './materials.js';
+import { materialOf, siProps, PROPS, allMaterials } from './materials.js';
 import { validateConditions, defaultConditions } from './conditions.js';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
+const packMaterial = (m) => ({ id: m.id, name: m.name, cls: m.class, props: siProps(m), quality: Object.fromEntries(PROPS.map((p) => [p.k, m.properties[p.k].quality])), durability: m.durability ? clone(m.durability) : null });
+/** Fastener metals every joint needs (the bolt, the nut, a sleeve, an insert) are always included. */
+const JOINT_METALS = ['steel-carbon', 'stainless-304', 'brass-cuzn'];
 
 export function resolveSetup(P, build) {
   const warnings = [];
@@ -12,8 +15,8 @@ export function resolveSetup(P, build) {
     const { material, assumed, missing } = materialOf(P, b.name);
     if (assumed) warnings.push(`Body "${b.name}" has no material${missing ? ` ("${missing}" is not available)` : ''}; ${material.name} is assumed.`);
     bodies.push({
-      name: b.name, assumed, material: { id: material.id, name: material.name, props: siProps(material),
-        quality: Object.fromEntries(PROPS.map((p) => [p.k, material.properties[p.k].quality])) },
+      name: b.name, assumed, material: { id: material.id, name: material.name, cls: material.class, props: siProps(material),
+        quality: Object.fromEntries(PROPS.map((p) => [p.k, material.properties[p.k].quality])), durability: material.durability ? clone(material.durability) : null },
     });
   }
   const conditions = clone((P.analysis && P.analysis.conditions) || defaultConditions());
@@ -24,7 +27,14 @@ export function resolveSetup(P, build) {
     if (h.target && h.target.body != null && !bodies.some((b) => b.name === h.target.body)) warnings.push(`Heat source "${h.id}" targets body "${h.target.body}", which is not in the build.`);
   }
   const total = conditions.heat.reduce((a, h) => a + h.power_W, 0);
-  return { bodies, conditions, pcb: clone((P && P.pcb) || {}), totalHeat_W: total, warnings, units: 'Physical quantities are SI (K, W, N, Pa, m/s, m/s²); geometry and positions are millimetres in the document frame.' };
+  // joints (A6) and the materials they name: external parts, bolt metals; nothing is sent anywhere, this is the analysis input
+  const joints = clone(P.joints || []), byId = {};
+  if (joints.length) {
+    const all = allMaterials(P), want = new Set(JOINT_METALS);
+    for (const j of joints) for (const c of j.clamps || []) if (c.external && c.material) want.add(c.material);
+    for (const id of want) if (all.has(id)) byId[id] = packMaterial(all.get(id));
+  }
+  return { bodies, joints, materialsById: byId, conditions, pcb: clone((P && P.pcb) || {}), totalHeat_W: total, warnings, units: 'Physical quantities are SI (K, W, N, Pa, m/s, m/s²); geometry and positions are millimetres in the document frame.' };
 }
 
 /** The meshes of the bodies in a build (reference parts are left out: they are not part of the product). */

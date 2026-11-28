@@ -7,7 +7,9 @@ import builtin from '../../analysis/materials.json' with { type: 'json' };
 export const MATERIAL_SCHEMA_VERSION = builtin.schema;
 export const SOURCES = builtin.sources;
 export const DEFAULT_MATERIAL = 'pla';
-export const QUALITIES = ['datasheet', 'handbook', 'estimate', 'measured', 'n/a'];
+export const QUALITIES = ['datasheet', 'handbook', 'estimate', 'typical', 'measured', 'n/a'];
+/** Qualities that cap the confidence of a durability flag at low: a value for the class, not for this material. */
+export const LOW_QUALITIES = ['typical', 'estimate'];
 
 /** Property table: key, label, SI unit, how the UI shows it (factor from SI, unit label, decimals) and the sanity bounds in SI. */
 export const PROPS = [
@@ -34,6 +36,7 @@ export function validateMaterial(m) {
   if (typeof m.name !== 'string' || !m.name.trim() || m.name.length > 60) throw new Error(`material "${m.id}": needs a name (up to 60 characters)`);
   if (!m.properties || typeof m.properties !== 'object') throw new Error(`material "${m.id}": needs properties`);
   for (const key of Object.keys(m.properties)) if (!PROP_KEYS.includes(key)) throw new Error(`material "${m.id}": unknown property "${key}"`);
+  if (m.durability != null) validateDurability(m);
   for (const p of PROPS) {
     const v = m.properties[p.k];
     if (v == null) throw new Error(`material "${m.id}": property ${p.k} is missing (use value null for "not applicable")`);
@@ -69,8 +72,44 @@ export const fromUi = (p, v) => v / p.f;
 
 /** Qualities of the properties a given analysis actually needs, worst first. Used to put an honest line on a result. */
 export function qualityOf(m, keys) {
-  const order = ['estimate', 'handbook', 'datasheet', 'measured'];
+  const order = ['typical', 'estimate', 'handbook', 'datasheet', 'measured'];
   let worst = 'measured';
   for (const k of keys) { const q = m.properties[k]?.quality; if (q && q !== 'n/a' && order.indexOf(q) < order.indexOf(worst)) worst = q; }
   return worst;
+}
+
+// ───────── durability data (A6): CTE, E and yield against temperature, wet/dry factors, Findley creep. Optional on a material.
+// A missing block or a missing item is a data gap that the A6 packages report; nothing here fills in a default.
+const pts = (pp, what, id) => {
+  if (!(Array.isArray(pp) && pp.length >= 1 && pp.every((p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite)))) throw new Error(`material "${id}": ${what} needs points [[T_C, value], ...]`);
+  for (let i = 1; i < pp.length; i++) if (!(pp[i][0] > pp[i - 1][0])) throw new Error(`material "${id}": ${what} points must rise in temperature`);
+};
+const item = (v, what, id) => {
+  if (!v || typeof v !== 'object') throw new Error(`material "${id}": ${what} must be an object`);
+  if (!QUALITIES.includes(v.quality) || v.quality === 'n/a') throw new Error(`material "${id}": ${what} quality must be one of ${QUALITIES.filter((q) => q !== 'n/a').join(', ')}`);
+  if (!(Array.isArray(v.sources) && v.sources.length)) throw new Error(`material "${id}": ${what} needs at least one source`);
+};
+export function validateDurability(m) {
+  const d = m.durability, id = m.id;
+  if (typeof d !== 'object' || Array.isArray(d)) throw new Error(`material "${id}": durability must be an object`);
+  for (const k of Object.keys(d)) if (!['cte', 'E_T', 'yield_T', 'wet', 'creep'].includes(k)) throw new Error(`material "${id}": unknown durability item "${k}"`);
+  if (d.cte != null) { item(d.cte, 'cte', id); if (!(typeof d.cte.value === 'number' && d.cte.value > 0 && d.cte.value < 1e-3)) throw new Error(`material "${id}": cte must be a number between 0 and 1e-3 per K`); }
+  for (const k of ['E_T', 'yield_T']) if (d[k] != null) { item(d[k], k, id); pts(d[k].points, k, id); if (d[k].points.some((p) => !(p[1] > 0 && p[1] < 5))) throw new Error(`material "${id}": ${k} factors must be between 0 and 5`); }
+  if (d.wet != null) { item(d.wet, 'wet', id); for (const s of ['conditioned', 'wet']) { const w = d.wet[s]; if (!w || !(w.E > 0 && w.E <= 1.5 && w.strength > 0 && w.strength <= 1.5)) throw new Error(`material "${id}": wet.${s} needs E and strength factors`); } }
+  if (d.creep != null) {
+    const c = d.creep;
+    if (c.model !== 'findley') throw new Error(`material "${id}": creep.model must be "findley"`);
+    item(c.n, 'creep.n', id); if (!(c.n.value > 0 && c.n.value < 1)) throw new Error(`material "${id}": creep.n must be between 0 and 1`);
+    item(c.beta_T, 'creep.beta_T', id); pts(c.beta_T.points, 'creep.beta_T', id); if (c.beta_T.points.some((p) => !(p[1] >= 0))) throw new Error(`material "${id}": creep beta must be zero or more`);
+    if (c.linear_limit != null) { item(c.linear_limit, 'creep.linear_limit', id); if (!(c.linear_limit.value > 0 && c.linear_limit.value <= 1)) throw new Error(`material "${id}": creep.linear_limit is a fraction of the yield strength`); }
+  }
+  return m;
+}
+
+/** Linear interpolation in a [[T, y], ...] table, flat outside. */
+export function interpT(points, T) {
+  if (!points || !points.length) return null;
+  if (T <= points[0][0]) return points[0][1];
+  for (let i = 1; i < points.length; i++) if (T <= points[i][0]) { const [t0, y0] = points[i - 1], [t1, y1] = points[i]; return y0 + (y1 - y0) * (T - t0) / (t1 - t0); }
+  return points[points.length - 1][1];
 }

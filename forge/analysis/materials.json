@@ -1,6 +1,6 @@
 {
- "$comment": "Material properties for the analysis framework (docs/EXTENSIONS_SPEC.md section 3.1). SI units. Every property has a quality (datasheet, handbook, estimate, n/a) and the sources it comes from; \"checked\" on a source is the date it was last read against the value. Typical values, not measurements of your material: override per material in the Analyze pane.",
- "schema": 1,
+ "$comment": "Material properties for the analysis framework (docs/EXTENSIONS_SPEC.md section 3.1). SI units. Every property has a quality (datasheet, handbook, estimate, typical, measured, n/a; \"typical\" is a value for the material class recalled without a specific datasheet, and caps the confidence of a durability flag at low) and the sources it comes from; \"checked\" on a source is the date it was last read against the value. Typical values, not measurements of your material: override per material in the Analyze pane.",
+ "schema": 2,
  "units": {
   "k": "W/(m·K)",
   "rho": "kg/m³",
@@ -88,6 +88,34 @@
   },
   "user": {
    "citation": "Entered by the user for this project",
+   "url": null
+  },
+  "vdi-2230": {
+   "citation": "VDI 2230 Part 1 (2015), Systematic calculation of highly stressed bolted joints. Formulas recalled from the guideline, not re-checked against a copy in this repository.",
+   "url": null
+  },
+  "iso-898-1": {
+   "citation": "ISO 898-1, Mechanical properties of fasteners made of carbon steel and alloy steel: bolts, screws and studs (property classes 4.8, 8.8, 10.9, 12.9: nominal yield stress Rp0.2 / Rp,min). Recalled, not re-checked.",
+   "url": null
+  },
+  "iso-3506-1": {
+   "citation": "ISO 3506-1, Fasteners of corrosion-resistant stainless steel: bolts, screws and studs (A2-70, A4-70, A4-80 proof stress). Recalled, not re-checked.",
+   "url": null
+  },
+  "findley-1976": {
+   "citation": "Findley, W. N., Lai, J. S., Onaran, K., Creep and Relaxation of Nonlinear Viscoelastic Materials, North-Holland 1976 (Dover 1989): the power-law creep form eps(t) = eps0 + m t^n. Gives the form only; the numbers below are not taken from it.",
+   "url": null
+  },
+  "asm-handbook": {
+   "citation": "ASM Handbook Vol. 1 (steels) and Vol. 2 (nonferrous alloys): typical room-temperature properties and thermal expansion of the metal class. Recalled, not re-checked in this repository.",
+   "url": null
+  },
+  "typical-plastic": {
+   "citation": "Typical value for the material class (rigid thermoplastic, printed or moulded): the order of magnitude and the shape of the curve seen across supplier datasheets. NOT taken from one datasheet and NOT measured. Replace with your supplier's datasheet or your own test.",
+   "url": null
+  },
+  "typical-creep": {
+   "citation": "Order-of-magnitude creep coefficients for rigid thermoplastics, chosen so that the creep modulus falls by roughly 30 to 50 % in 1000 h at room temperature and much faster near the glass transition. NOT from a specific datasheet and NOT measured: replace with the supplier's creep-modulus curve fitted to the Findley form.",
    "url": null
   }
  },
@@ -186,6 +214,129 @@
       0.8
      ],
      "note": "Strength across layers (Z) as a fraction of in-layer strength."
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 6.8e-05,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      4.1e-05,
+      7e-05
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.1
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.92
+      ],
+      [
+       55,
+       0.65
+      ],
+      [
+       70,
+       0.15
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.15
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.85
+      ],
+      [
+       55,
+       0.55
+      ],
+      [
+       70,
+       0.15
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.2,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.08
+       ],
+       [
+        23,
+        0.12
+       ],
+       [
+        40,
+        0.4
+       ],
+       [
+        55,
+        2.0
+       ],
+       [
+        70,
+        8.0
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
     }
    }
   },
@@ -289,6 +440,129 @@
       0.85
      ]
     }
+   },
+   "durability": {
+    "cte": {
+     "value": 6e-05,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      5e-05,
+      7e-05
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.1
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.95
+      ],
+      [
+       60,
+       0.8
+      ],
+      [
+       80,
+       0.4
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.15
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.92
+      ],
+      [
+       60,
+       0.72
+      ],
+      [
+       80,
+       0.3
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.2,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.08
+       ],
+       [
+        23,
+        0.15
+       ],
+       [
+        40,
+        0.35
+       ],
+       [
+        60,
+        1.2
+       ],
+       [
+        80,
+        5.0
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
+    }
    }
   },
   {
@@ -386,6 +660,129 @@
       0.5,
       0.85
      ]
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 9.5e-05,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      8.5e-05,
+      0.000105
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.08
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       60,
+       0.9
+      ],
+      [
+       80,
+       0.75
+      ],
+      [
+       100,
+       0.4
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.1
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       60,
+       0.85
+      ],
+      [
+       80,
+       0.65
+      ],
+      [
+       100,
+       0.3
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.2,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.07
+       ],
+       [
+        23,
+        0.12
+       ],
+       [
+        60,
+        0.35
+       ],
+       [
+        80,
+        0.9
+       ],
+       [
+        100,
+        3.0
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
     }
    }
   },
@@ -486,6 +883,129 @@
       0.85
      ]
     }
+   },
+   "durability": {
+    "cte": {
+     "value": 9e-05,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      7e-05,
+      0.0001
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.08
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       60,
+       0.9
+      ],
+      [
+       80,
+       0.75
+      ],
+      [
+       100,
+       0.4
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.1
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       60,
+       0.85
+      ],
+      [
+       80,
+       0.65
+      ],
+      [
+       100,
+       0.3
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.2,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.07
+       ],
+       [
+        23,
+        0.12
+       ],
+       [
+        60,
+        0.35
+       ],
+       [
+        80,
+        0.9
+       ],
+       [
+        100,
+        3.0
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
+    }
    }
   },
   {
@@ -584,6 +1104,145 @@
       0.5,
       0.85
      ]
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 0.0001,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      8e-05,
+      0.00012
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.35
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.8
+      ],
+      [
+       60,
+       0.55
+      ],
+      [
+       80,
+       0.35
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.3
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.85
+      ],
+      [
+       60,
+       0.6
+      ],
+      [
+       80,
+       0.4
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.2,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.1
+       ],
+       [
+        23,
+        0.2
+       ],
+       [
+        40,
+        0.5
+       ],
+       [
+        60,
+        1.0
+       ],
+       [
+        80,
+        2.0
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
+    },
+    "wet": {
+     "kind": "factors",
+     "conditioned": {
+      "E": 0.8,
+      "strength": 0.85
+     },
+     "wet": {
+      "E": 0.65,
+      "strength": 0.75
+     },
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factors on E and on strength after conditioning at 50 % RH and at saturation, against the dry-as-moulded value."
     }
    }
   },
@@ -684,6 +1343,146 @@
       0.65
      ]
     }
+   },
+   "durability": {
+    "cte": {
+     "value": 4.5e-05,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      3e-05,
+      6e-05
+     ],
+     "note": "Glass-filled: lower than the neat polymer and anisotropic; the in-plane value is used."
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.2
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.88
+      ],
+      [
+       60,
+       0.7
+      ],
+      [
+       80,
+       0.55
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.2
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       40,
+       0.88
+      ],
+      [
+       60,
+       0.7
+      ],
+      [
+       80,
+       0.55
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.15,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.05
+       ],
+       [
+        23,
+        0.08
+       ],
+       [
+        40,
+        0.15
+       ],
+       [
+        60,
+        0.3
+       ],
+       [
+        80,
+        0.6
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
+    },
+    "wet": {
+     "kind": "factors",
+     "conditioned": {
+      "E": 0.85,
+      "strength": 0.85
+     },
+     "wet": {
+      "E": 0.75,
+      "strength": 0.75
+     },
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factors on E and on strength after conditioning at 50 % RH and at saturation, against the dry-as-moulded value."
+    }
    }
   },
   {
@@ -783,6 +1582,129 @@
       0.8
      ]
     }
+   },
+   "durability": {
+    "cte": {
+     "value": 6.5e-05,
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "range": [
+      6e-05,
+      7e-05
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.04
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       60,
+       0.95
+      ],
+      [
+       100,
+       0.88
+      ],
+      [
+       120,
+       0.8
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the E at 23 °C (properties.E); linear between points, flat outside."
+    },
+    "yield_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -20,
+       1.08
+      ],
+      [
+       23,
+       1.0
+      ],
+      [
+       60,
+       0.92
+      ],
+      [
+       100,
+       0.78
+      ],
+      [
+       120,
+       0.6
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "typical-plastic"
+     ],
+     "note": "Factor on the yield strength at 23 °C; linear between points, flat outside."
+    },
+    "creep": {
+     "model": "findley",
+     "time_unit": "h",
+     "n": {
+      "value": 0.18,
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ]
+     },
+     "beta_T": {
+      "points": [
+       [
+        -20,
+        0.04
+       ],
+       [
+        23,
+        0.06
+       ],
+       [
+        60,
+        0.12
+       ],
+       [
+        100,
+        0.3
+       ],
+       [
+        120,
+        0.6
+       ]
+      ],
+      "quality": "typical",
+      "sources": [
+       "findley-1976",
+       "typical-creep"
+      ],
+      "note": "beta = m / eps0 per hour^n: the creep strain at time t is eps0 (1 + beta t^n) at a stress inside the linear range. Linear between temperatures."
+     },
+     "linear_limit": {
+      "value": 0.25,
+      "quality": "typical",
+      "sources": [
+       "typical-creep"
+      ],
+      "note": "Fraction of the yield strength below which the creep is treated as linear in stress."
+     }
+    }
    }
   },
   {
@@ -864,6 +1786,41 @@
      "value": 1,
      "quality": "n/a",
      "sources": []
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 2.36e-05,
+     "quality": "handbook",
+     "sources": [
+      "asm-6061"
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -40,
+       1.0
+      ],
+      [
+       20,
+       1.0
+      ],
+      [
+       100,
+       0.975
+      ],
+      [
+       150,
+       0.95
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "note": "Roughly -0.03 % per K above room temperature, the general trend for metals; not re-checked per alloy."
     }
    }
   },
@@ -956,6 +1913,19 @@
      "quality": "n/a",
      "sources": []
     }
+   },
+   "durability": {
+    "cte": {
+     "value": 1.4e-05,
+     "quality": "typical",
+     "sources": [
+      "estimate"
+     ],
+     "range": [
+      1.2e-05,
+      1.6e-05
+     ]
+    }
    }
   },
   {
@@ -1041,6 +2011,469 @@
      "value": 1,
      "quality": "n/a",
      "sources": []
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 1.65e-05,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -40,
+       1.0
+      ],
+      [
+       20,
+       1.0
+      ],
+      [
+       100,
+       0.975
+      ],
+      [
+       150,
+       0.95
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "note": "Roughly -0.03 % per K above room temperature, the general trend for metals; not re-checked per alloy."
+    }
+   }
+  },
+  {
+   "id": "steel-carbon",
+   "name": "Steel (structural / fastener)",
+   "class": "metal",
+   "notes": "Generic carbon steel for rails and bolts. Bolt strength comes from the property class (ISO 898-1), not from this row. E, expansion and the thermophysical values are textbook handbook numbers (recalled, not re-checked here); yield and tensile strength of the part itself are generic.",
+   "properties": {
+    "k": {
+     "value": 50,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "rho": {
+     "value": 7850,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "cp": {
+     "value": 480,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "emissivity": {
+     "value": 0.8,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 205000000000.0,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "nu": {
+     "value": 0.29,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "yield_strength": {
+     "value": 350000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "tensile_strength": {
+     "value": 500000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 1.17e-05,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ],
+     "range": [
+      1.1e-05,
+      1.3e-05
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -40,
+       1.0
+      ],
+      [
+       20,
+       1.0
+      ],
+      [
+       100,
+       0.975
+      ],
+      [
+       150,
+       0.95
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "note": "Roughly -0.03 % per K above room temperature, the general trend for metals; not re-checked per alloy."
+    }
+   }
+  },
+  {
+   "id": "stainless-304",
+   "name": "Stainless steel 304 / A2",
+   "class": "metal",
+   "notes": "Austenitic stainless. Bolt strength comes from the property class (ISO 3506-1), not from this row. E, expansion and the thermophysical values are textbook handbook numbers (recalled, not re-checked here); yield and tensile strength of the part itself are generic.",
+   "properties": {
+    "k": {
+     "value": 16,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "rho": {
+     "value": 8000,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "cp": {
+     "value": 500,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "emissivity": {
+     "value": 0.4,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 193000000000.0,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "nu": {
+     "value": 0.29,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "yield_strength": {
+     "value": 215000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "tensile_strength": {
+     "value": 505000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 1.73e-05,
+     "quality": "handbook",
+     "sources": [
+      "asm-handbook"
+     ],
+     "range": [
+      1.6e-05,
+      1.78e-05
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -40,
+       1.0
+      ],
+      [
+       20,
+       1.0
+      ],
+      [
+       100,
+       0.975
+      ],
+      [
+       150,
+       0.95
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "note": "Roughly -0.03 % per K above room temperature, the general trend for metals; not re-checked per alloy."
+    }
+   }
+  },
+  {
+   "id": "al7075",
+   "name": "Aluminium 7075-T6",
+   "class": "metal",
+   "notes": "Wrought alloy.",
+   "properties": {
+    "k": {
+     "value": 130,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "rho": {
+     "value": 2810,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "cp": {
+     "value": 960,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "emissivity": {
+     "value": 0.2,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 71700000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "nu": {
+     "value": 0.33,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "yield_strength": {
+     "value": 503000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "tensile_strength": {
+     "value": 572000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 2.36e-05,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -40,
+       1.0
+      ],
+      [
+       20,
+       1.0
+      ],
+      [
+       100,
+       0.975
+      ],
+      [
+       150,
+       0.95
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "note": "Roughly -0.03 % per K above room temperature, the general trend for metals; not re-checked per alloy."
+    }
+   }
+  },
+  {
+   "id": "brass-cuzn",
+   "name": "Brass (CuZn, heat-set inserts)",
+   "class": "metal",
+   "notes": "Free-cutting brass as used for heat-set and knurled inserts.",
+   "properties": {
+    "k": {
+     "value": 115,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "rho": {
+     "value": 8500,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "cp": {
+     "value": 380,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "emissivity": {
+     "value": 0.3,
+     "quality": "estimate",
+     "sources": [
+      "estimate"
+     ]
+    },
+    "E": {
+     "value": 97000000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "nu": {
+     "value": 0.34,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "yield_strength": {
+     "value": 310000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "tensile_strength": {
+     "value": 385000000.0,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ]
+    },
+    "interlayer_factor": {
+     "value": 1,
+     "quality": "n/a",
+     "sources": []
+    }
+   },
+   "durability": {
+    "cte": {
+     "value": 2.05e-05,
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "range": [
+      1.9e-05,
+      2.1e-05
+     ]
+    },
+    "E_T": {
+     "kind": "factor",
+     "points": [
+      [
+       -40,
+       1.0
+      ],
+      [
+       20,
+       1.0
+      ],
+      [
+       100,
+       0.975
+      ],
+      [
+       150,
+       0.95
+      ]
+     ],
+     "quality": "typical",
+     "sources": [
+      "asm-handbook"
+     ],
+     "note": "Roughly -0.03 % per K above room temperature, the general trend for metals; not re-checked per alloy."
     }
    }
   },

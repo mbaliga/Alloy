@@ -2,9 +2,35 @@
 // own board (tag solids of an imported STEP assembly in the Objects pane) and the enclosure follows.
 import demo from './demo.json' with { type: 'json' };
 import { defaultFeature, emptyProject, clone } from '../../src/model.js';
+import { frameOf } from './generate.js';
 
 export const TEMPLATE = { id: 'pcb-enclosure', label: 'PCB enclosure', desc: 'Parametric enclosure on the OCCT kernel: monolith, bullet or cell style, rear cap with fasteners, B-rep checks. Ships with an invented demo board.' };
 export { demo };
+
+/**
+ * The joints the template marks automatically (docs/EXTENSIONS_SPEC.md 4A): the rear cap's screws, which the generator really builds
+ * (self-tapping into the shell's screw pilots), and, when the spec describes a mounting clamp (`spec.clamp.crossBolt`: { where:[x,y,z],
+ * axis, size, grade, length_mm, torque_Nm, thickness_mm, rail:{ name, material, thickness_mm } }), the clamp's cross-bolt through the
+ * shell onto the rail. The invented demo board has no clamp, so it gets the cap screws only. The numbers are typical starting
+ * values shown in the Joints editor, not a design.
+ */
+export function templateJoints(enc, spec, pcb) {
+  const out = [], num = (v) => (typeof v === 'number' ? v : parseFloat(v));
+  const cap = (spec && spec.cap) || {}, fastener = String(enc.fastener || 'M2'), size = fastener.replace('M2.5', 'M2.5');
+  const { xRear } = frameOf(pcb, { clearance: num(enc.clearance), wall: num(enc.wall), xRear: spec && spec.xRear });
+  (cap.screwPositions || [[-2, -7], [-2, 7]]).forEach(([y, z], i) => out.push({
+    id: `CAP${i + 1}`, name: `Cap screw ${i + 1}`, where: [+xRear.toFixed(2), y, z], axis: '-x', bolt: { size, grade: 'A2-70', length_mm: 8 },
+    tightening: { mode: 'torque', method: 'nut_factor', torque_Nm: 0.2, nut_factor: 0.2 }, mu_clamp: 0.3, thread_locker: false,
+    clamps: [{ body: enc.capBody || 'Cap', thickness_mm: cap.thickness || 1.8 }], insert: 'none', thread_in: 'plastic', anchor: { body: enc.body || 'Shell', length_mm: 6 },
+  }));
+  const cb = spec && spec.clamp && spec.clamp.crossBolt;
+  if (cb) out.push({
+    id: 'CLAMP1', name: 'Clamp cross-bolt', where: cb.where, axis: cb.axis || '+z', bolt: { size: cb.size || 'M3', grade: cb.grade || '8.8', length_mm: cb.length_mm || 16 },
+    tightening: { mode: 'torque', method: 'nut_factor', torque_Nm: cb.torque_Nm || 0.9, nut_factor: 0.2 }, mu_clamp: 0.2, thread_locker: false,
+    clamps: [{ body: enc.body || 'Shell', thickness_mm: cb.thickness_mm || 6 }, { external: (cb.rail && cb.rail.name) || 'rail', material: (cb.rail && cb.rail.material) || 'steel-carbon', thickness_mm: (cb.rail && cb.rail.thickness_mm) || 3 }], insert: 'none', thread_in: 'metal',
+  });
+  return out;
+}
 
 export function pcbEnclosureProject(over = {}) {
   const P = emptyProject();
@@ -12,6 +38,8 @@ export function pcbEnclosureProject(over = {}) {
   P.settings.kernel = 'occt';
   P.pcb = clone(demo.pcb);
   P.features = [defaultFeature('enclosure', { ...clone(demo.enclosure), spec: clone(demo.spec), ...(over.enclosure || {}) })];
+  const f = P.features[0];
+  P.joints = templateJoints(f, f.spec, P.pcb);
   return P;
 }
 export { generateEnclosure } from './generate.js';

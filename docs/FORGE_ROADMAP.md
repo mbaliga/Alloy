@@ -104,6 +104,7 @@ Each milestone is one Claude Code session, one branch, one PR. "Done" means ever
 
 - A1 thermal estimate (plugin) > A2 voxel core + thermal 3D > A3 structural > A4 Alloy Runner (Elmer/OpenFOAM on the customer's machine) > A5 airflow (forced, then natural convection).
 - A6 durability and mechanical risk (`docs/EXTENSIONS_SPEC.md` §4A): A6a joint, preload and creep > A6b fatigue, thermal cycling, humidity > A6c modes and random vibration > A6d shock > A6e risk register, loop and test plan. Output: located, ranked risk flags with margin, confidence and a suggested fix.
+- **A6a (joint, preload and creep, plugin) is built on `forge-a6a-joint-creep`, pushed, no PR opened.** Duty profile, joints with typed ops and locks, durability material data (all polymer creep values `typical`), the risk-flag type and table, the package (simplified VDI 2230, Findley creep, slip and loosening, fixes as typed ops), a Risk list with viewport pins and "Apply fix", scorecard and loop gating, 22 of 22 validation checks pass (closed-form self-consistency references, not published figures), headless tests and a desktop and 390 px Playwright smoke. With the shipped data every flag has low confidence, so none can gate a stock project. Unmet items are listed in `docs/EXTENSIONS_SPEC.md` (A6a done).
 - **Done** per step: its validation cases pass within the stated tolerances, results carry an honest `validity`, and its checks join the scorecard and the design loop.
 
 ## F7 · White-label and deployment

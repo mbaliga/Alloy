@@ -9,6 +9,7 @@ import { resolveSetup } from './setup.js';
 import { buildReport } from './report.js';
 import { gridText, vectorFieldSamples } from '../ext/overlay.js';
 import { writeZip } from '../ext/zip.js';
+import { mountDurability } from './durability-ui.js';
 
 const BADGE = { validated: '▮ validated', estimate: '◆ estimate', experimental: '◇ experimental' };
 const slug = (s) => String(s || 'part').replace(/[^\w-]+/g, '_');
@@ -17,6 +18,7 @@ export function mountAnalyze(env) {
   const { h, S, tip, say, blip, runner, extUi, client } = env;
   const st = { sel: '', running: false, userRun: false, jobs: null, jobsError: '', jobsBusy: false, progress: 0, result: null, rows: [], error: '', ac: null, shown: new Set(), slice: { axis: 'z', frac: 0.5 }, setup: null };
   let box = null, bar = null;
+  const dur = mountDurability(env, { ops: (arr) => ops(arr), nextId: (p, items) => nextId(p, items), rerender: () => render() });
 
   const list = () => runner.declared(S.project);
   const current = () => { const l = list(); return l.find((d) => `${d.ext}/${d.item.id}` === st.sel) || l[0] || null; };
@@ -29,7 +31,7 @@ export function mountAnalyze(env) {
 
   const inputKey = () => {
     const P = S.project, c = P.analysis ? { ...P.analysis.conditions, limits: undefined } : null;
-    return JSON.stringify([(S.result ? S.result.bodies : []).map((b) => [b.name, +(b.volume || 0).toFixed(6)]), c, P.analysis && P.analysis.materials, Object.entries(P.bodies || {}).map(([n, b]) => [n, b.material]), P.ext]);
+    return JSON.stringify([(S.result ? S.result.bodies : []).map((b) => [b.name, +(b.volume || 0).toFixed(6)]), c, P.analysis && P.analysis.materials, Object.entries(P.bodies || {}).map(([n, b]) => [n, b.material]), P.ext, P.joints]);
   };
   // ───────── running
   async function run() {
@@ -39,7 +41,7 @@ export function mountAnalyze(env) {
     try {
       const r = await runner.run(S.project, S.result, d.ext, d.item.id, { signal: st.ac.signal, onProgress: (v) => { st.progress = v; if (bar) bar.style.width = `${Math.round(v * 100)}%`; } });
       st.result = r; st.key = inputKey(); st.setup = resolveSetup(S.project, S.result); st.rows = await runner.rows(S.project, S.result, { run: false });
-      st.shown = new Set((r.fields.filter((f) => f.kind !== 'vector')[0] ? [r.fields.filter((f) => f.kind !== 'vector')[0]] : r.fields.slice(0, 1)).map((f) => f.name)); refreshOverlays();
+      st.shown = new Set((r.fields.filter((f) => f.kind !== 'vector')[0] ? [r.fields.filter((f) => f.kind !== 'vector')[0]] : r.fields.slice(0, 1)).map((f) => f.name)); refreshOverlays(); dur.setResult(r);
       say(`${d.item.label}: done${r.cached ? ' (cached)' : ` in ${r.seconds.toFixed(1)} s`}. Validity: ${r.validity}.`); blip(980);
     } catch (e) { st.error = e.code === 'E_CONSENT' ? 'Nothing was sent: you did not confirm sending the design to the runner.' : e.code === 'E_CANCELLED' || /cancel/i.test(e.message) ? 'Cancelled.' : String(e.message || e); blip(200, 0.08); }
     st.running = false; st.userRun = false; st.ac = null; render(); if (needsRemote(d)) refreshJobs();
@@ -189,6 +191,7 @@ export function mountAnalyze(env) {
     const [vb, vt] = tip(VALIDITY_TEXT[r.validity]);
     wrap.append(h('div', { class: 'sub' }, 'Result', h('span', { class: `vbadge ${r.validity}`, id: 'an-validity' }, BADGE[r.validity]), vb, h('span', { class: 'tag', style: 'margin-left:auto' }, r.cached ? 'cached' : `${r.seconds.toFixed(1)} s`)), vt);
     wrap.append(h('div', { class: 'facts' }, r.summary.map((s) => h('div', { title: s.where ? `at ${s.where.map((v) => +v.toFixed(1)).join(', ')} mm` : '' }, h('span', {}, s.metric), `${+s.value.toPrecision(5)} ${s.unit}`))));
+    const rk = dur.riskBlock(r, (current() || {}).item); if (rk) wrap.append(rk);
     for (const w of r.warnings) wrap.append(h('div', { class: 'errbox warn', 'data-warning': '' }, w));
     if (r.fields.length) {
       wrap.append(h('div', { class: 'sub' }, 'Fields'));
@@ -292,14 +295,14 @@ export function mountAnalyze(env) {
     if (!box) return;
     bar = null; box.textContent = '';
     if (!list().length) { box.append(h('div', { class: 'empty' }, 'No analyses installed. Install one in Settings > Extensions.')); return; }
-    box.append(analysisSection(), conditionsSection(), materialsSection());
+    box.append(analysisSection(), conditionsSection(), dur.dutySection(), dur.jointsSection(), materialsSection());
     const cd = current(); if (cd && needsRemote(cd) && client && runnerUrl() && st.jobs === null && !st.jobsError && !st.jobsBusy) setTimeout(refreshJobs, 0);
   }
 
   return {
     render, refreshTabs() { for (const id of ['t-an', 'n-an']) { const b = env.$('#' + id); if (b) b.hidden = !list().length; } if (!list().length && S.pane === 'analyze') S.pane = 'tree'; },
     // A result stays on screen while the setup behind it is unchanged (a threshold edit rebuilds the document but not the inputs).
-    invalidate() { if (st.running) return; const k = inputKey(); if (st.result && k === st.key) return; st.result = null; st.rows = []; extUi.clearOverlaysOf('analysis'); },
+    invalidate() { if (st.running) return; const k = inputKey(); if (st.result && k === st.key) return; st.result = null; st.rows = []; extUi.clearOverlaysOf('analysis'); dur.clear(); },
     state: st, run, cancel, requestConsent, refreshJobs,
   };
 }

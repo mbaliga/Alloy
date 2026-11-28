@@ -312,7 +312,15 @@ export function createView(el, cb) {
   }
   new ResizeObserver(resize).observe(el); resize();
   setTheme('dark');
-  (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, cam); })();
+  // screen position (client pixels) of a document point, for DOM markers that follow the model (risk pins); visible is false behind the camera or off screen
+  const frameCbs = new Set(), _pv = new THREE.Vector3();
+  function screenPoint(x, y, z) {
+    const r = renderer.domElement.getBoundingClientRect(); _pv.set(x, y, z).project(cam);
+    const sx = ((_pv.x + 1) / 2) * r.width + r.left, sy = ((1 - _pv.y) / 2) * r.height + r.top;
+    return { x: sx, y: sy, visible: _pv.z > -1 && _pv.z < 1 && sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom };
+  }
+  const onFrame = (fn) => { frameCbs.add(fn); return () => frameCbs.delete(fn); };
+  (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, cam); for (const f of frameCbs) f(); })();
 
-  return { setResult, setOverlays, probe, fit, setView, setOrtho, setSection, setEdges, setMarks, setTheme, getBounds, attachGizmo, detachGizmo, isDragging: () => gizmo.dragging, snapshot: () => { renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } };
+  return { setResult, setOverlays, probe, screenPoint, onFrame, fit, setView, setOrtho, setSection, setEdges, setMarks, setTheme, getBounds, attachGizmo, detachGizmo, isDragging: () => gizmo.dragging, snapshot: () => { renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } };
 }

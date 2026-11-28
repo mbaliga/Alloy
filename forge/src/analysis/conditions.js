@@ -3,6 +3,8 @@
 // metres per second squared. The UI shows °C, W, N, Pa, m/s and g and converts at the edge (units.js). Positions and regions are
 // document coordinates in millimetres, like the rest of the document.
 
+import { validateDuty } from './durability.js';
+
 export const G0 = 9.80665;
 export const units = {
   cToK: (c) => c + 273.15, kToC: (k) => k - 273.15,
@@ -19,6 +21,7 @@ export const defaultConditions = () => ({
   heat: [],      // { id, target: { pcb: 'U1' } | { body: 'Shell' }, power_W }
   mounts: [],    // { id, kind: 'contact' | 'fixed' | 'slider', body, face, box?: [x0,x1,y0,y1,z0,z1] (mm), conductance_W_m2K? (contact) }; slider = holds only the displacement normal to the face (symmetry plane, frictionless support)
   loads: [],     // { id, kind: 'force' | 'pressure' | 'acceleration', body?, face?, vector_N?, direction?, pressure_Pa?, accel_ms2? }
+  duty: null,    // the A6 duty profile (analysis/durability.js): life, shots, vibration, temperature, humidity, safety factor; null = not set
   limits: {},    // "<ext>:<analysis>:<check>" -> limit in the check's SI unit (user thresholds for analysis checks)
 });
 
@@ -66,6 +69,7 @@ export function validateConditions(c, project) {
       if (!DIRS.includes(l.direction)) throw new Error(`load ${l.id}: direction must be one of ${DIRS.join(', ')}`);
     }
   }
+  validateDuty(c.duty == null ? null : c.duty);
   for (const [k, v] of Object.entries(c.limits || {})) { if (!/^[\w.-]+:[\w.-]+:[\w.-]+$/.test(k)) throw new Error(`limit key "${k}" must look like <extension>:<analysis>:<check>`); num(v, `limit ${k}`, -1e12, 1e12); }
   return c;
 }
