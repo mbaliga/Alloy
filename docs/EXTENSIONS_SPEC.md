@@ -383,6 +383,123 @@ Status: built on branch `forge-a5-airflow`, stacked on `forge-a4-runner` (not me
   - The GPU path covers forced flow only. The GPU readback every few hundred steps and the averaging are not optimised; a 2-million-cell lattice needs a device whose storage buffer holds 160 MB (the package asks for the adapter's maximum and falls back to the CPU lattice with a message when it cannot).
   - The Strouhal and cavity references are 2D problems run as two-layer periodic lattices; no 3D flow case against a published value was run (the Poiseuille test is the only 3D-lattice analytic case besides the heated cavity).
 
+## 4A. Durability and mechanical risk (A6)
+
+A3 answers "does it break on one load". A6 answers **"will it still be attached and intact after sustained use"**: thousands of shots, months of vibration, hot and cold cycles, humidity. The output is a **risk register**: ranked, located flags, each saying what could fail, why, with what margin, how sure we are, and a suggested fix. Life numbers are always `estimate` (plastic fatigue and creep data is scarce and grade-specific); the value is ranking designs and catching mechanisms early, then writing the physical test plan.
+
+### A6 shared pieces
+
+- **Duty profile** (saved in the project, `analysis.conditions.duty`): service life (years, hours per day), shot count (per day and total; recoil pulse as peak g and duration in ms, half-sine), vibration (a PSD in g²/Hz against Hz, from presets "handheld", "vehicle", "custom"; exposure hours), temperature (min, max, cycles per day), humidity (dry as moulded / conditioned 50 % RH / wet), target life and a safety factor on life (default 3 for plastics). Every preset is labelled a placeholder; the UI says to replace it with measured data.
+- **Material data** (extend `analysis/materials.json`; every value keeps `quality` and `sources`, and a missing value is a **data-gap flag**, never a silent default):
+  - coefficient of thermal expansion α
+  - E and yield as functions of temperature (a few points, linear between)
+  - wet/dry knock-down factors for polyamides
+  - fatigue: Basquin coefficients or S-N points (stress amplitude against cycles, R ratio stated), endurance at 10⁷
+  - creep: Findley power-law parameters ε(t) = ε₀ + m tⁿ (σ-, T-dependent) or stress-relaxation points
+  - metals for fasteners and rails: steel, stainless, aluminium 6061/7075, brass inserts
+- **Component masses**: `pcb.components[].mass_g` (and an optional stiffness class). A3 and the modal solver apply them as lumped masses spread over the faces each part bears on (cradles, stops). This also fixes A3's "parts on the board have no mass" gap.
+- **Joints**: `joints[]` in the project: a bolt (size, grade, length, torque or preload, friction coefficients, thread locker yes/no), what it clamps (bodies, plus the external part, e.g. "rail: steel"), and the insert type (none / heat-set brass / metal compression sleeve / moulded nut). The template marks the clamp's cross-bolt as a joint automatically.
+- **Risk flag** (the result type every A6 step emits, also exported as a table):
+  `{ id, mechanism: 'preload_loss' | 'self_loosening' | 'creep' | 'fatigue' | 'resonance' | 'shock' | 'thermal_cycling' | 'moisture' | 'data_gap', severity: 'high' | 'medium' | 'low' | 'info', body, where: [x,y,z], metric, value, limit, margin, why (one plain sentence), fix (a suggested change; where it is geometric, a typed-ops proposal the user can apply and undo), confidence: 'low' | 'medium' | 'high' }`
+  - Severity comes from the margin: margin < 1 → high; margin < the life safety factor → medium; margin < 10 → low; else info.
+  - Confidence comes from the result's `validity` and the worst material-data quality used. Low-quality data caps confidence at low, whatever the margin.
+- **UI**:
+  - A Risk pane (in Analyze) lists flags by severity.
+  - Pins in the viewport at each `where`; tap one for the why, the numbers, the confidence and the fix.
+  - "Apply fix" commits the proposal as one undoable step.
+  - Flags join the scorecard. High flags fail the design loop's gateway unless their confidence is low (then they are advisory). Experimental never gates.
+- **Test plan export**: from the flags and the duty profile, a markdown plan, marked as suggestions for a qualified lab:
+  - MIL-STD-810H methods 514.8 vibration, 516.8 shock, 501.7/502.7 high/low temperature, 503.7 temperature shock and 507.6 humidity
+  - a rounds-fired endurance test with a torque-audit schedule
+  - acceptance criteria tied to each flag
+
+### A6a · Joint, preload and creep (plugin) · easy–medium
+
+- **Bolted joint** (VDI 2230, simplified):
+  - bolt and clamped-part stiffness (pressure cone)
+  - preload from torque (nut factor, or thread and under-head friction)
+  - embedding loss
+  - preload change with temperature from the CTE difference between bolt, plastic and rail
+- **Creep relaxation** of the clamped plastic at the duty temperature: Findley or relaxation data over the service life, integrated over the temperature profile. Output: preload against time.
+- **Slip and self-loosening**:
+  - Transverse load per shot (recoil mass times g, through the clamp) against friction times residual preload. Where slip is possible, flag self_loosening (Junker mechanism).
+  - Thread locker or a locking washer lowers the severity but does not remove the flag.
+- **Fixes it proposes**:
+  - a metal compression sleeve (the plastic then carries no bolt load, so creep drops out)
+  - a larger bearing area
+  - a higher grade or larger bolt
+  - a thread locker
+- **Validation**:
+  - a VDI 2230 worked example: preload and thermal change within 2 %
+  - a closed-form Findley relaxation case within 2 %
+  - a sleeve-versus-no-sleeve case showing the creep path removed
+
+### A6b · Fatigue, thermal cycling, humidity (plugin on A3 results) · medium
+
+- **Load blocks**:
+  - recoil (A3 with the shot load and component masses, as amplitude about the assembly mean, which includes preload)
+  - thermal cycling (A2/A3: the thermal strain range from the CTE mismatch with the rail over the temperature range)
+  - vibration (from A6c when present)
+- **Per surface vertex**:
+  - mean-stress correction (Goodman; Gerber as an option)
+  - S-N life at the local temperature with the wet/dry and FDM inter-layer knock-downs
+  - Palmgren–Miner damage summed over the blocks
+  - life in shots and in years
+- **Thermal cycling**: also flags clamp-gap and preload change.
+- **Edge artefacts**: stress on boundary voxels flagged by A3 as edge artefacts lowers confidence; the flag says to confirm with the Runner.
+- **Validation**:
+  - an unnotched bar with a known S-N curve: life within 10 %
+  - a two-block Miner case: analytic
+  - a Goodman mean-stress case: analytic
+  - a bimetal strip (Timoshenko) curvature within 3 %
+
+### A6c · Modes and random vibration (extension, `compute.gpu`) · medium
+
+- **Lowest natural frequencies and mode shapes**:
+  - the A3 voxel stiffness with lumped component masses
+  - LOBPCG or subspace iteration on WebGPU, with a CPU fallback
+  - clamp faces fixed
+- **Flags**:
+  - resonance where a mode falls inside a band with significant PSD energy, or within ±15 % of a stated excitation frequency
+  - a loose-part flag for any component whose cradle mode is the lowest
+- **Random response**:
+  - per mode, Miles' equation (Grms = √(π/2 · f · Q · PSD(f)), with Q stated as an assumption, default 10)
+  - modal stresses scaled to 1σ and 3σ, then cycles counted (Steinberg three-band) into A6b's damage sum
+- **Validation**:
+  - cantilever first three frequencies (Euler–Bernoulli) within 3 % at fine
+  - free-free block: six rigid-body modes near zero
+  - a single-degree-of-freedom Miles result against a time-domain Monte Carlo within 10 %
+
+### A6d · Shock (extension, `compute.gpu`) · medium
+
+- **Method**: the shock response spectrum of the recoil and drop pulses (half-sine; sawtooth optional), applied to the A6c modes by mode superposition (SRSS, NRL as an option).
+- **Outputs**:
+  - peak stress and safety factor per pulse
+  - peak component acceleration at each cradle, for checking the parts' own ratings, e.g. a laser diode's shock limit
+- **Replaces the A3 constant-g placeholder** for shots and drops. The flag says the dynamic amplification it found.
+- **Validation**:
+  - the half-sine SRS of a single degree of freedom against the closed form within 2 %
+  - a two-mode case against direct Newmark integration within 5 %
+
+### A6e · Risk register, loop and test plan · easy–medium
+
+- **Risk register**:
+  - the Risk pane, viewport pins and "apply fix"
+  - the register export (CSV + markdown)
+  - per-flag history across design revisions, so a fixed flag shows as resolved
+- **Design loop**: the critic gets the flags; the designer is told the mechanism and the suggested fix.
+- **Test-plan export** as above.
+- **Benchmark**: the rail-mount reference enclosure gets a stored register (a generic one only; never client geometry) to catch regressions.
+
+### A6 done (each sub-step)
+
+- [ ] Its validation cases pass within tolerance (table in the PR), and the cases are in `analysis-validation/cases/durability-*.json`.
+- [ ] Every flag carries mechanism, severity, location, margin, why, fix and confidence.
+- [ ] Missing material data produces data-gap flags, not defaults.
+- [ ] Results are `estimate` and never claim more. Flags join the scorecard and the loop with the gating rules above.
+- [ ] Headless tests, plus a Playwright smoke test (desktop and a 390 px phone).
+- [ ] A worked example in `forge/README.md` on the demo board.
+
 ## 5. Order and sizing
 
 | Step | What | Tier | Difficulty | Rough size | Depends on |
@@ -394,12 +511,17 @@ Status: built on branch `forge-a5-airflow`, stacked on `forge-a4-runner` (not me
 | A3 | Structural | extension | medium | 2–3 weeks | A2 (voxel core) |
 | A4 | Alloy Runner + Forge client | extension + server | medium | 2–4 weeks | A0 (can run alongside A2/A3) |
 | A5 | Airflow: phase 1, then phase 2 | extension | medium–hard → hard | 4–6 weeks, then 2–3 months | A2, A4 for references |
+| A6a | Joint, preload, creep, loosening | plugin | easy–medium | 1–2 weeks | A0, A2 (temperatures) |
+| A6b | Fatigue, thermal cycling, humidity | plugin | medium | 2 weeks | A3, A6a |
+| A6c | Modes and random vibration | extension | medium | 2–3 weeks | A3 (voxel stiffness), A6b |
+| A6d | Shock (SRS + modes) | extension | medium | 1–2 weeks | A6c |
+| A6e | Risk register, loop, test plan | core UI + plugin | easy–medium | 1 week | A6a (grows with each step) |
 
 Sizes assume one developer with Claude Code. Validation is a large share of every analysis step and is not optional.
 
 ## 6. Out of scope for now
 
-A public marketplace and signing service; paid packages; nonlinear materials, contact mechanics, fatigue, modal and drop-impact dynamics; EMI and RF. Each can become a package later without changes to the host.
+A public marketplace and signing service; paid packages; nonlinear materials, contact mechanics, explicit impact dynamics (A6 covers fatigue, modes and shock by superposition); EMI and RF. Each can become a package later without changes to the host.
 
 ## Layers (overlay visibility)
 

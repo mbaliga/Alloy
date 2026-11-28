@@ -8,7 +8,7 @@ Alloy is a family of three tools on one shared core: **Alloy Forge** (web parame
 - `docs/SLICER_ROADMAP.md` — Slicer gates and stages, built from the stage1 gate docs, with current status.
 - `docs/DRAFT_SPEC.md` — Draft scope and v1 cut.
 - `docs/STYLE.md` — house style canon. UI work is checked against it.
-- `docs/EXTENSIONS_SPEC.md` — plugins/extensions (one system, two tiers), the extension host (X0), the analysis framework (A0) and the five analysis packages (A1–A5).
+- `docs/EXTENSIONS_SPEC.md` — plugins/extensions (one system, two tiers), the extension host (X0), the analysis framework (A0), the five analysis packages (A1–A5) and durability and mechanical risk (A6a–A6e).
 - `docs/CONSOLIDATION.md` — how the slicer branches were consolidated: inventory, decisions, what was archived and where.
 - `docs/EXTENSION_API.md` — reference for package authors, generated from `forge/src/ext/api-spec.js` (`npm run docs:api`; a test fails if it is stale).
 - `forge/` — Alloy Forge web app (see `forge/README.md`; third-party notices in `forge/THIRD_PARTY.md`).
@@ -17,7 +17,7 @@ Alloy is a family of three tools on one shared core: **Alloy Forge** (web parame
 - `slicer-ports/` — iOS and Ubuntu Touch companions (see their docs under `slicer-ports/docs/`).
 
 ## How to work
-- One milestone (or one Draft v1 item, or one X0/A0/A1–A5 step) per session, one branch, one PR. Use the milestone's "Done" list as the definition of done and say in the PR which items are met and which are not.
+- One milestone (or one Draft v1 item, or one X0/A0/A1–A6 step) per session, one branch, one PR. Use the milestone's "Done" list as the definition of done and say in the PR which items are met and which are not.
 - **Forge:** keep `cd forge && npm test` green; add tests for new kernel features, checks and ops. Prefer headless tests (Node) over browser tests; add a Playwright smoke test for UI flows.
 - **Slicer:** there is no Android SDK in the cloud sandbox. Run what you can (`android/tools`, `android/ci` as `python3 -m unittest` from `android/`, `android/parity`), then rely on the CI lanes for Gradle and native builds. Never loosen a parity tolerance to make a gate green; the G3 comparison is a gate, not a flaky test. Do not treat a green build as a qualified print.
 - The AI never edits geometry directly: every change goes through typed ops on the design document, validated, built and undoable. Locks are enforced in the ops layer.
